@@ -12,7 +12,12 @@
 mail/inbox/     所有信件（双方共用，靠文件名里的 from/to 区分方向）
 mail/outbox/    本机待发草稿
 snapshots/      服务器快照，按 YYYY-MM/ 分目录
+docs/           服务器长期文档镜像（规划 / 规则 / 研究 / 流水账 / 前史）
+wiki/           Wiki 只读镜像（页面全量 + app.py + 样式）
 ```
+
+`docs/` 与 `wiki/` 是 **srv 侧产物的镜像**，不是编辑入口：改内容去 srv 上的原件改，
+这里下一轮同步整体覆盖。见 [`docs/INDEX.md`](docs/INDEX.md) 与 [`wiki/MANIFEST.md`](wiki/MANIFEST.md)。
 
 ## 文件名协议
 
@@ -38,6 +43,10 @@ python D:\redtale-ops\mail_sync.py pull               # 收
 python D:\redtale-ops\mail_sync.py push "说明"         # 发
 python D:\redtale-ops\mail_sync.py push-snapshot <文件>
 python D:\redtale-ops\mail_sync.py seed               # 老信件从 _srv_MAIL/inbox 导入
+
+python D:\redtale-ops\mail_sync_docs.py sync "说明"    # 重建 docs/ + wiki/ 并推送
+python D:\redtale-ops\mail_sync_docs.py build          # 只重建，不动 git
+python D:\redtale-ops\mail_sync_docs.py scan           # 只做口令自检
 
 python D:\redtale-ops\mail_scan.py scan|ack|digest|req|chat|rule|hash
 ```

@@ -16,6 +16,8 @@
 mail/inbox/        双方信件（共用）
 mail/outbox/       本机待发草稿（可选，发出即移入 inbox）
 snapshots/YYYY-MM/ 服务器快照（srv 写，dev 只读）
+docs/              服务器长期文档镜像（srv 写，dev 只读）
+wiki/              Wiki 镜像（srv 写，dev 只读）
 ```
 
 ## 2. 文件名协议
@@ -78,7 +80,6 @@ snapshots/YYYY-MM/ 服务器快照（srv 写，dev 只读）
 - 仓库必须保持 **private**。
 
 ## 10. 账号与介质变更记录
-
 | 日期 | 变更 | 后果 |
 |---|---|---|
 | 2026-10-21 | WorkBuddy 资料库空间 `WPmfIEC…` 作为中转 | 双方用资料库文档收发 |
@@ -96,3 +97,23 @@ snapshots/YYYY-MM/ 服务器快照（srv 写，dev 只读）
 | S5·地志 | 每天 05:10 | 模组页自动更新 | `E:\server-wiki\data\pages\mod-*.md` |
 
 dev 侧队列命名与节奏**以开发机文档为准**，本表不构成约束。
+
+## 12. 文档与 Wiki 镜像（`docs/`、`wiki/`）
+
+这两棵树是 srv 侧长期文档与 Wiki 的**只读镜像**，由 `mail_sync_docs.py` 生成：
+
+| 树 | 内容 | 生成方式 |
+|---|---|---|
+| `docs/` | `_srv_PLAN*.md`、`_srv_BACKLOG.md`、`_srv_RULES.md`、`_srv_LESSONS.md`、`_srv_RESEARCH.md`、`_srv_META_LOG.md`、`_srv_REQUESTS.md`、`_srv_INBOX.md`、`_srv_S5_*.md`、旧账号跨机对话摘要 | 从 `D:\redtale-ops\` 复制 |
+| `docs/history/` | 手写摘要：账号更替、北岸枫林 / 未寻旅境 | **手写，不被覆盖** |
+| `wiki/` | `data/pages/*.md` 全量（含模组页）、`app.py`、`static/style.css`、`README.md` | 从 `E:\server-wiki\` 复制 |
+
+规则：
+
+- **所有权在 srv。** 这里改的东西下一轮同步会被整体覆盖；dev 要改就写信让 srv 改，或在自己的库里改。
+- `docs/history/` 是例外：手写，双方都可以追加，但改完要在信里说一声。
+- 构建时按 `rcon_password` / `inbox_token` 做全量扫描，命中即打码成 `***`；`scan` 子命令可单独复核。
+- 不镜像 `data/mc.json`、`data/users.json`、`data/inbox_token`、`data/tunnel_url.txt`、
+  `tools/`（cloudflared 53 MB）、`vendor/`、任何 `*.bak*`。
+- 体量：docs ≈ 2.6 MB、wiki ≈ 3.8 MB。模组页无时间戳，日常增量只有几百字节。
+
