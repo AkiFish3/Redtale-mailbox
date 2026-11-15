@@ -61,6 +61,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-15 11:30 · S7 · 拍板 4 项落地：①构建改「镜像源 + server-srg 直编」，`gradle build --offline` **BUILD SUCCESSFUL 19s**（`docs/BUILD.md`），产物进测试服 `Done (2.353s)`；②测试服已加 6 个玩法 jar（BetterCombat/playeranim/Farmer's Respite/FarmersDelight/SimplySwords/fzzy_config）全绿；③属性定 80 条（16 条预留）；④tooltip 口径 = 单次伤害 + 攻速，DPS 客户端开关（D20）· `E:////RedtaleProject`（PLAN/DAMAGE-PIPELINE/ATTRIBUTE-REGISTRY/BUILD/ROUND-M0）· S7 下轮进 M1：80 条属性注册 + `/redtale attr` + 攻速 mixin
 - 2026-11-15 11:42 · 协作板 · **运维坑**：`wiki_inbox.py resolve` 在本机 hang（`file_resolve` 里那段懒回溯正则 + 8080 假活时 `wiki_alive()` 判真），且被 kill 会留下 `.inbox.lock` 残锁（`E:////server-wiki/data/.inbox.lock`，内容是 pid，清前先确认进程已死）。绕行脚本 `C:////Users/AkiFish3/WorkBuddy/2026-10-24-05-43-33/resolve_inbox.py`（填拍板）+ `archive_inbox.py`（移入 §已定），同样持锁 + 原子写。**不要自己启 wiki 服务**。wiki 假活本身已由 S5 登记（`S5-20261115-113605`）
 - 2026-11-15 12:08 · S7 · 功能面缺口审计（第二轮）：新增 `docs/GAP-AUDIT.md`——上游漏 7 项（词条/工作台/矿脉/消耗品/专业/技能树/刷怪替换），与已装 mod 撞车 9 处（spell_power 属性、spell_engine 吃 XP 等级、伤害乘区、三套饰品、lootr、enchantmentdisabler、经济缺失、owo GUI）。开 Q-009~Q-011 · `E://RedtaleProject//docs//GAP-AUDIT.md` · 等 Aki 拍 3 条后进 M1
+- 2026-11-15 12:50 · S7 · 10 条拍板全落地：**D21~D31** 写进 `PLAN.md`。新增 `docs/ITEM-MODEL.md`（白板化/词条/消耗品修理/不做工作台与矿脉）与 `docs/SKILL-TREE.md`（结构+三例+schema）；`docs/DAMAGE-PIPELINE.md` §12 兼容层（只读桥接+tag 白名单+拆除检查单）；`GAP-AUDIT.md` §5 裁决表；M2/M6/M7 出口条件同步。开 Q-012（附魔强化走哪条）· `E://RedtaleProject` · S7 下轮进 M1（属性注册 + `/redtale attr` + 攻速 mixin），M1 里先做白板化验证件
 
 ---
 
@@ -78,9 +79,10 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-006 | S7 | `[Q-006]` 属性注册表一次注册多少条：64（够用，以后加要换 jar）还是 80（留余量，多出的不上面板） | **已答复（2026-11-15 11:22，Aki）：80**。`ATTRIBUTE-REGISTRY.md` §2F 已补 16 条预留（65~80，注册不使用、不上面板） |
 | Q-007 | S7 | `[Q-007]` 测试服要不要复制正式服同版本玩法 jar 来验证急迫→攻速联动 | **已答复（2026-11-15 11:22，Aki）：复制**。已复制 6 个 jar 进 `E:/server-test/mods`（BetterCombat + player-animation-lib + Farmer's Respite + FarmersDelight + SimplySwords + fzzy_config），实测 `Done (2.353s)` 无缺依赖、已停服 |
 | Q-008 | S7 | `[Q-008]` 暴击双轨（近战 `critical_strike_*` / 法术 `spell_critical_strike_*`）保留还是合并；基值是否照搬上游（暴击倍率 2.0、格挡强度 25） | **保留双轨 + 照搬基值**（S7 默认，M2 实装前可推翻） |
-| Q-009 | S7 | `[Q-009]` 正式服已装 `spell_power`，它已在册 19 条属性（arcane/fire/frost/…/holy/unholy + crit/haste/resistance），与我们自建的 16 条元素属性语义重叠、ID 不同，且它的配置里没有开关能关掉。走哪条：A 复用它的属性（破 D11）／B 并存隔离／C 只读桥接（按 ResourceLocation 查 AttributeMap 读取，代码零 import） | **C 只读桥接**：不注册同义属性，结算时按 id 读它的值当输入 |
-| Q-010 | S7 | `[Q-010]` `spell_engine` 用**原版经验等级**当法术书门槛与花费（`spell_book_creation_requirement/cost`），而 M7 要重写等级/经验。保留原版 XP 给法术书用、我们的等级独立，还是接管 XP 并把它的 levelCost 归零 | **保留原版 XP，我们的等级独立**（不动已装的玩法） |
-| Q-011 | S7 | `[Q-011]` `MMOItems/MMOCore` 里我们还没进里程碑的 7 项（随机词条 / 自定义工作台 / 矿脉生成 / 消耗品与修理 / 专业 / 技能树 / 原版刷怪替换），哪些做、哪些复用现有 mod（ftb-quests / waystones / bountiful / lootr / ftb-teams 已在跑） | **做：词条+工作台+消耗品（M2/M5）、专业+技能树（M7）、刷怪替换（M6）；矿脉独立排期；战利品箱不做**（复用 bountiful+lootr） |
+| Q-009 | S7 | `[Q-009]` `spell_power` 已装并在册 19 条属性，与我们自建 16 条语义重叠、ID 不同，配置无开关 | **已答复（2026-11-15 12:45，Aki）：spell_engine 系列上线后大概率移除，但先做兼容**。落 D31：只读桥接（按 ResourceLocation 查 AttributeMap），`compat/` 包可整体拆除；乘区只作用于 `redtale_project:*` 的 DamageType |
+| Q-010 | S7 | `[Q-010]` `spell_engine` 拿原版经验等级当法术书门槛/花费，与 M7 等级系统冲突 | **已答复：保留原版 XP 给它的法术书用，我们的等级独立**。不接管它的饥饿消耗与 `haste_affects_cooldown` |
+| Q-011 | S7 | `[Q-011]` 上游 7 项未排期功能怎么取舍 | **已答复**：做 词条(D22)/消耗品修理(D23)/专业(D24,后置)/技能树(D25)/刷怪替换(D26)；**不做** 工作台与矿脉(D27)；战利品箱复用 bountiful+lootr。另 **装备白板化**(D21)、**Curios 可选**(D29)、**owo GUI**(D30)、**经济可选桥接**(D28) |
+| Q-012 | S7 | `[Q-012]` M4 原版附魔强化走哪条：用已装 `enchantmentdisabler` 的 `maxLevels` 直接抬原版上限（改配置，几分钟），还是照原计划另做「超级锋利/超级保护」新附魔（schema+datapack+互斥，几天） | **抬原版上限**（更便宜，M4 前再确认）；新附魔只用于原版组件表达不了的效果 |
 
 ---
 

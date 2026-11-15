@@ -2821,3 +2821,12 @@
 - social.jsonl 2 条 comment（`test`），feedback 0。
 - 未启停任何服务；未动 app.py / static / social.py / mcauth.py / users.json / groups.json / social.jsonl / decisions.md。
 - 下轮：先探 8080（若仍挂且 37228 CPU 继续涨，怀疑启动死循环，需 Aki 重启）；其余照旧。
+
+## 批次 283 · 2026-11-15 12:37
+
+- 稳定态第 274 轮：243 模组 0 变更、旧版 577 页 0 变更、任务池 0、补简介 0（双跑幂等）。
+- 人工需求 0 条（_srv_S5_REQUESTS.md 待办区 4 条均 [x]）。
+- 收件箱开工 8 条全 `_待填_`（+S7 新增 4 条 Q-008~Q-011），无答复、未新登记。
+- **8080 连续第 3 轮挂**：PID 37228（10:02:24 起）仍 LISTENING 但 connect 拒绝；logs/service.log 最后一条仍是 10:02:20「app.py 退出」，之后无启动记录 → 卡在启动阶段，守护 3280 未再拉起。113605 已登记，未重复。
+- 巡检：audit 847 页 / 死链 0 / 空段 0 / 待补 351（filled 226）；audit2 broken [[]] 由 2 涨到 6（新增 decisions→属性注册表×3、→移植计划×2，均为 S7 队列写入的未建页）；cfgcheck 246/0；struct 847/820。
+- social.jsonl 2 条 comment（`test`），feedback 0。
