@@ -3,15 +3,15 @@
 > 本目录是 `E:\server-wiki` 的**只读镜像**，由 `D:\redtale-ops\mail_sync_docs.py` 生成。
 > 要改内容请改服务器上那份（或在 Wiki 网页里改），不要改这里——下一轮同步会整体覆盖。
 
-同步时间：2026-11-15 09:10
+同步时间：2026-11-15 10:15
 
 ## 体量
 
 | 项 | 数量 |
 |---|---|
-| 手写页面 | 20 |
+| 手写页面 | 24 |
 | 模组页面（自动生成） | 823 |
-| 合计 | 843 |
+| 合计 | 847 |
 
 ## 手写页面
 
@@ -29,6 +29,10 @@
 - `mobs`
 - `modlist`
 - `plan`
+- `project-decisions`
+- `project-design`
+- `project-testserver`
+- `project`
 - `rules`
 - `runbook`
 - `s1-snapshot`

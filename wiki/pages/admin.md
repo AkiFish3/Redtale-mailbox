@@ -9,6 +9,12 @@ order: 1
 
 这一组页面是给管理员看的：现状、怎么操作、技术方案为什么这么定。
 
+## 正在做的事
+
+[[project|RedtaleProject]]（2026-11-15 起）—— 把 Bukkit 系 RPG 套件（MMOItems / MMOCore / EcoEnchants / MythicMobs）的能力在 **1.21.1** 上自研重做。
+
+当前 **M0 准备中**：规划与调研已完成，源码 `E:/RedtaleProject` 的 `src/` 还空着，测试服 `E:/server-test`（25567）已可用。决策台账、架构与数值、测试服说明都在它的子页里。
+
 ## 两套服
 
 | | 旧服 | 新服 |
