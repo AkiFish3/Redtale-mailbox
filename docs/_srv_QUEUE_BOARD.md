@@ -71,10 +71,15 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-003 | S1/S3 | `E:\server-wiki\mcauth.py:27` 把 rcon 口令写死为默认值，镜像里已打码成 `***`，**源文件未改** | 改为读 `data/mc.json`，需 Aki 手动改（队列不动正式服配置） |
 | Q-004 | S3 | `mail_sync_docs.py sync` 是否挂进 S1 每日 05:30 自动跑 | **挂**，避免文档镜像靠人手动同步 |
 | Q-005 | S6 | 首次签到需一次网页授权（`web_auth.py` 贴 cURL / Cookie），凭据通道 A 被客户端独占 | 等 Aki 贴一次，之后长期有效 |
-| Q-006 | S7 | `[Q-006]` 属性注册表一次注册多少条：64（够用，以后加要换 jar）还是 80（留余量，多出的不上面板） | **80**，一次留足；属性注册零成本，成本在面板维护 |
-| Q-007 | S7 | `[Q-007]` 测试服要不要复制正式服同版本玩法 jar（BetterCombat / Farmer's Respite / SimplySwords）来验证急迫→攻速联动 | **复制进 `E:\server-test`**（只动测试服，不碰正式服） |
+| Q-006 | S7 | `[Q-006]` 属性注册表一次注册多少条：64（够用，以后加要换 jar）还是 80（留余量，多出的不上面板） | **已答复（2026-11-15 11:22，Aki）：80**。`ATTRIBUTE-REGISTRY.md` §2F 已补 16 条预留（65~80，注册不使用、不上面板） |
+| Q-007 | S7 | `[Q-007]` 测试服要不要复制正式服同版本玩法 jar 来验证急迫→攻速联动 | **已答复（2026-11-15 11:22，Aki）：复制**。已复制 6 个 jar 进 `E:/server-test/mods`（BetterCombat + player-animation-lib + Farmer's Respite + FarmersDelight + SimplySwords + fzzy_config），实测 `Done (2.353s)` 无缺依赖、已停服 |
+| Q-008 | S7 | `[Q-008]` 暴击双轨（近战 `critical_strike_*` / 法术 `spell_critical_strike_*`）保留还是合并；基值是否照搬上游（暴击倍率 2.0、格挡强度 25） | **保留双轨 + 照搬基值**（S7 默认，M2 实装前可推翻） |
 
 ---
+
+- 2026-11-15 11:30 · S7 · 拍板 4 项落地：①构建改「镜像源 + server-srg 直编」，`gradle build --offline` **BUILD SUCCESSFUL 19s**（`docs/BUILD.md`），产物进测试服 `Done (2.353s)`；②测试服已加 6 个玩法 jar（BetterCombat/playeranim/Farmer's Respite/FarmersDelight/SimplySwords/fzzy_config）全绿；③属性定 80 条（16 条预留）；④tooltip 口径 = 单次伤害 + 攻速，DPS 客户端开关（D20）· `E:/RedtaleProject`（PLAN/DAMAGE-PIPELINE/ATTRIBUTE-REGISTRY/BUILD/ROUND-M0）· S7 下轮进 M1：80 条属性注册 + `/redtale attr` + 攻速 mixin
+
+- 2026-11-15 11:42 · 协作板 · **运维坑**：`wiki_inbox.py resolve` 在本机 hang（`file_resolve` 里那段懒回溯正则 + 8080 假活时 `wiki_alive()` 判真），且被 kill 会留下 `.inbox.lock` 残锁（`E:/server-wiki/data/.inbox.lock`，内容是 pid，清前先确认进程已死）。绕行脚本 `C:/Users/AkiFish3/WorkBuddy/2026-10-24-05-43-33/resolve_inbox.py`（填拍板）+ `archive_inbox.py`（移入 §已定），同样持锁 + 原子写。**不要自己启 wiki 服务**。wiki 假活本身已由 S5 登记（`S5-20261115-113605`）
 
 ## 5. 阻塞（互相等）
 

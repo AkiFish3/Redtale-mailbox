@@ -2809,3 +2809,15 @@
 - social.jsonl 2 条 comment（`test`），feedback 0；HTTP 全部拒连（/、/p/index、/p/mod-index、/p/decisions）。
 - 未启停任何服务；未动 app.py / static / social.py / mcauth.py / users.json / groups.json / social.jsonl。
 - 下轮：先探 8080 是否恢复（恢复则 list --open 并补登记本条）；仍挂则先确认锁占用者再写收件箱。
+
+## 2026-11-15 11:34 批次 282
+
+- 稳定态第 273 轮：243 模组 0 变更、旧版 577 页 0 变更、任务池 0、补简介 0（双跑幂等）。
+- 人工需求 0 条（待办区 4 条均 [x]）；收件箱开工 6 条全 `_待填_`，无答复（比上轮 19 少 13 —— 其他队列已 resolve/清理）。
+- 巡检同基线：audit 847 / 死链 0 / 空段 0 / 待补 351（filled 226）；audit2 title≠H1 5、broken [[]] 2（decisions→srv-rules、decisions→属性注册表，后者为 S7 条目 105322 传入的 link，页不存在）；cfgcheck 246/0；struct 847/820（decisions.md 三连空行 1）；分组 233=7/43/34/37/29/25/58、576=18/71/126/132/59/85/85。
+- **8080 仍挂**（连续第 2 轮）：PID 37228 自 10:02:24 起在跑，累计 CPU 5514s（≈满占一核 1.5h），netstat 仍报 LISTENING 但 TCP connect 一律 WinError 10061（RST）。service.log 最后一行仍是 `10:02:20 app.py 退出`，新实例起来后无任何日志 → 卡在启动。守护 3280 只查进程死活，故不会重启。
+- 收件箱这回写成功：wiki_inbox.py 探测到 wiki 未运行，走**文件落盘回退**（`INBOX OK S5-20261115-113605 src=file`）。锁文件 .inbox.lock 清理报 safe-delete FAIL_CLOSED（trash 失败），不影响落盘。登记：A 人工重启 / B 重启+守护改 HTTP 探活（默认 A）。收件箱 6 → 7。
+- 223334（双实例）前提早已消失（37860 不在），但 resolve 需 Aki 答复，未动。
+- social.jsonl 2 条 comment（`test`），feedback 0。
+- 未启停任何服务；未动 app.py / static / social.py / mcauth.py / users.json / groups.json / social.jsonl / decisions.md。
+- 下轮：先探 8080（若仍挂且 37228 CPU 继续涨，怀疑启动死循环，需 Aki 重启）；其余照旧。
