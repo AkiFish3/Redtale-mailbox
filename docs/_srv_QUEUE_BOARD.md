@@ -84,6 +84,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 ---
 - 2026-11-16 06:30 · S7 · 验收 T-0004 附魔生成器 → `VERIFIED`（3/3 + 离线探针 15/15）；自研词条 roll（D22）：`AffixRoller` + `ItemFactory.build(content,Random)`，`selftest` 55→70、测试服三摇 12.096 / 15 / 15；派 T-0007 `/redtale item scan`（在制品 2/3） · `docs/ROUND-R11-AFFIX.md`、`PLAN.md` §13 R11 + §13.15、`docs/TASKS.md` · 下轮验 T-0006/T-0007，接 `ItemUpgrader.ensure` 三钩子与消耗品(D23)
+- 2026-11-16 06:16 · S8 · 领 **T-0006**（`ItemUpgrader.plan` 差异单纯函数）做到自测过 → `[DONE]`：新建 `items/ItemUpgrader.java`（73 行，`SCHEMA=1` + 内部 `Diff` record；`schema`+`contentRev` 双相等为快路径零遍历；重建只按「旧键集 ∩ 新定义」过滤 `rolled_stats`——删键保原 Map 迭代顺序、不白送新键、值一个都不改；四类出口均不抛异常，`stats`/`removedKeys`/`warnings` 全不可变） · `E:\RedtaleProject\src\main\java\com\redtale\project\items\ItemUpgrader.java`、`docs/TASKS.md`（状态 + 进度行） · 下一步：S7 验 T-0006（build exit 0 / `grep -c "public static Diff plan"`=1 / jar 内 2 条 class），并裁决卡面规则 5「值一个都不改」与 `docs/ITEM-UPDATE.md` §4.3「未在 `rolled_keys` 的键取新定义值」的口径归属（现按卡面实现，数值解析留给 `ItemFactory.applyDefinition`）；S8 下轮领 **T-0007**（`/redtale item scan`，只读）
 
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
@@ -130,3 +131,4 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 「下一步」是给下一个队列看的，不是给自己看的。
 - 需要别人动手，去 §5 开一条 `B-`，不要只在 §3 里抱怨。
 - 需要人拍板，去 §4 开一条 `Q-`，写清「默认怎么走」——默认项是为了让队列不被卡住。
+- 2026-11-16 07:22 · S7 · 验收 **T-0006 → VERIFIED**（3/3 + 自写独立探针 14/14）；**派 T-0008**（消耗品 `use` 段解析器，D23 第一层，在制品 T-0007+T-0008 = 2/3）。自研 D33 物品更新落地：`ItemUpgrader.ensure`（四出口 `NOT_CONTENT`/`ORPHAN`/`UNCHANGED`/`UPGRADED`，取值分派在 `ensure`）+ 新 `core/hook/ItemUpgradeHooks`（登录/换维度/复活/开容器/区块加载）。测试服 1 次启动实测三组：`rev 0→3` → `generic.attack_damage` **5.0 保留**、`physical_damage` **0.1→0.25**、`ghost_key` 删除并记账、名称/稀有度/耐久重建；`rev` 相等与孤儿组**组件逐字未变**；`/redtale reload` 后 5 件内容正常、ERROR 仍 4 条既有噪声，测试服已停（25567 关闭） · `E://RedtaleProject//docs//ROUND-R12-UPGRADE.md`、`PLAN.md` §13 R12 + §13.16、`src/main/java/com/redtale/project/{items/ItemUpgrader.java,core/hook/ItemUpgradeHooks.java}` · 下轮验 T-0007/T-0008；`ensure` 接结算路径（惰性兜底）+ 刷新点 ④（reload 后分帧全扫）+ M2 最后一块消耗品/修理
