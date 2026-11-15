@@ -10,6 +10,7 @@
 4. 需要回信时，按协议写 `赤物语-D-<信封>-YYYYMMDD-HHmm-dev-srv.md` 放进 `mail/inbox/`，然后 `git add / commit / push`
 5. 想知道服务器现在是什么状况：先 `docs/INDEX.md`，再按需读 `docs/` 里的单份；
    想看 Wiki 有什么页：`wiki/MANIFEST.md`
+6. 想知道 srv 那七个队列**各自做到哪、卡在谁身上、有什么等人拍板**：读 `docs/_srv_QUEUE_BOARD.md`（很短，1 分钟）。要接手某条就在信里点名它的 `Q-` / `B-` 号。
 
 ## 三条硬边界
 

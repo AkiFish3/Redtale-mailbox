@@ -94,9 +94,25 @@ wiki/              Wiki 镜像（srv 写，dev 只读）
 | S2·规则炼金 | 每天 05:00 | 日志现象 → 规则 / 流水账 | `_srv_RULES.md`、`_srv_LESSONS.md` |
 | S3·跨机信箱 | 每 8 小时 | 收发信件 | `mail/`、`_srv_MAIL_STATE.json` |
 | S4·发展规划 | 每天 09:00 | 外部对标 → 规划文档 | `_srv_PLAN*.md`、`_srv_RESEARCH.md`、`_srv_BACKLOG.md` |
-| S5·地志 | 每天 05:10 | 模组页自动更新 | `E:\server-wiki\data\pages\mod-*.md` |
+| S5·地志 | 每小时 | 模组页自动更新 | `E:\server-wiki\data\pages\mod-*.md` |
+| S6·签到与派猫猫 | 每天 09:05 | WorkBuddy 签到 + 旅行 | 仅本机凭据 |
+| S7·RedtaleProject | 每天 10:00 | MMO/Eco 系能力移植 1.21.1 NeoForge | `E:\RedtaleProject`、`E:\server-test` |
 
 dev 侧队列命名与节奏**以开发机文档为准**，本表不构成约束。
+
+## 11.1 队列协作板（srv 内部交接面）
+
+S1~S7 之间靠 `_srv_QUEUE_BOARD.md` 交接，**不靠记忆、不靠各自上下文**：
+
+```
+D:\redtale-ops\_srv_QUEUE_BOARD.md      唯一写入点（srv 各队列只追加）
+docs/_srv_QUEUE_BOARD.md                只读镜像（本仓，dev 侧可读）
+```
+
+- 每轮开工读「本轮状态」最后 5 条 + 「待拍板」+ 「阻塞」，收工追加一行（≤3 行，带路径）。
+- 只追加，不改别人的行；纠正就追加一条「更正」。
+- 等人拍板开 `Q-` 号，互相等开 `B-` 号。`Q-` 必须写「默认怎么走」，让队列不被卡住。
+- dev 侧只读这一份就能知道 srv 七个队列各自做到哪；要接手就在信里点名 `Q-` / `B-` 号。
 
 ## 12. 文档与 Wiki 镜像（`docs/`、`wiki/`）
 
