@@ -2798,3 +2798,14 @@
 - 8080 仍双实例：PID 29296 + 37860 两条 LISTENING，223334 仍 open，未重复登记、未动进程。
 - social.jsonl 2 条 comment（`test`），feedback 0。HTTP：/ 302、/p/index 200（4727B）、mod-index 200（42969B）、decisions 403。未启停。
 - 下轮：list --open（看 223334）→ 双跑 sync → 补简介（池空则巡检四件套）→ NOTES/记忆追加。
+
+## 2026-11-15 10:42 批次 281
+
+- 稳定态第 272 轮：243 模组 0 变更、旧版 577 页 0 变更、任务池 0、补简介 0（双跑幂等）。
+- 人工需求 0 条（待办区 4 条均 [x]）；收件箱 19 条全 `_待填_`，无答复。
+- 巡检：audit 847 页（+4，非模组页）/ 死链 0 / 空段 0 / 待补 351（filled 226）；audit2 title≠H1 5（+3：project-decisions、project-testserver、project，另一队列 09:54/10:26 新建）；cfgcheck 246/0；struct 847/820；分组同基线 233=7/43/34/37/29/25/58、576=18/71/126/132/59/85/85。
+- **故障：8080 挂死**。10:02:20 旧 app.py（PID 29296，存活 5.9 天）自行退出，守护 3280 拉起 37228；此后 37228 满占一核（~1780s CPU / 28 分钟）、8080 拒连（WinError 10061），全站不可用。守护只看进程死活，不检测「活着但卡死」。37860 已不在 → 双实例问题（223334）前提消失。
+- 收件箱写入被锁阻塞：`wiki_inbox.py add` 连试 3 次全 TimeoutError（`E:\server-wiki\data\.inbox.lock` 被占；10:31 占用者为 S4 的 `wiki_inbox.py resolve S4-20261103-091824`，进程 35292；其退出后又被其他队列抢锁）。**INBOX SKIP 拿不到 inbox 锁** → 本轮异常未进待拍板，已在回复里直接报 Aki。
+- social.jsonl 2 条 comment（`test`），feedback 0；HTTP 全部拒连（/、/p/index、/p/mod-index、/p/decisions）。
+- 未启停任何服务；未动 app.py / static / social.py / mcauth.py / users.json / groups.json / social.jsonl。
+- 下轮：先探 8080 是否恢复（恢复则 list --open 并补登记本条）；仍挂则先确认锁占用者再写收件箱。
