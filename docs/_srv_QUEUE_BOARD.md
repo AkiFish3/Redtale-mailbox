@@ -58,6 +58,9 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-15 10:45 · 协作板 · 查清 1.20.1「康普茶 × 星芒 = 5 分钟急迫 VIII」的机制（时长取 max、等级 +6/次、封顶 7）；1.21.1 不可复现（星芒重写、康普茶缩到 60 秒 II）。结论写进 `E:\RedtaleProject\PLAN.md` §12 · 该文件 · S7 下轮读 §12 时一并纳入投放层规则
 - 2026-11-15 10:55 · 协作板 · **Q-001 结案**：Aki 定「急迫=攻速」为玩法特性，D19 新写入 `PLAN.md`（默认 0.10/级、`soft_cap=0` 不饱和、只留 1 tick 物理地板防除零）；`DAMAGE-PIPELINE.md` §4.2/§4.3 与 `ATTRIBUTE-REGISTRY.md` §4 同步；新开 Q-006（属性 64/80）、Q-007（测试服加玩法 mod） · 上述三文件 + wiki 收件箱 · S7 下轮先把攻速 mixin 与 `/redtale attr` 一起做，用 Q-007 的 jar 验收
 
+- 2026-11-15 11:30 · S7 · 拍板 4 项落地：①构建改「镜像源 + server-srg 直编」，`gradle build --offline` **BUILD SUCCESSFUL 19s**（`docs/BUILD.md`），产物进测试服 `Done (2.353s)`；②测试服已加 6 个玩法 jar（BetterCombat/playeranim/Farmer's Respite/FarmersDelight/SimplySwords/fzzy_config）全绿；③属性定 80 条（16 条预留）；④tooltip 口径 = 单次伤害 + 攻速，DPS 客户端开关（D20）· `E:////RedtaleProject`（PLAN/DAMAGE-PIPELINE/ATTRIBUTE-REGISTRY/BUILD/ROUND-M0）· S7 下轮进 M1：80 条属性注册 + `/redtale attr` + 攻速 mixin
+- 2026-11-15 11:42 · 协作板 · **运维坑**：`wiki_inbox.py resolve` 在本机 hang（`file_resolve` 里那段懒回溯正则 + 8080 假活时 `wiki_alive()` 判真），且被 kill 会留下 `.inbox.lock` 残锁（`E:////server-wiki/data/.inbox.lock`，内容是 pid，清前先确认进程已死）。绕行脚本 `C:////Users/AkiFish3/WorkBuddy/2026-10-24-05-43-33/resolve_inbox.py`（填拍板）+ `archive_inbox.py`（移入 §已定），同样持锁 + 原子写。**不要自己启 wiki 服务**。wiki 假活本身已由 S5 登记（`S5-20261115-113605`）
+
 ---
 
 ## 4. 待拍板（Q 编号，等人，不是等机器）
@@ -76,10 +79,6 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-008 | S7 | `[Q-008]` 暴击双轨（近战 `critical_strike_*` / 法术 `spell_critical_strike_*`）保留还是合并；基值是否照搬上游（暴击倍率 2.0、格挡强度 25） | **保留双轨 + 照搬基值**（S7 默认，M2 实装前可推翻） |
 
 ---
-
-- 2026-11-15 11:30 · S7 · 拍板 4 项落地：①构建改「镜像源 + server-srg 直编」，`gradle build --offline` **BUILD SUCCESSFUL 19s**（`docs/BUILD.md`），产物进测试服 `Done (2.353s)`；②测试服已加 6 个玩法 jar（BetterCombat/playeranim/Farmer's Respite/FarmersDelight/SimplySwords/fzzy_config）全绿；③属性定 80 条（16 条预留）；④tooltip 口径 = 单次伤害 + 攻速，DPS 客户端开关（D20）· `E:/RedtaleProject`（PLAN/DAMAGE-PIPELINE/ATTRIBUTE-REGISTRY/BUILD/ROUND-M0）· S7 下轮进 M1：80 条属性注册 + `/redtale attr` + 攻速 mixin
-
-- 2026-11-15 11:42 · 协作板 · **运维坑**：`wiki_inbox.py resolve` 在本机 hang（`file_resolve` 里那段懒回溯正则 + 8080 假活时 `wiki_alive()` 判真），且被 kill 会留下 `.inbox.lock` 残锁（`E:/server-wiki/data/.inbox.lock`，内容是 pid，清前先确认进程已死）。绕行脚本 `C:/Users/AkiFish3/WorkBuddy/2026-10-24-05-43-33/resolve_inbox.py`（填拍板）+ `archive_inbox.py`（移入 §已定），同样持锁 + 原子写。**不要自己启 wiki 服务**。wiki 假活本身已由 S5 登记（`S5-20261115-113605`）
 
 ## 5. 阻塞（互相等）
 
