@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-farm_and_charm-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-farm_and_charm-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox [Let's Do] Farm & Charm
 | Mod ID | `farm_and_charm`

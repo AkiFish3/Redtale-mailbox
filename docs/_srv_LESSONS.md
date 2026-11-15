@@ -209,3 +209,70 @@
 
 - 2026-10-28 15:40 | netty IOException 出现 Windows 本地化消息「你的主机中的软件中止了一个已建立的连接」 | 10-27 15:40:54 Netty Server IO 线程，独立于读超时/解码事件的单条 IO 异常 | 第1次（已归类入 R2 io 子类，区别于通用 IOException）
 - 2026-10-28 06:47 | 新服 server-1.21.1 **尚未部署 RedtaleEconomy**：mods 共 223 个，无 redtale/economy/numismatic 类；`world/redtale-data` 目录不存在；旧服 Fabric 1.20.1 才是 numismatic-overhaul-0.2.14 + sdm_economy-fabric-1.20.1 | `ls server-1.21.1/mods | grep -iE "redtale|econom|numismat"` 空；`ls server-1.21.1/world/redtale-data` ABSENT；旧服 `ls server/mods | grep` 命中两枚 | 首次（议题16 体检前提更正：day/state.json 等是 RedtaleEconomy 专属，旧服无这些文件，体检须待新服部署后）
+- 2026-10-30 23:24:25 → 2026-10-31 01:38:44 | 停服后 **2h14m19s 完全无任何日志行**（跨两个日志件，中间不是崩溃而是空档） | `2026-10-30-1.log.gz` 末行 `23:24:25 Stopping server`（后接 `Shutdown Complete`），`2026-10-31-1.log.gz` 首行 `01:38:44 Loading Minecraft`；该空档与本轮 R33 的磁盘迁移窗口重合 | 首次
+- 2026-10-31 01:38:44 → 01:48:13 | 出现一段**只存活 10 分钟**的启动段：`Done (5.079s)` 后 8 分钟内即 `Stopping server` | `2026-10-31-1.log.gz` 全文 19,574 行、无玩家上线、无备份；随后 01:57:08 再启动一次 | 首次
+- 2026-10-31 16:24:40 | `Unable to start new backup as backup is already running` **首见**：同一秒内第二次触发备份被拒 | `16:24:36 Found world folder` 起一次手动扫描，`16:24:40` 再触发 ⇒ 先 `[Server thread/INFO]` 一次、紧接 `[Server thread/ERROR] Unable to create backup, Reason: ...` 一次；1 分钟后 `16:25:50 Stopping server` | 首次
+- 2026-10-31 16:37:10–16:37:11 | `Tried to load unrecognized recipe: <recipe> removed now.` **单次爆发 56 行**，集中在 2 秒内，涉及 3 个模组（`muffins_thaidelight` 32 / `mcwholidays` 16 / `rusticdelight` 8），同一配方重复 4 次 | `2026-10-31-3.log.gz`；时刻紧邻 `16:37:11` 一名玩家 `joined`，此前 3 次启动均无该签名 | 首次
+- 2026-10-31 16:37:11 | `lost connection: Server closed` **首见**断连原因串（服务端侧关连接，非客户端退出） | 紧随上述 `joined` 后 0 秒，与 `left the game` 不成对 | 首次
+- 2026-11-01 05:00:04 | 备份首次输出 `Last backup size: 0B` ⇒ **备份历史随新目录重置**（旧目录 `D:\server\backups` 的 5 份轮转记录不再被读到） | `11-01 05:00:04 Last backup size: 0B Current world size: 26.7GB`；对比 10-30 同字段为 `20.0GB`；同日 `05:21:50 New backup created at D:\mc_backups\server-1.20.1\...` | 首次
+- 2026-10-29 全日 | 单日读超时 **162 件**，为全库单日最高（此前单日峰值 27） | `2026-10-29-1.log.gz`；126 簇中含 12 件大簇（`02:50:39`–`03:45:44`）与 `13:37:27`–`14:11:25` 9 件簇；当日 `joined` 0 次 | 首次
+
+## 2026-11-04 05:00（S2 · 规则炼金 第 15 轮）
+
+- 2026-11-04 02:22:48 | netty 解码异常出现**第 5 种签名**：`IndexOutOfBoundsException: index: 3, length: 19 (expected: range(0, 3))`（此前为 `readerIndex(9)+length(1) exceeds writerIndex(9)` 族与 `Index N out of bounds for length 1`） | `latest.log:295`，同一事件在 `Caused by` 再重复一行 ⇒ **2 行 = 1 事件**，计数时不得按行算 | 首次
+- 2026-11-03 22:03:19 → 22:06:33 | 玩家 `tried to swim in lava` 后 **3m14s** 触发 R3 中段批次（168 行），该进程自 11-02 起未重启 ⇒ 会话中段的类加载可由「死亡 / 重生」引发，非登录瞬间 | `2026-11-03-1.log.gz` 22:03:19 死亡行 → 22:06:33 首批；批前 5s 另有一次 netty 异常 | 首次（样本 1，不足以定论）
+- 2026-11-03 05:00 / 2026-11-04 05:00 | R1 的 47 条 `No region file found` 跨度缩至 **15s / 17s**，跌破此前 30 / 30 / 41 / 70 / 110s 的历史区间 | 11-03 05:00:11→05:00:26、11-04 05:00:12→05:00:29；与 R34 的扫描耗时由 1,489s 降至 133–174s 同期 | 第 2 次同期共现（只记数值与共现，不写成因）
+- 2026-11-04 05:02:17 | 读取时当日备份**仍在飞行**：`Scan took 134,343ms` 已出、`New backup created` 未出 ⇒ 05:0x 轮次只能判前一日成败 | `latest.log` 末行即 `Backup preview created` | 第 3 次（10-25、10-26 同形）
+- 2026-11-03 21:43:56 | 登录后 3m53s 出现 `Searching for closest structure among [...]` 单行（`pool-31-thread-1` 源），此前 819 轮监控中未见 | `2026-11-03-1.log.gz`；该行紧接玩家在线、无伴随异常；**未回扫全库历史**，故只记「本轮首见」不记「全库首次」 | 首次（本轮）
+- 2026-11-04 11:50:31 | 一次握手期断连在同一秒产出**两行**：`Disconnecting ... GameProfile@<hash>[id=<null>]` + `lost connection: Version is out-of-date...`（同 hash、同秒）⇒ **1 事件 2 行**；R16 若按行计数会翻倍，须按 `Disconnecting` 关键字计事件 | `2026-11-04-1.log.gz` 11:50:31 相邻两行 | 首次（该双行同秒形态）
+- 2026-11-04 00:00–23:59 | 11-04 **全日零登录**（窗口内唯一 `logged in` 为 11-05 01:02:37），但当日 05:00 备份照常执行并于 05:21:11 落盘 20.0GB ⇒ 本日「零玩家」与「备份是否执行」不相关 | `2026-11-04-1.log.gz` 全日 `joined` 0 条 + `latest.log` 11-05 段唯一登录；与 R31 的跳过判据（取备份时刻前一日）不冲突，只记事实 | 首次（单日样本）
+
+## 2026-11-06 05:00（S2 · 规则炼金 第 17 轮）
+
+- 2026-11-05 全日 | netty 47 事件**全部**为 `java.io.IOException: 你的主机中的软件中止了一个已建立的连接。`，`DecoderException` 与 `ReadTimeoutException` 双签名 **24h 内 0 件** ⇒ 首次出现「单一签名占满整窗」（第 16 轮已是 cap=9 族归零、`Index N` 独占，本轮连 `Index N` 也归零） | 窗口 2,726 行内 `Exception occurred in netty pipeline` 47 条、起因 47 条全部为该文本、距离恒 1 行；按小时分布覆盖 19 个整点（峰值 6/小时），无簇、无秒级微簇 | 首次（构成反转第 2 段，样本 1）
+- 2026-11-05 17:00–17:59 | `[STDOUT]: TrampleStopperMixin` **单小时 348 行**，为该签名历史单小时最高（此前累计跨多日共 427 行） | 同日 14/15/16 时段分别 5 / 46 / 29 行，17 时段陡增；全部落在同一次会话 14:30:52–18:09:56 内，且集中在玩家活动区段，非登录/启动瞬间 | 首次（单小时峰值，样本 1）
+- 2026-11-05 14:30:52 | 全窗唯一一次登录**未出现** `Failed to fetch skin: not found`（R36 累计 11 次均先于 `joined` 2–24s） | `logged in with entity id` 14:30:52 → `Sending server config values` 14:30:52 → `joined the game` 14:30:53，三步齐全、无 skin 行 | 首次（R36 的反例，不足以推翻既有规则，只记该次缺失）
+
+## 2026-11-07 05:00（S2 · 规则炼金 第 18 轮）
+
+- 2026-11-06 05:21:28–05:21:29 | 备份**首次触发「>5 份轮转」**：`More backups than 5 found, Removing oldest backup` → `Removed old backup 2026-11-1_5-0-1.zip`，随后 **2 行** `File missing, removing from backups D:\mc_backups\server-1.20.1\...`（`2026-10-31_16-24-36.zip`、`2026-11-1_5-0-1.zip`）⇒ 4 行 = **1 事件**，`backups.json` 内 2 个条目在磁盘上已不存在 | `2026-11-06-1.log.gz`；回溯 11-01…11-06 六份轮转件，该四行**仅出现这一次**；与 R33（备份目标改指 `D:\mc_backups`）同期，只记共现不判因 | 首次
+- 2026-11-06 全日 | R8 播报 **145 轮清算值全部为 `0 掉落物 / 0 生物 / 0 经验球 / 0 其他实体`**，为首次「整窗零值窗」（此前每个窗口至少 3–21 轮非零，均落在有玩家在线时段） | 窗口 2,100 行内 `joined` / `logged in` / `left` 各 0，与零登录窗口重合；清算行 145 条逐条核对无正数 | 首次（与 R8 既有「非零随在线变化」口径同向，非新结论）
+
+## 2026-11-08 05:00（S2 · 规则炼金 第 19 轮）
+
+- 2026-11-07 20:00:06 | `Unable to fill loot chest in ResourceKey[minecraft:dimension / minecraft:overworld] at class_2338{x=-1056, y=75, z=7} as the loot table 'wizards:chests/villa…'` **ERROR 1 次**，落在本窗唯一会话内（`joined` 19:42:37 / `left` 20:10:33），无伴随异常 | `2026-11-07-1.log.gz`；全窗该签名仅 1 条，回溯 11-07 之前各件为 0 次；坐标与战利品表名只记一次，不追结构 | 首次
+- 2026-11-08 03:40:13 | 解码异常出现**第 4 种消息形态** `DecoderException: java.lang.IndexOutOfBoundsException: index: 3, length: 19 (expected: range(0, 3))`，与既有 3 种（cap=9 固定缓冲、cap=8、`Index N out of bounds for length 1`）不同：带 `expected: range(...)` 区间描述、长度字段为 19 而非常量 1 | 同簇 6 件（03:39:43–03:51:09）中 5 件为 `Index 69 ... length 1`、1 件为本形态；`2026-11-07-1.log.gz` 与 `latest.log` 合并件；cap=9 族连续第 4 个窗口 0 件 | 首次（构成细节属 R2 / 口径 ⑱，不单独升规则）
+
+## 2026-11-09 05:00（S2 · 规则炼金 第 20 轮）
+
+- 2026-11-08 06:43:14–06:43:44 | 解码异常**单次风暴 23 件 / 30 秒**，为历史最大解码簇（前值 6 件，第 19 轮）的近 4 倍，且同段混现 4 类签名 | 同段 `Exception occurred in netty pipeline` 头行连续 23 条（占本窗 DEC 28 件的 82%），签名 = `Index N ... length 1` ×15 + `index: 3, length: N (expected: range(0, M))` ×5 + `Packet -1/0 (class_2889) was larger than I expected` ×4 + `readerIndex(N)+length(N) exceeds writerIndex(N)`（cap=1/3）×4；该时段 `joined` / `logged in` 各 0 | 首次（构成细节属 R2 / 口径 ㉒，不单独升规则）
+- 2026-11-08 16:26:28 | 本窗唯一会话（**51 秒**）**未出现** `Failed to fetch skin: not found`，为 R36 反例第 2 次（第 1 次为 11-05 14:30:52） | `logged in with entity id` 16:26:28 → `joined the game` 16:26:30，六行登录序列齐全，全窗 `Failed to fetch skin` 0 条；`left the game` 16:27:19 | 第 2 次（同形样本 2/29 次登录，仍不足以改 R36 的「先于 joined 2–24 秒」描述）
+
+## 2026-11-10 05:00（S2 · 规则炼金 第 21 轮）
+
+- 2026-11-09 全日 | 40 件读超时**全窗零簇**：39 个间隔最短 **201s**、最长 6,241s，无任何 ≤60s 簇；历史每窗至少 1 簇（最大 23 件/30 秒，第 20 轮） | 按 60s 阈值聚类结果为 40 个单件族；小时分布覆盖 05–23 与次日 00–02 共 20 个整点，峰值 14 时 5 件；同一窗 `DecoderException` 0 件（构图另见 R2 / 口径 ㉕） | 首次（R18「簇不是唯一形态」的反形样本，纯散形态）
+- 2026-11-02 12:24 起 | **1.21.1 新服日志停更 7 天 16 小时**：`E:\server-1.21.1\logs\latest.log` 最后一行停在 11-02 12:24（1,761,897 B），`debug.log`（10.9 MB）与 5 件 `debug-*.log.gz` 同期均为 11-02 09:07–12:24；S2「双服对照」实为单服 | 两份 mtime 均为 11-02 12:24；旧服同期连续产出 8 份轮转件 ⇒ 非采集侧问题 | 首次（已登记待拍板 `S2-20261110-050538`，默认 B 继续双源采集）
+
+## 2026-11-11 05:00（S2 · 规则炼金 第 22 轮）
+
+- 2026-11-10 全日 | `netty` 的**本地化 IO 文本整窗 0 件**（`你的主机中的软件中止了一个已建立的连接。`），为 11-05 以来首次归零，前 5 窗序列 47 / 24 / 1 / 1 / 4 | 窗口 50 件 netty 全配对成功：RT 48 + DEC 2 + IO 0，无 `UNPAIRED` | 首次
+- 2026-11-10 05:18:32 | 备份轮转里 `File missing, removing from backups` 与 `Removed old backup` **指向同一个 zip**（`2026-11-5_5-0-0.zip`），即「磁盘上已不存在」与「从清单移除」是同一动作的两个打印 | 05:18:31 `More backups than 5 found` → 05:18:32 两行（`Removed old backup` + `File missing`）均为该文件，`Writing to file backups.json` 收尾 | 首次
+
+## 2026-11-12 05:00（S2 · 规则炼金 第 23 轮）
+
+- 2026-11-11 05:00 → 05:21 | 同一备份周期内 `Writing to file E:\server\backups\backups.json` 出现 **3 次**，且分属 3 种线程源 | 05:00:00 `ftbbackups2_Worker-1`（起块）/ 05:18:36 `FTB Backups scheduled executor 0`（轮转清理后）/ 05:21:18 `FTB Backups backup thread 0`（落盘后）；此前各窗每日仅 1–2 次 | 首次
+- 2026-11-11 05:10:55 → 11-12 04:50:55 | `ReadTimeoutException` **件数降到 29**，跌破 R40「单窗 ≥40 件」门槛，但形态仍是全窗零簇（最短间隔 208s）| 28 个间隔 208–4,914s、无任何 ≤60s；同窗 DEC 8（4 类签名）/ IO 本地化 4；唯一簇为 11:43:17–11:43:50 的 3 件混簇 | 首次
+
+## 2026-11-13 05:00（S2 · 规则炼金 第 24 轮）
+
+- 2026-11-12 14:12:00 | 解码异常出现**新签名** `DecoderException: java.io.IOException: Packet 2/0 (class_2915) was larger than I expected, found 1 bytes extra whilst reading packet`，与既有 `Packet -1/0 (class_2889)` 不同 class；本次为握手期断开（无 `joined`） | `latest.log` 14:12:00 netty 头行 + 同秒 `/<ip>:61078 lost connection` 行；本窗此类 1 件 | 首次
+- 2026-11-13 05:00 | `ReadTimeoutException` **整窗 0 件**，R2 本窗 9 件由 `DEC 6 + 本地化 IO 3` 构成，为近 5 窗最低 | 11-12 05:00:30 → 11-13 05:00:37 全窗 netty 头行 9，起因逐条配对：Index 69×2 / Index 3×3 / Packet 2/0×1 / 本地化 IO×3 | 首次（RT 归零，前两窗为 29、48）
+
+## 2026-11-14 05:00（S2 · 规则炼金 第 25 轮）
+
+- 2026-11-14 05:00 | 播报锚点单窗内**三段右移并追平历史模板值 `:40` 后停止漂移**，为 R20 观测以来首次「到达即稳」 | 05:00:37–05:30:37 共 4 轮 `:37`、05:40–07:10 共 10 轮 `:38`、07:20–17:20 共 61 轮 `:39`、17:30 起 69 轮 `:40` 零回退；清算行 `:00` 74 / `:59` 57 / `:58` 13 | 首次
+- 2026-11-14 05:00 | `netty pipeline` 单窗总量降至 **2 件**（DEC 1 / RT 1 / IO 0），为有记录以来最低，且 RT 与 IO 均只为 1 件/0 件 | 11-13 05:00:37 → 11-14 05:00:26 全窗 1,093 事件中仅 2 条头行：05:25:05 DEC `Index 69 out of bounds for length 1`（无 `joined`）、22:03:06 `ReadTimeoutException` 孤立单件；上窗 9 件 | 首次（连续下探：1,102 事件/9 件 → 1,093 事件/2 件）
+
+## 2026-11-15 05:00（S2 · 规则炼金 第 26 轮）
+
+- 2026-11-14 16:31:34 | 握手期断开出现**第三种组合**：断连原因写 `Disconnected`（不是版本过期、不是白名单），且**只有 `lost connection` 一行、没有 `Disconnecting` 行**，同时 `GameProfile` 里带**真实玩家名**（脱敏 `<玩家名>`）、`id=<null>`、属性表为空 | `16:31:33 [Handshake] Sending channel query` → `16:31:34 Server thread ... lost connection: Disconnected`，前后 1 分钟无第二条连接记录，也无 `joined` ⇒ 连接停在握手期、从未成为玩家。与 R23 的 `_unLoc_` 形态、R30 的三类原因均不同源 | 首次

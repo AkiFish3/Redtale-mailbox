@@ -1,5 +1,5 @@
 ---
-title: ChunkyBorder
+title: 区块边界（ChunkyBorder）
 role: admin
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# ChunkyBorder
+# 区块边界（ChunkyBorder）
 
 <!-- auto:begin -->
 
@@ -30,12 +30,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给 Chunky 预生成的世界套一圈真正的边界，玩家越界会被弹回。想限制探索范围、控制存档体积时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：走到边界会被弹回并看到提示文字；地图插件（BlueMap、squaremap 等）上会画出边界线。
+- 服务端侧：`config/chunkyborder/config.json` 的 `borderOptions`：`message` 越界提示文案、`preventMobSpawns` 边界外是否禁刷怪、`preventEnderpearl` / `preventChorusFruit` 是否禁末影珍珠与紫颂果穿越。边界本身用 `/chunkyborder` 命令设置。
 
 ## 相关页面
 

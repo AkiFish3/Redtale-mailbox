@@ -1,5 +1,5 @@
 ---
-title: AppleSkin
+title: 苹果皮（AppleSkin）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# AppleSkin
+# 苹果皮（AppleSkin）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-appleskin-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-appleskin-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox AppleSkin
 | Mod ID | `appleskin`

@@ -1,5 +1,5 @@
 ---
-title: Bosses of Mass Destruction
+title: 灾难之主（Bosses of Mass Destruction）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Bosses of Mass Destruction
+# 灾难之主（Bosses of Mass Destruction）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-bosses_of_mass_destruction-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-bosses_of_mass_destruction-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Bosses of Mass Destruction
 | Mod ID | `bosses_of_mass_destruction`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+往世界里加了四个高威胁 Boss：巫妖、虚空之花、黑曜石守门者与铁拳挑战者，每个都有独立机制、多阶段战斗和专属掉落。想打正经的 Boss 战、或者给服务器中期加个挑战目标时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：四个 Boss 各自守着对应的结构，进去会触发战斗；巫妖会靠周围光源回血、要先把火把清掉，虚空之花的弹幕要贴墙躲。带足抗性药水与回血食物再去。
+- 服务端侧：`config/bosses_of_mass_destruction.json5` 按 Boss 分段（`lichConfig`、`voidBlossomConfig`、`obsidilithConfig`、`gauntletConfig`）：`health` 血量、`experienceDrop` 经验、`summonMechanic.isEnabled` 是否允许召唤小怪。
 
 ## 相关页面
 

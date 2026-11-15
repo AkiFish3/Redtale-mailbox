@@ -1,5 +1,5 @@
 ---
-title: Chunky
+title: 区块预生成（Chunky）
 role: admin
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Chunky
+# 区块预生成（Chunky）
 
 <!-- auto:begin -->
 

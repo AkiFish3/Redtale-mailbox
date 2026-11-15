@@ -1,5 +1,5 @@
 ---
-title: Rhino
+title: Rhino（JavaScript 引擎）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Rhino
+# Rhino（JavaScript 引擎）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-rhino-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-rhino-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Rhino
 | Mod ID | `rhino`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+latvian.dev 把 Mozilla 的 Rhino JavaScript 引擎移植进 Minecraft 的版本，专门给 KubeJS 这类「用 JS 脚本改游戏」的模组当底层运行环境。玩家看不到它，但凡是 KubeJS 脚本能跑起来，背后都是它在解释执行。属于「不装就崩」的那类底层依赖。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，纯前置；KubeJS 脚本靠它执行，缺失则脚本全部失效。
+- 服务端侧：无独立服务端配置文件；脚本本身写在 KubeJS 的 `kubejs/` 目录下，不在这里改。
 
 ## 相关页面
 

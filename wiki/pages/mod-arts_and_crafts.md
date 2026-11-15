@@ -1,5 +1,5 @@
 ---
-title: Arts & Crafts
+title: 工艺装饰（Arts & Crafts）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Arts & Crafts
+# 工艺装饰（Arts & Crafts）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-arts_and_crafts-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-arts_and_crafts-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Arts & Crafts
 | Mod ID | `arts_and_crafts`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+一批原版风格的装饰方块与道具：染色花盆、粉笔、染色陶罐、可漂白羊。建房子、做布景需要补细节时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：在工作台和切石机里做，粉笔能在地上画记号，染色花盆和陶罐按染料配色。
+- 服务端侧：`config/arts_and_crafts-common.toml` 的 Features 段逐项开关（`enableDyedFlowerPots`、`enableChalkSticks`、`enableDyedDecoratedPots`、`bleachableSheep`），改完建议开新档。
 
 ## 相关页面
 

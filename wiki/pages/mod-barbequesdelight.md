@@ -1,5 +1,5 @@
 ---
-title: Barbeque's Delight
+title: 烧烤乐事（Barbeque's Delight）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Barbeque's Delight
+# 烧烤乐事（Barbeque's Delight）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-barbequesdelight-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-barbequesdelight-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Barbeque's Delight
 | Mod ID | `barbequesdelight`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给 Farmer's Delight 系补上烤架和烤串：肉和菜串起来、刷酱、上架烤，出炉就是能回大份饱食的熟食。想正经做顿烧烤、或者办聚餐时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：先做烤架，再把食材做成串放上去烤；不同串的饱食度和效果不一样，配方在 JEI 里查。
+- 服务端侧：无独立配置文件，内容走配方与标签，跟着 Farmer's Delight 的锅具与食物系统。
 
 ## 相关页面
 

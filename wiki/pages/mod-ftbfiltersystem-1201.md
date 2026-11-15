@@ -1,5 +1,5 @@
 ---
-title: FTB Filter System（1.20.1）
+title: FTB 物品过滤器（1.20.1）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod-legacy
 ---
 
-# FTB Filter System（1.20.1）
+# FTB 物品过滤器（1.20.1）
 
 <!-- auto:begin -->
 
-**版本**：[[mod-ftbfiltersystem|1.21.1（当前）]] ｜ **1.20.1（旧服存档）**
+**版本**：[[mod-ftbfiltersystem|1.21.1（当前）]] ｜ **1.20.1 服**
 
 ::: infobox FTB Filter System（1.20.1）
 | Mod ID | `ftbfiltersystem`
@@ -29,15 +29,15 @@ auto: mod-legacy
 
 ## 中文简介
 
-_待补：这是 1.20.1 的存档页，简介以当前版本的 [[mod-ftbfiltersystem]] 为准。_
+做一个可配置的物品过滤器物品，能按物品、标签、NBT、数量组合条件，配合漏斗、物品栏、自动化设备筛东西。分拣线、仓库入库口用它能省一堆红石。（1.20.1 服用的是该模组的旧版本，具体数值以本服为准。）
 
 ## 在赤物语里
 
-- 玩家侧：本页是 1.20.1 旧服存档，玩法与数值以当前版本 [[mod-ftbfiltersystem]] 为准。
-- 服务端侧：旧服已停运，这里的配置只作历史参考，别照着改现在的服。
+- 玩家侧：本页是 1.20.1 服的内容（该服仍在运行），玩法与数值以它为准；1.21.1 版见 [[mod-ftbfiltersystem]]。
+- 服务端侧：1.20.1 服还在开，这里的配置是它当前在用的；改之前先确认改的是哪个服。
 
 ## 相关页面
 
 - [[mod-ftbfiltersystem|当前版本（1.21.1）]]
-- [[mod-index-legacy|旧版模组存档]]
+- [[mod-index-legacy|1.20.1 服模组]]
 - [[mod-index|模组总览]]

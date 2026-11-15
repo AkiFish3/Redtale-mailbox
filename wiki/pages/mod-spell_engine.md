@@ -1,5 +1,5 @@
 ---
-title: Spell Engine
+title: 法术引擎（Spell Engine）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Spell Engine
+# 法术引擎（Spell Engine）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-spell_engine-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-spell_engine-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Spell Engine
 | Mod ID | `spell_engine`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+数据驱动的法术框架：法术的伤害、范围、冷却、施法动作都由 JSON 定义，作者不写代码就能加新法术；玩家侧统一了施法手感、法术书和冷却显示。赤物语里的法术书、法杖类内容都跑在它上面。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：法术靠法术书/法杖施放，看快捷栏上方的冷却图标；施法时移速会变慢，法术消耗法力或经验，具体看所用法术书。
+- 服务端侧：`config/spell_engine/server.json5` 是全局规则：`movement_multiplier_speed_while_casting`（施法移速倍率）、`bypass_iframes`（高频法术是否穿无敌帧）、`spell_target_range_tolerance`（服务端判定容差）、`spell_cost_*` 系列管消耗与耐久；`elemental_weaknesses.json` 管元素克制，`weapon_fallback.json` 管无法术武器时的兜底。
 
 ## 相关页面
 

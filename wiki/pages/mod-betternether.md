@@ -1,5 +1,5 @@
 ---
-title: Better Nether
+title: 更好的下界（Better Nether）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Better Nether
+# 更好的下界（Better Nether）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-betternether-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-betternether-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Better Nether
 | Mod ID | `betternether`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+把下界扩成能逛的地方：新生物群系、巨型菌与植被、下界生物、矿物与建材。前期下界取材、找要塞的路上不至于只有岩浆海。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：从下界传送门进去就能遇到新群系，新木材和建材可以做工具、盔甲和装饰。
+- 服务端侧：`config/betternether/biomes_toggle.json` 逐群系开关，`mobs.json` 调生物生成，`structures_toggle.json` 关结构，`main.json` 是总开关。
 
 ## 相关页面
 

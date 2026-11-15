@@ -1,5 +1,5 @@
 ---
-title: Ender's Delight（1.20.1）
+title: 末影乐事（1.20.1）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod-legacy
 ---
 
-# Ender's Delight（1.20.1）
+# 末影乐事（1.20.1）
 
 <!-- auto:begin -->
 
-**版本**：[[mod-endersdelight|1.21.1（当前）]] ｜ **1.20.1（旧服存档）**
+**版本**：[[mod-endersdelight|1.21.1（当前）]] ｜ **1.20.1 服**
 
 ::: infobox Ender's Delight（1.20.1）
 | Mod ID | `endersdelight`
@@ -28,15 +28,15 @@ auto: mod-legacy
 
 ## 中文简介
 
-_待补：这是 1.20.1 的存档页，简介以当前版本的 [[mod-endersdelight]] 为准。_
+另一套末地主题的农夫乐事附属，主打「末影相位」状态和虚空辣椒：吃了带相位的食物后受击会短距瞬移，虚空辣椒会自己蔓延生长。想玩末地风味的偏门食材和效果时用。（1.20.1 服用的是该模组的旧版本，具体数值以本服为准。）
 
 ## 在赤物语里
 
-- 玩家侧：本页是 1.20.1 旧服存档，玩法与数值以当前版本 [[mod-endersdelight]] 为准。
-- 服务端侧：旧服已停运，这里的配置只作历史参考，别照着改现在的服。
+- 玩家侧：本页是 1.20.1 服的内容（该服仍在运行），玩法与数值以它为准；1.21.1 版见 [[mod-endersdelight]]。
+- 服务端侧：1.20.1 服还在开，这里的配置是它当前在用的；改之前先确认改的是哪个服。
 
 ## 相关页面
 
 - [[mod-endersdelight|当前版本（1.21.1）]]
-- [[mod-index-legacy|旧版模组存档]]
+- [[mod-index-legacy|1.20.1 服模组]]
 - [[mod-index|模组总览]]

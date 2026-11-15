@@ -1,5 +1,5 @@
 ---
-title: Waystones
+title: 传送石碑（Waystones）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Waystones
+# 传送石碑（Waystones）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-waystones-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-waystones-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Waystones
 | Mod ID | `waystones`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+生存向传送系统：在世界里生成/自建石碑，激活后可以在已激活的石碑之间互相传送，支持私人石碑、村庄石碑、传送卷轴与传送石板。跑图远了懒得走、或者想让队友快速集合时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：第一次靠近野生石碑右键激活并记住；之后在任意已激活石碑右键打开列表选目的地。传送要花经验（按距离计，跨维度固定价），带宠物默认不行，拴绳牵着可以。
+- 服务端侧：`config/waystones-common.toml`：`[teleports]` 的 `enableCosts`（当前 true）、`warpRequirements`（经验花费公式：按距离 0.01/格、跨维度 +27、上限 27）、`transportPets`（当前 DISABLED）；`[general]` 的 `restrictedWaystones` 与 `defaultVisibility` 管谁能看到/管理石碑。
 
 ## 相关页面
 

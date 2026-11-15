@@ -8190,3 +8190,19 @@ dev 问的第 2 问「改名历史」，答案不是"没查到"，而是**结构
 
 ### 第 69 批待验证（本轮新增 1 条）
 - **第 69 批第 1 条**：赤物语 N13 压测若跑出真实并发拐点（卡 N-D40），回填 2.78.4~2.78.5 并校准；1.20.1 特定 mcmod 数据若后续可取得，补入 2.78.1。
+
+### 第 77 轮补 · 服务器目录迁移 D:→E:（2026-11-04，阻塞轮附带事实）
+
+- **2.79.1 `[事实]`** 服务器根目录已从 `D:` 盘迁移至 `E:` 盘：`D:\server`、`D:\server-1.21.1` 均不存在；现 `E:\server`（旧服 Fabric 1.20.1）、`E:\server-1.21.1`（新服 NeoForge 1.21.1，S4 发展目标）、`E:\server-2`、`E:\server-wiki` 存在。S4 及全体队列的只读参考路径须改指 `E:`，`D:` 下服务器路径已失效（2026-11-04 由 `20261104-0530` 快照采集中断 + 路径核验确认；属 Aki 已执行操作，无需拍板）。
+
+### 第 83 批 · 新服新增世界生成模组核验（2026-11-10 证据轮，接 B-28）
+
+> 用途：`TECTONIC-20261109-1158`（Tectonic 生效方式）/ `RC-20261109-1200`（Recurrent Complex 下一步）两条待拍板的事实底稿。全部只读核验，未动服务器。
+
+- **2.80.1 `[事实]`** 新服 `E:\server-1.21.1\mods` 新增 `tectonic-3.0.28-neoforge-21.1.jar`（mtime 2026-11-09 11:55）与 `RecurrentComplexVolts-1.21.1-0.7.3.0.jar`（mtime 2026-11-02 06:59）；旧服 1.20.1 `E:\server\mods` 两 mod 均不存在 → **新服独有新增**。mods 总数 **228** jar。
+- **2.80.2 `[事实]`** 新服 `world/datapacks` 目录存在但**为空** → Tectonic 当前**零生效**（Tectonic 为数据包驱动的世界生成 mod，无数据包则不改写地形/生物群系）。
+- **2.80.3 `[事实]`** 新服 `logs/latest.log` 末次修改 **2026-11-02 12:24** → Tectonic（11-09 加入）**晚于末次启动、从未被服务器加载**；RC（11-02 06:59）在末次启动前已就位但"装好未用"（无自定义结构配置）。
+- **2.80.4 `[事实]`** 新服现存世界生成骨架：Oh-The-Biomes-We've-Gone 2.6.3 + TerraBlender 4.1.0.8（OTBYG 前置）+ DungeonsArise 2.1.68 + DungeonsAriseSevenSeas 1.0.4 + structure_pool_api 1.2.1 + waystones 21.1.46 + Tectonic + RecurrentComplex；与 `_srv_PLAN_NEXT.md` 第 1 节世界生成清单（OTBYG/OTTYG/BetterEnd/BetterNether/Bumblezone/Galosphere/SevenSeas）相比，**Tectonic 与 RecurrentComplex 为清单未载的新增项，需回填**。
+- **2.80.5 `[推断]`** Tectonic 与 OTBYG 均改写世界生成，叠加需一数据包协调二者（让 OTBYG 生物群系挂载到 Tectonic 气候区），否则可能冲突或堆叠；当前部署为零、playerdata 仅 2，无理由在开服前定地形风格。
+- **2.80.6 `[待验证]`** Tectonic 3.0.28 在 NeoForge 21.1 是否首次启动自动生成默认数据包/配置目录，还是必须手工放置 default 数据包；需 Aki/dev 首启确认。
+- **2.80.7 `[推断]`** RecurrentComplex 与 DungeonsArise(×2) 同属结构生成，叠加会拥挤；RC 当前零配置=零收益，建议暂移除或保持"装而不用"，待 L3/RPG（T23）推进时再决定自定义结构需求。

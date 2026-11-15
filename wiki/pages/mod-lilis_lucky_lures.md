@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-lilis_lucky_lures-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-lilis_lucky_lures-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox [Let's Do] Lilis Lucky Lures
 | Mod ID | `lilis_lucky_lures`

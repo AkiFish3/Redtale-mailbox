@@ -1,5 +1,5 @@
 ---
-title: Resourceful Lib
+title: 资源库（Resourceful Lib）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Resourceful Lib
+# 资源库（Resourceful Lib）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-resourcefullib-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-resourcefullib-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Resourceful Lib
 | Mod ID | `resourcefullib`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+Team Resourceful 的通用代码库，给同团队的一大批模组（资源包相关、配置系统、各种装饰/功能模组）提供注册、配置和网络基础能力。玩家看到的是「Team Resourceful 系列功能齐全」，它本身不加玩法。装了任意一个该团队模组就离不开它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，纯前置；Team Resourceful 系模组在它缺失时无法启动。
+- 服务端侧：无独立服务端配置文件；各模组自己的设置仍在 `config/` 下对应文件。
 
 ## 相关页面
 

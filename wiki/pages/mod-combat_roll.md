@@ -1,5 +1,5 @@
 ---
-title: Combat Roll
+title: 战斗翻滚（Combat Roll）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Combat Roll
+# 战斗翻滚（Combat Roll）
 
 <!-- auto:begin -->
 
@@ -26,12 +26,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给玩家加一个翻滚闪避动作，带无敌帧、翻滚距离属性和相关附魔。打 Boss、玩偏动作向的战斗时用来拉开距离。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：默认按 R 翻滚（可在按键设置里改），消耗少量饥饿度、有冷却；翻滚距离受属性与附魔影响，饿着肚子翻不动。
+- 服务端侧：`config/combat_roll/server.json5`：`roll_cooldown` 冷却秒数、`invulnerable_ticks_upon_roll` 无敌帧、`exhaust_on_roll` 每次翻滚的饥饿消耗、`roll_duration` 动作时长、`allow_rolling_while_airborn` 是否允许空中翻滚（开了会破坏距离属性）。
 
 ## 相关页面
 

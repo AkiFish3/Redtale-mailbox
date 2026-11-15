@@ -1,5 +1,5 @@
 ---
-title: Serene Seasons
+title: 静谧四季（Serene Seasons）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Serene Seasons
+# 静谧四季（Serene Seasons）
 
 <!-- auto:begin -->
 
@@ -32,7 +32,7 @@ auto: mod
 ## 在赤物语里
 
 - 玩家侧：种地要看季节，冬天部分作物不长；出门看天气也要考虑季节温度。
-- 服务端侧：季节长度与起始季节在 `config/sereneseasons-common.toml`。
+- 服务端侧：季节长度与起始季节在 `config/sereneseasons/seasons.toml`：`time_settings.sub_season_duration`（默认 8 天一个子季节）、`starting_sub_season` 起始季节、`progress_season_while_offline` 离线是否推进；作物季节性耐性在同目录 `fertility.toml`。
 
 ## 相关页面
 

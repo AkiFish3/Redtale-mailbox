@@ -1,5 +1,5 @@
 ---
-title: ModernFix
+title: 现代修复（ModernFix）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# ModernFix
+# 现代修复（ModernFix）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-modernfix-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-modernfix-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox ModernFix
 | Mod ID | `modernfix`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+针对 1.16+ 版本的启动与运行性能补丁集：缩短启动时间、降低内存占用、加速资源加载与动态注册表构建，顺带修掉一批原版与常见模组的卡顿源。整合包模组多、启动慢、内存吃紧时，它是收益最直接的那一档。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，装上即生效；个别优化会改变内部实现，遇到偶发 bug 时先看是不是它引起的。
+- 服务端侧：`config/modernfix-common.toml`（如 `blacklist_async_jei_plugins` 把不兼容的 JEI 插件拉回主线程）与 `config/modernfix-mixins.properties`，后者用 `mixins.<名字>=false` 单独关某项优化，默认建议保持全开。
 
 ## 相关页面
 

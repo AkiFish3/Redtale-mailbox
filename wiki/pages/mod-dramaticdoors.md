@@ -1,5 +1,5 @@
 ---
-title: Dramatic Doors
+title: 高门（Dramatic Doors）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Dramatic Doors
+# 高门（Dramatic Doors）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-dramaticdoors-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-dramaticdoors-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Dramatic Doors
 | Mod ID | `dramaticdoors`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+把门做高：三格高的门，配马、配大型建筑、配城堡大门都不再顶头。也顺带解决了骑马穿门被卡住的问题。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：合成方式同原版门，只是产出的是加高版本；摆放时占三格高度。
+- 服务端侧：`config/dramaticdoors-startup.toml`：`[Mixins]` 的 `waterloggable_doors` / `waterloggable_fence_gates` 控制门能否含水（与其他模组冲突时可关）。
 
 ## 相关页面
 

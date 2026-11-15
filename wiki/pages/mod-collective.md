@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-collective-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-collective-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Collective
 | Mod ID | `collective`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+Serilum 全家桶（几十个小模组）共用的代码库，负责实体替换、掉落生成等公共逻辑。属于前置库。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：不用操作；装了 Serilum 的模组就少不了它。
+- 服务端侧：`config/collective.json5`：`enableUpdateChecker` 是否在控制台提示依赖模组更新、`transferItemsBetweenReplacedEntities` 实体被替换时是否转移身上物品、`loopsAmountUsedToGetAllEntityDrops` 掉落生成循环次数（调低可加快加载）。
 
 ## 相关页面
 

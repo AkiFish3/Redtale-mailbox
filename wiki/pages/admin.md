@@ -18,16 +18,16 @@ order: 1
 | 目录 | `E:\server` | `E:\server-1.21.1` |
 | 端口 | 25565 | **25566** |
 | RCON | 25575 | **25576** |
-| 模组数 | 271 | 225 |
+| 模组数 | 271 | 226 |
 | 状态 | 运行中 | 内部测试 |
 
 **两个服的 RCON 端口必须错开**，这是 2026-10-31 定下的（原本都是 25575，双开时会抢端口，导致指令发到另一个服上）。
 
 ## 客户端
 
-`E:\client\赤物语N客户端-0.0.1`，232 个模组。
+`E:\client\赤物语N客户端-0.0.1`，234 个模组。
 
-**服务端 225 + 客户端独有的 7 个**（Jade、REI、Forgematica、BocchHUD、Tweakerge、Rock'n Roller、mafglib）。
+**服务端 226 + 客户端独有的 8 个**（Jade、REI、Forgematica、BocchHUD、Tweakerge、Rock'n Roller、mafglib、ldlib2）。
 
 规则：**服务端有的，客户端必须有**；客户端多的不影响，但不能少。
 

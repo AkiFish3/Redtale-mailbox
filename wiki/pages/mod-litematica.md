@@ -1,5 +1,5 @@
 ---
-title: Litematica Stub
+title: 投影（Litematica）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Litematica Stub
+# 投影（Litematica）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-litematica-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-litematica-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Litematica Stub
 | Mod ID | `litematica`

@@ -1,5 +1,5 @@
 ---
-title: Decorative Blocks Reborn
+title: 装饰方块重制（Decorative Blocks Reborn）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Decorative Blocks Reborn
+# 装饰方块重制（Decorative Blocks Reborn）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-decorative_blocks-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-decorative_blocks-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Decorative Blocks Reborn
 | Mod ID | `decorative_blocks`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+补原版缺的那批建筑零件：不同材质的梁、支架、椅子、栅栏门、火盆、石柱等。盖房子时用来收边、做结构和细节。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：在创造物品栏或合成表里取用；梁和支架可以多层堆叠拼成完整的木构架。
+- 服务端侧：无独立配置文件。
 
 ## 相关页面
 

@@ -1,5 +1,5 @@
 ---
-title: Ferrite Core
+title: 铁氧体内存优化（Ferrite Core）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Ferrite Core
+# 铁氧体内存优化（Ferrite Core）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-ferritecore-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-ferritecore-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Ferrite Core
 | Mod ID | `ferritecore`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+压缩方块状态、模型、顶点数据这些占内存的大头，服务端和客户端都能省下可观的堆内存。模组多、跑久了容易 OOM 的服基本必装。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：无感知，不改变任何画面与玩法，只是内存占用更低、GC 卡顿更少。
+- 服务端侧：`config/ferritecore-mixin.toml`：`compactFastMap` 换更紧凑但略慢的方块状态表示，`useSmallThreadingDetector` 是已知会有极罕见崩溃的风险项（默认关），模型与方块状态的去重开关也都在这份文件里。
 
 ## 相关页面
 

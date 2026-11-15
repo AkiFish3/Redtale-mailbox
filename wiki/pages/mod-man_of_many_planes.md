@@ -1,5 +1,5 @@
 ---
-title: Man of Many Planes
+title: 飞行器大全（Man of Many Planes）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Man of Many Planes
+# 飞行器大全（Man of Many Planes）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-man_of_many_planes-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-man_of_many_planes-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Man of Many Planes
 | Mod ID | `man_of_many_planes`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+沉浸式飞行器（Immersive Aircraft）的扩展包，加了一批新机型：双翼战斗机、水上飞机、货运运输机等，部分机型支持机械动力（Create）的传动部件联动。已经玩腻原版那几架、想换外观或加运力时加它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：按机型配方造出部件后拼装，坐进驾驶位用 W/S 升降、A/D 转向；带 Create 支持的机型可以接传动轴驱动螺旋桨。
+- 服务端侧：无独立配置文件；机型数值写死在模组里，服务端装同版本即可同步。
 
 ## 相关页面
 

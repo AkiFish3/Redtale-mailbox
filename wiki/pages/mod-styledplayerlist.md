@@ -1,5 +1,5 @@
 ---
-title: Styled Player List
+title: 玩家列表样式（Styled Player List）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Styled Player List
+# 玩家列表样式（Styled Player List）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-styledplayerlist-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-styledplayerlist-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Styled Player List
 | Mod ID | `styledplayerlist`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+服务端侧重做 Tab 玩家列表：可改表头表尾、名字格式、右侧附加信息，还能做多套「样式」让玩家自己切。原版那张灰白名单看腻了、想放服务器名和在线人数时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：默认自动套用服主配好的样式；如果配了多套样式，可用对应指令切换（需权限）。
+- 服务端侧：`config/styledplayerlist/config.json` 管默认样式、`update_tick_time`（刷新间隔）、名字格式与提示文案；具体版式在 `config/styledplayerlist/styles/` 下的样式文件里。
 
 ## 相关页面
 

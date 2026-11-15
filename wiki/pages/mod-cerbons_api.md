@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-cerbons_api-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-cerbons_api-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Cerbons API
 | Mod ID | `cerbons_api`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+Bosses of Mass Destruction 作者 CerbonXD 自用的模组库，封装注册、实体与渲染相关的公共逻辑。属于前置库。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：不直接接触，删掉会让依赖它的模组加载失败。目前由 [[mod-bosses_of_mass_destruction|Bosses of Mass Destruction]] 依赖。
+- 服务端侧：无独立配置文件。
 
 ## 相关页面
 

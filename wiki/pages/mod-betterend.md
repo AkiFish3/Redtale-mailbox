@@ -1,5 +1,5 @@
 ---
-title: Better End
+title: 更好的末地（Better End）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Better End
+# 更好的末地（Better End）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+重做整个末地：十几个新生物群系、对应的植被与生物、末地木材与装备线、新的结构。末地不再是打完龙就没东西的空岛。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：打完末影龙后从末地传送门去外岛，新群系和结构都在外岛；末地木材能做成一整套工具与建材。
+- 服务端侧：`config/betterend/biomes_toggle.json` 逐群系开关，`structures_toggle.json` 关结构，`items.json`/`blocks.json` 调数值，`generator.json` 管地形生成。
 
 ## 相关页面
 

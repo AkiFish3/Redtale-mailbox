@@ -1,5 +1,5 @@
 ---
-title: Open Parties and Claims
+title: 开放领地与队伍（Open Parties and Claims）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Open Parties and Claims
+# 开放领地与队伍（Open Parties and Claims）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-openpartiesandclaims-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-openpartiesandclaims-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Open Parties and Claims
 | Mod ID | `openpartiesandclaims`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+玩家自助领地系统：圈地保护方块与实体、给区块设强制加载、组队共享权限，服务器端还能限制每人可圈多少块、哪些维度不能圈。多人服想让大家自己管地盘、又不想装重型保护插件时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：按 `P`（或配置的快捷键）打开界面，选两个角点圈地，可给队友或全服玩家单独开建造/交互/容器权限；队伍面板能邀请、踢人和共享领地，强制加载的区块在下线后仍保持加载。
+- 服务端侧：`config/openpartiesandclaims-server.toml` 的 `[serverConfig]`：`defaultLanguage`（无模组玩家的服务端提示语言）、`[claims]` 下 `maxPlayerClaims` / `maxPlayerClaimForceloads` 限制数量（可用权限节点覆盖）、`[general]` 的 `claimableDimensions` 控制哪些维度可圈；玩家默认值在 `openpartiesandclaims-server.toml` 旁边的 `default-player-config` 里。
 
 ## 相关页面
 

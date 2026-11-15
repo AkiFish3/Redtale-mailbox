@@ -1,5 +1,5 @@
 ---
-title: Styled Chat
+title: 聊天样式（Styled Chat）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Styled Chat
+# 聊天样式（Styled Chat）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-styledchat-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-styledchat-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Styled Chat
 | Mod ID | `styledchat`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+服务端侧美化聊天：给聊天加颜色、粗体、悬停提示和点击事件，支持 Markdown、链接识别、@提及和表情，还能按权限给不同组不同格式。嫌服务器聊天是原版白字时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：正常打字即可，可用 `*斜体*`、`**粗体**`、`~~删除线~~` 和直接贴链接（能否用取决于服主开的开关）；点聊天里的名字可能有动作（传送/私聊），看服务器配置。
+- 服务端侧：`config/styled-chat.json`：`text_formatting` 段管 Markdown、链接解析、提及开关；`auto_completion` 段管标签/表情补全；各组具体格式在 `styles`/`formats` 段按权限配。
 
 ## 相关页面
 

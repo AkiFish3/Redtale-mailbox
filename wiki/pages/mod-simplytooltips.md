@@ -1,5 +1,5 @@
 ---
-title: Simply Tooltips
+title: Simply 提示框（Simply Tooltips）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Simply Tooltips
+# Simply 提示框（Simply Tooltips）
 
 <!-- auto:begin -->
 
@@ -26,12 +26,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给物品 tooltip 换一套更现代的排版：分节、图标、颜色、属性对比都更清楚，主要服务 Simply 系武器，也能接管原版和其他模组的物品说明。嫌原版提示框信息挤成一团时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：鼠标悬停物品就能看到新版式；某些属性行没出现，多半是设置里对应区块被关了，去客户端配置里打开。
+- 服务端侧：`config/simplytooltips/config.toml` 控制显示哪些区块、颜色与图标样式；以客户端观感为主，服务端改它只对同样装了此模组的客户端生效。
 
 ## 相关页面
 

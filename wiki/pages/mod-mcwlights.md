@@ -1,5 +1,5 @@
 ---
-title: Macaw's Lights and Lamps
+title: 麦克瓦的灯饰（Macaw's Lights and Lamps）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Macaw's Lights and Lamps
+# 麦克瓦的灯饰（Macaw's Lights and Lamps）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-mcwlights-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-mcwlights-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Macaw's Lights and Lamps
 | Mod ID | `mcwlights`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+灯具合集：纸灯笼、壁灯、落地灯、串灯、霓虹灯管、路灯杆，还有能调亮度的款式。夜里给街道、店铺、基地照明，比插火把好看且不占地方。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：合成后放置即亮，壁灯与吊灯可以贴墙/吊顶；串灯之间相邻自动连接，路灯杆能叠高。
+- 服务端侧：无服务端配置文件；光源为普通方块光照，不影响刷怪判定之外的机制。
 
 ## 相关页面
 

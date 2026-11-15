@@ -1,5 +1,5 @@
 ---
-title: Pineapple Delight
+title: 菠萝乐事（Pineapple Delight）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Pineapple Delight
+# 菠萝乐事（Pineapple Delight）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-pineapple_delight-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-pineapple_delight-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Pineapple Delight
 | Mod ID | `pineapple_delight`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+农夫乐事的果园系扩展：加了菠萝作物、菠萝块、菠萝汁与几道甜点菜，还有能种在沙子上的菠萝种植方式。想在热带/沙滩据点搞种植、或者单纯想多几种水果菜时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：找到菠萝或种子后种在沙地/耕地上，成熟后收割；用刀具切开菠萝得到果肉，下锅做菠萝炒饭、菠萝派一类，成品多数带饱食度加成。
+- 服务端侧：无独立配置文件；配方与数值跟随农夫乐事本体。
 
 ## 相关页面
 

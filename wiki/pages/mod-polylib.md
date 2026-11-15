@@ -1,5 +1,5 @@
 ---
-title: PolyLib
+title: PolyLib（CreeperHost 工具库）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# PolyLib
+# PolyLib（CreeperHost 工具库）
 
 <!-- auto:begin -->
 
@@ -26,12 +26,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+CreeperHost 出品的小型辅助库，给模组作者提供一批工具类，主要是更省事的 GUI/界面构建和通用开发增强，用来提升开发效率与体验。玩家侧几乎无感，只作为依赖存在。装了依赖它的模组时它才会出现在列表里。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，纯前置；依赖它的模组在它缺失时无法启动。
+- 服务端侧：`config/polylib.json`：CreeperHost 系模组的通用设置（界面与调试开关），正常游玩保持默认即可。
 
 ## 相关页面
 

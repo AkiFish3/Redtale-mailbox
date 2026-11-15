@@ -1,5 +1,5 @@
 ---
-title: When Dungeons Arise: Seven Seas（1.20.1）
+title: 地牢浮现之时：七海（1.20.1）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod-legacy
 ---
 
-# When Dungeons Arise: Seven Seas（1.20.1）
+# 地牢浮现之时：七海（1.20.1）
 
 <!-- auto:begin -->
 
-**版本**：[[mod-dungeons_arise_seven_seas|1.21.1（当前）]] ｜ **1.20.1（旧服存档）**
+**版本**：[[mod-dungeons_arise_seven_seas|1.21.1（当前）]] ｜ **1.20.1 服**
 
 ::: infobox When Dungeons Arise: Seven Seas（1.20.1）
 | Mod ID | `dungeons_arise_seven_seas`
@@ -29,15 +29,15 @@ auto: mod-legacy
 
 ## 中文简介
 
-_待补：这是 1.20.1 的存档页，简介以当前版本的 [[mod-dungeons_arise_seven_seas]] 为准。_
+《地牢浮现之时》的海洋扩展：在海上和海底生成巨型沉船、海盗要塞、海底遗迹这类体量很大的水上结构，风格延续本体但更偏航海主题。喜欢开船探索、或者想要海上地标时加它。（1.20.1 服用的是该模组的旧版本，具体数值以本服为准。）
 
 ## 在赤物语里
 
-- 玩家侧：本页是 1.20.1 旧服存档，玩法与数值以当前版本 [[mod-dungeons_arise_seven_seas]] 为准。
-- 服务端侧：旧服已停运，这里的配置只作历史参考，别照着改现在的服。
+- 玩家侧：本页是 1.20.1 服的内容（该服仍在运行），玩法与数值以它为准；1.21.1 版见 [[mod-dungeons_arise_seven_seas]]。
+- 服务端侧：1.20.1 服还在开，这里的配置是它当前在用的；改之前先确认改的是哪个服。
 
 ## 相关页面
 
 - [[mod-dungeons_arise_seven_seas|当前版本（1.21.1）]]
-- [[mod-index-legacy|旧版模组存档]]
+- [[mod-index-legacy|1.20.1 服模组]]
 - [[mod-index|模组总览]]

@@ -1,5 +1,5 @@
 ---
-title: Farmer's Delight
+title: 农夫乐事（Farmer's Delight）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Farmer's Delight
+# 农夫乐事（Farmer's Delight）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-farmersdelight-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-farmersdelight-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Farmer's Delight
 | Mod ID | `farmersdelight`

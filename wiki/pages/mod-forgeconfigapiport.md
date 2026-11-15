@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-forgeconfigapiport-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-forgeconfigapiport-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Forge Config API Port
 | Mod ID | `forgeconfigapiport`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+把 Forge/NeoForge 的配置系统搬到别的加载器上，让同一份代码在 Fabric 等环境里也能读 TOML 配置。属于多加载器整合的技术底座，玩家看不到任何内容。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，纯前置依赖。
+- 服务端侧：无独立配置文件。
 
 ## 相关页面
 

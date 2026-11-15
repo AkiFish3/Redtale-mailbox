@@ -1,5 +1,5 @@
 ---
-title: Elytra Slot
+title: 鞘翅饰品槽（Elytra Slot）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Elytra Slot
+# 鞘翅饰品槽（Elytra Slot）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-elytraslot-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-elytraslot-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Elytra Slot
 | Mod ID | `elytraslot`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给鞘翅单独一个饰品槽，穿上它也能同时穿胸甲。解决「想飞就得裸胸」的老问题，PVP 和长途探索都用得上。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：把鞘翅放进饰品栏的独立槽位，胸甲照常穿；按键打开饰品界面即可。
+- 服务端侧：无独立配置文件。
 
 ## 相关页面
 

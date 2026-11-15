@@ -63,6 +63,8 @@
 | **世界生成** | OTBYG / OTTYG / BetterEnd / BetterNether / Bumblezone / Galosphere / SevenSeas | 探索半径极大 |
 | **可挂画** | xercapaint / immersive_paintings | 玩家作品上墙 |
 
+> **[S4建议] 第 83 轮补 · 世界生成清单待回填**：第 1 节「探索世界 / 世界生成」清单（OTBYG/OTTYG/BetterEnd/BetterNether/Bumblezone/Galosphere/SevenSeas）已**不完整**——新服 `mods` 现另含 `tectonic-3.0.28-neoforge-21.1`（2026-11-09 加入）与 `RecurrentComplexVolts-1.21.1-0.7.3.0`（2026-11-02 加入），二者均不在原清单。Tectonic 当前 `world/datapacks` 为空 → 零生效、且从未被加载（末次启动 11-02 早于其加入）；RC 装好未用。是否启用、如何与 OTBYG 协调，待拍板 `TECTONIC-20261109-1158` / `RC-20261109-1200`（详见 BACKLOG B-28 + RESEARCH 第 83 批）。开服前须回填本节清单并定世界生成最终组合。
+
 ### 1.4 新服现在的三个空白（不是"待办"，是"现在开服就是空壳"）
 
 | 空白 | 实测证据 | 后果 |

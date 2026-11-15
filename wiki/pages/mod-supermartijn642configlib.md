@@ -1,5 +1,5 @@
 ---
-title: SuperMartijn642's Config Library
+title: 配置库（SuperMartijn642's Config Library）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# SuperMartijn642's Config Library
+# 配置库（SuperMartijn642's Config Library）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+配置库，让依赖它的模组（SuperMartijn642 系：机器、储存、装饰等）能在游戏内直接改设置——带图形界面、改完即时生效，不用退出重开。玩家感受到的是「设置能点着调」，它本身没有玩法。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：本身用不到；装了依赖它的模组后，主菜单或模组列表里会多出图形化配置入口，拖动/勾选即可，改完即时生效。
+- 服务端侧：无独立服务端配置文件；各模组真正的设置仍写在 `config/` 下各自文件里，这个库只负责界面与读写。
 
 ## 相关页面
 

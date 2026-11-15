@@ -1,5 +1,5 @@
 ---
-title: Ender's Delight
+title: 末影乐事（Ender's Delight）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Ender's Delight
+# 末影乐事（Ender's Delight）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-endersdelight-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-endersdelight-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Ender's Delight
 | Mod ID | `endersdelight`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+另一套末地主题的农夫乐事附属，主打「末影相位」状态和虚空辣椒：吃了带相位的食物后受击会短距瞬移，虚空辣椒会自己蔓延生长。想玩末地风味的偏门食材和效果时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：做带末影相位的料理吃下，被打时会随机瞬移躲避；虚空辣椒种在末地石一类方块上会自行扩散，注意别让它长满基地。
+- 服务端侧：`config/endersdelight-common.toml`：`[ender_phasing]` 的 `doesPhasingTeleportPlayer` 开关受击瞬移、`cooldownBetweenPhasingTeleports` 调冷却、`doesWaterHurtPlayerWithPhasingEffect` 决定相位期间碰水是否掉血；`[void_pepper]` 的 `spreadRadius` / `spreadChance` 控蔓延速度。
 
 ## 相关页面
 

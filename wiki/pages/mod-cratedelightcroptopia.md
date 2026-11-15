@@ -1,5 +1,5 @@
 ---
-title: Crate Delight: Croptopia
+title: 木箱与麻袋：作物（Crate Delight: Croptopia）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Crate Delight: Croptopia
+# 木箱与麻袋：作物（Crate Delight: Croptopia）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-cratedelightcroptopia-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-cratedelightcroptopia-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Crate Delight: Croptopia
 | Mod ID | `cratedelightcroptopia`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+Crate Delight 的 Croptopia 扩展，为每种作物单独加一个装满状态的木箱，收完菜直接装箱，仓库看着整齐也省格子。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：收完一批作物后直接合成对应的作物箱，或把作物右键装进去，需要时可以整箱搬运。
+- 服务端侧：无独立配置文件，依赖 Crate Delight 与 Croptopia 本体。
 
 ## 相关页面
 

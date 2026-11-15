@@ -1,5 +1,5 @@
 ---
-title: Resourceful Lib（1.20.1）
+title: 资源库（1.20.1）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod-legacy
 ---
 
-# Resourceful Lib（1.20.1）
+# 资源库（1.20.1）
 
 <!-- auto:begin -->
 
-**版本**：[[mod-resourcefullib|1.21.1（当前）]] ｜ **1.20.1（旧服存档）**
+**版本**：[[mod-resourcefullib|1.21.1（当前）]] ｜ **1.20.1 服**
 
 ::: infobox Resourceful Lib（1.20.1）
 | Mod ID | `resourcefullib`
@@ -28,15 +28,15 @@ auto: mod-legacy
 
 ## 中文简介
 
-_待补：这是 1.20.1 的存档页，简介以当前版本的 [[mod-resourcefullib]] 为准。_
+Team Resourceful 的通用代码库，给同团队的一大批模组（资源包相关、配置系统、各种装饰/功能模组）提供注册、配置和网络基础能力。玩家看到的是「Team Resourceful 系列功能齐全」，它本身不加玩法。装了任意一个该团队模组就离不开它。（1.20.1 服用的是该模组的旧版本，具体数值以本服为准。）
 
 ## 在赤物语里
 
-- 玩家侧：本页是 1.20.1 旧服存档，玩法与数值以当前版本 [[mod-resourcefullib]] 为准。
-- 服务端侧：旧服已停运，这里的配置只作历史参考，别照着改现在的服。
+- 玩家侧：本页是 1.20.1 服的内容（该服仍在运行），玩法与数值以它为准；1.21.1 版见 [[mod-resourcefullib]]。
+- 服务端侧：1.20.1 服还在开，这里的配置是它当前在用的；改之前先确认改的是哪个服。
 
 ## 相关页面
 
 - [[mod-resourcefullib|当前版本（1.21.1）]]
-- [[mod-index-legacy|旧版模组存档]]
+- [[mod-index-legacy|1.20.1 服模组]]
 - [[mod-index|模组总览]]

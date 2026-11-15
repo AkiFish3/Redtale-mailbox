@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-coroutil-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-coroutil-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox CoroUtil
 | Mod ID | `coroutil`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+CoroUtil 是 Corosus 系列模组（Weather2、Zombie Awareness 等）的公共工具库，提供实体寻路、配置文件框架、网络同步等底层内容。玩家侧无感知。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，纯前置依赖。
+- 服务端侧：`config/CoroUtil/General.toml`：`[general]` 下的 `useLoggingLog` / `useLoggingDebug` / `useLoggingError` 控制日志级别，排查问题时临时开 debug。
 
 ## 相关页面
 

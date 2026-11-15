@@ -1,5 +1,5 @@
 ---
-title: Bosses of Mass Destruction（1.20.1）
+title: 灾难之主（1.20.1）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod-legacy
 ---
 
-# Bosses of Mass Destruction（1.20.1）
+# 灾难之主（1.20.1）
 
 <!-- auto:begin -->
 
-**版本**：[[mod-bosses_of_mass_destruction|1.21.1（当前）]] ｜ **1.20.1（旧服存档）**
+**版本**：[[mod-bosses_of_mass_destruction|1.21.1（当前）]] ｜ **1.20.1 服**
 
 ::: infobox Bosses of Mass Destruction（1.20.1）
 | Mod ID | `bosses_of_mass_destruction`
@@ -29,15 +29,15 @@ auto: mod-legacy
 
 ## 中文简介
 
-_待补：这是 1.20.1 的存档页，简介以当前版本的 [[mod-bosses_of_mass_destruction]] 为准。_
+往世界里加了四个高威胁 Boss：巫妖、虚空之花、黑曜石守门者与铁拳挑战者，每个都有独立机制、多阶段战斗和专属掉落。想打正经的 Boss 战、或者给服务器中期加个挑战目标时用它。（1.20.1 服用的是该模组的旧版本，具体数值以本服为准。）
 
 ## 在赤物语里
 
-- 玩家侧：本页是 1.20.1 旧服存档，玩法与数值以当前版本 [[mod-bosses_of_mass_destruction]] 为准。
-- 服务端侧：旧服已停运，这里的配置只作历史参考，别照着改现在的服。
+- 玩家侧：本页是 1.20.1 服的内容（该服仍在运行），玩法与数值以它为准；1.21.1 版见 [[mod-bosses_of_mass_destruction]]。
+- 服务端侧：1.20.1 服还在开，这里的配置是它当前在用的；改之前先确认改的是哪个服。
 
 ## 相关页面
 
 - [[mod-bosses_of_mass_destruction|当前版本（1.21.1）]]
-- [[mod-index-legacy|旧版模组存档]]
+- [[mod-index-legacy|1.20.1 服模组]]
 - [[mod-index|模组总览]]

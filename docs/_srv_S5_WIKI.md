@@ -11,60 +11,17 @@
 
 | 项 | 值 |
 |---|---|
-| 最近运行 | 2026-11-02 12:06 |
-| 当前版模组（1.21.1） | **241**（双端 228 / 仅客户端 13 / 仅服务端 0） |
-| 页面可见性 | player 233 ｜ admin 8 |
-| 新建 / 更新 / 未变 / 手建跳过 | 0 / 0 / 241 / 0 |
-| 旧版模组（1.20.1） | **577** 页（与当前版重合 184 / 仅旧服 393）｜新建 0 更新 0 未变 577 跳过 0 |
+| 最近运行 | 2026-11-15 07:49 |
+| 当前版模组（1.21.1） | **243**（双端 228 / 仅客户端 13 / 仅服务端 2） |
+| 页面可见性 | player 233 ｜ admin 10 |
+| 新建 / 更新 / 未变 / 手建跳过 | 0 / 0 / 243 / 0 |
+| 旧版模组（1.20.1） | **577** 页（与当前版重合 185 / 仅旧服 392）｜新建 0 更新 0 未变 577 跳过 0 |
 | 旧版总览 | 576 行（`mod-index-legacy`） |
-| 待办任务 | **204**（补简介 **203** · 分类 **1**） |
+| 待办任务 | **0**（—） |
 
 ## 任务池
 
-| # | 类型 | 对象 | 说明 |
-|---|---|---|---|
-| W1 | 补简介 | Archers (RPG Series) | 「中文简介」还没写（`archers`，双端）；标题也只有英文名，可顺手加中文 |
-| W2 | 补简介 | Architectury | 「中文简介」还没写（`architectury`，双端）；标题也只有英文名，可顺手加中文 |
-| W3 | 补简介 | Armor Model API | 「中文简介」还没写（`armor_model_api`，双端）；标题也只有英文名，可顺手加中文 |
-| W4 | 补简介 | Armourer's Workshop | 「中文简介」还没写（`armourers_workshop`，双端）；标题也只有英文名，可顺手加中文 |
-| W5 | 补简介 | Arts & Crafts | 「中文简介」还没写（`arts_and_crafts`，双端）；标题也只有英文名，可顺手加中文 |
-| W6 | 补简介 | Athena | 「中文简介」还没写（`athena`，双端）；标题也只有英文名，可顺手加中文 |
-| W7 | 补简介 | AttributeFix | 「中文简介」还没写（`attributefix`，双端）；标题也只有英文名，可顺手加中文 |
-| W8 | 补简介 | Automobility | 「中文简介」还没写（`automobility`，双端）；标题也只有英文名，可顺手加中文 |
-| W9 | 补简介 | AzureLib | 「中文简介」还没写（`azurelib`，双端）；标题也只有英文名，可顺手加中文 |
-| W10 | 补简介 | Balm | 「中文简介」还没写（`balm`，双端）；标题也只有英文名，可顺手加中文 |
-| W11 | 补简介 | Barbeque's Delight | 「中文简介」还没写（`barbequesdelight`，双端）；标题也只有英文名，可顺手加中文 |
-| W12 | 补简介 | BCLib | 「中文简介」还没写（`bclib`，双端）；标题也只有英文名，可顺手加中文 |
-| W13 | 补简介 | Beautify | 「中文简介」还没写（`beautify`，双端）；标题也只有英文名，可顺手加中文 |
-| W14 | 补简介 | Better Advanced Tooltips | 「中文简介」还没写（`betteradvancedtooltips`，双端）；标题也只有英文名，可顺手加中文 |
-| W15 | 补简介 | Better End | 「中文简介」还没写（`betterend`，双端）；标题也只有英文名，可顺手加中文 |
-| W16 | 补简介 | Better McDonald's Mod | 「中文简介」还没写（`better_mcdonalds_mod`，双端）；标题也只有英文名，可顺手加中文 |
-| W17 | 补简介 | Better Nether | 「中文简介」还没写（`betternether`，双端）；标题也只有英文名，可顺手加中文 |
-| W18 | 补简介 | Biolith | 「中文简介」还没写（`biolith`，双端）；标题也只有英文名，可顺手加中文 |
-| W19 | 补简介 | BoccHUD | 「中文简介」还没写（`bocchud`，仅客户端）；标题也只有英文名，可顺手加中文 |
-| W20 | 补简介 | Bookshelf | 「中文简介」还没写（`bookshelf`，双端）；标题也只有英文名，可顺手加中文 |
-| W21 | 补简介 | Bosses of Mass Destruction | 「中文简介」还没写（`bosses_of_mass_destruction`，双端）；标题也只有英文名，可顺手加中文 |
-| W22 | 补简介 | Bountiful | 「中文简介」还没写（`bountiful`，双端）；标题也只有英文名，可顺手加中文 |
-| W23 | 补简介 | Bountiful Fares | 「中文简介」还没写（`bountifulfares`，双端）；标题也只有英文名，可顺手加中文 |
-| W24 | 补简介 | Brewin' And Chewin' | 「中文简介」还没写（`brewinandchewin`，双端）；标题也只有英文名，可顺手加中文 |
-| W25 | 补简介 | BundleAPI | 「中文简介」还没写（`bundleapi`，双端）；标题也只有英文名，可顺手加中文 |
-| W26 | 补简介 | Caelus API | 「中文简介」还没写（`caelus`，双端）；标题也只有英文名，可顺手加中文 |
-| W27 | 补简介 | Camping | 「中文简介」还没写（`camping`，双端）；标题也只有英文名，可顺手加中文 |
-| W28 | 补简介 | CasualnessDelight | 「中文简介」还没写（`casualnessdelight`，双端）；标题也只有英文名，可顺手加中文 |
-| W29 | 补简介 | Cerbons API | 「中文简介」还没写（`cerbons_api`，双端）；标题也只有英文名，可顺手加中文 |
-| W30 | 补简介 | Chimes | 「中文简介」还没写（`chimes`，双端）；标题也只有英文名，可顺手加中文 |
-| W31 | 补简介 | Chipped | 「中文简介」还没写（`chipped`，双端）；标题也只有英文名，可顺手加中文 |
-| W32 | 补简介 | ChunkyBorder | 「中文简介」还没写（`chunkyborder`，双端）；标题也只有英文名，可顺手加中文 |
-| W33 | 补简介 | Cloth Config v15 API | 「中文简介」还没写（`cloth_config`，双端）；标题也只有英文名，可顺手加中文 |
-| W34 | 补简介 | Clumps | 「中文简介」还没写（`clumps`，双端）；标题也只有英文名，可顺手加中文 |
-| W35 | 补简介 | Cluttered | 「中文简介」还没写（`cluttered`，双端）；标题也只有英文名，可顺手加中文 |
-| W36 | 补简介 | Cobweb | 「中文简介」还没写（`cobweb`，双端）；标题也只有英文名，可顺手加中文 |
-| W37 | 补简介 | Collective | 「中文简介」还没写（`collective`，双端）；标题也只有英文名，可顺手加中文 |
-| W38 | 补简介 | Combat Roll | 「中文简介」还没写（`combat_roll`，双端）；标题也只有英文名，可顺手加中文 |
-| W39 | 补简介 | Compact Help Command | 「中文简介」还没写（`compacthelpcommand`，双端）；标题也只有英文名，可顺手加中文 |
-| W40 | 补简介 | Contact | 「中文简介」还没写（`contact`，双端）；标题也只有英文名，可顺手加中文 |
-
-_还有 164 条没列出来。完整清单在 `_srv_artifacts\s5_state.json`，或跑 `python s5_wiki_sync.py --json` 取。_
+_本轮没有待办。_
 
 ## 任务池怎么来的
 
@@ -96,7 +53,7 @@ _还有 164 条没列出来。完整清单在 `_srv_artifacts\s5_state.json`，�
 
 - 旧版目录写在 `s5_config.json` 的 `legacy_mods` / `legacy_client_mods`，合并逻辑和当前版一样（双端/仅客户端/仅服务端）。
 - 文件名 `mod-<modid>-1201.md`，`auto: mod-legacy`，`role` 跟当前版一致，**不进左栏**。
-- 两版都有的模组：当前版页面顶部有「版本：1.21.1（当前）｜1.20.1（旧服存档）」切换条，旧版页反向链回来。
+- 两版都有的模组：当前版页面顶部有「版本：1.21.1（当前）｜1.20.1（1.20.1 服）」切换条，旧版页反向链回来。
 - 只有旧版才有的模组：只建存档页，不产生「补简介」任务——先把当前版补完，旧版简介从当前版继承。
 - 旧版总览是 `mod-index-legacy`，玩家可见；当前版总览 `mod-index` 只列现行模组，避免混淆。
 - 想让旧版重新公开/隐藏，改 `s5_config.json` 的 `role_override` 或直接调 `legacy_mods` 目录。

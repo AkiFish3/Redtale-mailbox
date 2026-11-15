@@ -1,5 +1,5 @@
 ---
-title: Roughly Enough Items (REI)
+title: 物品管理器（Roughly Enough Items）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Roughly Enough Items (REI)
+# 物品管理器（Roughly Enough Items）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-roughlyenoughitems-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-roughlyenoughitems-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Roughly Enough Items (REI)
 | Mod ID | `roughlyenoughitems`

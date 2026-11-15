@@ -11,7 +11,7 @@ auto: mod
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-bclib-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-bclib-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox BCLib
 | Mod ID | `bclib`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+BetterEnd / BetterNether 团队的世界生成基础库：管生物群系源、维度补丁和地形拼装。玩家不直接接触，但它决定新群系能不能正常生成。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到；它出问题时表现是新维度/新群系不生成或地形错乱。
+- 服务端侧：`config/bclib/main.json` 控补丁应用（`apply_patches`、`repairBiomesOnLoad`），另有 `generator.json`、`server.json` 管生成与服务端行为。
 
 ## 相关页面
 

@@ -12,8 +12,16 @@ auto: mod-index
 
 | 项 | 数 |
 |---|---|
-| 本页收录 | **8** 个 |
-| 全服模组合计（含玩家可见页） | 241 |
+| 本页收录 | **10** 个 |
+| 全服模组合计（含玩家可见页） | 243 |
+
+### 前置库与 API（1）
+
+别的模组依赖的库，玩家平时感知不到。
+
+<div class="tablewrap"><table class="wikitable"><thead><tr>
+<th>名称</th><th>Mod ID</th><th>版本</th><th>端</th><th>作者</th>
+</tr></thead><tbody><tr><td><a href="/p/mod-lithostitched">Lithostitched</a></td><td><code>lithostitched</code></td><td>1.8.1</td><td>仅服务端</td><td>Apollo</td></tr></tbody></table></div>
 
 ### 服务端运维（8）
 
@@ -22,6 +30,14 @@ auto: mod-index
 <div class="tablewrap"><table class="wikitable"><thead><tr>
 <th>名称</th><th>Mod ID</th><th>版本</th><th>端</th><th>作者</th>
 </tr></thead><tbody><tr><td><a href="/p/mod-chunky">Chunky</a></td><td><code>chunky</code></td><td>1.4.23</td><td>服务端工具</td><td>pop4959</td></tr><tr><td><a href="/p/mod-chunkyborder">ChunkyBorder</a></td><td><code>chunkyborder</code></td><td>1.2.18</td><td>服务端工具</td><td>pop4959</td></tr><tr><td><a href="/p/mod-dbe">DBE</a></td><td><code>dbe</code></td><td>1.0.1044-SNAPSHOT</td><td>服务端工具</td><td>Abbolevil, SoothSayer, 曦月(SolarMoon), 甜粽子(Sweetzonzi)</td></tr><tr><td><a href="/p/mod-dbe_npc">DBE NPC</a></td><td><code>dbe_npc</code></td><td>1.0.1044-SNAPSHOT</td><td>服务端工具</td><td>Abbolevil, SoothSayer, 曦月(SolarMoon), 甜粽子(Sweetzonzi)</td></tr><tr><td><a href="/p/mod-ftbbackups2">FTB Backups 2</a></td><td><code>ftbbackups2</code></td><td>1.0.28</td><td>服务端工具</td><td>CreeperHost</td></tr><tr><td><a href="/p/mod-packetfixer">PacketFixer</a></td><td><code>packetfixer</code></td><td>3.3.1</td><td>服务端工具</td><td>TonimatasDEV</td></tr><tr><td><a href="/p/mod-server_i18n_api">Server I18n API</a></td><td><code>server_i18n_api</code></td><td>1.5</td><td>服务端工具</td><td>IAFEnvoy</td></tr><tr><td><a href="/p/mod-spark">spark</a></td><td><code>spark</code></td><td>1.10.124</td><td>服务端工具</td><td>—</td></tr></tbody></table></div>
+
+### 其他（1）
+
+还没归类的模组。
+
+<div class="tablewrap"><table class="wikitable"><thead><tr>
+<th>名称</th><th>Mod ID</th><th>版本</th><th>端</th><th>作者</th>
+</tr></thead><tbody><tr><td><a href="/p/mod-tectonic">Tectonic</a></td><td><code>tectonic</code></td><td>3.0.28</td><td>仅服务端</td><td>Apollo</td></tr></tbody></table></div>
 
 ## 说明
 

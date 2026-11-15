@@ -1,5 +1,5 @@
 ---
-title: Better McDonald's Mod
+title: 麦当劳食品（Better McDonald's Mod）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Better McDonald's Mod
+# 麦当劳食品（Better McDonald's Mod）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+往游戏里塞了一整套麦当劳风格的食物和饮料：汉堡、薯条、可乐之类，带各自的饱食度与效果。图一乐、或者在服务器里开家快餐店时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用合成台按配方做，配件和饮料分开；吃了回饱食度，部分食物带短时效果。
+- 服务端侧：无独立配置文件，内容全在配方与物品定义里。
 
 ## 相关页面
 

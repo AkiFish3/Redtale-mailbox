@@ -1,5 +1,5 @@
 ---
-title: Spooky Doors
+title: 惊悚之门（Spooky Doors）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Spooky Doors
+# 惊悚之门（Spooky Doors）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-spookydoors-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-spookydoors-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Spooky Doors
 | Mod ID | `spookydoors`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+让门变得「不老实」：靠近会自己缓缓打开、镜头被门带着转、开关时带恐怖片式的顿挫，还能用蜂蜜块之类「驱邪」把门恢复正常。做鬼屋、恐怖地图或万圣节活动时很好用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：默认模式下普通门就有概率闹鬼（自开、镜头跟着偏）；拿蜂蜜块右键可驱邪、拿恶魂之泪右键可反向让门闹鬼；若服主设成强制模式，这两种道具都无效。
+- 服务端侧：`config/spookydoors-common.toml`：`spookyDoorActivation` 三档 `OPTIONAL`（默认不闹，需指令开启）/`DEFAULT`（默认闹，可关）/`FORCED`（全部强制闹）；`allowItemToExorciseDoors`、`allowItemToHauntDoors` 开关驱邪与闹鬼道具；`moveCameraWithDoor` 管镜头跟随。
 
 ## 相关页面
 

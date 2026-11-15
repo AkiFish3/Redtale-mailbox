@@ -1,5 +1,5 @@
 ---
-title: Create
+title: 机械动力（Create）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Create
+# 机械动力（Create）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-create-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-create-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Create
 | Mod ID | `create`
@@ -34,7 +34,7 @@ auto: mod
 ## 在赤物语里
 
 - 玩家侧：做自动农场、矿车货运、装饰性机械都靠它。注意规则第七条，中大型生电装置仍然受限。
-- 服务端侧：配方与应力参数在 `config/create-common.toml`、`config/create_server.toml`。
+- 服务端侧：配方与应力参数在 `config/create-common.toml`、`config/create-server.toml`。
 
 ## 相关页面
 

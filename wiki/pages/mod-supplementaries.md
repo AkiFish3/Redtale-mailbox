@@ -1,5 +1,5 @@
 ---
-title: Supplementaries
+title: 附属物（Supplementaries）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Supplementaries
+# 附属物（Supplementaries）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-supplementaries-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-supplementaries-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Supplementaries
 | Mod ID | `supplementaries`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+原版风格的「小物件全家桶」：绳梯、滑轮、告示牌挂旗、锁、计时炸弹、加固玻璃、挂画等一整套实用装饰方块，都做得像原版本来就有。想给建筑加细节、或者要几个轻量的功能性方块（升降机、绳梯、铁门加固）时用它，不用为了一个功能装一整个大模组。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：装饰方块在创造分类里按材质找；绳梯可攀爬兼当垂直通道，滑轮能拉绳索运货，锁可以给箱子/门加密码，加固玻璃能挡苦力怕爆炸。
+- 服务端侧：`config/supplementaries-common.toml`，分 `[redstone]` `[functional]` `[building]` `[tools]` `[general]` `[tweaks]` 六组；`[general]` 的 `dispensers` 控制发射器能否用模组物品，`red_merchant_spawn_multiplier` 调红衣商人出现率。
 
 ## 相关页面
 

@@ -1,5 +1,5 @@
 ---
-title: Beautify
+title: 美化家居（Beautify）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Beautify
+# 美化家居（Beautify）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-beautify-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-beautify-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Beautify
 | Mod ID | `beautify`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+一堆原版风格的家具与小装饰：百叶窗、花架、水壶、挂画、灯串之类，模型刻意贴着原版材质做。装修室内、给建筑补生活感时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：工作台合成后直接摆放；百叶窗右键会连带打开附近同一组窗（范围由服务端配），村里还会刷植物学家卖花。
+- 服务端侧：`config/beautify-server.toml`：`searchRadius` 是百叶窗联动开关的搜索半径，`botanistSpawnWeight` 是村庄植物学家小屋的生成权重。
 
 ## 相关页面
 

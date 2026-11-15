@@ -1,5 +1,5 @@
 ---
-title: Armourer's Workshop
+title: 盔甲工坊（Armourer's Workshop）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Armourer's Workshop
+# 盔甲工坊（Armourer's Workshop）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-armourers_workshop-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-armourers_workshop-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Armourer's Workshop
 | Mod ID | `armourers_workshop`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+游戏内的皮肤编辑器：玩家可以把盔甲、武器、方块画成自定义外观，存成皮肤文件共享或上架。想给自己弄一套全世界独一份的外观时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：在工坊的皮肤桌上画模型、给装备套皮肤，染色台改颜色，方块皮肤可以整片贴到建筑上；撤销次数有上限。
+- 服务端侧：`config/armourers_workshop-common.toml`：`serverCompressesSkins` 压皮肤节省带宽、`lockDyesOnSkins` 禁止从皮肤上洗掉染料、`maxUndos` 设撤销步数、`enableProtocolCheck` 校验客户端版本。
 
 ## 相关页面
 

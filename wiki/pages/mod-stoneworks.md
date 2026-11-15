@@ -1,5 +1,5 @@
 ---
-title: Stoneworks
+title: 石工坊（Stoneworks）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Stoneworks
+# 石工坊（Stoneworks）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-stoneworks-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-stoneworks-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Stoneworks
 | Mod ID | `stoneworks`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给每种原版石头补齐一整套变体：砖、瓦、柱、磨制、台阶、墙、栏杆等，风格统一，专治「想用深板岩做栏杆但没有」。建筑党堆细节时几乎必装。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：在装饰方块里按石种找对应变体，多数用石匠台或工作台合成；创造模式会集中在模组自带标签页，方便翻。
+- 服务端侧：`config/stoneworks-common.toml` 目前只有 `vanilla_variants_in_creative_tab`（是否把原版石变体塞进创造标签页）；方块与配方是数据驱动的，服务端装同版本即可。
 
 ## 相关页面
 

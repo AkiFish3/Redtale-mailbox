@@ -1,5 +1,5 @@
 ---
-title: Majo's Broom Dl909
+title: 魔女的扫帚（Majo's Broom）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Majo's Broom Dl909
+# 魔女的扫帚（Majo's Broom）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-majobroom-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-majobroom-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Majo's Broom Dl909
 | Mod ID | `majobroom`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+一把能骑的飞行扫帚，造型取自《魔女之旅》伊蕾娜的扫帚：手持即飞、可悬停、能载人，飞行手感偏轻盈而不是创造模式那种直上直下。跑图、跨地形、拍风景时比走路舒服，也更符合魔法系建筑的调性。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：合成扫帚后右键骑上，W/A/S/D 控制方向、空格上升、Shift 下降；落地会自动减速，长时间飞行不掉饥饿。
+- 服务端侧：`config/majobroom-server.toml` 的 `[flight]`：`maxSpeed` 水平最大速度（默认 `0.9`）、`acceleration` 水平加速度、`maxVerticalSpeed` 垂直速度上限（默认 `0.5`）、`momentum` 惯性（默认 `0.92`，越大越难停）。
 
 ## 相关页面
 

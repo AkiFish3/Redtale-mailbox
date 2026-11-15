@@ -1,5 +1,5 @@
 ---
-title: Dusty Decorations
+title: 尘埃装饰（Dusty Decorations）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Dusty Decorations
+# 尘埃装饰（Dusty Decorations）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-dustydecorations-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-dustydecorations-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Dusty Decorations
 | Mod ID | `dustydecorations`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+偏港口与集市主题的装饰方块，木头、绳索、货箱、招牌一类，做旧质感。搭码头、市场、仓库区时能快速出氛围。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：在创造物品栏取用或按配方合成；多数是纯装饰，少数带朝向，用右键调整。
+- 服务端侧：无独立配置文件。
 
 ## 相关页面
 

@@ -1,5 +1,5 @@
 ---
-title: Immersive Paintings
+title: 沉浸式画作（Immersive Paintings）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Immersive Paintings
+# 沉浸式画作（Immersive Paintings）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-immersive_paintings-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-immersive_paintings-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Immersive Paintings
 | Mod ID | `immersive_paintings`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+把任意图片变成游戏里的画挂到墙上，支持任意尺寸、透明通道和自定义画框。装修展厅、还原现实照片、给自己基地挂张地图都行。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用画布和染料合成空白画，手持后在界面上传图片并选尺寸，贴到墙上即可；别人的画默认也能看到。
+- 服务端侧：`config/immersive_paintings/common_config.toml`：`maxUserImages` 限制每人上传张数（默认 1000），`maxUserImageWidth` / `maxUserImageHeight` 限制图片像素（默认 4096），`uploadPermissionLevel` 是上传所需权限等级（`0` 表示所有人都能传），`enableBundledPaintings` 控制是否带内置画作。
 
 ## 相关页面
 

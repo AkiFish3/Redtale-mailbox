@@ -1,5 +1,5 @@
 ---
-title: Compact Help Command
+title: 紧凑帮助（Compact Help Command）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Compact Help Command
+# 紧凑帮助（Compact Help Command）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-compacthelpcommand-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-compacthelpcommand-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Compact Help Command
 | Mod ID | `compacthelpcommand`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+重写 `/help`：彩色、可悬停看说明、按页翻。服务器指令一多，原版 `/help` 刷一屏根本看不完，用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：直接 `/help` 看分页列表，鼠标悬停在指令上看子指令说明，翻页用页码参数。
+- 服务端侧：`config/compacthelpcommand.json5`：`amountCommandsPerPage` 每页条数、`commandColour` / `subcommandColour` 配色编号（0–15 对应原版颜色）。
 
 ## 相关页面
 

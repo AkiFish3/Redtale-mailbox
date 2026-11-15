@@ -1,5 +1,5 @@
 ---
-title: Oh The Biomes We've Gone
+title: 漫游生物群系（Oh The Biomes We've Gone）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Oh The Biomes We've Gone
+# 漫游生物群系（Oh The Biomes We've Gone）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-biomeswevegone-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-biomeswevegone-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Oh The Biomes We've Gone
 | Mod ID | `biomeswevegone`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+大型群系模组（BYG 的续作）：往主世界、下界、末地各塞了几十个新群系，配套新树种、花草、木材套装与专属生物，地貌风格从温带林地到荒芜盐滩都有。嫌原版跑图风景重复、想给建筑找新木料时用它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：跑图时按 F3 看群系名，新群系里能采到对应的新木头、花和果实；部分群系有专属结构与小怪，进之前先看一眼装备。
+- 服务端侧：`config/biomeswevegone/` 下的 JSON：`world_generation.json` 调群系权重与是否启用、`mob_spawn.json` 管各群系刷怪表、`trades.json` 是流浪商人与村民交易、`misc.json` 是杂项开关；改完需重载数据包。
 
 ## 相关页面
 

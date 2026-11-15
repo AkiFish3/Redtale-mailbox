@@ -1,5 +1,5 @@
 ---
-title: SeasonHud
+title: 季节显示（SeasonHud）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# SeasonHud
+# 季节显示（SeasonHud）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+配合「Serene Seasons / 宁静季节」用的客户端小插件：在 HUD（或各类小地图模组的角落）常驻显示当前季节和季节进度，不用再去翻日历。开了季节玩法的整合包里，想随时知道现在是春是冬、作物什么时候换季时加它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：装上后在屏幕角落（或你用的小地图里）直接看到当前季节与进度条；位置与显示方式在 `config/seasonhud-server.toml` 里可调。
+- 服务端侧：`config/seasonhud-server.toml`：调 HUD 显示位置、是否显示季节进度、与特定小地图模组的兼容开关等；改完重载即可。
 
 ## 相关页面
 

@@ -1,5 +1,5 @@
 ---
-title: FTB Teams
+title: 队伍系统（FTB Teams）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# FTB Teams
+# 队伍系统（FTB Teams）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-ftbteams-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-ftbteams-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox FTB Teams
 | Mod ID | `ftbteams`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给服务器加一层「队伍」概念：玩家自己建队、拉人、设队长和队员，队伍关系会被 FTB 全家桶共用。FTB 任务的进度共享、FTB Chunks 的区块共同认领，都靠它判断「谁和谁是一伙的」。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：按默认按键打开队伍界面（FTB Library 的侧栏）建队并邀请队友；建队后任务进度可以选「队伍共享」，认领的区块队友也能用。
+- 服务端侧：`config/ftbteams-server.snbt`：`limited_lives` 是队伍共享生命数，默认 `0` 表示关闭；设成正数后队员死亡会扣队伍命，命耗尽时死亡的人被踢出队伍、队长死亡会顺位转让。改 `world/serverconfig/` 下的同名文件才不会被整合包更新覆盖。
 
 ## 相关页面
 

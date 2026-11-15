@@ -1,5 +1,5 @@
 ---
-title: Item Banning
+title: 物品禁用（Item Banning）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Item Banning
+# 物品禁用（Item Banning）
 
 <!-- auto:begin -->
 
@@ -26,12 +26,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+服主用来禁物品的开关：被禁的物品无法合成、不能交易、放进容器会被清掉、丢在地上也会消失。有人拿创造模式物品或漏洞道具搞事时，用它比逐个回收省事。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：通常只会看到「这个物品不能拿」的提示；本服未启用任何禁用条目，正常物品不受影响。
+- 服务端侧：`config/itemblacklist.properties.toml`：`[banProperties]` 的 `banContainerChanged` / `banMerchantTrades` / `banCraftingRecipes` / `banItemEntity` 分别控制容器、交易、配方、掉落四个入口是否拦截，`banRate` 是拦截检查概率（调低省性能），`[miscProperties]` 的 `showMessages` 决定非 OP 玩家能否看到提示。
 
 ## 相关页面
 

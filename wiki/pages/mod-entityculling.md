@@ -1,5 +1,5 @@
 ---
-title: EntityCulling
+title: 实体剔除（EntityCulling）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# EntityCulling
+# 实体剔除（EntityCulling）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-entityculling-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-entityculling-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox EntityCulling
 | Mod ID | `entityculling`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+用异步光线追踪判断哪些方块实体和生物其实被墙挡住看不见，直接跳过它们的渲染。人多、箱子多、刷怪塔多的地方掉帧时，它是最直接的客户端提帧手段之一。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：纯客户端优化，装上就生效，没有界面也不用设置；看不到的东西不再渲染，视野内的画面不受影响。
+- 服务端侧：无配置文件，仅客户端生效。
 
 ## 相关页面
 

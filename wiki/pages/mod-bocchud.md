@@ -1,5 +1,5 @@
 ---
-title: BoccHUD
+title: 迷你 HUD（BoccHUD）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# BoccHUD
+# 迷你 HUD（BoccHUD）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+MiniHUD 的非官方 NeoForge 移植：在屏幕上叠几行「迷你 F3」信息（坐标、生物群系、朝向、光照、区块边界），还有若干 overlay。想看坐标又不想开整块 F3 时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：默认有快捷键打开配置界面，逐项勾选要显示的行；只装客户端即可，服务端不参与。
+- 服务端侧：纯客户端模组，配置文件首次进游戏后生成在客户端 `config` 目录（bocchud 相关 json5），服务端无需配置。
 
 ## 相关页面
 

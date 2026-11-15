@@ -1,5 +1,5 @@
 ---
-title: Better Combat
+title: 更好的战斗（Better Combat）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Better Combat
+# 更好的战斗（Better Combat）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-bettercombat-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-bettercombat-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Better Combat
 | Mod ID | `bettercombat`

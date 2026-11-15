@@ -1,5 +1,5 @@
 ---
-title: Better Advanced Tooltips
+title: 高级提示信息（Better Advanced Tooltips）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Better Advanced Tooltips
+# 高级提示信息（Better Advanced Tooltips）
 
 <!-- auto:begin -->
 
@@ -26,12 +26,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+在原版按 F3+H 打开的高级提示基础上，再给物品补上标签、组件、耐久、食物属性等更多行。查装备词条、核对配方细节时用。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：按 F3+H 开关，鼠标悬停物品就能看到多出来的几行；嫌乱可以只留需要的那几类。
+- 服务端侧：纯客户端模组，配置在客户端的 `config/better-advanced-tooltips-client.toml`，服务端不用管。
 
 ## 相关页面
 

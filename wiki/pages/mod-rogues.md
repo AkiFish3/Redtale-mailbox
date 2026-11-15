@@ -1,5 +1,5 @@
 ---
-title: Rogues & Warriors (RPG Series)
+title: 盗贼与战士（Rogues & Warriors）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Rogues & Warriors (RPG Series)
+# 盗贼与战士（Rogues & Warriors）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-rogues-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-rogues-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Rogues & Warriors (RPG Series)
 | Mod ID | `rogues`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+Daedelus 的 RPG 系列战斗模组：加了一套盗贼、战士职业与对应的武器、技能（潜行背刺、连击、破防等），走「冷兵器武术」而非魔力路线。想给近战加点职业深度、下副本有清晰定位时选它。同作者还有法师、游侠等系列可搭配。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：做出职业武器后右键绑定职业，用快捷键释放职业技能、靠连击/背刺积累效果；技能数值与可学内容在 `config/rogues/` 下（`equipment_v3.json` 装备、`tweaks.json` 平衡开关、`villages.json` 村庄交易）。
+- 服务端侧：`config/rogues/` 下的 JSON：`effects.json` 调技能效果、`equipment_v3.json` 改装备属性、`tweaks.json` 是平衡总开关、`villages.json` 管村民交易；改完重载数据包生效。
 
 ## 相关页面
 

@@ -1,5 +1,5 @@
 ---
-title: Armor Statues
+title: 盔甲雕像（Armor Statues）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Armor Statues
+# 盔甲雕像（Armor Statues）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-armorstatues-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-armorstatues-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Armor Statues
 | Mod ID | `armorstatues`

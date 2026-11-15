@@ -303,11 +303,12 @@ python app.py 9000
 
 ## 模组页（S5 自动维护）
 
-`mod-*.md` 一共 241 页，由 `D:\redtale-ops\_srv_artifacts\s5_wiki_sync.py` 生成，**不要手动新建同名文件**。
+由 `D:\redtale-ops\_srv_artifacts\s5_wiki_sync.py` 生成，**不要手动新建同名文件**。
 
-- 每页文件名 `mod-<Mod ID>`，分组「模组」，`nav: no`（不进左栏，从「模组总览」点进去）
+- 1.21.1 服：`mod-<Mod ID>.md` 241 页，`nav: no`，从「模组总览」进
+- 1.20.1 服（**仍在运行**）：`mod-<Mod ID>-1201.md` 577 页，从「1.20.1 服模组」进；两套整合包各自维护
 - 双端 / 仅客户端模组 → `role: player`；仅服务端与服务端工具（chunky、spark 等）→ `role: admin`
-- 两张总览页：`mod-index`（玩家可见，233 条）、`mod-index-server`（管理员，8 条服务端工具）
+- 三张总览页：`mod-index`（1.21.1，233 条）、`mod-index-server`（管理员，8 条工具）、`mod-index-legacy`（1.20.1，576 条，其中 183 个两服都装）
 - 页面里 `<!-- auto:begin --> … <!-- auto:end -->` 之间是脚本区，**只改这里**；
   其余段落（中文简介、在赤物语里）是手写区，脚本永不覆盖
 - 模组增删、版本变化 → 下次跑脚本自动同步，并把「还缺什么」写进 `D:\redtale-ops\_srv_S5_WIKI.md` 的任务池

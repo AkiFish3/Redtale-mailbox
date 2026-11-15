@@ -1,5 +1,5 @@
 ---
-title: PacketFixer
+title: 封包修复（PacketFixer）
 role: admin
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# PacketFixer
+# 封包修复（PacketFixer）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-packetfixer-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-packetfixer-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox PacketFixer
 | Mod ID | `packetfixer`
@@ -31,12 +31,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+放宽网络包与原版 NBT/字符串的大小上限，解决「发包过大」导致的踢出、区块加载失败、大箱子/大机械的 NBT 传不过去这类问题。装了大量内容模组、机器或容器一多就有人掉线时，先试它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，装上即生效；如果之前因为「Packet too large」被踢，装完一般直接恢复。
+- 服务端侧：`config/packetfixer.properties`：`packetSize`、`decoderSize`、`nbtMaxSize`、`stringSize`、`varInt21` 等上限，当前 `allSizesUnlimited=true` 走无限制档；要保守一点就设成 `false` 再单独调大 `nbtMaxSize`。
 
 ## 相关页面
 

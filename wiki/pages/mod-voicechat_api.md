@@ -1,5 +1,5 @@
 ---
-title: Simple Voice Chat API
+title: 简单语音 API（Simple Voice Chat API）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Simple Voice Chat API
+# 简单语音 API（Simple Voice Chat API）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+语音模组的开发接口包，让其他模组能接入语音系统，做无线电、对讲机、靠说话触发的机关这类玩法。单独装没有任何功能，只在有模组依赖它时才需要。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：用不到，纯前置；装了依赖它的语音扩展（无线电、对讲机等）才用得上。
+- 服务端侧：无独立服务端配置文件；语音本体设置仍在 `config/voicechat/`。
 
 ## 相关页面
 

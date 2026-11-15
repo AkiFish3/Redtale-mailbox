@@ -1,5 +1,5 @@
 ---
-title: ExtraQuests [FTB Quests]
+title: FTB 任务扩展（ExtraQuests）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# ExtraQuests [FTB Quests]
+# FTB 任务扩展（ExtraQuests）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-extraquests-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-extraquests-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox ExtraQuests [FTB Quests]
 | Mod ID | `extraquests`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+给 FTB Quests 补任务类型和奖励类型：多了一些原版没有的判定条件（比如检测物品、进度、统计）和奖励形式（发指令、给经验等）。做任务线时能把「做什么算完成」写得更细。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：看到的是任务书里多出来的任务条目，操作方式不变；奖励若是指令型，会在完成时自动执行。
+- 服务端侧：`config/extraquests/config.yml`：`blacklist-console` 与 `blacklist-console-list` 决定指令奖励能执行哪些命令，默认已把 `op`、`gamemode` 拉黑，避免任务奖励被当成提权后门。
 
 ## 相关页面
 

@@ -1,5 +1,5 @@
 ---
-title: Thigh highs etc
+title: 过膝袜（Thigh Highs Etc）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Thigh highs etc
+# 过膝袜（Thigh Highs Etc）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-thigh_highs_etc-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-thigh_highs_etc-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Thigh highs etc
 | Mod ID | `thigh_highs_etc`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+etcetera 模组的服装附属，加了一批过膝袜外观，属于纯装饰的穿戴层，不改数值。想给角色换装、截图或者做统一制服时用；单独装没内容，要跟 etcetera 一起。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：在 etcetera 的服装栏位里选过膝袜穿上，可按染料改色；纯外观，不占护甲位、不加属性。
+- 服务端侧：无独立服务端配置文件；衣物定义与配方随 etcetera 的数据包，服务端装同版本即可。
 
 ## 相关页面
 

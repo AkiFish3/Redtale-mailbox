@@ -1,5 +1,5 @@
 ---
-title: Twilight Lootr
+title: 暮色战利品（Twilight Lootr）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Twilight Lootr
+# 暮色战利品（Twilight Lootr）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+把 Lootr 的「每人一份独立战利品」机制接到暮色森林的 BOSS 上：参与击杀的每个玩家都会拿到自己的宝箱内容，不会出现一个人开完其他人空手的情况。多人服打暮色 BOSS 时基本必备。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：打完 BOSS 后在你自己的宝箱界面里开箱，看到的是属于你的那份；别人开同一个箱子不影响你。
+- 服务端侧：`config/twilight_lootr-common.toml`：`enable_decay`（当前 true，宝箱会过期消失）、`decay_time`（3600 tick = 3 分钟）。怕玩家来不及捡就把 `decay_time` 调大或关掉 decay。
 
 ## 相关页面
 

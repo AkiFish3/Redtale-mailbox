@@ -1,5 +1,5 @@
 ---
-title: Paladins & Priests (RPG Series)
+title: 圣骑士与牧师（Paladins & Priests）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Paladins & Priests (RPG Series)
+# 圣骑士与牧师（Paladins & Priests）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-paladins-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-paladins-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Paladins & Priests (RPG Series)
 | Mod ID | `paladins`
@@ -28,12 +28,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+RPG 系列里的辅助职业模组：加了一套圣骑士（盾、锤、光环、治疗）与牧师（法杖、群体增益、复活）的装备和技能书，靠「神圣」资源而非魔力施法。组队下副本、想当奶或前排时选它。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：做出职业装备后右键装备绑定职业，技能用快捷键释放、消耗神圣值；神圣值靠攻击亡灵或队友附近的光环回复，技能书可以在村庄教堂结构里找到。
+- 服务端侧：`config/paladins/` 下按系统分 JSON：`equipment_v2.json` 调装备属性、`effects.json` 是技能效果数值、`shields.json` 管盾牌格挡、`tweaks.json` 是平衡开关，改完重载数据包生效。
 
 ## 相关页面
 

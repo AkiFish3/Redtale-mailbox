@@ -1,5 +1,5 @@
 ---
-title: Gardener's Dream
+title: 花盆自由（Gardener's Dream）
 role: player
 group: 模组
 order: 300
@@ -7,11 +7,11 @@ nav: no
 auto: mod
 ---
 
-# Gardener's Dream
+# 花盆自由（Gardener's Dream）
 
 <!-- auto:begin -->
 
-**版本**：**1.21.1（当前）** ｜ [[mod-mr_gardeners_dream-1201|1.20.1（旧服存档）]]
+**版本**：**1.21.1（当前）** ｜ [[mod-mr_gardeners_dream-1201|1.20.1（1.20.1 服）]]
 
 ::: infobox Gardener's Dream
 | Mod ID | `mr_gardeners_dream`
@@ -29,12 +29,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+把「哪些植物能放进花盆」的限制拆掉：花、树苗、蘑菇、作物、藤蔓基本都能塞进原版花盆、饰纹陶罐、玩家头颅，还加了半砖高的矮花盆。做景观、摆店面、装饰房间时不用再愁「这株植物放不进去」。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：手持要摆的植物对着花盆/陶罐/头颅右键即可放入，空手右键取回；矮花盆用半砖加陶土合成，摆在窗台或桌面上高度正好。
+- 服务端侧：无服务端配置文件，纯装饰向内容，不改方块行为。
 
 ## 相关页面
 

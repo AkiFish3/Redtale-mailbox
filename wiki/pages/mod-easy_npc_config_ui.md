@@ -1,5 +1,5 @@
 ---
-title: Easy NPC: Config UI
+title: 简易 NPC 配置界面（Easy NPC: Config UI）
 role: player
 group: 模组
 order: 300
@@ -7,7 +7,7 @@ nav: no
 auto: mod
 ---
 
-# Easy NPC: Config UI
+# 简易 NPC 配置界面（Easy NPC: Config UI）
 
 <!-- auto:begin -->
 
@@ -27,12 +27,12 @@ auto: mod
 
 ## 中文简介
 
-_待补。写 2–4 句：这个模组解决什么问题、玩家会在什么时候用到它。_
+Easy NPC 的可视化配置界面：在游戏里点开就能改 NPC 的外观、装备、属性、掉落和对话，不用手写配置文件。
 
 ## 在赤物语里
 
-- 玩家侧：
-- 服务端侧：
+- 玩家侧：对着 NPC 打开配置界面，按页签改外观、装备、AI 与交易；改完即时生效。
+- 服务端侧：无独立配置文件，界面里的改动写入 `config/easy_npc/` 下的 `npc_base.cfg`、`dialog_options.cfg` 等。
 
 ## 相关页面
 
