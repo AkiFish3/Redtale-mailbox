@@ -82,7 +82,17 @@ order: 2
 
 <!-- s7:begin -->
 
-_尚未同步。S7 下一次运行会写入本轮进度：当前里程碑、做了什么、下一步、卡点。_
+**当前里程碑：M0（地基）—— 出口条件已达成**
+
+本轮做了什么（2026-11-15）：
+
+- Gradle 骨架搭好（ModDevGradle 2.0.148 / NeoForge 21.1.257 / wrapper 8.8），落地 22 个源文件：自写 JSON5 解析器、配置目录热载、脚本层三张注册表（effect 2 / trigger 2 / condition 3）、`/redtale reload｜status｜list｜fire`、默认脚本自动生成。
+- 测试服实测通过：启动即生成 `config/redtale_project/` 并载入 1 条脚本；改文本后 `reload` 立刻生效；坏配置只跳过坏的那条，其余照常跑。
+- 顺带把属性清单做实了：从上游 jar 里取出 61 条共用属性实证，写成 64 条候选表（`docs/ATTRIBUTE-REGISTRY.md`），等拍板。
+
+下一步（R2）：属性注册表落地 + `/redtale attr`、`settle()` 单测、`attack_speed.json5` 攻速来源表。
+
+卡点：**Gradle build 拉不到 `maven.neoforged.net`**（`neoform-runtime` 五个国内镜像全 404），本轮改用离线 javac + 手工打 jar 上测试服；正式构建等拍板（已进「待拍板」）。
 
 <!-- s7:end -->
 

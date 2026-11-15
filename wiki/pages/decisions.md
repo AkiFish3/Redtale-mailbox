@@ -54,6 +54,15 @@ order: 0
 - 拍板：_待填_
 <!-- inbox:key=S2-20261115-050446 -->
 
+### S7-20261115-102617 · 构建链路：Gradle 拉不到 maven.neoforged.net，走哪条路
+- 队列：S7
+- 时间：2026-11-15 10:26
+- 问题：M0 实测：neoform-runtime-2.0.31.pom 在腾讯/华为/阿里/清华/bmclapi 五个镜像全 404，官方源 DNS 被污染直连超时，Gradle build 无法完成。选哪条？
+- 选项：A 开代理给 Gradle（最小改动，一次性） ／ B 改 hosts 指真实 IP（需管理员权限） ／ C 认离线路径：本地只用 tools/offline_check.py 验证，发布包由能联网的机器构建
+- 默认：C
+- 相关：[[project]]
+- 拍板：_待填_
+<!-- inbox:key=S7-20261115-102617 -->
 
 ## 已定
 

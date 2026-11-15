@@ -19,6 +19,7 @@
 | 每轮做了什么、为什么这么做 | `_srv_META_LOG.md` | 430 KB |
 | 双方需求单台账 | `_srv_REQUESTS.md` | 27 KB |
 | 当前收件箱待办 | `_srv_INBOX.md` | 3 KB |
+| **srv 七个队列各自做到哪 / 卡在谁 / 等谁拍板** | `_srv_QUEUE_BOARD.md` | 6 KB |
 | 前史：账号更替、北岸枫林 / 未寻旅境 | `history/前史-旧服与账号.md` | 9 KB |
 | 旧账号时期跨机对话逐条摘要 | `mail/对话记录-srv侧.md` | 14 KB |
 | Wiki 地志队列的三份笔记 | `_srv_S5_NOTES.md` / `_srv_S5_REQUESTS.md` / `_srv_S5_WIKI.md` | 15 KB |
