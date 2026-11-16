@@ -89,6 +89,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-16 08:47 · S7 · 验收 **T-0007 → VERIFIED**（3/3，`item scan` 件数对账因无在线玩家挂账）；实现 D33 第 ④ 个刷新点 `UpgradeSweep`（reload 后分帧全量刷新，实测箱内过期件 `content_rev 0→3` 且 `rolled_stats` 保留）；**派 T-0010**（`RepairSpec`，D23 第二半），在制品 3/3 · `src/main/java/com/redtale/project/core/hook/UpgradeSweep.java`、`docs/ROUND-R14-SWEEP.md`、`PLAN.md` §13 R14 · 下一步：验 T-0008/0009/0010，接消耗品右键与磨刀石
 
+- 2026-11-16 09:15 · S4 · **第 90 轮证据轮**：不新增玩法，按 D1~D33 把新服 L3 前提从「装 mod」对齐到「S7 自研」——设计端 self-built / 部署端第三方 mod 双轨（正式服仍 228 jar、无 redtale jar、M3~M7 未完）· `BACKLOG` A段 T54 + B段 B-35 / `RESEARCH` 第 90 批 2.81 / `PLAN_NEXT` §15 · 下一步：S7 自研 jar 进正式服时点定后，S4 做 §7 L3 表述替换轮；S4 当前 0 条待拍板、0 阻塞
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -136,3 +138,4 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 需要人拍板，去 §4 开一条 `Q-`，写清「默认怎么走」——默认项是为了让队列不被卡住。
 - 2026-11-16 07:22 · S7 · 验收 **T-0006 → VERIFIED**（3/3 + 自写独立探针 14/14）；**派 T-0008**（消耗品 `use` 段解析器，D23 第一层，在制品 T-0007+T-0008 = 2/3）。自研 D33 物品更新落地：`ItemUpgrader.ensure`（四出口 `NOT_CONTENT`/`ORPHAN`/`UNCHANGED`/`UPGRADED`，取值分派在 `ensure`）+ 新 `core/hook/ItemUpgradeHooks`（登录/换维度/复活/开容器/区块加载）。测试服 1 次启动实测三组：`rev 0→3` → `generic.attack_damage` **5.0 保留**、`physical_damage` **0.1→0.25**、`ghost_key` 删除并记账、名称/稀有度/耐久重建；`rev` 相等与孤儿组**组件逐字未变**；`/redtale reload` 后 5 件内容正常、ERROR 仍 4 条既有噪声，测试服已停（25567 关闭） · `E://RedtaleProject//docs//ROUND-R12-UPGRADE.md`、`PLAN.md` §13 R12 + §13.16、`src/main/java/com/redtale/project/{items/ItemUpgrader.java,core/hook/ItemUpgradeHooks.java}` · 下轮验 T-0007/T-0008；`ensure` 接结算路径（惰性兜底）+ 刷新点 ④（reload 后分帧全扫）+ M2 最后一块消耗品/修理
 - 2026-11-16 08:15 · S7 · 回答 Aki「`weapon_attributes` 是不是 MMOItems 的」→ **不是**，是 BetterCombat 的 datapack registry；原「只处理 `redtale_project:` 前缀」是自己加的保守阀门，已按「什么东西都要可改」放开：配置目录里放 `<ns>__<path>.json5` 即可覆盖外部定义（覆盖必 WARN，只引用不生成 → 引用与篡改可分、可审计）。新增 `docs/ITEM-UPDATE.md`（三层身份 / 4 刷新点 / 服务端推送 / U1~U10 矩阵）+ `PLAN.md` D33 + `ContentData` 补 `rolled_keys` 语义（键在里=玩家 roll 保旧值，不在=跟新定义走，这是「改配置全服生效」与「不许冲玩家资产」两条不再互斥的唯一办法）；派 **T-0009**（`/redtale item upgrade` 写回命令，`RedtaleCommand` 挂行由 S7 做） · 下一步：T-0009 落地后由 S7 挂行 + 起测试服验「升级后客户端 tooltip 立刻变」
+- 2026-11-16 08:43 · S8 · **T-0008 完成**（消耗品 `use` 段解析器，[DONE]，待 S7 验）：新建 `src/main/java/com/redtale/project/items/ConsumableSpec.java`（199 行，`Effect`/`Spec` 两个 record，卡外零改动）；build exit 0，离线探针 `build/probe/ConsProbe.java` 54/54 · `E://RedtaleProject//src//main//java//com//redtale//project//items//ConsumableSpec.java`、`E://RedtaleProject//build//probe//ConsProbe.java` · 下一步：S7 验 T-0008；S8 下轮按 id 升序领 T-0009
