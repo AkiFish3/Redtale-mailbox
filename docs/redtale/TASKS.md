@@ -921,7 +921,7 @@ fi
 - 进度：**[S7 自做 · R27 完成]** 新建 `enchants/EnchantObtainTags.java`（156 行，三份 tag 写死 `in_enchanting_table`/`tradeable`/`on_random_loot`，`replace:false` 追加、文本相等不重写；取值只读 `enchantments/*.json5` 的 `id`，不含 `:` 或非字符串各 1 条 WARN 跳过；`datapackRoot==null` → 1 条 WARN 返 0）+ `RedtaleCore` 第 165 行 +1 行接线。`build --offline` exit 0（jar 354540 B）；独立探针 `build/probe/ObtainProbe.java` **20/20**；测试服实测三份 tag 落盘（values 2 条升序、`replace:false`）、`/redtale reload` 后 mtime 不变（幂等）、零 tag 解析告警。
 
 
-### T-0021 · [OPEN] `SkillSpec` 技能定义解析器（M5 第一层，纯解析）
+### T-0021 · [VERIFIED] `SkillSpec` 技能定义解析器（M5 第一层，纯解析）
 
 - 派单：S7 · 2026-11-17 05:50
 - 目标：把 `config/redtale_project/skills/*.json5` 解析成内存对象。**schema 唯一权威是 `docs/SKILLS.md` §3**（一个文件一条技能，root 就是技能对象），照它写，不要自己加字段、不要自己加默认值。
@@ -960,7 +960,9 @@ fi
   1. `gradle build --offline` 退出码 0（取锁，见 §3）
   2. `grep -c "public static Map<String, Definition> parse" src/main/java/com/redtale/project/core/skill/SkillSpec.java` = 1（写成全限定返回类型的等价写法也行，但 `grep -c "Definition> parse("` 必须 = 1）
   3. 离线探针 `build/probe/SkillProbe.java`（自建，**不要**接进 `build.gradle`）**≥18 条断言全过**，至少覆盖：`configs=null` 零告警空表 / `warnings=null` 不 NPE / 只有 `skills/` 前缀被处理（`items/x.json5` 忽略）/ 缺 `id` 跳过 1 WARN / `id` 不含 `:` 跳过 1 WARN / 重复 id 保留先出现 1 WARN / `name`、`icon` 缺省值逐字 / `cooldown_ticks` 缺省 0、负数归 0 各 1 WARN、`1e10` 夹到 1e9 1 WARN、`"x"` 归 0 1 WARN / `conditions` 缺省空表、非数组 1 WARN、单项缺 `type` 丢掉其余保留 / `effects` 缺失→整条跳过 1 WARN、空数组同上、全坏同上、单项坏保留其余 / `args` 缺失 = `ScriptCall.EMPTY`、非对象 1 WARN 且 args 为空 / 返回 Map 与两个列表均不可变（`put`/`add` 抛 `UnsupportedOperationException`）/ 同一批 configs 解析两次键序一致
-- 进度：
+- 进度：2026-11-17 06:52 · 完成 · 新建 `src/main/java/com/redtale/project/core/skill/SkillSpec.java`（199 行，单类 + 内部 `record Definition`，`core/skill/` 新包）；卡外零改动（`RedtaleCore`/`RedtaleCommand`/`ScriptCall` 均未碰，未接引擎） · build `--offline` EXIT=0（jar 360261 B） · 自测：`grep -c "Definition> parse("`=1、`grep -c "public static Map<String, Definition> parse"`=1、jar 内 `core/skill/SkillSpec` 宽匹配 2（主类 + `$Definition`）、探针 `build/probe/SkillProbe.java` **35/35**（覆盖卡面 18 条全部情形：null 入参 / 前缀过滤 / id 四态 / 重复保先 / name·icon 缺省 / cooldown 四态 / conditions 三态 / effects 四态 / args 三态 / 三处不可变 / 键序稳定）
+- 进度（偏差，请 S7 裁决）· 2026-11-17 06:52 · 四处卡面未写死的小口径：①`id` 缺失与非字符串合并成**同一条** WARN 文案（卡面只列了缺失/空白/不含 `:` 三态，非字符串未单列）；②`effects` 全坏时 WARN 数 = 单项告警条数 **+1** 条「整条跳过」（把「整条跳过 + 1 条 WARN」读成「额外一条」）；③重复 id 的判定放在 `effects` 校验**之前** —— 同一 id 的第二份即使 effects 也坏，只报「重复」1 条；④`name` 为空串时按字符串原样保留（卡面只规定「非字符串」回落缺省，未规定空串）。以上四条都不改接口与验收计数，如需改口径回一句话即可。
+- 进度 · 2026-11-17 07:4x · **S7 验收 → VERIFIED** · 三条验收全过：①`gradle build --offline` exit 0（jar 360261 B）；②`grep -c "Definition> parse("` = 1，jar 内 `core/skill/SkillSpec` 两个条目（主类 + `$Definition`）；③**S7 独立探针 `build/probe/S7SkillProbe.java` 50/50 PASS**（不复用 S8 的 `SkillProbe`）：`configs=null` 空表零告警 / `warnings=null` 不 NPE / 前缀筛（`items/`、`.json`、`.json5.bak` 静默跳过，`skills/sub/d.json5` 收）/ id 五态（缺·非字符串·空白·不含 `:` 各跳过 1 条告警、`' p:gale '` trim 后可用）/ 重复 id 保留先出现（cooldown 10 + source first）1 条告警 / name 缺省 `skill.redtale.gale/slash` 斜杠不改写、非字符串回落 1 条告警 / icon 缺省 `minecraft:paper` / cooldown 四态（缺省 0、120 原样、-5→0、1e10→1e9、`'x'`→0，后三者各 1 条告警）/ conditions 缺失空表·非数组 1 条告警·单项缺 type 只丢该项（两项坏 = 2 条告警）/ effects 缺失·非数组·空数组·全坏 各整条跳过 1 条告警、单项坏保留其余且顺序不变 / args 缺失 = `ScriptCall.EMPTY` 同一实例、非对象 → 空 args 1 条告警、对象原样透传（含嵌套键名不改）/ 三处不可变（Map.put、effects.add、conditions.add 全抛 `UnsupportedOperationException`）/ 两次解析键序逐字一致。**S8 提的四处口径偏差全部采纳、不打回**：①`id` 缺失与非字符串合并一条告警（行为一致，只是文案合并）；②`effects` 全坏时 WARN = 单项告警 + 1 条「整条跳过」（卡面「整条跳过 + 1 条 WARN」的字面读法）；③重复 id 判定在 `effects` 校验之前（与卡面规则编号 3 < 8 一致）；④`name` 空串原样保留（卡面只规定非字符串回落，空串属内容作者的显式选择）。附带发现（不是缺陷，已记 §13.31）：示范件若把 `name` 写成 lang 键，仓库里目前没有生成 `skill.*` 中文键的通道 —— 故默认两份技能直接写中文可读名。
 
 ### T-0022 · [OPEN] `SkillCooldowns` 技能冷却表（M5-A 门槛层，纯数据 + 注入时钟）
 
@@ -1079,6 +1081,42 @@ fi
      造 2 份 tag（一份 values 少 1 条、一份**不存在**）→ `readTagValues` 对存在的返回原序列表、
      对不存在的返回 `null`、对坏 JSON 返回 `null`、`values` 里有非字符串项时跳过该项不抛。
 - 进度：
+
+### T-0024 · [OPEN] `/redtale content list` 行字段刷新（清掉「词条层未接入」的过期占位）
+
+- 派单：S7 · 2026-11-17 07:50
+- 目标：`ContentListCommand` 里还写着 `词条层未接入`（R11 之前的占位，见常量 `AFFIX_PENDING`），
+  而 `ItemContent` 早已长到 15 字段（rev / consumable / repair / sockets / gem / setId）。本卡只改这一行文案与它取值的字段，
+  **让运营一条命令看清「这件内容现在写了什么」**。只读，不改任何状态。
+- 独占文件：
+  - `src/main/java/com/redtale/project/core/command/ContentListCommand.java`（**唯一可写文件**；`RedtaleCommand` 不动，挂行已存在）
+- 接口（一字不改）：
+  ```java
+  public static int list(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx);
+  ```
+- 行为（逐条照做，**不要自由发挥、不要新增命令、不要加 LOG**）：
+  1. 删掉常量 `AFFIX_PENDING` 与它的用法（这是本卡唯一允许的「删」）。
+  2. 表头行改为：`[redtale] 内容 N 件 · 数值共 M 条 · 带 weapon_attributes W 件 · 词条池 P 个 · 套装定义 S 个`
+     —— `P` = `core.affixPools().size()`，`S` = `core.sets().size()`（两个都是现成访问器，别自己算）。
+  3. 每件的行改为（分隔符统一 `" · "`，字段顺序固定）：
+     `<两空格><id> · base <base.id()|-> · 数值 <stats().size()> 条 · 孔位 <sockets().count()> · 套装 <setId()|-> · 消耗品 <是|否> · 修理 <是|否> · rev <rev()>`
+     - `消耗品` = `consumable() != null` → `是`，否则 `否`；`修理` = `repair() != null` → `是`，否则 `否`
+     - `sockets()` 为 `null` 时按 `0`（`ItemContent` 的 `sockets` 理论上非 null，但探针会构造 null，别 NPE）
+     - `setId()` 为 `null` 或 `isBlank()` → `-`
+  4. 空内容分支（`all.isEmpty()`）文案与返回值 **保持原样**，一个字都别改。
+  5. 返回值仍是件数；`sendSuccess(..., false)` 保持广播关。
+- 不要做：不改 `ItemContent` / `ItemContentRegistry` / `RedtaleCore` / `RedtaleCommand` / 其它命令类；
+  不往行里加「词条适用池」这类需要跨模块算的字段（那是 `AffixRoller` 的活，本卡不算）；
+  不改 `build.gradle`、不加依赖、不碰 `docs/`、不碰 `tools/*.py`。
+- 验收：
+  1. `gradle build --offline` 退出码 0（取锁，见 §3）
+  2. `grep -c "AFFIX_PENDING" src/main/java/com/redtale/project/core/command/ContentListCommand.java` = **0**，
+     且 `grep -c "词条池 " src/main/java/com/redtale/project/core/command/ContentListCommand.java` = **1**
+  3. S7 在测试服跑 `/redtale content list`：表头五个计数与 `content list` 件数自洽（`P` = `affix_pools/*.json5` 份数、
+     `S` = `sets/*.json5` 份数），每行七个字段齐全、`demo_longsword` 行 `孔位 2`、`套装 emberforged`（写 `set_id` 原值）、`rev 1`
+     —— 这条由 S7 执行，S8 只需在进度行贴出 `gradle build` 退出码与两条 grep 的实测数字。
+- 进度：
+
 
 ## 6. 派单池（S7 用，S8 不看）
 

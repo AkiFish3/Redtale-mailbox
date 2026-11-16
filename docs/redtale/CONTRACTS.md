@@ -23,7 +23,7 @@
 | `com.redtale.project.core.script` | 脚本层三张注册表 + builtin | 有 |
 | `com.redtale.project.items` | `ContentData` / 基底 / 解析 / 建栈 / tooltip / `ContentItem`（唯一物品行为类，R15）/ `Repairer`（修理唯一结算点，R16） | 有 |
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
-| `com.redtale.project.core.skill` | 技能定义解析 `SkillSpec`（T-0021）+ 技能引擎（冷却表 / 释放，M5-A，S7） | **新建中**（`SkillSpec` 属 T-0021，`OPEN`） |
+| `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021，VERIFIED）+ `SkillRegistry` 不可变快照（R28）+ 技能引擎 `SkillEngine`（M5-A，等 T-0022 冷却表合流） | 快照层已上：`RedtaleCore.skills()` |
 | `com.redtale.project.mobs` | 模板实体（M6） | **未建** |
 | `com.redtale.project.progression` | 等级/技能树（M7） | **未建** |
 
@@ -393,7 +393,7 @@ public final class EnchantObtainTags {
 | 附魔 L0 生成物 | `<world>/datapacks/redtale_project/data/redtale_project/enchantment/<path>.json` —— **`/reload` 加不进注册表，要重启**（R21-c） |
 | 基底附魔归属（R23） | `<world>/datapacks/redtale_project/data/minecraft/tags/item/enchantable/<7 个名>.json`（追加型）+ `data/redtale_project/tags/enchantment/exclusive_set/<名>.json`（缺失时补空）；都是 `/reload` 即生效 |
 | 附魔脚本（L3，随默认配置落地） | `config/redtale_project/scripts/*.json5`（默认 `greeting.json5` + `enchants_soul_reap.json5`） |
-| 技能定义（M5，R25 定稿） | `config/redtale_project/skills/<id>.json5`（一个文件一条技能，schema 见 `docs/SKILLS.md` §3） |
+| 技能定义（M5，R25 定稿） | `config/redtale_project/skills/<id>.json5`（一个文件一条技能，schema 见 `docs/SKILLS.md` §3）；默认两份 `gale_slash` / `ember_burst` 属 `DEFAULT_FILES`，**删文件会被 reload 重建**（想停用就改文件内容，别删） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 
 运行期生成物**不进 jar、不进 config**；jar 内的 `data/` 只放不会变的东西（如 `damage_type`）。
