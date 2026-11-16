@@ -111,6 +111,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-17 06:1x · S7 · **验 T-0019 → VERIFIED**（`/redtale enchant list`：build 0 / 接线 1 / jar 1 条 / 测试服 RCON 实测 3 条 + 负向「脚本不存在」验证，多出的 `frost_edge` 是 R24 手测留下的落盘产物，命令如实报 = 正常）；**派 T-0022**（`core/skill/SkillCooldowns` 冷却表，在制品 3/3）；**自己写伤害类别池**（Q-018 默认 A 落地：`MultiplierRules` 加 `category_attributes` + `attributesFor()` first-match，`DamageLayer` 改吃类别池，新增两个冻结 `damage_type` `skill_physical`/`skill_magical` + 死亡提示 lang） · `E://RedtaleProject//docs//CONTRACTS.md` §4.12/§4.13、`docs//ROUND-R26-CATEGORY.md`、`PLAN.md` §13 R26 + §13.29、`docs//TASKS.md`（T-0019 VERIFIED / T-0022） · jar 344079 B、`selftest` 78 PASS、测试服两次启停干净（`console_r26.log`/`console_r26b.log`）、构建锁已删 · 下一步：验 T-0020/0021/0022；`SkillEngine` + `/redtale skill list|cast`；T-0020 若仍无人领 → 收回自做
 
+- 2026-11-17 07:05 · S7 · **T-0020 收回自做 + 派 T-0023 + M5-A 第一条原语**：T-0020 连挂两轮 → `[DROPPED] (S8 静默两轮，S7 自做)`，自写 `enchants/EnchantObtainTags`（三份原版可获取性 tag，`replace:false` 追加、幂等不改 mtime、空集写空＝清场）+ `RedtaleCore` 1 行；新原语 `core/script/builtin/DamageEffect`（`damage`：只 `hurt(白值)`、类型缺省 `skill_physical`、两级回退、`radius` 不支持） + `Builtins` 1 行 + `/redtale damage hit probe [amount]`；**派 T-0023**（`/redtale enchant obtain` 只读对账，V4 的观测面），在制品 T-0021+T-0022+T-0023 = 3/3 · `E://RedtaleProject//src//main//java//com//redtale//project//enchants//EnchantObtainTags.java`、`core//script//builtin//DamageEffect.java`、`core//RedtaleCore.java`、`core//command//RedtaleCommand.java`、`build//probe//ObtainProbe.java`、`docs//ROUND-R27-OBTAIN.md`、`docs//SKILLS.md` §4、`docs//CONTRACTS.md` §4.14/§4.15、`docs//TASKS.md`、`PLAN.md` §13 R27 + §13.30 · build exit 0（jar 354540 B）、`selftest` 78 PASS、探针 20/20、测试服一次启动 `Done (2.213s)` 已停（25567/25577 无 LISTEN）；`damage hit probe` **5/5**（10→10 / 12.5 / 10 / 15 / 12.5，白值不被原语乘、L2 接上、法术分轴成立）；三份 tag 落盘 + reload 后 mtime 不变 · 下一步：验 T-0021/T-0022/T-0023；`SkillEngine` + `/redtale skill list|cast`（前置＝前两张落地）；V4 的「附魔台真刷出」需客户端窗口，挂账
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -148,6 +150,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | B-01·默认 | S7 自己 | 下一轮（R26）若仍静默 → **收回自做**（两张卡都卡着 M4 的 V4），卡片标 `DROPPED (S8 静默，S7 自做)`；同时把 T-0021 拆成两半降低单卡体量 | — | — |
 | B-01·结 | S7 | **S8 05:41 交付 T-0019，阻塞解除**（R26 验收通过）。T-0020 仍无人领，R27 若仍 `OPEN` → 收回自做 | T-0019 已 VERIFIED | 2026-11-17 06:1x |
 
+| B-01·执行 | S7 | **已执行**（R27 06:29）：T-0020 标 `DROPPED (S8 静默两轮，S7 自做)` 并由 S7 完成 + 验收（探针 20/20、测试服 tag 落盘、reload 幂等）；**未重派同内容卡**（重派会让 S8 改 S7 刚写完的文件，见 `PLAN.md` §13.30 R27-d）。T-0021/T-0022 05:50 派单属正常在制，不拆 | 2026-11-17 07:05 |
 ---
 
 ## 6. 追加模板

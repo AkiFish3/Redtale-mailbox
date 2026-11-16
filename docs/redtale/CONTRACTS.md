@@ -341,6 +341,47 @@ public final class SkillCooldowns {
 **纯类**：零 `net.minecraft.*` / `net.neoforged.*` import，时间由调用方传 tick，可在 `selftest` 里直接测。
 键必须是 `(UUID, 技能 id)`——按玩家名记账会让改名成为清冷却的手段（R25-b）。
 
+### 4.14 `damage` 原语（M5-A，R27 定稿）
+
+```java
+package com.redtale.project.core.script.builtin;
+
+public final class DamageEffect implements EffectType {   // id = "damage"
+    public static final String DEFAULT_TYPE = "redtale_project:skill_physical";
+    // args.amount: 白值（必填，>0）  args.damage_type: 缺省 DEFAULT_TYPE  args.radius: 不支持（>0 → WARN 忽略）
+}
+```
+
+| 契约点 | 值 | 改了会怎样 |
+|---|---|---|
+| 原语 id | `damage`（进 `ScriptRegistries`，启动期冻结） | 加原语 = 换 jar（D17）；已有 `skills/*.json5` / `scripts/*.json5` 引用会加载期报未知 effect |
+| 数值口径 | **只 `hurt(src, amount)`，绝不 `setAmount`** | 写绝对值等于绕过属性池：`physical_damage` / 条件乘区对技能全失效，且有无属性时数值不可对账（SKILLS §5 红线 1） |
+| 伤害类型 | 缺省 `skill_physical`；法术技能**必须显式写** `skill_magical` | 忘写不报错，但法术会去吃物理百分比池 → 「堆法伤没反应」且日志无提示（SKILLS §5 第 4 条）。类型不在注册表 → 回缺省 + WARN 一次；连缺省都没有（数据包没加载）→ 退 `level.damageSources().generic()` + WARN，**本次不吃乘区** |
+| 打谁 | `ctx.target()`（技能释放的被命中实体 / `post_attack` 的受害者）；没有就跳过 + WARN 一次 | 本原语**不**退回打自己（退回 `player()` 只会误伤施法者） |
+| 施法者 | `player()` 优先，其次 `vars.attacker`（生物施法者） | 只影响记账与死亡文案，不影响数值 |
+| `radius` | **不支持**，>0 → WARN 一次并忽略 | 范围伤害是 `damage_aoe`（第 2 条）的语义；两原语共用一个参数必然有人写错（R27-a） |
+| 异常保护 | 缺省/非数字/负数 → 跳过 + WARN 一次；`1e9` 硬顶 | D16：只留异常保护，不做平衡钳制 |
+| 观测 | `[script] damage · <名> <前> → <后>（白值 N，类型 msgId，已结算|被原版拦下）` | 端到端验收入口：`/redtale damage hit probe [amount]` 一次跑五组（零属性 / +25% 物理 / 法术只堆物理 / +50% 法术 / 未知类型回缺省） |
+
+### 4.15 附魔可获取性 tag `EnchantObtainTags`（M4 / V4，R27 定稿）
+
+```java
+package com.redtale.project.enchants;
+
+public final class EnchantObtainTags {
+    public static int generateAll(Path datapackRoot, List<ConfigFile> configs, List<String> warnings);
+}
+```
+
+| 契约点 | 值 | 改了会怎样 |
+|---|---|---|
+| 三条 tag（**写死**，不从配置读） | `minecraft:in_enchanting_table` / `tradeable` / `on_random_loot` | 缺一条 = 附魔台刷不出 / 村民不卖 / 战利品不掉（V4 过不了）。从配置读等于允许内容侧静默关掉获取途径 |
+| 写法 | `data/minecraft/tags/enchantment/<tag>.json`，`replace: false` **追加** | `replace: true` 会抹掉原版与其它 mod 的同名 tag（R23-a 红线） |
+| 取值来源 | `enchantments/*.json5` 的 `id` 字段；不含 `:` 或非字符串 → WARN 跳过 | **不按文件名猜命名空间**：文件名→id 的映射是 `EnchantmentGenerator` 的语义，复制一份必然漂 |
+| 空集行为 | 仍写三份空 `values` | 语义 = 「清场」。删光附魔时不清 tag 会留下指向不存在 id 的条目，数据包加载报 Unknown entry |
+| 幂等 | 文本逐字相等 → 不写、不改 mtime | reload 每次都改写 mtime 会触发整包重载 |
+| 时机 | 只在 `RedtaleCore.reload()` 里跑；tag 是**资源**层，`/reload` 即生效（不用重启） | 与 `enchantment`（启动期 registry）不同层：加附魔要重启，改 tag 不用（R23 两条时机） |
+
 ## 5. 路径约定
 
 | 用途 | 路径 |

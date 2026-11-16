@@ -68,11 +68,11 @@
 ## 4. 24 条原语总表（8 类）
 
 状态：`✅` 已注册 · `—` 待实现（**加原语 = 换 jar，D17 必须记账**）。
-已注册的 3 条 effect（`message` / `console_log` / `heal`）里只有 `heal` 计入 24 条，前两条是 M0 的调试原语。
+已注册的 4 条 effect（`message` / `console_log` / `heal` / `damage`）里 `heal` 与 `damage` 计入 24 条，前两条是 M0 的调试原语。
 
 | # | id | 类 | 参数（全部可选，缺省见右） | 状态 | 备注 |
 |---|---|---|---|---|---|
-| 1 | `damage` | 直伤 | `amount` 白值 · `radius` 0=单体 · `damage_type` 缺省 `redtale_project:skill_physical` · `falloff` 0 | — | **只给白值**，倍率由 `DamageLayer` 统一乘（§5） |
+| 1 | `damage` | 直伤 | `amount` 白值（必填）· `damage_type` 缺省 `redtale_project:skill_physical` | ✅ R27 | **只给白值**，倍率由 `DamageLayer` 统一乘（§5）。`radius` 由 R27 移出本行：范围伤害是第 2 条 `damage_aoe` 的语义，本原语读到 `radius>0` 打一行 WARN 并忽略 |
 | 2 | `damage_aoe` | 直伤 | `amount` · `radius` · `falloff` 0.5 · `max_targets` 0=不限 | — | 与 1 分开：AOI 中心是施法者脚下还是命中点要显式 |
 | 3 | `damage_over_time` | 直伤 | `amount` · `duration_ticks` · `interval_ticks` 20 · `damage_type` | — | 每个 tick 走一次 `hurt`，不吃暴击 |
 | 4 | `execute` | 直伤 | `threshold` 0.2（目标血量比例）· `damage_type` | — | 达标直接结算，不走倍率也不会暴击 |

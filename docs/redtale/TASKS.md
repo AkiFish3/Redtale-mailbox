@@ -876,7 +876,7 @@ fi
   - 负向验证：临时改名 `config/redtale_project/scripts` → `soul_reap` 行尾出现 ` · 脚本不存在`；改回后消失。
     → S8 提的单引号口径偏差**采纳**（默认配置写 `id: 'enchants/soul_reap'`，卡面双引号规则会误报）。
 
-### T-0020 · [OPEN] 附魔可获取性 tag 生成（`in_enchanting_table` / `tradeable` / `on_random_loot`）
+### T-0020 · [DROPPED] (S8 静默两轮，S7 自做 R27) 附魔可获取性 tag 生成（`in_enchanting_table` / `tradeable` / `on_random_loot`）
 
 - 派单：S7 · 2026-11-16 21:15
 - 目标：我们生成的 L0 附魔现在只有 `/enchant` 与铁砧能拿到（ENCHANT-API §7 的「M4 核对项」没做）。
@@ -918,7 +918,7 @@ fi
      喂进 `generateAll` 到临时目录，断言：① 写出 **3** 个文件且 `json.load` 全过；
      ② 每份 `values` = 2 个 id 升序、`replace` 为 `false`；③ 坏文件只产出 1 条 WARN、不进 values；
      ④ 第二次调用返回 **0**（幂等）
-- 进度：
+- 进度：**[S7 自做 · R27 完成]** 新建 `enchants/EnchantObtainTags.java`（156 行，三份 tag 写死 `in_enchanting_table`/`tradeable`/`on_random_loot`，`replace:false` 追加、文本相等不重写；取值只读 `enchantments/*.json5` 的 `id`，不含 `:` 或非字符串各 1 条 WARN 跳过；`datapackRoot==null` → 1 条 WARN 返 0）+ `RedtaleCore` 第 165 行 +1 行接线。`build --offline` exit 0（jar 354540 B）；独立探针 `build/probe/ObtainProbe.java` **20/20**；测试服实测三份 tag 落盘（values 2 条升序、`replace:false`）、`/redtale reload` 后 mtime 不变（幂等）、零 tag 解析告警。
 
 
 ### T-0021 · [OPEN] `SkillSpec` 技能定义解析器（M5 第一层，纯解析）
@@ -1017,6 +1017,68 @@ fi
      `null` 玩家与 `null`/空白 `skillId` 四个方法都不抛且返回值符合第 7 条。
 - 进度：
 
+
+### T-0023 · [OPEN] `/redtale enchant obtain` —— 可获取性 tag 的只读对账（V4 的观测面）
+
+- 派单：S7 · 2026-11-17 06:50
+- 目标：R27 已经能把三条原版可获取性 tag（`in_enchanting_table` / `tradeable` / `on_random_loot`）生成出来，
+  但**没有观测面**：附魔台刷不出时，没人能一眼分清是「tag 没写」「附魔没生成」还是「写错 id」。
+  本卡做一条只读命令，把两份产物对账后逐 tag 打印「已收录 N / 应收录 M + 差集」。
+- 独占文件：
+  - `src/main/java/com/redtale/project/core/command/EnchantObtainCommand.java`（**新建，唯一新建文件**）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**仅追加 ≤2 行**：一行注释 + 一行
+    `.then(EnchantObtainCommand.node())`；插在 `.then(EnchantListCommand.node())` 那条语句**之后**。
+    **禁止删改任何已有行**）
+- 接口（一字不改）：
+  ```java
+  public static com.mojang.brigadier.builder.LiteralArgumentBuilder<CommandSourceStack> node();
+  public static int obtain(com.mojang.brigadier.context.CommandContext<CommandSourceStack> ctx);
+
+  // 两个包内可见纯函数：为了离线探针能直调，不许 private
+  static java.util.Set<String> collectEnchantIds(java.nio.file.Path datapackRoot);
+  static java.util.List<String> readTagValues(java.nio.file.Path datapackRoot, String tag);
+  ```
+  - `node()` 返回 `Commands.literal("obtain").executes(EnchantObtainCommand::obtain)`
+  - 字段顺序/可见性照 `EnchantListCommand` 的写法（同包、无 import 冲突）
+- 行为（逐条，**不要自由发挥**）：
+  1. 数据包根：`ServerLifecycleHooks.getCurrentServer()` → `getWorldPath(LevelResource.DATAPACK_DIR).resolve("redtale_project")`。
+     `server == null` → `src.sendFailure(Component.literal("[redtale] 没有服务端上下文"))` 并返回 **0**。
+  2. `collectEnchantIds(root)`：扫 `<root>/data/<ns>/enchantment/**/*.json`，id = `<ns>:<相对路径去掉 .json>`，
+     **子目录用 `/` 连接**（与 `EnchantListCommand` 同一口径，照它抄）；返回 `TreeSet`（升序、不可变）。
+     目录不存在 → 返回空 Set（不抛）。
+  3. `readTagValues(root, tag)`：读 `<root>/data/minecraft/tags/enchantment/<tag>.json` 的 `values` 数组，
+     只收字符串项，**保持文件里的顺序**（原样，不排序）；文件不存在 → 返回 **`null`**（语义 = 未生成，
+     与「生成但 values 为空」区分开）；坏 JSON / IO 异常 → 也返回 `null`。
+  4. 三个 tag 名写死常量数组：`in_enchanting_table`、`tradeable`、`on_random_loot`（与 `EnchantObtainTags` 一致）。
+  5. 输出格式（逐字，`Component.literal`）：
+     ```
+     [redtale] 附魔可获取性对账（已生成 2 条附魔）：
+       in_enchanting_table  已收录 2/2  ✓
+       tradeable            已收录 2/2  ✓
+       on_random_loot       已收录 1/2  缺：redtale_project:frost_edge
+     [redtale] 有 1 条附魔拿不到（缺 tag 见上）
+     ```
+     - 每行固定 `  ` + tag 名 + 两个空格 + `已收录 X/Y`；齐了在行尾加 `  ✓`，
+       不齐加 `  缺：` + 差集（升序 id，逗号 + 空格分隔）
+     - tag 未生成：该行文案 `  <tag>  未生成`（**不**写成 `0/N`，两者是不同的故障）
+     - 已生成附魔数为 0：仍然三行都打「未生成」或「已收录 0/0」，末尾改成
+       `[redtale] 还没有任何已生成的附魔（先 /redtale reload 生成数据包）`
+     - 末尾一行：三条都齐 → `[redtale] 三条全齐 ✓`；否则 → `[redtale] 有 N 条附魔拿不到（缺 tag 见上）`
+       （N = 三条 tag 缺集的**并集**大小）
+  6. 只读：不写盘、不改配置、不打 `LOG`（只用 `sendSuccess` / `sendFailure`）。
+- 不要做：不改 `EnchantObtainTags` / `EnchantableTags` / `EnchantmentGenerator` / `EnchantListCommand` / `RedtaleCore`；
+  不生成或修复任何 tag（本卡只读）；不碰 `tools/*.py`；不加依赖；不改 `build.gradle`；不新增 `LOG` 打点。
+- 验收：
+  1. `gradle build --offline` 退出码 0（取锁，见 §3）
+  2. `grep -c "EnchantObtainCommand.node()" src/main/java/com/redtale/project/core/command/RedtaleCommand.java` = **1**，
+     且 `unzip -l build/libs/*.jar | grep -c "core/command/EnchantObtainCommand.class"` = **1**
+  3. 离线探针 `build/probe/ObtainListProbe.java`（自建，**不要**接进 `build.gradle`）**≥12 条断言全过**，至少覆盖：
+     临时目录里造 2 个 `enchantment/*.json`（其中一个在**子目录**）+ 1 个非 `.json` 干扰文件 →
+     `collectEnchantIds` 返回 2 条升序、子目录那条用 `/` 连接、干扰文件不收；
+     `data/` 不存在 → 空 Set 不抛；
+     造 2 份 tag（一份 values 少 1 条、一份**不存在**）→ `readTagValues` 对存在的返回原序列表、
+     对不存在的返回 `null`、对坏 JSON 返回 `null`、`values` 里有非字符串项时跳过该项不抛。
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 
