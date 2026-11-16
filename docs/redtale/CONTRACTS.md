@@ -36,7 +36,7 @@ S8 只在卡指定的包内新建文件；新建包需卡上写明。
 | 组件 | `redtale_project:content` | 唯一内容组件（`ContentData`） |
 | 自建属性 | `redtale_project:<snake>` × 66 | 见 `docs/ATTRIBUTE-REGISTRY.md` §2，**不得增删改名** |
 | 原版属性引用 | `minecraft:<...>` × 14 | 同上表「落点 = 原版」行 |
-| 脚本 effect | `message` / `console_log` | `ScriptRegistries` 注册 |
+| 脚本 effect | `message` / `console_log` / `heal`（R24） | `ScriptRegistries` 注册 |
 | 脚本 condition | `always` / `health_below` / `chance` | 同上 |
 | 脚本 trigger | `manual` / `player_join` | 同上 |
 | 伤害类型 | `redtale_project:verification_strike` | 仅验收用（`scaling: never`） |
@@ -146,11 +146,11 @@ AffixPools.normalizeKey(String raw) -> String | null
 ```
 
 - 孔位在**物品定义**里（`sockets.count` / `sockets.types`），宝石是**另一件内容物品**（`gem` 段）。
-- 镶嵌结果落 `ContentData.sockets[]`（`""` = 空孔）+ `ContentData.gemStats{}`；**宝石数值不并进 `rolled_stats`**（拆宝石要能扣准，见 `ITEM-MODEL.md` §5.1）。
+- 镶嵌结果落 `ContentData.sockets[]`（`""` = 空孔）+ `ContentData.gem_stats{}`（codec 键 snake_case；Java 字段名 `gemStats`）；**宝石数值不并进 `rolled_stats`**（拆宝石要能扣准，见 `ITEM-MODEL.md` §5.1）。
 - 套装是独立文件 `sets/*.json5`，物品只写 `set_id`；件数加成是派生值，写固定 modifier id `redtale_project:set/<setId>/<count>`。
 - `SocketSpec.Gem` 的 `stats` 由 `AffixPools.parseStats(gemObj, …)` 产出（把 `gem` 对象当 root 传），**不许另写一份 stats 解析**。
 - **R19 状态（第 4 步已落地）**：`ItemContent.sockets()` / `ItemContent.gem()` 已接；`ItemFactory.build` 按布局**填空孔**；
-  镶嵌 / 取出的唯一结算点是 `Socketer`（见 §4.6）；`ensure` 迁移时按新定义**补空孔**并**重算 `gemStats`**。
+  镶嵌 / 取出的唯一结算点是 `Socketer`（见 §4.6）；`ensure` 迁移时按新定义**补空孔**并**重算 `gem_stats`**。
 - 孔数**只补不截**：定义把孔数改小不自动截断（截断 = 销毁玩家资产），`ensure` 只逐条记账要求管理员先 `socket extract`。
 - 套装解析器（T-0014，R20 `VERIFIED`）：`SetSpec.parseAll(List<ConfigFile>, List<String>) -> Map<String, Definition>` / `SetSpec.activeBonuses(Definition, int wornPieces) -> List<Bonus>`；`activeBonuses` 返回**所有** `count <= wornPieces` 的档（不是只取最高档）。件数下发见 §4.7。
 

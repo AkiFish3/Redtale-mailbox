@@ -72,7 +72,7 @@
 
 | # | id | 类 | 参数（全部可选，缺省见右） | 状态 | 备注 |
 |---|---|---|---|---|---|
-| 1 | `damage` | 直伤 | `amount` 白值 · `radius` 0=单体 · `damage_type` 缺省 `redtale_project:skill` · `falloff` 0 | — | **只给白值**，倍率由 `DamageLayer` 统一乘（§5） |
+| 1 | `damage` | 直伤 | `amount` 白值 · `radius` 0=单体 · `damage_type` 缺省 `redtale_project:skill_physical` · `falloff` 0 | — | **只给白值**，倍率由 `DamageLayer` 统一乘（§5） |
 | 2 | `damage_aoe` | 直伤 | `amount` · `radius` · `falloff` 0.5 · `max_targets` 0=不限 | — | 与 1 分开：AOI 中心是施法者脚下还是命中点要显式 |
 | 3 | `damage_over_time` | 直伤 | `amount` · `duration_ticks` · `interval_ticks` 20 · `damage_type` | — | 每个 tick 走一次 `hurt`，不吃暴击 |
 | 4 | `execute` | 直伤 | `threshold` 0.2（目标血量比例）· `damage_type` | — | 达标直接结算，不走倍率也不会暴击 |
@@ -117,9 +117,11 @@ LivingIncomingDamageEvent（LOWEST）
 
 1. **绝不 `setAmount()`**：`damage` 原语只 `hurt`，不碰事件里的 amount。谁写绝对值谁破坏 `DAMAGE-PIPELINE` 的可加性。
 2. **技能类型必须在 `redtale_project:` 下**：`DamageLayer` 的白名单是 `redtale_project:*`（R4），写 `minecraft:generic` 的技能伤害**不会被乘**（等于绕过整套属性）。
-3. **`damage_type` 是启动期 datapack registry**：新增技能伤害类型 = 生成 `data/redtale_project/damage_type/*.json` + **重启**（与附魔同层，R21-c）。所以 v1 先用一个通用 `redtale_project:skill`，不按技能分类型。
+3. **`damage_type` 是启动期 datapack registry**：新增技能伤害类型 = 生成 `data/redtale_project/damage_type/*.json` + **重启**（与附魔同层，R21-c）。所以**只冻结两个**：`redtale_project:skill_physical` / `redtale_project:skill_magical`，**绝不按技能各注册一个**（R26-a 取代本条的 R25-d 旧口径：按技能注册 = 每加一个技能重启一次，直接撞 D17）。
 
-**M5-A 要补的一件事（S7 做，不派卡）**：`MultiplierRules` 现在只取 `physical_damage`（R4 口径），法术技能会吃物理百分比。需要按 `damage_type` 分「物理 / 法术」两轴，各自取自己的属性池；这是 `core/damage` 的结构改动，S7 独占。
+**已落地（R26-B，本节原写的「M5-A 要补」已完成）**：`MultiplierRules.attributesFor(id)` 按类别取属性池（first-match），`category_attributes` 把 `skill_physical` / `skill_magical` 分到两条轴；条件乘区（pvp/pve/undead）不跟着分轴、两类共用。`percent_attributes` 保留作「未命中类别」的兜底池，显式写 `category_attributes: []` 即关掉分轴。
+
+4. **法术技能必须显式写 `damage_type: redtale_project:skill_magical`**：`damage` 原语的缺省是 `skill_physical`。忘写不报错，但法术会去吃物理百分比属性——玩家看到的现象是「堆了一身法伤装备没反应」，且日志里没有任何提示。这是缺省值带默认值的代价，写内容时按「技能是物理还是法术」先定这一行。
 
 ## 6. 冷却与资源
 
@@ -136,7 +138,7 @@ LivingIncomingDamageEvent（LOWEST）
 | 阶段 | 做法 | 换 jar？ |
 |---|---|---|
 | v1（M5-A） | `/redtale skill cast <id> [等级]`，只验引擎 | 否 |
-| v1.5 | 物品绑定：`items/*.json5` 的 `abilities: ["redtale_project:gale_slash"]` → `ItemContent` 第 16 字段 → 写进 `ContentData.abilities`（字段**已存在**，只是没人填）→ `ContentItem#use` 里没有 `use` 段时尝试施放 | 是（`ItemContent` 加字段） |
+| v1.5 | 物品绑定：`items/*.json5` 的 `abilities: ["redtale_project:gale_slash"]` → **`ItemContent` 加 `abilities` 字段（15 → 16，换一次 jar）** → 写进 `ContentData.abilities`（该字段已在，只是没人填）→ `ContentItem#use` 在没有 `use` 段时尝试施放 | 是（`ItemContent` 加字段，**只这一次**；之后加技能只写 JSON5，见 §2） |
 | M5-C | 键位绑定（客户端 mod + payload，D10 允许随包下发） | 是 |
 | M6 | 怪物技能：同一 `SkillEngine`，`SkillController` 从怪配置读 ability 列表 | 是 |
 

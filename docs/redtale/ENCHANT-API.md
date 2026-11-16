@@ -125,12 +125,15 @@ F5 决定了每个新 effect 类都是一次换 jar。若按「一个附魔一�
 
 ```java
 // scripted/ScriptedEnchantmentEffect.java
-public record ScriptedEnchantmentEffect(ResourceLocation script, CompoundTag args)
+// ⚠ R22 已改：script 是 **纯字符串 id**，不是 ResourceLocation（本段曾按旧形态写，2026-11-17 dev 复核指出）。
+//   用 ResourceLocation.CODEC 会把裸 id `enchants/soul_reap` 补成 `minecraft:enchants/soul_reap`，
+//   与脚本 id 永不相等 → 附魔生效、执行体静默不跑、零日志。冻结口径见 CONTRACTS §4.8。
+public record ScriptedEnchantmentEffect(String script, CompoundTag args)
         implements EnchantmentEntityEffect {
 
     public static final MapCodec<ScriptedEnchantmentEffect> CODEC =
         RecordCodecBuilder.mapCodec(i -> i.group(
-            ResourceLocation.CODEC.fieldOf("script").forGetter(ScriptedEnchantmentEffect::script),
+            Codec.STRING.fieldOf("script").forGetter(ScriptedEnchantmentEffect::script),
             CompoundTag.CODEC.optionalFieldOf("args", new CompoundTag())
                           .forGetter(ScriptedEnchantmentEffect::args)
         ).apply(i, ScriptedEnchantmentEffect::new));

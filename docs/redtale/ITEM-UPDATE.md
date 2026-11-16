@@ -78,7 +78,7 @@ claymore 定义顶掉，整合包里所有用 claymore 的物品（包括不是�
 
 | 字段 | 含义 | 变化原因 | 处理方式 |
 |---|---|---|---|
-| `schema` | **组件结构版本**（当前 = 1） | 字段改名 / 改语义 / 删字段 | codec 迁移分支（`ItemUpgrader` 里 if 链） |
+| `schema` | **组件结构版本**（当前 = **2**，R18 从 1 升上来加了 `sockets` / `gem_stats`） | 字段改名 / 改语义 / 删字段 | 见 §4.3：`schemaStale` 标记 + 整体重建；**没有 if 链**（新增字段全部 `optionalFieldOf` 带默认值，旧数据自动取默认） |
 | `content_rev` | **这件物品基于哪一版定义生成**（取自 json5 的 `rev`） | 改了任何定义型字段 | 重建定义型字段 |
 | `rolled_keys` | **哪些键是真 roll 出来的**（M2 词条系统才填，现在恒空） | roll 时写一次 | 决定迁移时「跟定义走」还是「保留玩家值」 |
 
@@ -145,7 +145,9 @@ claymore 定义顶掉，整合包里所有用 claymore 的物品（包括不是�
 ```
 ensure(stack):
   data = stack.get(CONTENT)              // 没有 → 不是我们的物品，原样返回 UNCHANGED
-  if data.schema != CURRENT_SCHEMA       // 结构迁移（if 链，目前只有 1，无分支）
+  if data.schema != CURRENT_SCHEMA       // 结构迁移：打 schemaStale 标记，走下面的整体重建。
+                                        // 没有 if 分支：R18 加的 sockets/gem_stats 都是 optionalFieldOf 带默认值，
+                                        // 旧数据缺键自动取默认；不需要逐版本写迁移代码。
   content = 当前配置里查 data.contentId
   if content == null                     // → ORPHAN：不改任何数值，只在 tooltip 标红「内容已失效」
   if data.contentRev == content.rev      // → UNCHANGED（快路径，绝大多数物品走这里）
@@ -160,6 +162,8 @@ ensure(stack):
     ATTRIBUTE_MODIFIERS ← ItemFactory.modifiers(content, 上面算出的 rolled_stats)
     affixes / abilities: id 仍存在才留（不补新的）
     upgrade_level: 原样
+    sockets: Socketer.aligned(旧孔位, 新定义孔数) —— **只补空孔、不截断**；定义改小且孔里还有宝石 → 只 WARN 并列出，等管理员 /redtale socket extract
+    gem_stats: Socketer.solve(对齐后的孔序) 重算 —— 定义改了宝石数值时，这里跟着变（改配置全服生效）
   写回 content_rev = content.rev，返回 UPGRADED
 ```
 

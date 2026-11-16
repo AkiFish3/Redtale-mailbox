@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-17 06:05 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-17 06:21 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -34,11 +34,11 @@
 
 ## 5. 队列动态（协作板最近 5 条）
 
-- `2026-11-16 12:45` S7 · 验收 **T-0011 → VERIFIED**（3/3：脚本 exit 0 且 id 由 `ItemBase.java` 正则得 14 / zh·en `item.*` 各 14、`attribut
 - `2026-11-16 13:52` S7 · 验收 **T-0012 → VERIFIED**（3/3 + 功能四跑：建基线 17 份/items 8 → 改 `demo_longsword` 不加 rev 报 1 份（文案逐字对）→ `rev:
 - `2026-11-16 16:35` S7 · 验收 **T-0014 → VERIFIED**（3/3 + 自写独立探针 `build/probe/S7SetProbe.java` **36/36**）；**派 T-0016**（`/redtal
 - `2026-11-16 18:05` S7 · 验收 **T-0015 → VERIFIED**（3/3 + 功能四跑：三份坏配置 → `问题 4 条`，四条文案逐字对上；删掉后 `（没有引用问题）`；两次连跑 diff 空）；**派 T-0017
 - `2026-11-16 21:25` S7 · 验收 **T-0018 → VERIFIED**（3/3 + 测试服四跑：基线 0 条 → 三处坏配置（套装 piece 写错 / `set_id` 悬空 / `applies_to` 裸名）→ `问
+- `2026-11-17 06:10` S7 · **代码仓上线**：`github.com/AkiFish3/RedtaleProject`（private），已推 2 个提交（`5794d69` 初始 / `847d232` 规则），160 文件
 
 ---
 

@@ -135,20 +135,33 @@ L3  天花板    final clamp
 
 ```java
 double settle(double base, double sumPercent, List<Double> conds, Caps caps) {
-    double p = Math.min(sumPercent, caps.percentCap);       // 默认 2.0 上限
-    double c = 1.0;
-    for (int i = 0; i < Math.min(conds.size(), caps.condCount); i++)
-        c *= Math.min(conds.get(i), caps.condCap);           // 每个默认 1.5 上限
-    double out = base * (1.0 + p) * c;
-    return Math.min(out, caps.damageCap);                    // 默认 500
+    // caps 默认全 0 = 关闭（D16）。0 若直接喂给 Math.min 会把结果归零，
+    // 所以每一处都**必须先判 limited**——漏一处 = 全服伤害恒 0。真实现见 core/math/Settle.java。
+    double p = sumPercent;
+    if (caps.percentLimited()) p = Math.min(p, caps.percentCap);
+
+    double condProduct = 1.0;
+    int applied = 0;
+    for (double rawCond : conds) {
+        if (caps.countLimited() && applied >= caps.condCount) break;   // 按「实际应用数」计，不是下标
+        if (rawCond == 0.0) continue;                                   // 0 值不计入 condCount
+        double cond = caps.condLimited() ? Math.min(rawCond, caps.condCap) : rawCond;
+        condProduct *= (1.0 + cond);                                    // 条件乘区也是 (1+x)，不是 x
+        applied++;
+    }
+
+    double out = base * (1.0 + p) * condProduct;
+    if (caps.damageLimited()) out = Math.min(out, caps.damageCap);
+    return out;
 }
 ```
 
 关键点：
 
 - `sumPercent` 是**先加后乘**，不是连乘。10 个 +20% 是 +200%，不是 6.19 倍。
-- 条件乘区个数硬上限 2，防止「背刺×暴击×处决×元素克制」叠成天文数字。
-- 全部钳制**可配**，`/redtale reload` 生效。
+- 条件乘区是 **(1 + cond) 连乘**（+20% 条件 = ×1.2），不是把 cond 当乘数直接连乘。两者差一个 1，写反了「+20% 背刺」会变成 ×0.2。
+- 条件乘区个数默认**不限**（`condCount: 0`）；要收紧时填数字，计数口径是「实际应用数」（0 值不占名额），不是列表下标。
+- 全部钳制**可配且默认关**，`/redtale reload` 生效。
 
 ### 为什么不做硬截断
 
