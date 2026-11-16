@@ -130,6 +130,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-014 | S7 | `[Q-014]` 属性值口径：`redtale_project:physical_damage = 0.2` 表示 **+20%**（小数，与 `ADD_MULTIPLIED_TOTAL` 同单位），还是 `20` 表示 +20%（百分数，面板/配置更好读） | **默认：小数**（0.2 = +20%）。理由：①与属性 modifier 的 `ADD_MULTIPLIED_TOTAL` 同单位，写入零换算、零精度坑；②tooltip 只在显示时 ×100 加 `%`，逻辑层永远一个单位；③改口径要动所有内容配置 + 已发物品，越早定越便宜。M2 铺 14 基底物品时按此写配置 |
 | Q-016 | S7 | `[Q-016]` D17 的 14 基底（sword…amulet）没有「食物/药水」这一格，D23 消耗品只能借用非护甲基底（现 `demo_stew` 借 `amulet`，玩家看到的是一枚护符）；`ITEM-MODEL.md` §3.1 样例写的 `base: minecraft:rabbit_stew` 与「`base` 只认 14 个 `ItemBase`」冲突 | **默认：A 复用现有基底**（`amulet`/`ring` 顶外观，零注册表变更、不换 jar；等 M5 真要食物外观再走 B）。备选 B = 加第 15 基底 `consumable`（一次换 jar + 补 lang/模型/创造栏）；C = 允许 `base` 写原版物品（最灵活但白板化要覆盖非自家注册物品，风险最大） |
 | Q-017 | S7 | `[Q-017]` D23 修理的**交互口径**：磨刀石右键时修哪件。右键没有「对哪件用」的原版钩子，必须自己定 | **默认：A 副手优先 → 副手空着则修背包里损伤最重的一件**（已实装并验收，`PLAN.md` §13.19 R16-b）。备选 B = 只修副手（更精确，但玩家要来回切手）；C = 只修背包里最破的那件（顺手，但可能修到不想修的装备）；D = 开 GUI 选目标（最准，但要 owo GUI，D30 排期在 M5 之后）。默认已上线，改口径只换 jar 一个方法，不坏存档 |
+| Q-018 | S7 | `[Q-018]` 技能伤害吃哪条属性轴：物理技能与法术技能共用一个百分比池（都取 `physical_damage`），还是按 `damage_type` 分两轴（物理 → `physical_damage`，法术 → `spell_power` + 既有条件乘区） | **默认：A = 分轴**（要给 `MultiplierRules` 加一个「伤害类别」维度，纯代码改动、不换内容格式）。理由：①80 条属性里法术侧有 `spell_power` 13 系 + 法术暴击双轨，不分轴这些属性对技能永远无效；②混一个池会出现「力法双修」靠一件装备吃满两侧，M5 之后很难再收回；③分轴后物理/法术各自可调，与 D12 三层模型不冲突。备选 B = 不分轴（最省事，但等于宣布法术属性只影响附魔/怪物） |
 
 ---
 
@@ -137,7 +138,10 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 格式：`B-xx · 谁在等谁 · 等什么 · 从什么时候`
 
-（空）
+| 编号 | 谁在等谁 | 等什么 | 从什么时候 |
+|---|---|---|---|
+| B-01 | S7 等 S8 | T-0019（20:12 派）/ T-0020（21:15 派）连挂两轮无人领，进度行为空；S8 最后一次交付是 2026-11-16 19:04 的 T-0018 | T-0019 / T-0020 被执行 | 2026-11-16 20:12 |
+| B-01·默认 | S7 自己 | 下一轮（R26）若仍静默 → **收回自做**（两张卡都卡着 M4 的 V4），卡片标 `DROPPED (S8 静默，S7 自做)`；同时把 T-0021 拆成两半降低单卡体量 | — | — |
 
 ---
 
@@ -166,3 +170,4 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-16 18:05 · S7 · 验收 **T-0015 → VERIFIED**（3/3 + 功能四跑：三份坏配置 → `问题 4 条`，四条文案逐字对上；删掉后 `（没有引用问题）`；两次连跑 diff 空）；**派 T-0017**（`tools/gen_enchant_lang.py` 附魔 lang 生成器），在制品 T-0016+T-0017 = 2/3。**自研 M4 第 1 块**：新类 `enchants/ScriptedEnchantmentEffect`（`redtale_project:scripted` 走 `RegisterEvent` 进内置表）+ `enchantments/*.json5` → L0 接线（2 份默认配置进 `DEFAULT_FILES`）· `src/main/java/com/redtale/project/enchants/ScriptedEnchantmentEffect.java`、`docs/ROUND-R21-M4.md`、`PLAN.md` §13 R21/§13.24、`docs/CONTRACTS.md` §4.8 · **R1 风险解除**：日志 `附魔实体效果注册：redtale_project:scripted 存在=true（表内共 14 条）`；L0 实测 `Applied enchantment ...super_sharpness III` / `...soul_reap II`；**新记**：`/reload` 加不了 L0 附魔（必须重启，R21-c）。测试服已停（25567/25577 无 LISTEN）。下一步：验 T-0016/0017；V9/V10 脚本触发与缺脚本不崩；V8 数值对账
 - 2026-11-16 21:25 · S7 · 验收 **T-0018 → VERIFIED**（3/3 + 测试服四跑：基线 0 条 → 三处坏配置（套装 piece 写错 / `set_id` 悬空 / `applies_to` 裸名）→ `问题 3 条` 文案逐字对上 → 还原回 0 条）；**派 T-0020**（附魔可获取性 tag `in_enchanting_table` / `tradeable` / `on_random_loot`，在制品 T-0019 + T-0020 = 2/3）。自研 **`heal` 原语 + 脚本层双实体上下文**：`ScriptContext.target()` / `ofEntity(caster,target)`、新类 `core/script/builtin/HealEffect`、`ScriptedEnchantmentEffect` 同时交出 `vars.attacker`（施法者）与 `ctx.target()`（受害者）。测试服两段启动：`soul_reap` 木桩实测 `heal · test_husk 8.00 → 10.00（+2.00，等级 2）`（20×0.10 精确）、把脚本改成 `target: target` 后日志目标变成受害者；**V11 首次端到端跑通**——只写 `enchantments/frost_edge.json5`（零编译）→ reload 生成 L0 → 同启动 `/enchant` 报 `Can't find element` → 重启后 `Applied enchantment ...frost_edge III` · 留下 `E://RedtaleProject//docs//ROUND-R24-HEAL.md`、`PLAN.md` §13 R24 + §13.27、`docs/CONTRACTS.md` §4.11、`docs/TASKS.md`（T-0018 VERIFIED + T-0020）、`D:/redtale-work/drills/v11_frost_edge.json5` · jar 334577 B、`selftest` 70 PASS、测试服已停（25567 / 25577 无 LISTEN）、构建锁已删；M4 出口 8/11（剩 V4 / V5 / V6 全是 GUI 面）· 下一步：验 T-0019 / T-0020；M5 先写 `docs/SKILLS.md` 的 schema 再派解析器
+- 2026-11-17 06:0x · S7 · **M5 开工**：新写 `docs/SKILLS.md`（M5 接口契约：五步释放链路 + `skills/*.json5` v1 schema + **24 条原语总表**（直伤4/控场4/位移3/投射3/增益4/减益3/召唤2/表现1，现状仅 `heal`）+ 伤害三条红线（绝不 `setAmount` / 类型必须 `redtale_project:` / `damage_type` 是启动期 registry）+ K1~K8 验收矩阵）；**派 T-0021**（`core/skill/SkillSpec.java` 解析器，在制品 3/3 封顶）；`CONTRACTS` 加 `core.skill` 包与 `skills/` 路径。本轮**无卡可验**（T-0019/T-0020 仍 OPEN，S8 自 11-16 19:04 零交付，已开 `B-01`） · `E://RedtaleProject//docs//SKILLS.md`、`docs//ROUND-R25-SKILLS.md`、`PLAN.md` §13 R25 + §13.28、`docs//TASKS.md`（T-0021）、`docs//CONTRACTS.md` §2/§5 · jar 334577 B（零代码改动）、`selftest` 70 PASS、`grep -c "^| [0-9]" docs/SKILLS.md`=24、构建锁已删 · 下一步：验 T-0019/0020/0021；M5-A 引擎（`SkillEngine` + `/redtale skill cast`）；`MultiplierRules` 伤害类别轴（Q-018 默认分轴）
