@@ -91,6 +91,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-16 09:15 · S4 · **第 90 轮证据轮**：不新增玩法，按 D1~D33 把新服 L3 前提从「装 mod」对齐到「S7 自研」——设计端 self-built / 部署端第三方 mod 双轨（正式服仍 228 jar、无 redtale jar、M3~M7 未完）· `BACKLOG` A段 T54 + B段 B-35 / `RESEARCH` 第 90 批 2.81 / `PLAN_NEXT` §15 · 下一步：S7 自研 jar 进正式服时点定后，S4 做 §7 L3 表述替换轮；S4 当前 0 条待拍板、0 阻塞
 
+- 2026-11-16 09:58 · S7 · 验收 **T-0008 → VERIFIED**（3/3 + 独立探针 48/48）；M2 消耗品**右键生效**上线（`items/ContentItem` 只覆写 `use()` + `ItemContent` 第 11 字段 `consumable` + `ScriptEngine.runCalls` + `/redtale use probe`），测试服两组全过（`demo_stew` 五项 ✓、`only_when_hungry` 饱食 20/20 挡住）；**派 T-0011**（`tools/gen_item_lang.py`，原 T-0005 重派），在制品 3/3 · `src/main/java/com/redtale/project/items/ContentItem.java`、`docs/ROUND-R15-CONSUME.md`、`PLAN.md` §13 R15/§13.18、`docs/CONTRACTS.md` §4.3 · 下一步：验 T-0009/0010/0011，磨刀石修耐久（等 T-0010）
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -112,6 +114,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-013 | S7 | `[Q-013]` 1.21.1 原版急迫**自带** `ATTACK_SPEED +0.1/级`（`MobEffects.DIG_SPEED` 字节码实读），D19「原版不加」的前提在 1.21.1 不成立；我们的 0.10/级会让急迫 II = +40% | **默认：自动去重**——检测到 `minecraft:effect.haste` 就让位给原版，配置数字不动（仍写 0.10，代表「目标总加成」）。实测急迫 II 4→4.8。若 Aki 要「原版 + 我们各 10%」的双份手感，把配置改 0.20 并把去重关掉即可（一行代码） |
 | Q-015 | S7 | `[Q-015]` 原版跳跃暴击固定 1.5，我们 `critical_strike_power` 基值 2.0；`apply_to_vanilla_crit` 默认 true = 全服暴击统一 2.0（实测已确认是替换不是叠乘） | **统一 2.0**（S7 默认）。两套倍率共存玩家对不上账；想保留原版 1.5 改配置 false + reload，不换 jar |
 | Q-014 | S7 | `[Q-014]` 属性值口径：`redtale_project:physical_damage = 0.2` 表示 **+20%**（小数，与 `ADD_MULTIPLIED_TOTAL` 同单位），还是 `20` 表示 +20%（百分数，面板/配置更好读） | **默认：小数**（0.2 = +20%）。理由：①与属性 modifier 的 `ADD_MULTIPLIED_TOTAL` 同单位，写入零换算、零精度坑；②tooltip 只在显示时 ×100 加 `%`，逻辑层永远一个单位；③改口径要动所有内容配置 + 已发物品，越早定越便宜。M2 铺 14 基底物品时按此写配置 |
+| Q-016 | S7 | `[Q-016]` D17 的 14 基底（sword…amulet）没有「食物/药水」这一格，D23 消耗品只能借用非护甲基底（现 `demo_stew` 借 `amulet`，玩家看到的是一枚护符）；`ITEM-MODEL.md` §3.1 样例写的 `base: minecraft:rabbit_stew` 与「`base` 只认 14 个 `ItemBase`」冲突 | **默认：A 复用现有基底**（`amulet`/`ring` 顶外观，零注册表变更、不换 jar；等 M5 真要食物外观再走 B）。备选 B = 加第 15 基底 `consumable`（一次换 jar + 补 lang/模型/创造栏）；C = 允许 `base` 写原版物品（最灵活但白板化要覆盖非自家注册物品，风险最大） |
 
 ---
 
