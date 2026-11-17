@@ -127,7 +127,7 @@ LivingIncomingDamageEvent（LOWEST）
 
 | 项 | v1（M5-A） | 之后 |
 |---|---|---|
-| 冷却 | `SkillEngine` 内存表 `key = (玩家 UUID, 技能 id)` → 到期 tick；重启清零 | `cooldown_reduction` 属性接入（M5-B），仍按固定公式 `cd × (1 - min(0.9, 值))`，**不设 0 冷却**（下限 1 tick，理由同 D19 的物理地板） |
+| 冷却 | `SkillEngine` 内存表 `key = (玩家 UUID, 技能 id)` → 到期 tick；重启清零 | **已接入（R30）**：`SkillEngine.cooldownReduction()` 读 `redtale_project:cooldown_reduction`，公式 `cd × (1 - min(0.9, 值))` 在 `SkillCooldowns.effectiveTicks` 单点换算，**不设 0 冷却**（下限 1 tick，理由同 D19 的物理地板） |
 | 法力 | 不耗 | M5-B：`max_mana` 上限 + `mana_regeneration`/秒回复 + `mana_cost_reduction` 折算；当前法力是**玩家持久状态**（`PlayerData`），登录同步 |
 | 物品消耗 | 无 | M5-C：`cost.item` / `cost.durability`，复用 `Repairer` 的扣件口径 |
 
@@ -138,7 +138,7 @@ LivingIncomingDamageEvent（LOWEST）
 | 阶段 | 做法 | 换 jar？ |
 |---|---|---|
 | v1（M5-A） | `/redtale skill cast <id> [等级]`，只验引擎 | 否 |
-| v1.5 | 物品绑定：`items/*.json5` 的 `abilities: ["redtale_project:gale_slash"]` → **`ItemContent` 加 `abilities` 字段（15 → 16，换一次 jar）** → 写进 `ContentData.abilities`（该字段已在，只是没人填）→ `ContentItem#use` 在没有 `use` 段时尝试施放 | 是（`ItemContent` 加字段，**只这一次**；之后加技能只写 JSON5，见 §2） |
+| v1.5 | 物品绑定：`items/*.json5` 的 `abilities: ["redtale_project:gale_slash"]` → **`ItemContent` 加 `abilities` 字段（15 → 16，换一次 jar）** → 写进 `ContentData.abilities`（该字段已在，只是没人填）→ `ContentItem#use` 在没有 `use` 段时尝试施放 —— **R30 已落地**，之后加技能只写 JSON5 | 是（仅 `ItemContent` 加字段那一次；已换过） |
 | M5-C | 键位绑定（客户端 mod + payload，D10 允许随包下发） | 是 |
 | M6 | 怪物技能：同一 `SkillEngine`，`SkillController` 从怪配置读 ability 列表 | 是 |
 
@@ -154,7 +154,7 @@ LivingIncomingDamageEvent（LOWEST）
 | K4 | 原语序列 | 一条技能里 3 个 effect 按序全跑；中间一个参数写坏只丢那一条 |
 | K5 | 伤害走管线 | `damage` 技能打木桩：白板 10 → 属性 `physical_damage 0.2` 时 **12**（证明吃 L2 乘区，不是 `setAmount`） |
 | K6 | 坏配置不崩 | 缺 `id` / `id` 不含 `:` / `effects` 空 / `cooldown_ticks: "x"` → reload 各 1 条 WARN，服务端照跑 |
-| K7 | 绑定 | 带 `abilities` 的武器右键施放，空手右键不施放（M5-B） |
+| K7 | 绑定 | 带 `abilities` 的武器右键施放，空手右键不施放（M5-B）—— ✅ R30：`/redtale skill use` 四组（施放 / 冷却拦截 / 无 abilities 不放 / 减免 50%） |
 | K8 | 怪物技能 | 配置的怪能放同一技能（M6 验） |
 
 ## 9. 交付顺序

@@ -1088,7 +1088,7 @@ fi
 - 待 S7 验收（离线不可验）：真实服务端跑 `/redtale enchant obtain`，核对三行文案与 `EnchantObtainTags` 产物一致；`/redtale enchant obtain` 与 `/redtale enchant list` 在 brigadier 同名 `enchant` 节点下合并后两条都在
 - 验收：2026-11-17 09:16 · S7 · **VERIFIED（3/3）** · build EXIT=0 · `grep -c EnchantObtainCommand.node()`=1 / jar 内 class=1 · S7 独立探针 `build/probe/s7obtain/…/S7ObtainProbe.java` **19/19 PASS**（不复用 ObtainListProbe：子目录 `/` 连接 + 非 .json 不收 + 不可变集合 + 空 values 与 null 的区分 + 坏 JSON/缺 values/非数组三种 null）· 测试服实测三分支：常态 `已生成 3 条`（frost_edge 为 R24 演练残留）+ 三行 `已收录 2/3 缺：…`；移走 `tradeable.json` → `tradeable  未生成` + `有 3 条附魔拿不到`；移走 frost_edge → 三行 `2/2  ✓` + `三条全齐 ✓`；`enchant list` 与 `enchant obtain` 同节点共存；两次夹具均已还原
 
-### T-0024 · [OPEN] `/redtale content list` 行字段刷新（清掉「词条层未接入」的过期占位）
+### T-0024 · [VERIFIED] `/redtale content list` 行字段刷新（清掉「词条层未接入」的过期占位）
 
 - 派单：S7 · 2026-11-17 07:50
 - 目标：`ContentListCommand` 里还写着 `词条层未接入`（R11 之前的占位，见常量 `AFFIX_PENDING`），
@@ -1122,6 +1122,11 @@ fi
      `S` = `sets/*.json5` 份数），每行七个字段齐全、`demo_longsword` 行 `孔位 2`、`套装 emberforged`（写 `set_id` 原值）、`rev 1`
      —— 这条由 S7 执行，S8 只需在进度行贴出 `gradle build` 退出码与两条 grep 的实测数字。
 - 进度：
+- 2026-11-17 10:14 · 完成 · `ContentListCommand.java`（67 行；删常量 `AFFIX_PENDING` 与其用法，表头 +5 字段、每行 7 字段） · 只改本卡独占文件，卡外零改动 · build `--offline` EXIT=0（jar 386261 B） · 自测：`AFFIX_PENDING`=0、`词条池 `=1、jar 内该类=1、9 条字段文案在常量池各命中 1 · 功能项 `/redtale content list` 输出（demo_longsword 孔位 2 / 套装 emberforged / rev 1）待 S7 测试服验收
+- 2026-11-17 10:33 · **S7 验收 → VERIFIED** · build `--offline` EXIT=0（jar 386261 B）· `AFFIX_PENDING`=0、`词条池 `=1 · 字节级：类常量池 `词条池`/`孔位 `/`套装 `/`消耗品 `/`修理 `/` · rev `/`套装定义 ` 各 1、`AFFIX_PENDING`=0
+  · 测试服 `Done (2.256s)` 后 `/redtale content list`：表头 `内容 10 件 · 数值共 11 条 · 带 weapon_attributes 2 件 · 词条池 1 个 · 套装定义 1 个`
+  = 对账（10 份 items / 11 = 3+4+2+2 / 2 份带 WA / 1 份 affix_pools / 1 份 sets）；10 行 × 7 字段齐全，
+  `demo_longsword · 孔位 2 · 套装 emberforged · rev 2` —— 卡面写的 `rev 1` 是陈旧期望（R20 改 `set_id` 时已 +1 到 2），实测 2 与定义一致，判过
 
 
 ### T-0025 · [OPEN] `/redtale validate` 补第 6 条 —— 技能引用的原语是否存在（R28-d 收口）
@@ -1164,6 +1169,54 @@ fi
      `conditions: [{type:"no_such_condition"}]`）→ `/redtale reload` → `/redtale validate` 恰好多 **2 条**问题
      （`effects 引用了未注册的原语 dash` / `conditions 引用了未注册的原语 no_such_condition`），头部技能计数 2 → 3；
      删掉该文件再 reload → 问题数回落到原值、两次输出逐字相同。S8 只需在进度行贴 build 退出码与两条 grep 的实测数字。
+
+- 进度：
+
+### T-0026 · [OPEN] `buff` 原语 —— 增益类第一条（M5-C）
+
+- 派单：S7 · 2026-11-17 10:40
+- 目标：`docs/SKILLS.md` §4 第 15 条 `buff`（增益类 4 条的第一条）。现在技能只能回血 / 直伤，没有任何一条能给目标挂状态效果 ——
+  内容侧写 `{type:"buff"}` 只会得到「引用了未注册的原语」的告警，运营无从下手。本卡只做 `buff`，不做 `debuff`。
+- 独占文件（**只有这两个可写**）：
+  - `src/main/java/com/redtale/project/core/script/builtin/BuffEffect.java`（**新建**）
+  - `src/main/java/com/redtale/project/core/script/builtin/Builtins.java`（**只**允许加 1 行 `registries.register(new BuffEffect());`
+    + 1 行注释；`registerAll` 的其它行、`ManualTrigger` / `PlayerJoinTrigger` 都不许动）
+- 接口（一字不改）：
+  ```java
+  public final class BuffEffect implements com.redtale.project.core.script.EffectType
+  public String id()                 // 固定返回 "buff"（小写，无命名空间）
+  public String description()        // 一行中文参数说明，照 HealEffect 的写法
+  public void run(ScriptContext ctx, com.google.gson.JsonObject args)
+  ```
+- 参数（`docs/SKILLS.md` §4 第 15 行）：
+
+  | 键 | 缺省 | 语义 |
+  |---|---|---|
+  | `target` | `caster` | `caster` = 施法者；`target` = 本次触发的受害者（`ScriptContext#target()`） |
+  | `effect` | **必填** | 原版效果 id，如 `minecraft:speed` |
+  | `amplifier` | `0` | 等级偏移（0 = I 级）；负数归 0、>255 夹到 255 |
+  | `duration_ticks` | `200` | 时长 tick；`<=0` 跳过；>72000 夹到 72000（原版瞬时效果上限） |
+
+- 行为（逐条照做，**不要自由发挥**）：
+  1. 施法者取法与 `HealEffect#pick` **完全一致**：`target=target` → `ctx.target()`；否则 `ctx.hasPlayer()` → `ctx.player()`；
+     再否则 `ctx.vars().get("attacker") instanceof Entity`。取不到活体 → 一条 WARN `buff 没有可用目标` 后 return。
+  2. `effect` 不是字符串 / 空串 → WARN `buff 缺 effect 参数` 后 return，**不要**抛异常。
+  3. `ResourceLocation.tryParse` 失败 → WARN 后 return。
+  4. `who.level().registryAccess().registryOrThrow(Registries.MOB_EFFECT).getHolder(id)` 取不到 → WARN 后 return。
+  5. 成功：`who.addEffect(new MobEffectInstance(holder, duration, amplifier))`，再 `LOG.info` 一行
+     `[script] buff · <目标名> + <effect id> <duration>t×<amplifier>`（照 HealEffect 的 `[script]` 前缀）。
+  6. 告警**按文案去重只打一次**（照 `HealEffect#warnOnce` 的 `Set<String> WARNED`；不要按脚本名去重，那会刷屏）。
+  7. 只用 `com.redtale.project.core.script` 包 + Minecraft 原版类，**零自有包依赖**（不要 import `RedtaleCore`）。
+- 不要做：不做 `debuff`；不碰 `ScriptContext` / `ScriptRegistries` / `EffectType` / `HealEffect` / `DamageEffect`；
+  不做「叠加层数 / 最大层数」（本卡没有这个概念）；不改 `docs/`；不加依赖、不改 `build.gradle`。
+- 验收：
+  1. `gradle build --offline` 退出码 0（取锁，见 §3）
+  2. `grep -c "new BuffEffect()" src/main/java/com/redtale/project/core/script/builtin/Builtins.java` = **1**，且
+     `grep -c 'return "buff"' src/main/java/com/redtale/project/core/script/builtin/BuffEffect.java` = **1**
+  3. `cd build/libs && unzip -l redtale_project-0.1.0.jar | grep -c "script/builtin/BuffEffect.class"` = **1**
+
+  三条都由 S8 自己跑并在进度行贴实测数字；功能验收（写一份 `skills/t_buff.json5` → reload → 放技能看目标身上的效果与时长）
+  由 S7 在测试服跑，**S8 不启停测试服、不发游戏内指令**。
 
 - 进度：
 

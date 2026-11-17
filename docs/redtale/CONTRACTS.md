@@ -55,7 +55,7 @@ S8 只在卡指定的包内新建文件；新建包需卡上写明。
 
 ## 4. 数据字段（改字段 = 改契约）
 
-`ItemContent`（配置侧，**15 字段**）：`id` / `base` / `name` / `durability` / `rarity` / `weaponAttributes` / `stats` / `stripVanillaEffects` / `rev` / `source` / `consumable`（R15，`ConsumableSpec.Spec`，`null` = 不是消耗品）/ `repair`（R16，`RepairSpec.Spec`，`null` = 不是修理物品）/ `sockets`（R19，`SocketSpec.Layout`，缺省 `Layout.EMPTY`）/ `gem`（R19，`SocketSpec.Gem`，`null` = 不是宝石）/ `setId`（R20，`set_id`，空串 = 不属于任何套装；**定义型字段**，改它要 `rev`+1）
+`ItemContent`（配置侧，**16 字段**）：`id` / `base` / `name` / `durability` / `rarity` / `weaponAttributes` / `stats` / `stripVanillaEffects` / `rev` / `source` / `consumable`（R15，`ConsumableSpec.Spec`，`null` = 不是消耗品）/ `repair`（R16，`RepairSpec.Spec`，`null` = 不是修理物品）/ `sockets`（R19，`SocketSpec.Layout`，缺省 `Layout.EMPTY`）/ `gem`（R19，`SocketSpec.Gem`，`null` = 不是宝石）/ `setId`（R20，`set_id`，空串 = 不属于任何套装；**定义型字段**，改它要 `rev`+1） / `abilities`（R30，`abilities[]`，每条带命名空间的技能 id，**定义型字段**，改它要 `rev`+1；右键施放**第一条**，空列表 = 不是技能载体）
 
 `ContentData`（运行时组件，**12 字段**）：`content_id` / `content_rev` / `schema` / `set_id` / `upgrade_level` / `rolled_stats` / `rolled_keys` / `affixes` / `abilities` / `weapon_attributes` / `sockets`（R18，`List<String>`，`""` = 空孔）/ `gem_stats`（R18，`Map<String,Double>`）
 
@@ -411,6 +411,35 @@ public final class SkillEngine {
 
 `ScriptEngine.runCalls` 另有 `(calls, ctx, String owner)` 重载（R29-d）：技能传 `"技能 <id>"`，日志不再是「物品脚本的 effect」；
 旧的两参版委托并传 `"物品脚本"`，行为零变更。
+
+### 4.17 物品绑定技能 `abilities` + 冷却减免（M5-B，R30 定稿）
+
+```java
+// 配置（items/*.json5）—— 定义型字段，改它要 rev+1
+abilities: ["redtale_project:gale_slash"]       // 数组；坏项只跳过自己并告警
+
+// 解析（ItemContent.parse → parseAbilities）
+ItemContent.abilities() -> List<String>         // 不可变；不校验技能是否存在（R28-d）
+
+// 写入 / 迁移
+ItemFactory.build(content, random)              // ContentData.abilities = content.abilities()
+ItemUpgrader.ensure(stack)                      // 重建时取**新定义**的 abilities（与 set_id 同口径）
+
+// 右键（ContentItem#use，分支优先级固定）
+use 段 → repair 段 → abilities.get(0) → 什么都不做
+    CAST      → CONSUME
+    COOLDOWN  → FAIL + 「技能 <id> 冷却中：<n> tick」
+    CONDITION → FAIL + 「技能 <id> 条件不满足（<type>）」
+    NO_SKILL  → PASS + 一条 WARN（配置漂移不吞物品）
+
+// 冷却减免（M5-B 后半）
+SkillEngine.cooldownReduction(ServerPlayer) -> double   // 读 redtale_project:cooldown_reduction，异常归零
+SkillCooldowns.effectiveTicks(cd, reduction)            // 夹 [0, 0.9]，结果地板 1 tick（唯一换算点）
+```
+
+- **只放第一条**：一键全放等于「按一下掏空家底」；多技能选择是键位绑定（M5-C）。
+- `ContentData.abilities` 字段**早就在**（M0 起），本卡之前恒空 —— 所以 schema **不变**（仍 2），不需要迁移。
+- 探针：`/redtale skill use "<内容id>"`（FakePlayer 真调 `ItemStack#use`，四组：A 施放 / B 冷却拦截 / C 无 abilities 不放 / D 减免 50%）。
 
 ## 5. 路径约定
 
