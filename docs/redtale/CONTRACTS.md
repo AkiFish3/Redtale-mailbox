@@ -24,7 +24,7 @@
 | `com.redtale.project.items` | `ContentData` / 基底 / 解析 / 建栈 / tooltip / `ContentItem`（唯一物品行为类，R15）/ `Repairer`（修理唯一结算点，R16） | 有 |
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
-| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ **`RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）**。**刷怪 / 装备装配 / 刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b） |
+| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）**。**技能释放与刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
 | `com.redtale.project.progression` | 等级/技能树（M7） | **未建** |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
@@ -525,6 +525,33 @@ public record Definition(String id, String name, String icon, int cooldownTicks,
 | 持久化 | **本轮不做**：重登 = 满蓝（R35-e）；`restore`/`clear` 两个口子已就位，等 `PlayerData` | 现在落盘要在「什么时候写 / 丢多少 / 多世界」三件事上先拍板，格式定错会连带改结算 |
 | 观测面 | `/redtale skill list` 与 `info` 每行带 `法力 <n>`；`/redtale skill mana probe` A~F 六组；`mana` 只读当前/上限/回蓝/减免 | 没有观测面时「蓝不扣」只能靠人肉感觉，六组探针是唯一能定位到「哪一段断」的东西 |
 
+### 4.22 怪物生成 `MobSpawner`（M6 第三步第 2 小步，R38 定稿）
+
+```java
+package com.redtale.project.mobs;
+
+public final class MobSpawner {
+    public record Result(boolean ok, String message, net.minecraft.world.entity.Mob mob, java.util.List<String> skips) {}
+    public static final String TAG_PREFIX = "redtale_mob/";
+    /** 失败不抛异常：ok=false + message 说明原因。 */
+    public static Result spawn(net.minecraft.server.level.ServerLevel level,
+                               double x, double y, double z, MobSpec.Definition def);
+}
+```
+
+| 项 | 契约 |
+|---|---|
+| 落地顺序 | `RedtaleEntities.byBase(base)` → `EntityType#create(Level)`（**单参**，1.21.1 没有 `EntitySpawnReason`）→ `moveTo` → 属性 → 体积 → 六槽 → 名称/标签/持久化 → `addFreshEntity` → `setHealth(getMaxHealth())` |
+| 属性写法 | `ADD_VALUE` **临时** modifier，id = `redtale_project:mob/<怪id>/<属性path>`；`addOrUpdateTransientModifier`，重生成是覆盖不是叠加（R38-a） |
+| 数值语义 | **加法**：出厂基值（`MAX_HEALTH 20` / `ATTACK_DAMAGE 2` / `MOVEMENT_SPEED 0.25` / `ARMOR 0`）+ 配置值 × 公式 `base + per_item_level × level`。与 `max_mana` 的**绝对值**口径不同（R35-a），别互相套用 |
+| 体积 | `minecraft:generic.scale` 的**基值**，`1.0` 不写（唯一走基值的字段，R38-b）；夹取在 `MobSpec` 解析期（`[0.25,4.0]`） |
+| 装备 | 六槽 `mainhand/offhand/head/chest/legs/feet` → `BuiltInRegistries.ITEM`；**必须写物品 id**（`redtale_project:sword`），内容 id（`demo_longsword`）→ `skips` 一条，不纠正（纠正属运营决定） |
+| 标签 | scoreboard tag `redtale_mob/<怪id>`；`setPersistenceRequired()` 防自然消失；`CustomName` = `name` 且始终可见 |
+| `skips` 可达面 | 只有「装备 id 未知」「实体没有该属性」两类；**未知属性键在解析层就被 `AffixPools` 丢掉**，查 reload 告警才是正解（R38-c） |
+| 不做 | 技能释放（M6 第 4 步）、刷怪替换、AI 差异、落盘等级字段 |
+
+命令面：`/redtale mob list`（id / 原型 / 等级 / 装备件数 / 技能条数 / 体积）、`/redtale mob spawn <id> [x y z]`（坐标缺省取命令源位置，返回 1/0）。**验收前先 `forceload`**（R38-d）。
+
 
 ## 5. 路径约定
 
@@ -539,6 +566,7 @@ public record Definition(String id, String name, String icon, int cooldownTicks,
 | 附魔脚本（L3，随默认配置落地） | `config/redtale_project/scripts/*.json5`（默认 `greeting.json5` + `enchants_soul_reap.json5`） |
 | 技能定义（M5，R25 定稿） | `config/redtale_project/skills/<id>.json5`（一个文件一条技能，schema 见 `docs/SKILLS.md` §3）；默认两份 `gale_slash` / `ember_burst` 属 `DEFAULT_FILES`，**删文件会被 reload 重建**（想停用就改文件内容，别删） |
 | 怪物定义（M6，R36） | `config/redtale_project/mobs/<id>.json5`（一个文件一只怪，schema 见 `MobSpec` 卡 T-0030）；默认 `ember_guard` / `ash_caster` 属 `DEFAULT_FILES`，**删文件会被 reload 重建** |
+| 怪物实体（M6，R38） | 不落盘：`/redtale mob spawn` 现生成；识别靠 scoreboard tag `redtale_mob/<怪id>`（1.21.1 无 `getPersistentData`，R34 事实） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 
 运行期生成物**不进 jar、不进 config**；jar 内的 `data/` 只放不会变的东西（如 `damage_type`）。

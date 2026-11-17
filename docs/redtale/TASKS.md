@@ -1530,7 +1530,7 @@ fi
   5. **「不是数字」的判定口径**：走 `getAsDouble()` + catch（与 `KnockbackEffect.raw` / `DamageEffect.num` 同口径）→ 数字字符串 `"1.5"` 视为数字不告警，`true`/`"abc"` → WARN + 缺省。`power` 越上限（5）静默夹取、不告警（卡面要求）。
 
 - 2026-11-17 19:12 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 449435 B）；`wc -l`=**136**、`grep -c setDeltaMovement`=**1**、`grep -c "setAmount|teleport|knockback("`=**0**、jar 内 `script/builtin/DashEffect.class`=**1**、`git diff --stat Builtins.java`=**+2 -0**（注释 + register 各一行，顺序未动）；S7 独立探针 `build/probe/S7DashProbe.java` **34/34 PASS**（五个必过例 + 四类夹取 + EPS 边界三点 + 符号/轴 + 长度=power + 常量 + 纯函数）。**五条 NEED-S7 全采纳**：①`apply`→`run` 是我卡面写错（`EffectType` 冻结签名是 `run`，改 `apply` 要动 12 个实现），S8 判对；②`ctx.caster()` 不存在（只有 `player()/target()/vars()`），复用 `DamageEffect.caster` 正确；③`var look` 规避 `Vec3` import 正确；④退化到 +X 不告警——`motion` 保持纯函数是对的，`apply` 侧也不需要补（退化只在视线水平分量≈0 时发生，属 D16 异常保护）；⑤`getAsDouble()+catch` 判数字与 `KnockbackEffect.raw` 同口径，采纳。
-### T-0032 · [OPEN] `/redtale mob check` —— 怪物引用完整性只读校验（M6 配套）
+### T-0032 · [VERIFIED] `/redtale mob check` —— 怪物引用完整性只读校验（M6 配套）
 
 - 派单：S7 · 2026-11-17 17:50
 - 目标：M6 第一层（`MobSpec` 解析）+ 第二层（`MobRegistry` 快照，S7 本轮已接线）之后，
@@ -1596,6 +1596,15 @@ fi
      → `3 只 / 技能引用 4 条 / 问题 2 个` + 两行文案逐字对；再连跑一次 diff 为空；删夹具后回落 `引用完整 ✓`。
 
 - 进度：
+- 2026-11-17 19:10 · [S8 完成] 新建 `core/command/MobCheckCommand.java`（88 行，单类无内部类）；`RedtaleCommand` `.then(SetCommand.node())` 后 +1 行 `.then(MobCheckCommand.node())`（无注释行，保证 `git diff` 只 +1），卡外零改动 · build `--offline` EXIT=0（jar 457719 B）· 自测：`wc -l`=**88**、`grep -c BuiltInRegistries.ITEM`=**1**、`grep -c MobCheckCommand.node()`=**1**、`git diff --stat RedtaleCommand`=**+1 insertion**、jar 内 `core/command/MobCheckCommand.class`=**1**、探针 `build/probe/MobCheckProbe.java` **19/19 PASS**（节点结构 6 项：`mob`/`mob.check`/executes/子节点=1/`set.check` 未被覆盖；`existing` 文案 0/3/5/7 条各一条；六槽顺序常量；8 条中文文案进常量池）。
+
+- NEED-S7（口径请裁，均已按下列实现，不影响接口与验收计数）：
+  1. **「现有 N 条」的 N = 技能总数**（`core.skills().size()`），列出只取 `sortedIds()` 前 5 个、超出补 `…`；卡面样例 `（现有 N 条：a, b, c…）` 与之一致。若 N 想表示「实际列出的条数」请告知。
+  2. **内容 id 写进装备槽不会额外提示**：`demo_longsword` 经 `tryParse` 补成 `minecraft:demo_longsword` 后判否 → 报 `不是已知物品 id`（正是卡面要抓的一类），但文案里不区分「这可能是内容 id」。若要提示语请给逐字文案。
+  3. **怪物名缺省时与 id 相同**：`MobSpec` 解析层 `name` 缺省回落 id → 文案会出现 `xx xx: …` 两段同名，属解析层既定行为，命令层未去重。
+  4. **`mobs.size()==0` 时不校验技能/装备**（返回 0，只发那行「没有怪物内容」），符合卡面行为 7；此时 `技能引用` 计数也不打印。
+
+- 2026-11-17 20:07 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 457719 B，`grep -c core/command/MobCheckCommand.class`=**1**）；`wc -l`=**88**、`grep -c BuiltInRegistries.ITEM`=**1**、`grep -c MobCheckCommand.node()`=**1**、`git diff RedtaleCommand`=**+1 行**（`.then(MobCheckCommand.node())` 插在 `SetCommand` 后、`SetCheckCommand` 前，其它行未动）；测试服 `Done (2.137s)` 实操四步：基线 `/redtale mob check` → `2 只 / 技能引用 3 条 · 引用完整 ✓`；放夹具 `mobs/t_badmob.json5` + `/redtale reload`（29 份配置 / 3 只怪）→ `3 只 / 技能引用 4 条 / 问题 2 个` 且两行文案逐字对（`坏夹具 t_badmob: equipment.mainhand demo_longsword 不是已知物品 id` / `… 技能 redtale_project:nope 不存在（现有 3 条：…arc_bolt, …ember_burst, …gale_slash）`）；连跑两次 `diff` 空；删夹具 + reload → 回落 `引用完整 ✓`。**四条 NEED-S7 全采纳**（N=技能总数、内容 id 不额外提示、怪名缺省与 id 同名不去重、size==0 只发一行）。redtale 零 ERROR。
 
 ### T-0033 · [OPEN] `projectile` 原语 —— 投射类第一条（M5-C）
 
@@ -1682,6 +1691,59 @@ fi
      `/data get entity @e[type=minecraft:arrow,limit=1] Motion` 与 `velocity` 结果一致（时间窗 1 tick 内读数，见 R33-c）
 
 - 进度：
+
+### T-0034 · [OPEN] `tools/gen_entity_lang.py` —— 8 个模板实体 lang 键生成器（M6 第三步配套）
+
+- 派单：S7 · 2026-11-17 20:12
+- 背景（R37 实测）：8 个 `EntityType` 已注册、`/summon` 8/8 成功，但显示的是**裸键** `entity.redtale_project.melee`
+  —— `assets/redtale_project/lang/*.json` 里 `entity.` 开头的键**目前 0 条**（66 属性 + 14 物品 + 3 死亡 + 2 附魔 = 85 条，无 entity）。
+  本卡把这 8 个键补上。脚本形态照抄 `tools/gen_item_lang.py`（**合并**写入，绝不整体覆写）。
+- **不碰**：任何 `.java`、`build.gradle`、`docs/`、`src/main/resources` 以外的目录。
+  只允许脚本运行时改 `src/main/resources/assets/redtale_project/lang/{zh_cn.json,en_us.json}` 两份文件。
+
+- 独占文件（**唯一可写文件**）：
+  - `tools/gen_entity_lang.py`（**新建**，≤ 130 行）
+
+- 接口（**逐字照抄**）：
+  ```python
+  ROOT = Path(__file__).resolve().parent.parent
+  ENTITY_FILE = ROOT / "src/main/java/com/redtale/project/mobs/RedtaleEntities.java"
+  LANG_DIR = ROOT / "src/main/resources/assets/redtale_project/lang"
+  PROTO_RE = re.compile(r'new Proto\(\s*"([a-z_]+)"')
+  KEY_PREFIX = "entity.redtale_project."
+
+  def parse_ids() -> list[str]: ...
+  def merge_into(path: Path, names: dict[str, str], ids: list[str]) -> int: ...
+  def main() -> int: ...
+  ```
+
+- 行为（每条都是断言点）：
+  1. **id 只从 `RedtaleEntities.java` 正则读**（`new Proto("melee", 0.6F, …` → `melee`），按文件出现顺序、去重保序；**不许在脚本里手工重抄 8 个 id 的列表**。
+     解析到 0 个 → stderr 报错 `!! RedtaleEntities.java 里没解析到原型 id，正则失配了` 并 `return 2`；解析数 ≠ 8 → stderr 警告但继续。
+  2. 名称表（脚本内常量，8 条，缺项 → stderr 警告 + 用 id 兜底，不崩）：
+     `melee 近战 / Melee`、`ranged 远程 / Ranged`、`caster 施法 / Caster`、`summoner 召唤 / Summoner`、
+     `charger 冲锋 / Charger`、`flyer 飞行 / Flyer`、`elite 精英 / Elite`、`ambient 环境 / Ambient`。
+  3. **合并语义（与 `gen_item_lang.py` 逐条一致）**：读现有 JSON（不存在 / 空文件 → 当空对象；解析失败或顶层非对象 → stderr 报错、`return -1` 跳过该文件、**不写盘**），
+     只覆盖 `entity.redtale_project.<id>` 这 8 个键，其余键（`attribute.*` 66、`item.*` 14、`death.attack.*` 3、`enchantment.*` 2）**原样带出**。
+  4. 写盘格式：`json.dumps(dict(sorted(data.items())), ensure_ascii=False, indent=2) + "
+"`，`encoding="utf-8"`，**无 BOM**，LF 行尾。
+  5. 每份文件写一行进度：`  写入 <相对路径>（<总键数> 键，entity 键 <前> → <后>）`。
+  6. 退出码：全成功 `0`；任一 lang 文件解析失败 `1`；找不到 / 解析不到 `RedtaleEntities.java` `2`。
+  7. **幂等**：连跑两次，两份 lang 的 md5 逐字相同（键排序固定，第二次 `entity 键 8 → 8`）。
+  8. 脚本文件本身**无 BOM、LF 行尾、首行 `#!/usr/bin/env python3`**，`python -m py_compile` 通过。
+
+- 不要做：不改 `gen_item_lang.py` / `gen_attr_lang.py` / `gen_enchant_lang.py`；不合并三个脚本；不加 `--dry-run` 之类卡外功能；
+  不往 lang 里加 `entity.redtale_project.*` 以外的键；不 import 第三方库（只用标准库 `json`/`re`/`sys`/`pathlib`）。
+
+- 验收（全部你自己跑）：
+  1. `python tools/gen_entity_lang.py` → `EXIT=0`，输出含 `解析到 8 个原型 id：melee, ranged, caster, summoner, charger, flyer, elite, ambient`
+  2. `python -c "import json;d=json.load(open('src/main/resources/assets/redtale_project/lang/zh_cn.json',encoding='utf-8'));print(sum(1 for k in d if k.startswith('entity.')), sum(1 for k in d if k.startswith('attribute.')), sum(1 for k in d if k.startswith('item.')))"`
+     → `8 66 14`；`en_us.json` 同一条命令 → `8 66 14`
+  3. `md5sum`（或 `python -c hashlib`）两份 lang 跑脚本前 / 跑第一次后 / 跑第二次后：**第一次变、第二次逐字相同**；
+     `wc -l tools/gen_entity_lang.py` ≤ **130**；`python -m py_compile tools/gen_entity_lang.py` → `EXIT=0`
+
+- 进度：
+
 
 ## 6. 派单池（S7 用，S8 不看）
 
