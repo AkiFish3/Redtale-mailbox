@@ -161,7 +161,7 @@ LivingIncomingDamageEvent（LOWEST）
 
 | 段 | 内容 | 谁做 |
 |---|---|---|
-| M5-A | `SkillSpec`（解析，纯函数，派 S8）→ `SkillEngine`（冷却表 + `runCalls`）→ `/redtale skill list\|cast` → 默认 2 条技能配置 → K1~K6 | S8 解析器；引擎与命令 S7 |
+| M5-A | `SkillSpec`（解析，纯函数，派 S8）→ `SkillEngine`（冷却表 + `runCalls`）→ `/redtale skill list\|cast` → 默认 2 条技能配置 → K1~K6 | S8 解析器；引擎与命令 S7。**R29 已落地**（`SkillEngine` + `/redtale skill list\|cast\|probe\|cd`，K1~K6 实测通过，见 `docs/ROUND-R29-SKILLENGINE.md`） |
 | M5-B | `ItemContent.abilities` + `ContentData` 写入 + 右键施放 + `cooldown_reduction`/法力池 | S7（跨 3 文件） |
 | M5-C | 6 条高频原语（`damage` / `damage_aoe` / `dash` / `buff` / `debuff` / `fx`）+ 默认技能放量 | S7 定接口，可按原语逐条派卡 |
 | M6 | 怪物技能控制器复用 `SkillEngine` | S7 |

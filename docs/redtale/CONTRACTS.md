@@ -23,7 +23,7 @@
 | `com.redtale.project.core.script` | 脚本层三张注册表 + builtin | 有 |
 | `com.redtale.project.items` | `ContentData` / 基底 / 解析 / 建栈 / tooltip / `ContentItem`（唯一物品行为类，R15）/ `Repairer`（修理唯一结算点，R16） | 有 |
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
-| `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021，VERIFIED）+ `SkillRegistry` 不可变快照（R28）+ 技能引擎 `SkillEngine`（M5-A，等 T-0022 冷却表合流） | 快照层已上：`RedtaleCore.skills()` |
+| `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
 | `com.redtale.project.mobs` | 模板实体（M6） | **未建** |
 | `com.redtale.project.progression` | 等级/技能树（M7） | **未建** |
 
@@ -381,6 +381,36 @@ public final class EnchantObtainTags {
 | 空集行为 | 仍写三份空 `values` | 语义 = 「清场」。删光附魔时不清 tag 会留下指向不存在 id 的条目，数据包加载报 Unknown entry |
 | 幂等 | 文本逐字相等 → 不写、不改 mtime | reload 每次都改写 mtime 会触发整包重载 |
 | 时机 | 只在 `RedtaleCore.reload()` 里跑；tag 是**资源**层，`/reload` 即生效（不用重启） | 与 `enchantment`（启动期 registry）不同层：加附魔要重启，改 tag 不用（R23 两条时机） |
+
+### 4.16 技能引擎 `SkillEngine`（M5-A，R29 定稿）
+
+```java
+package com.redtale.project.core.skill;
+
+public final class SkillEngine {
+    public enum Status { CAST, NO_SKILL, NO_PLAYER, CONDITION, COOLDOWN }
+    public record Result(Status status, String skillId, int remainingTicks, int effects, String failedCondition) {
+        public boolean cast();
+    }
+    public static final double AIM_RANGE = 8.0D;
+
+    public SkillCooldowns cooldowns();
+    public Result cast(net.minecraft.server.level.ServerPlayer player, String skillId);
+    public static String cooldownText(String skillId, int remainingTicks);   // "技能 <id> 冷却中：<N> tick"
+    public static net.minecraft.world.entity.Entity aimedTarget(net.minecraft.server.level.ServerPlayer player);
+}
+```
+
+**顺序是硬约束**（R29-a）：③ conditions 全 true → ④ `cooldowns().tryStart(...)` → ⑤ `runCalls`。
+条件不过**不记冷却**、冷却不过**不跑 effects**。未知 condition type 跳过（与 `ScriptEngine#passConditions` 同口径，
+解析层按 R28-d 不校验原语）。目标来自视线 raycast `AIM_RANGE` 格（只认活体、排除自己），打不中就是 null，
+由 `damage` 原语自己跳过 + WARN（R29-c）。
+
+命令：`/redtale skill list` · `cast <id>`（要玩家，取 UUID）· `probe <id>`（FakePlayer + 木桩牛，A/B 两组数值对照，
+会 `cooldowns().clear()`，**验收工具不进玩法路径**，R29-e）· `cd <id>`（只读剩余冷却）。
+
+`ScriptEngine.runCalls` 另有 `(calls, ctx, String owner)` 重载（R29-d）：技能传 `"技能 <id>"`，日志不再是「物品脚本的 effect」；
+旧的两参版委托并传 `"物品脚本"`，行为零变更。
 
 ## 5. 路径约定
 

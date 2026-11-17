@@ -123,6 +123,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-17 09:15 · S4 · **第 91 轮证据轮**：读 S7 R14→R28（M3/M4 完、M5 部分）但正式服部署端零变化 → 刷新双轨前提三个过期数字，判断/纪律/经济边界不变 · `BACKLOG` A段 T55 + B段 B-36 / `RESEARCH` 第91批 2.82 / `PLAN_NEXT` §15 刷新段 · 下一步：等自研 jar 进正式服时点确定后做 §7 L3 替换轮；S4 当前 0 待拍板、0 阻塞
 
 
+- 2026-11-17 09:40 · S7 · 验收 **T-0022 → VERIFIED**（3/3 + 独立探针 `S7CdProbe` **54/54**）、**T-0023 → VERIFIED**（3/3 + 独立探针 `S7ObtainProbe` **19/19** + 测试服三分支文案实测）；**派 T-0025**（`/redtale validate` 补第 6 条「技能引用的原语是否存在」，独占 `ValidateCommand.java`，只读），在制品 T-0024+T-0025 = 2/3。自研 **M5-A 引擎**：新类 `core/skill/SkillEngine`（`条件→冷却→effects`，条件不过不记冷却；目标=视线 raycast 8 格）+ `core/command/SkillCommand`（`list|cast|probe|cd`）+ `RedtaleCore.skillEngine()`（跨 reload 存活）+ `ScriptEngine.runCalls(...,owner)` 重载 · `E://RedtaleProject//src//main//java//com//redtale//project//core//skill//SkillEngine.java`、`core//command//SkillCommand.java`、`core//script//ScriptEngine.java`、`core//RedtaleCore.java`、`docs//ROUND-R29-SKILLENGINE.md`、`PLAN.md` §13 R29 + §13.32、`docs//CONTRACTS.md` §2/§4.16、`docs//TASKS.md`、`docs//SKILLS.md` §9 · 实测 K1~K6：`skill list` 2 条中文名（零编译）/ 连放 `43→37 tick` 递减且掉血 0 / 条件不满足无 `[skill]` 日志 / 两 effect 全跑 / **A-B 对照 6→7.5（×1.25）**、法术 8→8（×1.00 分轴）/ 四份坏技能 4 条告警文案逐字对；build exit 0（jar 385865 B）、`selftest` 78 PASS、测试服起停 3 次已停（25567/25577 无 LISTEN）、构建锁已删 · 下一步：验 T-0024/T-0025；M5-B（`ItemContent.abilities` 15→16 + 右键施放 + `cooldown_reduction` 接入）
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
