@@ -1366,7 +1366,7 @@ fi
 
 - 2026-11-17 16:40 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 425611 B，与你报的一致）· `grep -c net.minecraft`=**0**、`grep -c "synchronized\|ConcurrentHashMap"`=**0**、`wc -l`=**138**、jar 内 `core/skill/ManaPool*`=4 · S7 独立探针 `build/probe/S7ManaProbe.java` **85/85**（不复用 ManaPoolProbe）· 卡面 8 条行为逐条断言过；四处口径全采纳（①`setMax` 抬高上限**不补蓝**只夹取 —— 实测 `setMax(u,250)` 后 current 仍 100，这是对的，卡面写的是「current 夹到 [0,max]」，「新玩家满蓝」只在降上限时表现为满；②`regen` 满蓝不建记录；③`NaN` 成本按免费；④`max<=0` 记 0）
 
-### T-0030 · [OPEN] `mobs/MobSpec` —— 怪物定义解析器 v1（M6 第一层，纯解析）
+### T-0030 · [VERIFIED] `mobs/MobSpec` —— 怪物定义解析器 v1（M6 第一层，纯解析）
 
 - 派单：S7 · 2026-11-17 15:25
 - 目标：D4「8 个模板实体 + 数据驱动」里**唯一能离线断言的那一层**——把 `mobs/*.json5` 解析成不可变快照。
@@ -1439,6 +1439,8 @@ fi
      三处不可变 / 键序不随解析变化），跑出 `PASS` 总数并贴上来
 
 - 进度：
+2026-11-17 17:10 · 完成 · 新建 `mobs/MobSpec.java`（197 行：主类 + `SkillRef`/`Equipment`/`Definition` 三个 record）· 构建 `--offline` EXIT=0（jar 441816 B）· 自测 `build/probe/MobSpecProbe.java` **90/90** PASS；grep 验收：`net.minecraft`=0 / `wc -l`=197 / `Map<String, Definition> parse(`=1 / jar 内 `mobs/MobSpec`=4（主类+3 record）
+  口径备注（请 S7 裁，未影响接口与计数）：① `attributes` 与 `parseStats` 读的 `stats` 键不同名 → 套一层 `{stats: attributes}` 载体转手，归一规则仍只用 `AffixPools` 那份；② `scale` 的 `<=0`/非有限按卡面括号「非数字才告警」字面**静默**回落 1.0；③ `cooldown_ticks` 非数字补了 1 条告警（卡面只给 `chance` 写了告警，为与既有解析器同口径）；④ id 去重发生在 base 校验之后（base 非法的条目不占 id）；⑤ `warnings==null` 用本地 sink，不 NPE。
 
 
 ### T-0031 · [OPEN] `dash` 原语 —— 位移类第一条（M5-C，纯数学可离线断言）
@@ -1515,6 +1517,74 @@ fi
      `grep -c "setAmount\|teleport\|knockback(" ` = **0**；`git diff --stat -- .../Builtins.java` 只 +2 行
   3. 探针 `build/probe/DashProbe.java` ≥ **20** 条断言覆盖「行为 2 的五个必过例 + 夹取 + 退化 + 符号」，
      跑出 `PASS` 总数并贴上来（**只断言 `motion` 的数值，别断言 `apply`** —— `apply` 由 S7 在测试服验）
+
+- 进度：
+- 2026-11-17 17:40 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 445907 B）；`grep -c net.minecraft`=**0**、`wc -l`=**197**、`grep -c "Map<String, Definition> parse("`=**1**、jar 内 `mobs/MobSpec*`=**4**；S8 探针 `MobSpecProbe` **90/90**，S7 独立探针 `build/probe/S7MobSpecProbe.java` **71/71**（不复用 S8 断言，12 条行为逐条过）。五处口径全采纳：①`attributes` 套 `{stats:…}` 载体转手（归一规则仍只用 `AffixPools` 一份，实测裸名 `attack_damage` 归一成 `minecraft:generic.attack_damage`）；②`scale<=0`/非有限静默回落 1.0（卡面括号字面）；③`cooldown_ticks` 非数字补告警（与既有解析器同口径）；④base 非法条目不占 id（实测坏 base + 好 base 同 id → 好那条被收下）；⑤`warnings==null` 用本地 sink。**注意**：夹取不告警是卡面要求，探针一开始按「越界必告警」写，红了两条才改回来——`chance:3`/`cooldown:-5` 静默夹取是对的。
+
+### T-0032 · [OPEN] `/redtale mob check` —— 怪物引用完整性只读校验（M6 配套）
+
+- 派单：S7 · 2026-11-17 17:50
+- 目标：M6 第一层（`MobSpec` 解析）+ 第二层（`MobRegistry` 快照，S7 本轮已接线）之后，
+  补一个**只读观测面**：`mobs/*.json5` 里写错的装备 id / 技能 id 现在**全部静默**——
+  解析层不查注册表，快照层不查内容，装备写错就是「怪生成时手里空着」，技能写错就是「永远不放」。
+  本卡把这些静默坑变成一张能对账的清单。
+- **不碰**：`MobSpec` / `MobRegistry` / `RedtaleCore` / `ConfigStore` / `Builtins` / 任何实体或刷怪逻辑。
+
+- 独占文件（**唯一可写文件**）：
+  - `src/main/java/com/redtale/project/core/command/MobCheckCommand.java`（**新建**，≤140 行）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**只加 1 行**：
+    `.then(MobCheckCommand.node())`，插在 `.then(SetCheckCommand.node())` 那行**之前**。
+    同包，不需要 import。其它行一个字符都不许动）
+
+- 接口（**逐字照抄**）：
+  ```java
+  package com.redtale.project.core.command;
+
+  public final class MobCheckCommand {
+      private MobCheckCommand() {}
+      /** 命令节点：/redtale mob check（Brigadier 按同名 literal 合并到已有 redtale 树）。 */
+      public static com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> node();
+      /** 返回「问题」条数（不是检查项总数，与 SetCheckCommand 同口径）。 */
+      public static int check(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> ctx);
+  }
+  ```
+
+- 行为（逐条断言点，输出必须**逐字可复现**）：
+  1. 数据源只有三处，全是现成快照，**不读盘、不重新解析**：
+     `RedtaleCore.get().mobs()` / `.skills()` / `net.minecraft.core.registries.BuiltInRegistries.ITEM`。
+  2. 遍历顺序 = `core.mobs().all()` 的迭代序（配置顺序）；每只怪先装备后技能。
+  3. **装备六槽**按固定顺序 `mainhand, offhand, head, chest, legs, feet` 检查；值为空串跳过；
+     非空时 `BuiltInRegistries.ITEM.containsKey(ResourceLocation.tryParse(id))` 为假 → 记一条问题：
+     `"  " + 怪物名 + " " + 怪物id + ": equipment." + 槽名 + " " + id + " 不是已知物品 id"`。
+     `ResourceLocation.tryParse` 返回 null（写法非法，如带空格）也算问题，文案同上。
+     **注意**：内容栈的 item id 就是**基底 id**（`redtale_project:sword` 这类），所以内容 id
+     （`demo_longsword`）写进装备槽**不是**合法值 —— 这是本检查最常抓到的一类。
+  4. **技能列表**按配置顺序检查：`core.skills().has(skillId)` 为假 → 一条问题：
+     `"  " + 怪物名 + " " + 怪物id + ": 技能 " + skillId + " 不存在（现有 N 条：a, b, c…）"`；
+     现有 id 用 `core.skills().sortedIds()`，**最多列 5 个**，超出补 `…`；一条都没有时写 `（现有 0 条）`。
+  5. 每条问题的追加顺序：按上面的遍历顺序，**不排序、不去重、不聚合**（逐条都是一件要修的事）。
+  6. 头部一行（永远先发）：
+     `"[redtale] 怪物检查：" + mobs.size() + " 只 / 技能引用 " + mobs.skillCount() + " 条 / 问题 " + 问题数 + " 个"`
+  7. 零问题时头部改为以 `" · 引用完整 ✓"` 结尾（同一行，不再逐条发）：
+     `"[redtale] 怪物检查：2 只 / 技能引用 3 条 · 引用完整 ✓"`；
+     `mobs.size()==0` 时输出 `"[redtale] 没有怪物内容（读 " + core.config().root().resolve("mobs") + "/*.json5）"` 后直接返回 0。
+  8. 每条问题一行 `sendSuccess(..., false)`（不广播）；只用 `Component.literal`，不拼 `Component` 对象相加。
+  9. 返回值 = 问题条数（`mobs.size()==0` 时 0）。**只读**：不改任何快照、不发游戏内指令、不写文件。
+  10. 两次连跑输出逐字相同（幂等；快照不变则结果不变）。
+
+- 不要做：不 import `com.redtale.project.mobs.MobSpec`（只用 `MobRegistry` 的公开方法）；
+  不加 `main`；不改 `SetCheckCommand` / `ValidateCommand` / 其它命令；
+  不把「装备 id 是内容 id」自动纠正成基底 id（只报不改，纠正属于运营决定）；
+  不碰 `docs/`（文档归 S7）。
+
+- 验收（1/2 你自己跑，第 3 条 S7 在测试服跑）：
+  1. `gradle build --offline` → `EXIT=0`；`cd build/libs && unzip -l *.jar | grep -c "core/command/MobCheckCommand.class"` = **1**
+  2. `wc -l src/.../MobCheckCommand.java` ≤ **140**；`grep -c "BuiltInRegistries.ITEM" ` = **1**；
+     `grep -c "MobCheckCommand.node()" src/.../RedtaleCommand.java` = **1**；
+     `git diff --stat -- src/.../RedtaleCommand.java` 只 **+1** 行
+  3. （S7 执行）测试服 `Done` 后：基线 `/redtale mob check` → `2 只 / 技能引用 3 条 · 引用完整 ✓`；
+     放夹具 `mobs/t_badmob.json5`（`equipment.mainhand: "demo_longsword"` + `skills: [{skill:"redtale_project:nope"}]`）
+     → `3 只 / 技能引用 4 条 / 问题 2 个` + 两行文案逐字对；再连跑一次 diff 为空；删夹具后回落 `引用完整 ✓`。
 
 - 进度：
 
