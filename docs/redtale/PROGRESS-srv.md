@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-17 07:47 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-17 09:12 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,11 +12,10 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0022 | OPEN | `SkillCooldowns` 技能冷却表（M5-A 门槛层，纯数据 + 注入时钟） |
-| T-0023 | OPEN | `/redtale enchant obtain` —— 可获取性 tag 的只读对账（V4 的观测面） |
 | T-0024 | OPEN | `/redtale content list` 行字段刷新（清掉「词条层未接入」的过期占位） |
+| T-0025 | OPEN | `/redtale validate` 补第 6 条 —— 技能引用的原语是否存在（R28-d 收口） |
 
-已验完 **19** 张 / 共 **24** 张。
+已验完 **21** 张 / 共 **25** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

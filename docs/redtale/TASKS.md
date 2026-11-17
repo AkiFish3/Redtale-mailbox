@@ -964,7 +964,7 @@ fi
 - 进度（偏差，请 S7 裁决）· 2026-11-17 06:52 · 四处卡面未写死的小口径：①`id` 缺失与非字符串合并成**同一条** WARN 文案（卡面只列了缺失/空白/不含 `:` 三态，非字符串未单列）；②`effects` 全坏时 WARN 数 = 单项告警条数 **+1** 条「整条跳过」（把「整条跳过 + 1 条 WARN」读成「额外一条」）；③重复 id 的判定放在 `effects` 校验**之前** —— 同一 id 的第二份即使 effects 也坏，只报「重复」1 条；④`name` 为空串时按字符串原样保留（卡面只规定「非字符串」回落缺省，未规定空串）。以上四条都不改接口与验收计数，如需改口径回一句话即可。
 - 进度 · 2026-11-17 07:4x · **S7 验收 → VERIFIED** · 三条验收全过：①`gradle build --offline` exit 0（jar 360261 B）；②`grep -c "Definition> parse("` = 1，jar 内 `core/skill/SkillSpec` 两个条目（主类 + `$Definition`）；③**S7 独立探针 `build/probe/S7SkillProbe.java` 50/50 PASS**（不复用 S8 的 `SkillProbe`）：`configs=null` 空表零告警 / `warnings=null` 不 NPE / 前缀筛（`items/`、`.json`、`.json5.bak` 静默跳过，`skills/sub/d.json5` 收）/ id 五态（缺·非字符串·空白·不含 `:` 各跳过 1 条告警、`' p:gale '` trim 后可用）/ 重复 id 保留先出现（cooldown 10 + source first）1 条告警 / name 缺省 `skill.redtale.gale/slash` 斜杠不改写、非字符串回落 1 条告警 / icon 缺省 `minecraft:paper` / cooldown 四态（缺省 0、120 原样、-5→0、1e10→1e9、`'x'`→0，后三者各 1 条告警）/ conditions 缺失空表·非数组 1 条告警·单项缺 type 只丢该项（两项坏 = 2 条告警）/ effects 缺失·非数组·空数组·全坏 各整条跳过 1 条告警、单项坏保留其余且顺序不变 / args 缺失 = `ScriptCall.EMPTY` 同一实例、非对象 → 空 args 1 条告警、对象原样透传（含嵌套键名不改）/ 三处不可变（Map.put、effects.add、conditions.add 全抛 `UnsupportedOperationException`）/ 两次解析键序逐字一致。**S8 提的四处口径偏差全部采纳、不打回**：①`id` 缺失与非字符串合并一条告警（行为一致，只是文案合并）；②`effects` 全坏时 WARN = 单项告警 + 1 条「整条跳过」（卡面「整条跳过 + 1 条 WARN」的字面读法）；③重复 id 判定在 `effects` 校验之前（与卡面规则编号 3 < 8 一致）；④`name` 空串原样保留（卡面只规定非字符串回落，空串属内容作者的显式选择）。附带发现（不是缺陷，已记 §13.31）：示范件若把 `name` 写成 lang 键，仓库里目前没有生成 `skill.*` 中文键的通道 —— 故默认两份技能直接写中文可读名。
 
-### T-0022 · [OPEN] `SkillCooldowns` 技能冷却表（M5-A 门槛层，纯数据 + 注入时钟）
+### T-0022 · [VERIFIED] `SkillCooldowns` 技能冷却表（M5-A 门槛层，纯数据 + 注入时钟）
 
 - 派单：S7 · 2026-11-17 05:52
 - 目标：`docs/SKILLS.md` §6 的第一段——技能冷却表。**只做表，不做引擎**：不读注册表、不调 `ScriptEngine`、
@@ -1017,10 +1017,11 @@ fi
      `tryStart` 冷却中返回 false 且 `remaining` 不变 / 冷却过后 `tryStart`=true / `start(0)` 后仍 `ready`=true /
      `prune` 返回删除数且 `size()` 递减 / `clear(uuid)` 只清该玩家 / `clearAll` 后 `size()`=0 /
      `null` 玩家与 `null`/空白 `skillId` 四个方法都不抛且返回值符合第 7 条。
-- 进度：
+- 进度：2026-11-17 07:55 · 完成 · 新建 `src/main/java/com/redtale/project/core/skill/SkillCooldowns.java`（141 行，单类无内部类，`SkillSpec.java` 未碰、卡外零改动） · build `--offline` EXIT=0（jar 366526 B） · 自测：`grep -c "net.minecraft\|net.neoforged"`=0（纯类可离线跑）、jar 内 `core/skill/SkillCooldowns`=1、九个方法签名与 §4.13 逐字一致（`effectiveTicks` 静态 + 8 个实例方法 + 显式无参构造）、探针 `build/probe/CooldownProbe.java` **48/48 PASS**（覆盖卡面 16 条全部情形：effectiveTicks 十态含 NaN/Inf/夹 0.9/地板 1、start→remaining 三段衰减、tryStart 冷却中 false 且 remaining 不变、冷却后 true 并重新记账、start(0) 不留记录、prune 计数与 size 递减、clear(p1) 只清该玩家、clearAll 归零、null 玩家 / null·空白 skillId 四方法不抛且返回值合第 7 条、id 大小写敏感不 trim）
+- 验收：2026-11-17 09:12 · S7 · **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 371570 B，3 up-to-date）· `grep -c "net.minecraft\|net.neoforged" SkillCooldowns.java`=**0** · jar 内 `core/skill/SkillCooldowns.class`=1 · S7 独立探针 `build/probe/S7CdProbe.java` **54/54 PASS**（不复用 CooldownProbe）：卡面 16 条全覆 + 额外查 `(100,+Inf)`=100、`(3,0.7)`=1 四舍五入、1 tick 打折仍记账、到期自动删键、`prune` 计数、id 大小写敏感/不 trim、空值四方法不抛
 
 
-### T-0023 · [OPEN] `/redtale enchant obtain` —— 可获取性 tag 的只读对账（V4 的观测面）
+### T-0023 · [VERIFIED] `/redtale enchant obtain` —— 可获取性 tag 的只读对账（V4 的观测面）
 
 - 派单：S7 · 2026-11-17 06:50
 - 目标：R27 已经能把三条原版可获取性 tag（`in_enchanting_table` / `tradeable` / `on_random_loot`）生成出来，
@@ -1081,6 +1082,11 @@ fi
      造 2 份 tag（一份 values 少 1 条、一份**不存在**）→ `readTagValues` 对存在的返回原序列表、
      对不存在的返回 `null`、对坏 JSON 返回 `null`、`values` 里有非字符串项时跳过该项不抛。
 - 进度：
+- 2026-11-17 09:05 · 完成 · 新建 `core/command/EnchantObtainCommand.java`（186 行，单类无内部类）+ `RedtaleCommand` 第 130 行后 +2 行 · build `--offline` EXIT=0（jar 371570 B） · 自测：`grep -c "EnchantObtainCommand.node()"`=1；jar 内 `core/command/EnchantObtainCommand.class`=1；探针 `build/probe/ObtainListProbe.java` 18/18 ALL PASS
+- 必要变更：`RedtaleCommand` 原末条 `.then(EnchantListCommand.node()));` 的 `));` 改成 `))` 才能续挂（与 T-0016/T-0019 同法），未删改任何行内容
+- 卡面未写死口径（已按最保守解释实现，请 S7 确认）：①tag 文件存在但缺 `values` 数组 → 返回 `null`（与坏 JSON 同义）；②「未生成」的 tag 其缺集按「全部已生成附魔」计入末尾 `有 N 条` 的并集；③`未生成` 行同样做 19 列对齐；④`obtain` 返回值 = 已生成附魔件数（卡面未规定）；⑤`values` 里的对象项 `{"id":..}` 按「只收字符串项」跳过 —— 若将来 tag 改对象写法会误判为缺失
+- 待 S7 验收（离线不可验）：真实服务端跑 `/redtale enchant obtain`，核对三行文案与 `EnchantObtainTags` 产物一致；`/redtale enchant obtain` 与 `/redtale enchant list` 在 brigadier 同名 `enchant` 节点下合并后两条都在
+- 验收：2026-11-17 09:16 · S7 · **VERIFIED（3/3）** · build EXIT=0 · `grep -c EnchantObtainCommand.node()`=1 / jar 内 class=1 · S7 独立探针 `build/probe/s7obtain/…/S7ObtainProbe.java` **19/19 PASS**（不复用 ObtainListProbe：子目录 `/` 连接 + 非 .json 不收 + 不可变集合 + 空 values 与 null 的区分 + 坏 JSON/缺 values/非数组三种 null）· 测试服实测三分支：常态 `已生成 3 条`（frost_edge 为 R24 演练残留）+ 三行 `已收录 2/3 缺：…`；移走 `tradeable.json` → `tradeable  未生成` + `有 3 条附魔拿不到`；移走 frost_edge → 三行 `2/2  ✓` + `三条全齐 ✓`；`enchant list` 与 `enchant obtain` 同节点共存；两次夹具均已还原
 
 ### T-0024 · [OPEN] `/redtale content list` 行字段刷新（清掉「词条层未接入」的过期占位）
 
@@ -1117,6 +1123,49 @@ fi
      —— 这条由 S7 执行，S8 只需在进度行贴出 `gradle build` 退出码与两条 grep 的实测数字。
 - 进度：
 
+
+### T-0025 · [OPEN] `/redtale validate` 补第 6 条 —— 技能引用的原语是否存在（R28-d 收口）
+
+- 派单：S7 · 2026-11-17 09:20
+- 目标：解析层按 R28-d **不校验原语存在**（那需要启动期冻结的 `ScriptRegistries`），但「技能写了 `type: "dash"` 而 `dash` 还没实现」
+  现在只有执行期一行 WARN —— 运营得先把技能放一遍才知道。本卡把这条检查并进 `validate`：只读、单类、不新增命令。
+- 独占文件：
+  - `src/main/java/com/redtale/project/core/command/ValidateCommand.java`（**唯一可写文件**；已有 142 行，本卡预计 +25 行以内）
+- 接口：**不改任何方法签名**（`public static int validate(CommandContext<CommandSourceStack>)` 保持原样）。
+  只允许新增**一个** `private static` 辅助方法，签名写死：
+  ```java
+  private static void checkSkillPrimitives(RedtaleCore core, List<String> problems)
+  ```
+- 行为（逐条照做，**不要自由发挥**）：
+  1. 在现有第 5 条（套装引用，`for (ItemContent content : contents) { ... set_id ... }` 那一段）**之后**、
+     `final int k = problems.size();` **之前**插入一行调用：`checkSkillPrimitives(core, problems);`
+  2. `checkSkillPrimitives` 逻辑：
+     - 遍历 `core.skills().all()`（`Map<String, SkillSpec.Definition>`，保持迭代序，**不要排序**，不要再 new 一个 map）
+     - 对每条定义的 `conditions()`：`core.registries().condition(call.type()) == null` → 加一条问题；
+     - 对每条定义的 `effects()`：`core.registries().effect(call.type()) == null` → 加一条问题；
+     - **同一个（技能 id, 原语 type, 种类）只报一次**（`conditions` 与 `effects` 各算一类；同一技能里同 type 出现两次只报 1 条）
+  3. 问题文案**逐字**（缩进两空格开头，与其它 5 条一致）：
+     - condition：`"  " + 技能id + ": conditions 引用了未注册的原语 " + type`
+     - effect：`"  " + 技能id + ": effects 引用了未注册的原语 " + type`
+  4. `type` 可能是空串（解析层已丢过，理论上到不了这里）：照样按「未注册」报一条，**不要** NPE、不要跳过。
+  5. 头部那行汇总**追加技能计数**（放在 `个套装` 之后）：
+     `" · 技能 " + core.skills().size() + " 条"` —— 其余字一个不动，顺序保持
+     `内容 / 词条池 / 词条定义 / 套装 / 技能 · 问题 N 条（外部 …）`。
+  6. 返回值与「问题 0 条」分支文案**保持原样**（`return k;` 与 `（没有引用问题）`）。
+  7. 只读：不写盘、不改内存、不打 `LOG`。
+- 不要做：不改 `SkillRegistry` / `SkillSpec` / `ScriptRegistries` / `RedtaleCore` / `RedtaleCommand`；
+  不在解析层加校验（R28-d 的红线）；不新增命令节点、不改 `AFFIX`/`SET`/`WA` 任何已有检查；不加依赖、不碰 `build.gradle`、不碰 `docs/`。
+- 验收：
+  1. `gradle build --offline` 退出码 0（取锁，见 §3）
+  2. `grep -c "checkSkillPrimitives" src/main/java/com/redtale/project/core/command/ValidateCommand.java` = **2**
+     （1 处定义 + 1 处调用；多一处就说明抄了第二份），且
+     `grep -c "引用了未注册的原语" src/main/java/com/redtale/project/core/command/ValidateCommand.java` = **2**
+  3. S7 在测试服跑（**S8 不跑服**）：临时写一份 `skills/t_bad.json5`（`effects: [{type:"dash"}, {type:"console_log",args:{text:"x"}}]`、
+     `conditions: [{type:"no_such_condition"}]`）→ `/redtale reload` → `/redtale validate` 恰好多 **2 条**问题
+     （`effects 引用了未注册的原语 dash` / `conditions 引用了未注册的原语 no_such_condition`），头部技能计数 2 → 3；
+     删掉该文件再 reload → 问题数回落到原值、两次输出逐字相同。S8 只需在进度行贴 build 退出码与两条 grep 的实测数字。
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 
