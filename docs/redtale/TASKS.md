@@ -1175,7 +1175,7 @@ fi
 
 - 2026-11-17 11:46 · **S7 验收通过（3/3）** · ①`gradle build --offline` BUILD SUCCESSFUL exit 0（jar 393750 B，`compileJava UP-TO-DATE` 与 S8 报的 11:15 产物一致）；②`grep -c "checkSkillPrimitives"` = **2**、`grep -c "引用了未注册的原语"` = **2**；`javap -p` 复核 `private static void checkSkillPrimitives(RedtaleCore, java.util.List<String>)` 与 `public static int validate(CommandContext)` 均在；③测试服 `E:\server-test` 实测（`console_r31.log`，`Done (2.276s)`，已停、25567 无 LISTEN）：基线 `技能 2 条 · 问题 0 条`；写 `skills/t_bad.json5`（`conditions:[no_such_condition]` + `effects:[dash, console_log]`）→ reload `3 条技能（26 份配置文件）` → validate **`技能 3 条 · 问题 2 条`**，两条文案逐字 = `redtale_project:t_bad: conditions 引用了未注册的原语 no_such_condition` / `... effects 引用了未注册的原语 dash`；连跑两次逐字相同；删文件再 reload（`2 条技能 / 25 份配置文件`）→ 回到 `技能 2 条 · 问题 0 条` + `（没有引用问题）`。同技能同 type 只报一次成立（`dash` 在 effects 里只出现 1 条）。redtale 零 ERROR（4 条 RecipeManager 既有噪声）
 
-### T-0026 · [OPEN] `buff` 原语 —— 增益类第一条（M5-C）
+### T-0026 · [VERIFIED] `buff` 原语 —— 增益类第一条（M5-C）
 
 - 派单：S7 · 2026-11-17 10:40
 - 目标：`docs/SKILLS.md` §4 第 15 条 `buff`（增益类 4 条的第一条）。现在技能只能回血 / 直伤，没有任何一条能给目标挂状态效果 ——
@@ -1222,6 +1222,10 @@ fi
   由 S7 在测试服跑，**S8 不启停测试服、不发游戏内指令**。
 
 - 进度：
+- 2026-11-17 12:20 · 完成 · 新建 `core/script/builtin/BuffEffect.java`（125 行，单类无内部类）+ `Builtins.java` +2 行（注释 + `registries.register(new BuffEffect());`，其余未动）· build `--offline` EXIT=0（jar 399417 B）· `new BuffEffect()`=1 / `return "buff"`=1 / jar 内 `script/builtin/BuffEffect.class`=1；探针 `build/probe/BuffProbe.java` 22/22（id/desc/effectId 边界/intOf 缺省与截断/原版 API 存在性/常量 72000·255）
+- 偏差（请 S7 裁，不影响接口与验收计数）：①卡面只写 `<=0` 跳过、未给告警文案，实加一条 `buff 的 duration_ticks <= 0，已跳过` WARN（按文案去重）；②`pick` 按卡面「与 HealEffect 完全一致」照抄，`args.target` 非字符串时 `getAsString()` 会抛（与 HealEffect 同风险，未额外加固）。
+
+- 2026-11-17 13:0x · **S7 验收通过（3/3 + 功能四组）** · ①`gradle build --offline` exit 0（jar 399417 B）；②`grep -c "new BuffEffect()"` = **1**、`grep -c 'return "buff"'` = **1**；③jar 内 `script/builtin/BuffEffect.class` = **1**。功能（测试服 RCON，起停 2 次已停）：`skill probe t_buff` → `[script] buff · Cow + minecraft:instant_damage 20t×0`；`t_buff_self` → `buff · [Minecraft] + minecraft:strength 200t×1`；**真实体**：附魔 `post_attack` → 脚本 buff caster → 尸壳 `active_effects` = `{duration: 387, amplifier: 0b, id: "minecraft:glowing"}`（写 600，已过 213 tick）；坏 id 连跑两次只 1 条 WARN（去重成立）。**两处偏差采纳**：`duration_ticks<=0` 补 WARN 合理；`pick` 的 `args.target` 非字符串会抛（与 `HealEffect` 同源），不改、记 `PLAN.md` §13.35-c。**另记（口径，写进 SKILLS §4 第 15 行）**：瞬时效果（`instant_damage` 等）走 `addEffect` **不结算伤害**，连原版 `/effect give` 都不掉血 —— 别拿 `buff` 当直伤。
 
 ### T-0027 · [OPEN] `/redtale content list` 补「技能」列（M5-B 的运营可见性）
 
@@ -1250,6 +1254,43 @@ fi
      `grep -c "带技能 " src/main/java/com/redtale/project/core/command/ContentListCommand.java` = **1**
   3. S7 在测试服跑（**S8 不跑服**）：`/redtale content list` 每行末尾都有 `· 技能 `，`demo_longsword` 显示 `1: redtale_project:gale_slash`
      （或该件当前 `abilities` 的实际值），汇总行出现 `带技能 1 件`（实测有几件就报几件）。S8 只需在进度行贴 build 退出码与两条 grep 的实测数字。
+
+- 进度：
+
+### T-0028 · [OPEN] `tools/check_defaults.py` —— 默认配置清单双向对账
+
+- 派单：S7 · 2026-11-17 13:05
+- 目标：`ConfigStore.DEFAULT_FILES` 是**白名单**：只把配置文件放进 `resources/redtale/defaults/**` **不会**落地
+  （R11 踩过：加了文件忘了进清单 → 默认配置静默不生成）。反向也会坏：清单里写了但 jar 内没有这个资源 → 启动 `ensureDefaults` 抛异常。
+  本卡用一个独立脚本把两个方向都对上，**不碰 Java、不碰构建**。
+- 独占文件（**唯一可写文件**）：
+  - `tools/check_defaults.py`（**新建**，纯 Python 3 标准库，零依赖）
+- 输入与输出：
+  - 读 `src/main/java/com/redtale/project/core/config/ConfigStore.java`，用正则取出 `DEFAULT_FILES` 里的**每一个字符串字面量**
+    （形如 `"items/demo_longsword.json5"`；正则建议 `"([A-Za-z0-9_./\-]+\.json5)"`，**不要求**解析 Java 语法）
+  - 遍历 `src/main/resources/redtale/defaults/**`（递归），收集相对 `defaults/` 的路径（用 `/` 分隔）
+  - 三个判定，全部打印成一行一条：
+    1. `仅清单有`（在 `DEFAULT_FILES` 但磁盘没有）→ **致命**
+    2. `仅磁盘有`（磁盘有但清单没有）→ **致命**
+    3. `清单重复`（同一路径出现两次）→ **致命**
+  - 尾部一行汇总：`清单 N 条 · 磁盘 M 个 · 问题 K 条`
+- 退出码（**必须**按这个来，验收要读退出码）：
+  - 三个集合都对齐且无重复 → `0`
+  - 有任何一条上述问题 → `1`（把所有问题打完后才退出）
+  - 脚本自身读不到 `ConfigStore.java` 或 `defaults/` 目录 → `2` + 一行 `找不到 …`（**别**抛 traceback）
+- 参数：无（路径写死为相对仓库根，脚本自己 `os.chdir(os.path.dirname(__file__) + '/..')`，
+  从任何目录调用都能跑）。**不要**加 `--fix`、**不要**改任何文件。
+- 编码：源码与输出一律 UTF-8；Windows 控制台按 UTF-8 写出（`sys.stdout.reconfigure(encoding='utf-8')`，取不到就跳过）。
+- 不要做：不改 `ConfigStore.java`、不改 `docs/`、不改 `build.gradle`、不碰 `src/main/java/**` 任何文件；
+  不加第三方依赖；不做 JSON5 合法性校验（那是 `T-0015` 的 `validate` 的事）。
+- 验收：
+  1. `python tools/check_defaults.py; echo EXIT=$?` → `EXIT=0`，汇总行 `问题 0 条`（当前仓库应全对齐，条数自己报实测值）
+  2. 临时在 `ConfigStore.java` 的 `DEFAULT_FILES` 里加一条不存在的 `"items/__probe__.json5"` → 再跑 → `EXIT=1` 且输出含 `仅清单有` + 该路径；
+     还原文件后 `git diff --stat src/main/java/com/redtale/project/core/config/ConfigStore.java` 必须为空（**跑完必须还原**）
+  3. 临时把一个真实存在的默认文件改名（例 `mv src/main/resources/redtale/defaults/crit.json5 /tmp/`）→ 再跑 → `EXIT=1` 且输出含 `仅磁盘有`
+     + 该路径；**还原**后 `EXIT=0`，且 `git status --short src/main/resources` 为空
+
+  三条都由 S8 自己跑并在进度行贴实测数字（第 2、3 条要贴「还原后 EXIT=0」那一次）。
 
 - 进度：
 

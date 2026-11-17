@@ -73,7 +73,7 @@
 | # | id | 类 | 参数（全部可选，缺省见右） | 状态 | 备注 |
 |---|---|---|---|---|---|
 | 1 | `damage` | 直伤 | `amount` 白值（必填）· `damage_type` 缺省 `redtale_project:skill_physical` | ✅ R27 | **只给白值**，倍率由 `DamageLayer` 统一乘（§5）。`radius` 由 R27 移出本行：范围伤害是第 2 条 `damage_aoe` 的语义，本原语读到 `radius>0` 打一行 WARN 并忽略 |
-| 2 | `damage_aoe` | 直伤 | `amount` · `radius` · `falloff` 0.5 · `max_targets` 0=不限 | — | 与 1 分开：AOI 中心是施法者脚下还是命中点要显式 |
+| 2 | `damage_aoe` | 直伤 | `amount` · `radius` 4 · `falloff` 0.5 · `max_targets` 0=不限 · `damage_type` | ✅ R32 | 与 1 分开：圈心**有受害者就在受害者脚下，否则在施法者脚下**（R32-a）。衰减线性、只乘白值；施法者不在命中集合 |
 | 3 | `damage_over_time` | 直伤 | `amount` · `duration_ticks` · `interval_ticks` 20 · `damage_type` | — | 每个 tick 走一次 `hurt`，不吃暴击 |
 | 4 | `execute` | 直伤 | `threshold` 0.2（目标血量比例）· `damage_type` | — | 达标直接结算，不走倍率也不会暴击 |
 | 5 | `knockback` | 控场 | `strength` 0.4 · `radius` 0 | — | |
@@ -86,11 +86,11 @@
 | 12 | `projectile` | 投射 | `entity` 缺省 `minecraft:arrow` · `speed` 2.0 · `on_hit` 原语序列 | — | 命中回调要能把 `damage` 塞进去（M5-C） |
 | 13 | `beam` | 投射 | `range` 12 · `damage` · `damage_type` | — | 瞬间命中，无实体，纯 raycast |
 | 14 | `aura` | 投射 | `radius` 4 · `duration_ticks` 100 · `interval_ticks` 20 · `on_tick` 原语序列 | — | 跟随施法者的持续范围 |
-| 15 | `buff` | 增益 | `effect` 原版 id · `amplifier` 0 · `duration_ticks` | — | |
+| 15 | `buff` | 增益 | `target` caster · `effect` 原版 id · `amplifier` 0 · `duration_ticks` 200 | ✅ R32 | T-0026 交付；**瞬时效果（`instant_damage` 等）走 `addEffect` 不结算伤害**（R32-d 实测），别拿它当直伤 |
 | 16 | `heal` | 增益 | `target` caster·`ratio`·`per_level`·`flat` | ✅ R24 | 按最大生命比例（R24-a） |
 | 17 | `shield` | 增益 | `amount` · `duration_ticks` | — | `absorption` 心形护盾，不进 `DamageLayer` |
 | 18 | `cleanse` | 增益 | `max_count` 0=全清 | — | 只清负面 `MobEffect` |
-| 19 | `debuff` | 减益 | `effect` · `amplifier` · `duration_ticks` | — | |
+| 19 | `debuff` | 减益 | `target` target · `effect` · `amplifier` 0 · `duration_ticks` 200 | ✅ R32 | 缺省打**受害者**；只收 `MobEffectCategory.HARMFUL`，写正面效果 WARN 跳过（R32-b） |
 | 20 | `ignite` | 减益 | `seconds` 4 | — | 走 `setRemainingFireTicks`，不是 `MobEffect` |
 | 21 | `weaken` | 减益 | `attribute` · `operation` · `amount` · `duration_ticks` | — | 限时属性 modifier，id 固定 `redtale_project:skill/<skill>/<n>`，到点必移除 |
 | 22 | `summon` | 召唤 | `entity` · `count` 1 · `lifetime_ticks` 0=永久 · `inherit_owner` true | — | M6 的模板实体就位后才有内容价值 |

@@ -442,6 +442,25 @@ SkillCooldowns.effectiveTicks(cd, reduction)            // 夹 [0, 0.9]，结果
 - `ContentData.abilities` 字段**早就在**（M0 起），本卡之前恒空 —— 所以 schema **不变**（仍 2），不需要迁移。
 - 探针：`/redtale skill use "<内容id>"`（FakePlayer 真调 `ItemStack#use`，四组：A 施放 / B 冷却拦截 / C 无 abilities 不放 / D 减免 50%）。
 
+### 4.18 M5-C 原语批次一：`buff` / `damage_aoe` / `debuff`（R32 定稿）
+
+三个原语都只吃 `com.redtale.project.core.script` 包 + 原版类，**不 import `RedtaleCore`**；参数非法一律 WARN 后 return，绝不抛。
+
+| 原语 | 参数（缺省见括号） | 打谁 / 圈心 | 硬约束 |
+|---|---|---|---|
+| `buff` | `target`(`caster`) · `effect`（**必填**）· `amplifier`(0，0~255) · `duration_ticks`(200，1~72000) | `target:target` → `ctx.target()`；否则 `ctx.player()`；再否则 `vars.attacker` | 只挂**时长型**效果。瞬时效果（`minecraft:instant_damage` / `instant_health`）走 `addEffect` **不结算**（R32-c） |
+| `damage_aoe` | `amount`（**必填**）· `radius`(4，上限 32) · `falloff`(0.5，夹 0~1) · `max_targets`(0=不限) · `damage_type`(`skill_physical`) | **圈心 = 有 `ctx.target()` 在受害者脚下，否则施法者脚下**；施法者自身不进命中集合 | 只 `hurt(白值×衰减)`，**绝不 `setAmount`**；衰减只乘白值，倍率仍归 `DamageLayer`。命中按距离升序，`max_targets>0` 取前 N |
+| `debuff` | `target`(`target`) · `effect`（**必填**）· `amplifier`(0) · `duration_ticks`(200) | 缺省**受害者**；写 `caster` 才打施法者 | 只收 `MobEffectCategory.HARMFUL`，正面效果 WARN 跳过（R32-b） |
+
+共用约定：
+
+| 契约点 | 值 | 改了会怎样 |
+|---|---|---|
+| 伤害类型回退 | `DamageEffect.source/holder/caster/num` 是**包内可见**（R32-d），三个伤害原语共用同一份回退 | 各自复制一份 → 以后改第三条必漏一份，现象是「同一技能换个原语就不吃乘区」 |
+| 告警去重 | 按**文案**去重（`Set<String>`），不按脚本名 | 按脚本名去重 = 每个技能每次释放刷一行 |
+| 数值保护 | 负数/非数字回缺省、`1e9` 硬顶（D16）。**这不是平衡钳制** | 加 `percentCap` 之类的上限 = 推翻 D16 |
+| 验证手法 | `skill probe` 的木桩会被 `discard()` → 效果类原语要验「真挂上了」必须走附魔 `post_attack` 打真实体，再 `data get entity … active_effects` | 只验日志 = 验日志；`FakePlayer` 不在实体表里，查不到 `active_effects` |
+
 ## 5. 路径约定
 
 | 用途 | 路径 |
