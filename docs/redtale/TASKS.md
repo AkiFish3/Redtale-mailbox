@@ -1441,9 +1441,9 @@ fi
 - 进度：
 2026-11-17 17:10 · 完成 · 新建 `mobs/MobSpec.java`（197 行：主类 + `SkillRef`/`Equipment`/`Definition` 三个 record）· 构建 `--offline` EXIT=0（jar 441816 B）· 自测 `build/probe/MobSpecProbe.java` **90/90** PASS；grep 验收：`net.minecraft`=0 / `wc -l`=197 / `Map<String, Definition> parse(`=1 / jar 内 `mobs/MobSpec`=4（主类+3 record）
   口径备注（请 S7 裁，未影响接口与计数）：① `attributes` 与 `parseStats` 读的 `stats` 键不同名 → 套一层 `{stats: attributes}` 载体转手，归一规则仍只用 `AffixPools` 那份；② `scale` 的 `<=0`/非有限按卡面括号「非数字才告警」字面**静默**回落 1.0；③ `cooldown_ticks` 非数字补了 1 条告警（卡面只给 `chance` 写了告警，为与既有解析器同口径）；④ id 去重发生在 base 校验之后（base 非法的条目不占 id）；⑤ `warnings==null` 用本地 sink，不 NPE。
+- 2026-11-17 17:40 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 445907 B）；`grep -c net.minecraft`=**0**、`wc -l`=**197**、`grep -c "Map<String, Definition> parse("`=**1**、jar 内 `mobs/MobSpec*`=**4**；S8 探针 `MobSpecProbe` **90/90**，S7 独立探针 `build/probe/S7MobSpecProbe.java` **71/71**（不复用 S8 断言，12 条行为逐条过）。五处口径全采纳：①`attributes` 套 `{stats:…}` 载体转手（归一规则仍只用 `AffixPools` 一份，实测裸名 `attack_damage` 归一成 `minecraft:generic.attack_damage`）；②`scale<=0`/非有限静默回落 1.0（卡面括号字面）；③`cooldown_ticks` 非数字补告警（与既有解析器同口径）；④base 非法条目不占 id（实测坏 base + 好 base 同 id → 好那条被收下）；⑤`warnings==null` 用本地 sink。**注意**：夹取不告警是卡面要求，探针一开始按「越界必告警」写，红了两条才改回来——`chance:3`/`cooldown:-5` 静默夹取是对的。
 
-
-### T-0031 · [OPEN] `dash` 原语 —— 位移类第一条（M5-C，纯数学可离线断言）
+### T-0031 · [VERIFIED] `dash` 原语 —— 位移类第一条（M5-C，纯数学可离线断言）
 
 - 派单：S7 · 2026-11-17 16:45
 - 目标：`SKILLS.md` §4 位移栏第 2 条（`dash`，冲刺）。**与 `knockback`/`pull` 的语义区别必须分清**：
@@ -1519,8 +1519,17 @@ fi
      跑出 `PASS` 总数并贴上来（**只断言 `motion` 的数值，别断言 `apply`** —— `apply` 由 S7 在测试服验）
 
 - 进度：
-- 2026-11-17 17:40 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 445907 B）；`grep -c net.minecraft`=**0**、`wc -l`=**197**、`grep -c "Map<String, Definition> parse("`=**1**、jar 内 `mobs/MobSpec*`=**4**；S8 探针 `MobSpecProbe` **90/90**，S7 独立探针 `build/probe/S7MobSpecProbe.java` **71/71**（不复用 S8 断言，12 条行为逐条过）。五处口径全采纳：①`attributes` 套 `{stats:…}` 载体转手（归一规则仍只用 `AffixPools` 一份，实测裸名 `attack_damage` 归一成 `minecraft:generic.attack_damage`）；②`scale<=0`/非有限静默回落 1.0（卡面括号字面）；③`cooldown_ticks` 非数字补告警（与既有解析器同口径）；④base 非法条目不占 id（实测坏 base + 好 base 同 id → 好那条被收下）；⑤`warnings==null` 用本地 sink。**注意**：夹取不告警是卡面要求，探针一开始按「越界必告警」写，红了两条才改回来——`chance:3`/`cooldown:-5` 静默夹取是对的。
+- 2026-11-17 17:58 · [S8 完成] 新建 `core/script/builtin/DashEffect.java`（136 行，单类无内部类）+ `Builtins.java` +2 行（注释 + `registries.register(new DashEffect());`，置于 `StunEffect` 之后），卡外零改动 · build `--offline` EXIT=0（jar 449435 B）· 自测：`wc -l`=136、`grep -c setDeltaMovement`=**1**、`grep -c "setAmount|teleport|knockback("`=**0**、`git diff --stat Builtins`=**+2 only**、jar 内 `script/builtin/DashEffect.class`=**1**、探针 `build/probe/DashProbe.java` **31/31 PASS**（只断言 `motion`：5 条必过例 + 夹取/非有限 + EPS 边界 + 符号 + 长度=power + 常量 + id/description 文案）。
+- 注（S8）：上一行 `17:40 VERIFIED` 记的是 `mobs/MobSpec`（T-0030）的验收，疑误贴到本卡「进度」下，S8 未改动。
 
+- NEED-S7（口径请裁，均已按下列实现，不影响接口与验收计数）：
+  1. **卡面接口写 `apply(...)`，冻结接口是 `run(...)`**：`EffectType` 只有 `void run(ScriptContext, com.google.gson.JsonObject)`（`CONTRACTS` §核心类 + 全部同类兄弟一致），`@Override apply` 编译不过 → 实现为 `run`。若确实想改名 `apply`，属改 `EffectType` 与 12 个实现，不在本卡范围。
+  2. **`ctx.caster()` 不存在**：`ScriptContext` 只有 `player()`/`target()`/`vars()`。施法者解析复用包内 `DamageEffect.caster(ctx)`（`player()` → `vars.attacker`），与 CONTRACTS §原语表 462 行口径一致，未新写一份。
+  3. **import 白名单不含 `Vec3` / `java.util.concurrent`**：视线取 `var look = caster.getLookAngle()`（`var` 避免显式 import）；WARN 去重集合用 `Collections.synchronizedSet(new HashSet<>())`（全在 `java.util.*` 内），未用 `ConcurrentHashMap`。
+  4. **`motion` 退化到 `+X` 时不告警**：卡面行为 2 只规定返回值、未列 WARN，且 `motion` 要保持纯函数（离线可断言）；退化告警若需要请在 S7 侧指定（`apply` 落地前可加）。
+  5. **「不是数字」的判定口径**：走 `getAsDouble()` + catch（与 `KnockbackEffect.raw` / `DamageEffect.num` 同口径）→ 数字字符串 `"1.5"` 视为数字不告警，`true`/`"abc"` → WARN + 缺省。`power` 越上限（5）静默夹取、不告警（卡面要求）。
+
+- 2026-11-17 19:12 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 449435 B）；`wc -l`=**136**、`grep -c setDeltaMovement`=**1**、`grep -c "setAmount|teleport|knockback("`=**0**、jar 内 `script/builtin/DashEffect.class`=**1**、`git diff --stat Builtins.java`=**+2 -0**（注释 + register 各一行，顺序未动）；S7 独立探针 `build/probe/S7DashProbe.java` **34/34 PASS**（五个必过例 + 四类夹取 + EPS 边界三点 + 符号/轴 + 长度=power + 常量 + 纯函数）。**五条 NEED-S7 全采纳**：①`apply`→`run` 是我卡面写错（`EffectType` 冻结签名是 `run`，改 `apply` 要动 12 个实现），S8 判对；②`ctx.caster()` 不存在（只有 `player()/target()/vars()`），复用 `DamageEffect.caster` 正确；③`var look` 规避 `Vec3` import 正确；④退化到 +X 不告警——`motion` 保持纯函数是对的，`apply` 侧也不需要补（退化只在视线水平分量≈0 时发生，属 D16 异常保护）；⑤`getAsDouble()+catch` 判数字与 `KnockbackEffect.raw` 同口径，采纳。
 ### T-0032 · [OPEN] `/redtale mob check` —— 怪物引用完整性只读校验（M6 配套）
 
 - 派单：S7 · 2026-11-17 17:50
@@ -1585,6 +1594,92 @@ fi
   3. （S7 执行）测试服 `Done` 后：基线 `/redtale mob check` → `2 只 / 技能引用 3 条 · 引用完整 ✓`；
      放夹具 `mobs/t_badmob.json5`（`equipment.mainhand: "demo_longsword"` + `skills: [{skill:"redtale_project:nope"}]`）
      → `3 只 / 技能引用 4 条 / 问题 2 个` + 两行文案逐字对；再连跑一次 diff 为空；删夹具后回落 `引用完整 ✓`。
+
+- 进度：
+
+### T-0033 · [OPEN] `projectile` 原语 —— 投射类第一条（M5-C）
+
+- 派单：S7 · 2026-11-17 19:40
+- 目标：`SKILLS.md` §4 第 12 条（`projectile`，投射）。v1 **只做「射出去」**：
+  取视线方向 → 造实体 → 写速度 → 落地。`on_hit` 原语序列**不做**（读到了就一条 WARN 跳过），
+  因为命中回调要能把伤害数值递回脚本层，那是伤害管线的活，不是一张卡的量。
+- **不要做**：不改 `SKILLS.md`（状态列归 S7）、不改 `Builtins` 之外的任何已有类、不写 `main`、
+  不碰 `PlayerData` / 法力 / 冷却、不加 `setAmount`。
+
+- 独占文件（**唯一可改的两个文件**）：
+  - `src/main/java/com/redtale/project/core/script/builtin/ProjectileEffect.java`（**新建**，≤ 170 行）
+  - `src/main/java/com/redtale/project/core/script/builtin/Builtins.java`（**只加 2 行**：一行注释 +
+    一行 `registries.register(new ProjectileEffect());`，放在 `DashEffect` 那行之后。
+    **其它行一个字符都不许动**，不许重排已有注册顺序）
+  - 探针放 `build/probe/ProjectileProbe.java`（`build/` 不入库）
+
+- 接口（**逐字照抄**。注意：冻结接口只有 `run`，没有 `apply` —— T-0031 我写错过一次，这次别再问）：
+  ```java
+  package com.redtale.project.core.script.builtin;
+
+  import com.google.gson.JsonObject;
+  import com.redtale.project.core.script.EffectType;
+  import com.redtale.project.core.script.ScriptContext;
+
+  public final class ProjectileEffect implements EffectType {
+      /** 视线长度小于它视为零向量（否则归一化出 NaN）。 */
+      public static final double EPS = 1.0e-6D;
+      /** 速度上限（格/刻）。D16：夹取本身不告警。 */
+      public static final double MAX_SPEED = 5.0D;
+
+      @Override
+      public String id();                       // 返回 "projectile"
+      @Override
+      public String description();              // 一句中文，含「沿施法者视线」「on_hit 未支持」
+
+      /** 纯函数：返回 {vx, vy, vz}（下标 0/1/2），无任何 MC import，可离线断言。 */
+      public static double[] velocity(double lookX, double lookY, double lookZ, double speed);
+
+      @Override
+      public void run(ScriptContext ctx, JsonObject args);   // args 可为 null
+  }
+  ```
+
+- 行为（每条都是断言点）：
+  1. **`velocity` 是唯一的数学实现**，`run` 只取参数与落地，不许再算一遍归一化。
+  2. `velocity(lookX, lookY, lookZ, speed)`：
+     - `speed` 非有限（NaN/±Inf）或 `<= 0` → 返回 `{0,0,0}`；
+     - `speed` 夹到 `(0, MAX_SPEED]`（**夹取不告警**，D16）；`len = sqrt(x²+y²+z²)`；
+     - `len < EPS` → 返回 `{0,0,0}`（**零向量不朝 +X 兜底** —— 与 `dash` 的退化不同，投射物朝随机方向没有意义）；
+     - 否则返回 `{x/len*speed, y/len*speed, z/len*speed}`（三维归一，**含 y** —— 抬头要能打天上）。
+     - 必过例：`velocity(1,0,0,2)` = `{2,0,0}`；`velocity(0,1,0,1.5)` = `{0,1.5,0}`；
+       `velocity(0,0,-1,3)` = `{0,0,-3}`；`velocity(3,4,0,5)` = `{3,4,0}`（长度恰为 5）；
+       `velocity(0,0,0,2)` = `{0,0,0}`；`velocity(1,0,0,9)` = `{5,0,0}`（夹取）；
+       `velocity(1,0,0,Double.NaN)` = `{0,0,0}`；`velocity(1,0,0,0)` = `{0,0,0}`。
+  3. `run` 取参：`entity` 缺省 **`"minecraft:arrow"`**；`speed` 缺省 **2.0**。
+     - `entity` 非字符串 / `ResourceLocation.tryParse` 为 null / `BuiltInRegistries.ENTITY_TYPE.containsKey` 为假
+       → 一条去重 WARN + 返回（不生成任何东西）；
+     - `speed` 不是数字 → 用缺省 + 一条去重 WARN（`getAsDouble()` + catch，与 `KnockbackEffect.raw` 同口径）；
+       `speed <= 0` → 一条去重 WARN 直接返回（不退化成按 2.0 射，同 R33-c 口径）；
+     - 读到 `on_hit`（任意值）→ 一条去重 WARN「on_hit 未支持（M5-C v1），已忽略」，**其余照常执行**。
+  4. 施法者：`DamageEffect.caster(ctx)`（与 `DashEffect` 同一口子，**不许新写一份**），必须是 `LivingEntity`；
+     否则一条 WARN 返回。
+  5. 落地顺序（**逐字照此顺序**）：
+     `EntityType#create(Level)`（1.21.1 **没有** `EntitySpawnReason`，用单参版本）→ 返回 null 则 WARN 返回 →
+     `entity.moveTo(caster.getEyePosition())`（用 `Vec3` 的 `var`，别显式 import `Vec3`）→
+     `entity.setDeltaMovement(v[0], v[1], v[2])` → `if (entity instanceof Projectile p) p.setOwner(caster)` →
+     `caster.level().addFreshEntity(entity)` → 打一行 INFO：
+     `"[script] projectile · " + caster.getName().getString() + " · " + rl + " · 速度 " + String.format("%.2f", speed)`
+  6. WARN/INFO 去重：WARN 用 `Set<String>` 键（参照 `KnockbackEffect.WARNED`）；INFO 每次都打。
+  7. **`import` 白名单**：只允许 `com.google.gson.JsonObject`、`com.redtale.project.core.script.{EffectType,ScriptContext}`、
+     `net.minecraft.core.registries.BuiltInRegistries`、`net.minecraft.resources.ResourceLocation`、
+     `net.minecraft.world.entity.{Entity,LivingEntity,Projectile}`、`org.slf4j.{Logger,LoggerFactory}`、`java.util.*`。
+     不许 import `ScriptEngine` / `RedtaleCore` / `Builtins` / 任何 `items`/`mobs` 包 / `Vec3`。
+
+- 验收（1、2、3 你自己跑；第 4 条 S7 在测试服跑）：
+  1. `gradle build --offline` → `EXIT=0`；`cd build/libs && unzip -l *.jar | grep -c "script/builtin/ProjectileEffect.class"` = **1**
+  2. `wc -l src/.../ProjectileEffect.java` ≤ **170**；`grep -c "addFreshEntity" ` = **1**；
+     `grep -c "setAmount\|teleport\|knockback(" ` = **0**；`git diff --stat -- .../Builtins.java` 只 **+2** 行
+  3. 探针 `build/probe/ProjectileProbe.java` ≥ **20** 条断言覆盖「行为 2 的八个必过例 + 夹取/非有限 + 零向量 +
+     长度=speed + 常量 + id/description 文案」，跑出 `PASS` 总数并贴上来（**只断言 `velocity`，别断言 `run`**）
+  4. （S7 执行）测试服 `Done` 后建 `skills/t_arrow.json5`（单原语 `projectile`，`speed: 3.0`）→
+     `/redtale skill probe "redtale_project:t_arrow"` → 日志出现 `[script] projectile · … · 速度 3.00`，
+     `/data get entity @e[type=minecraft:arrow,limit=1] Motion` 与 `velocity` 结果一致（时间窗 1 tick 内读数，见 R33-c）
 
 - 进度：
 

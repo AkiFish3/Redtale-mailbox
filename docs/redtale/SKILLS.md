@@ -82,7 +82,7 @@
 | 6 | `pull` | 控场 | `strength` 0.4 · `radius` 6 | ✅ R33 | 反向击退（拉向施法者）+ 缺省半径 6；与 5 共用 `KnockbackEffect.shove` 一份位移实现（R32-d 口径）；玩家抗性由原版 `knockback` 打折，不需要额外 `no_knockback` 判断 |
 | 7 | `stun` | 控场 | `target` target · `radius` 0 · `duration_ticks` 60 | ✅ R34 | 停 AI（`Mob#setNoAi`）：不移动 / 不攻击 / 不放技能，**不**用 `slowness 255`（那是速度乘数，会被速度修正抵消成「慢慢挪」）。`radius 0` = 只定住目标；玩家没有「禁移动」接口，退路为 `slowness` 7 级（R34-a）。恢复按截止时刻轮询 + 进世界兜底清重启残留 |
 | 8 | `slow` | 控场 | `amplifier` 1 · `duration_ticks` 100 | — (不做) | **R34 拍：不单独做原语** —— `debuff` 写 `minecraft:slowness` 与它完全等价，多一条实现只会让「减益」与「控场」两套语义漂移；内容作者需要减速就用第 19 条 |
-| 9 | `dash` | 位移 | `distance` 4 · `duration_ticks` 6 | — | 分帧给速度，一次性 `setDeltaMovement` 会被服务端校正拉回 |
+| 9 | `dash` | 位移 | `power` 0.8 · `up` 0.2 · `direction` look\|back | ✅ R37 | **施法者自己**冲出去（不吃自己的击退抗性），一次性 `setDeltaMovement` + `hurtMarked`；`power<=0` 告警跳过、夹 `[0,5]`、`up` 夹 `[-1,2]`、`direction` 只认 `look`/`back`（`away` 等近义词不收）；水平分量为 0 时退化为 `+X`。**分帧版（原写的 `distance`/`duration_ticks`）未做**：怪物身上一次性速度由 AI 接着走，只有玩家会被客户端校正拉回（R37-a，挂账） |
 | 10 | `teleport` | 位移 | `distance` 8 · `require_line_of_sight` true | — | 视线 raycast 落点，落点必须在可站立方块上 |
 | 11 | `leap` | 位移 | `up` 0.5 · `forward` 0.3 | — | |
 | 12 | `projectile` | 投射 | `entity` 缺省 `minecraft:arrow` · `speed` 2.0 · `on_hit` 原语序列 | — | 命中回调要能把 `damage` 塞进去（M5-C） |
