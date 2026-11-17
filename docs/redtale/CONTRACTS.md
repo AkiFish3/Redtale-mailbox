@@ -18,13 +18,13 @@
 | `com.redtale.project.core.damage` | L2 乘区、白名单、trace、暴击入口（R9） | 有 |
 | `com.redtale.project.core.command` | `/redtale` 子命令 | 有 |
 | `com.redtale.project.core.config` | JSON5 解析、配置目录 | 有 |
-| `com.redtale.project.core.datapack` | 运行期生成数据包的启用（R8） | 有 |
+| `com.redtale.project.core.datapack` | 运行期生成数据包的启用（R8）+ **`TagJson`（tag / JSON 写手，幂等，R39）** | 有 |
 | `com.redtale.project.core.hook` | 事件接线（脚本 trigger / 攻速 / 乘区 / tooltip / 暴击 / 物品更新刷新点 ①②③ + `UpgradeSweep` ④） | 有 |
 | `com.redtale.project.core.script` | 脚本层三张注册表 + builtin | 有 |
 | `com.redtale.project.items` | `ContentData` / 基底 / 解析 / 建栈 / tooltip / `ContentItem`（唯一物品行为类，R15）/ `Repairer`（修理唯一结算点，R16） | 有 |
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
-| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）**。**技能释放与刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
+| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）**。**技能释放与刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
 | `com.redtale.project.progression` | 等级/技能树（M7） | **未建** |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
@@ -587,3 +587,53 @@ NEED-S7: <一句话问题> · <为什么现在的契约做不到> · <建议的�
 ```
 
 然后停手，状态保持 `DOING`。**不要自己加字段、不要自己造接口名。**
+
+### 4.23 亡灵归属 `MobSpec.undead` + `MobEntityTags`（M6 第三步配套，R39 定稿）
+
+`MobSpec.Definition` **9 → 10 字段**：`(id, name, base, scale, level, undead, attributes, equipment, skills, source)`。
+`undead` 只参与一个判断 —— 这只怪所在的**原型**要不要进 `#minecraft:undead`。它不进任何数值结算。
+
+| 配置键 | 类型 | 缺省 | 坏值处理 |
+|---|---|---|---|
+| `undead` | 布尔 | `false` | 非布尔 → `false` + 1 条 WARN（**不**整条跳过，R39-b） |
+
+```java
+// com.redtale.project.mobs.MobEntityTags
+public static List<String> undeadTypes(Map<String, MobSpec.Definition> defs);   // 纯函数，已排序
+public static int generateAll(Path datapackRoot, Map<String, MobSpec.Definition> defs, List<String> warnings);
+```
+
+写出物：`<world>/datapacks/redtale_project/data/minecraft/tags/entity_type/undead.json`，
+`{"replace": false, "values": ["redtale_project:<base>", …]}`。
+
+**三条口径**：
+
+1. **粒度 = 原型**（R39-a）：EntityType 按 `MobSpec.BASES` 注册，tag 只能按 EntityType 打 →
+   同一 `base` 下**任一只**怪写 `undead: true`，整个原型都算亡灵。要按怪区分得等拆子类。
+2. **空集也写**（`values: []`）：删光配置后旧值不能留在磁盘上。写盘走 `TagJson.write`，`replace: false` 保证原版值不丢。
+3. **幂等**：内容逐字相同就不动文件、不计入 `written`（R39-d）。
+
+**验法**（磁盘与内存是两层，要分别取证，R39-e）：文件 → `cat` / `md5sum`；内存 → `execute if entity @e[type=#minecraft:undead,type=redtale_project:<base>]`。
+
+### 4.24 `PackEnabler` 资源级重载 + `TagJson`（D14 补漏，R39 定稿）
+
+```java
+// 旧签名保留，等价于 resourcesChanged = false
+public static PackEnabler.Outcome ensureEnabled(MinecraftServer server, String packId, List<String> warnings);
+public static PackEnabler.Outcome ensureEnabled(MinecraftServer server, String packId, List<String> warnings,
+                                                boolean resourcesChanged);
+
+// com.redtale.project.core.datapack.TagJson
+public static boolean write(Path out, List<String> values, String label, List<String> log);      // tag 专用
+public static boolean writeIfChanged(Path out, String text, String label, List<String> log);     // 任意文本
+
+// com.redtale.project.core.RedtaleCore
+public ReloadResult reload();                    // 启动期用，不重载资源
+public ReloadResult reload(boolean allowResourceReload);   // /redtale reload 传 true
+```
+
+`Outcome` 新增 `ALREADY_SELECTED_AND_RELOADED`：包已选中、本次**真的写了文件**、2s 去重窗通过 → 顺手 `reloadResources`。
+返回值语义：`true` = 文件被新建或内容变化；`false` = 幂等未动 **或** IO 失败（失败会记告警）。
+
+**调用方义务**：任何往 `<world>/datapacks/redtale_project/` 写文件的生成器，①必须走 `TagJson`（拿到幂等 + 统一失败文案）；
+②必须把 `true` 的条数累加进 `written`，否则 `/redtale reload` 不知道自己要不要重载资源。

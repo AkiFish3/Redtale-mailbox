@@ -1606,7 +1606,7 @@ fi
 
 - 2026-11-17 20:07 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 457719 B，`grep -c core/command/MobCheckCommand.class`=**1**）；`wc -l`=**88**、`grep -c BuiltInRegistries.ITEM`=**1**、`grep -c MobCheckCommand.node()`=**1**、`git diff RedtaleCommand`=**+1 行**（`.then(MobCheckCommand.node())` 插在 `SetCommand` 后、`SetCheckCommand` 前，其它行未动）；测试服 `Done (2.137s)` 实操四步：基线 `/redtale mob check` → `2 只 / 技能引用 3 条 · 引用完整 ✓`；放夹具 `mobs/t_badmob.json5` + `/redtale reload`（29 份配置 / 3 只怪）→ `3 只 / 技能引用 4 条 / 问题 2 个` 且两行文案逐字对（`坏夹具 t_badmob: equipment.mainhand demo_longsword 不是已知物品 id` / `… 技能 redtale_project:nope 不存在（现有 3 条：…arc_bolt, …ember_burst, …gale_slash）`）；连跑两次 `diff` 空；删夹具 + reload → 回落 `引用完整 ✓`。**四条 NEED-S7 全采纳**（N=技能总数、内容 id 不额外提示、怪名缺省与 id 同名不去重、size==0 只发一行）。redtale 零 ERROR。
 
-### T-0033 · [OPEN] `projectile` 原语 —— 投射类第一条（M5-C）
+### T-0033 · [VERIFIED] `projectile` 原语 —— 投射类第一条（M5-C）
 
 - 派单：S7 · 2026-11-17 19:40
 - 目标：`SKILLS.md` §4 第 12 条（`projectile`，投射）。v1 **只做「射出去」**：
@@ -1691,6 +1691,13 @@ fi
      `/data get entity @e[type=minecraft:arrow,limit=1] Motion` 与 `velocity` 结果一致（时间窗 1 tick 内读数，见 R33-c）
 
 - 进度：
+- 2026-11-17 20:16 · [S8 完成] 新建 `core/script/builtin/ProjectileEffect.java`（152 行，单类）；`Builtins` `DashEffect` 后 +2 行（注释 + 注册），卡外零改动 · build `--offline` EXIT=0（jar 471397 B）· `addFreshEntity`=1、`setAmount|teleport|knockback(`=0、jar 内该类=1、`Builtins` diff 严格 +2 · 探针 `build/probe/ProjectileProbe.java` **38/38**（只断言 `velocity` + 常量/文案）
+
+- NEED-S7（口径请裁，均已按下述实现，不影响接口与验收计数）：
+  1. **`velocity` 多挡一层非有限 len**：`look` 含 ±Inf 时 `len=Inf`，原式会得 `Inf/Inf=NaN`（探针 `v.inf.look` 实测红）。已加 `!Double.isFinite(len)` 与零向量同路返回 `{0,0,0}`；卡面只写「`len < EPS` → 零」，此为超出卡面的安全挡。
+  2. **`entity` 三种坏值各用独立去重键**（`proj_entity_type` / `proj_entity_id` / `proj_entity_missing`）：卡面写「一条去重 WARN」，按「每因一条」实现，日志可分辨错在哪。
+  3. **`speed` 非有限（NaN/Inf）静默回落 2.0 不告警**：与 `KnockbackEffect.raw` 同口径（只对「非数字」告警），`speed <= 0` 才告警跳过。
+  4. **`type.create(Level)` 后再判 null**：`containsKey` 已挡住未注册 id，create 仍可能返回 null（如无默认构造），故保留 `proj_create_null` 一条去重 WARN。
 
 ### T-0034 · [OPEN] `tools/gen_entity_lang.py` —— 8 个模板实体 lang 键生成器（M6 第三步配套）
 
@@ -1744,6 +1751,67 @@ fi
 
 - 进度：
 
+
+
+### T-0035 · [OPEN] `mobs/DropSpec` —— 掉落表解析器 v1（M6 第四层，纯解析）
+
+- 派单：S7 · 2026-11-17 21:25
+- 目标：把 `drops/*.json5` 解析成 `Map<String, Definition>`。**只解析、只校验，不生成战利品表、不接任何注册表**（接线归 S7）。
+  这一层成立后，「怪物掉什么」才是数据而不是代码。
+- **不要做**：不改 `MobSpec` / `MobRegistry` / `RedtaleCore` / `MobSpawner`（一个字符都不许动，本轮 S7 要改前三个）；
+  不生成任何文件；不写 loot table JSON；不查 `BuiltInRegistries`（只校验 id 形态，存在性归 S7 的 `mob check` 类比命令）。
+
+- 独占文件（**唯一可改的两个**）：
+  - `src/main/java/com/redtale/project/mobs/DropSpec.java`（**新建**，≤ 190 行）
+  - `build/probe/DropSpecProbe.java`（新建，`build/` 不入库）
+
+- 接口（**逐字照抄**，不得增删方法）：
+  ```java
+  package com.redtale.project.mobs;
+
+  import com.redtale.project.core.config.ConfigFile;
+  import java.util.List;
+  import java.util.Map;
+
+  public final class DropSpec {
+      /** 一条掉落项：min/max 是件数区间，chance 是单次命中概率，rolls 是掷几次。 */
+      public record Entry(String item, int min, int max, double chance, int rolls) {}
+      /** 一张掉落表：xp 是经验白值（不乘任何属性），drops 不可变。 */
+      public record Definition(String id, int xp, List<Entry> drops, String source) {}
+
+      public static final String DIR = "drops/";
+      public static final String SUFFIX = ".json5";
+
+      private DropSpec() {}
+
+      /** 解析全部掉落表；非 drops/*.json5 静默跳过；保序 + 不可变；null → 空表。 */
+      public static Map<String, Definition> parse(List<ConfigFile> configs, List<String> warnings);
+  }
+  ```
+
+- 行为（每条都是断言点，**照此顺序实现**）：
+  1. 只吃 `path.startsWith("drops/") && path.endsWith(".json5")`，其余 `continue`；`configs == null` → 返回空表；`warnings == null` → 内部建临时 `ArrayList`（**不许 NPE**）。
+  2. 根节点不是对象 → 1 条 WARN（含 path）+ 跳过本条。
+  3. `id`：必填，字符串且 trim 后非空，**原样保留、不补命名空间**。缺失 / 非字符串 / 空串 → 整条跳过 + 1 条 WARN，**文案必须含 `path`**。
+  4. `id` 重复 → 保留**先出现**的定义，后者 + 1 条 WARN，文案含两个 path。
+  5. `xp`：缺省 `0`；非整数 → `0` + WARN；负数 → `0` + WARN；超过 `1_000_000` → 夹到上限（**夹取不告警**，D16）。
+  6. `drops`：缺键 → 空表 + 1 条 WARN（含 path）；不是数组 → 空表 + WARN；数组内非对象项 → 跳过该项 + WARN（一项一条，不去重）。
+  7. 每项 `item`：必填字符串，且 `ResourceLocation.tryParse` 非 null（**只校验形态**）；坏值 / 缺键 → 跳过该项 + WARN（含原始文本）。
+  8. 每项 `min` 缺省 `1`；`max` 缺省 = 生效后的 `min`；两者都夹到 `[0, 64]`（夹取不告警）；生效后 `max < min` → `max = min` + 1 条 WARN。
+  9. `chance` 缺省 `1.0`；非数字 / `NaN` / `Inf` → `1.0` + WARN；夹到 `[0, 1]`（**夹取不告警**，D16）。
+  10. `rolls` 缺省 `1`；非整数 → `1` + WARN；夹到 `[1, 16]`（夹取不告警）。
+  11. 返回的 `Map` 与每个 `Definition.drops()` 都**不可变**（`Collections.unmodifiableMap` / `List.copyOf`），顺序 = 文件出现顺序。
+  12. `import` 白名单：`com.google.gson.*`、`com.redtale.project.core.config.ConfigFile`、`net.minecraft.resources.ResourceLocation`、`java.util.*`。
+      **不许** `BuiltInRegistries`、不许 `items` / `core.skill` / `core.script` 包、不许静态可变状态。
+
+- 验收（1、2、3 你自己跑）：
+  1. `gradle build --offline` → `EXIT=0`；`unzip -l build/libs/*.jar | grep -c "mobs/DropSpec.class"` = **1**
+  2. `wc -l src/main/java/com/redtale/project/mobs/DropSpec.java` ≤ **190**；`grep -c "net.minecraft"` = **1**；`grep -c "Registr"` = **0**；
+     `git status --porcelain` 只出现上面两个文件（卡外零改动）
+  3. 探针 `build/probe/DropSpecProbe.java` ≥ **24** 条断言，覆盖「行为 3~11」（含缺失 id / 重复 id / 非数组 drops / 坏 item / `max<min` / chance 夹取 / rolls 夹取 / 两项不可变 / 保序），
+     把 `PASS n / FAIL 0 / TOTAL n` 贴上来。**只断言 `parse`，别断言「文件被写出来」**
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 

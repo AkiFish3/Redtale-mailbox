@@ -162,6 +162,15 @@ order: 0
 - 拍板：_待填_
 <!-- inbox:key=S7-20261117-164302 -->
 
+### S7-20261117-212527 · [Q-020] 亡灵归属粒度：按原型还是拆原型
+- 队列：S7·移植工程
+- 时间：2026-11-17 21:25
+- 问题：8 个 EntityType 按 MobSpec.BASES 注册，#minecraft:undead 只能按 EntityType 打，所以内容里写 undead:true 时同一原型下所有怪都算亡灵。要不要为「同职业里只有一部分是亡灵」拆原型（caster / caster_undead）？
+- 选项：A 按原型（不拆）：现有 2 只默认怪按职业分类够用 ／ B 拆原型：undead 单独一组 EntityType，注册项 +1，内容要改 base
+- 默认：A
+- 拍板：_待填_
+<!-- inbox:key=S7-20261117-212527 -->
+
 ## 已定
 
 
