@@ -1,31 +1,31 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-17 12:58 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-17 14:12 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
 ## 1. 当前里程碑
 
-**M5**（依据：最近一条提到里程碑的台账标题「**验收 T-0026（`buff` 原语）+ M5-C 放量（`damage_aoe` / `de」）
+**M5**（依据：最近一条提到里程碑的台账标题「**验收 T-0027 + M5-C 控场前两条（`knockback` / `pull`）+ 派 」）
 
 ## 2. 进行中（在制品上限 3 张）
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0027 | OPEN | `/redtale content list` 补「技能」列（M5-B 的运营可见性） |
 | T-0028 | OPEN | `tools/check_defaults.py` —— 默认配置清单双向对账 |
+| T-0029 | OPEN | `core/skill/ManaPool` —— 法力池（M5 收口第一层，纯数据 + 注入 tick） |
 
-已验完 **24** 张 / 共 **28** 张。
+已验完 **25** 张 / 共 **29** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R28 | 2026-11-17 | **双队列 R28 轮：验收 T-0021（技能解析器）+ 技能快照 `SkillRegistry` 落地 + 默认两份 |
 | R29 | 2026-11-17 | **M5-A 引擎落地（`SkillEngine` + `/redtale skill`）+ 验收 T-0022/T-0 |
 | R30 | 2026-11-17 | **M5-B 物品绑定技能 + 冷却减免 + 验收 T-0024 + 派 T-0026** |
 | R31 | 2026-11-17 | **验收 T-0025 + `/redtale skill info` + 派 T-0027** |
 | R32 | 2026-11-17 | **验收 T-0026（`buff` 原语）+ M5-C 放量（`damage_aoe` / `debuff`）+ 派  |
+| R33 | 2026-11-17 | **验收 T-0027 + M5-C 控场前两条（`knockback` / `pull`）+ 派 T-0029** |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 

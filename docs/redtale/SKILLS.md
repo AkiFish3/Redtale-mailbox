@@ -76,8 +76,8 @@
 | 2 | `damage_aoe` | 直伤 | `amount` · `radius` 4 · `falloff` 0.5 · `max_targets` 0=不限 · `damage_type` | ✅ R32 | 与 1 分开：圈心**有受害者就在受害者脚下，否则在施法者脚下**（R32-a）。衰减线性、只乘白值；施法者不在命中集合 |
 | 3 | `damage_over_time` | 直伤 | `amount` · `duration_ticks` · `interval_ticks` 20 · `damage_type` | — | 每个 tick 走一次 `hurt`，不吃暴击 |
 | 4 | `execute` | 直伤 | `threshold` 0.2（目标血量比例）· `damage_type` | — | 达标直接结算，不走倍率也不会暴击 |
-| 5 | `knockback` | 控场 | `strength` 0.4 · `radius` 0 | — | |
-| 6 | `pull` | 控场 | `strength` 0.4 · `radius` 6 | — | 反向击退；对玩家生效要判 `no_knockback` |
+| 5 | `knockback` | 控场 | `strength` 0.4 · `radius` 0 | ✅ R33 | 推离施法者，走原版 `knockback`（吃 `KNOCKBACK_RESISTANCE`，抗性 1.0 位移逐位不变）；`radius 0` = 只推受害者 |
+| 6 | `pull` | 控场 | `strength` 0.4 · `radius` 6 | ✅ R33 | 反向击退（拉向施法者）+ 缺省半径 6；与 5 共用 `KnockbackEffect.shove` 一份位移实现（R32-d 口径）；玩家抗性由原版 `knockback` 打折，不需要额外 `no_knockback` 判断 |
 | 7 | `stun` | 控场 | `duration_ticks` 40 | — | 停 AI + 禁移动，**不**用 `slowness 255`（会被抗性减免） |
 | 8 | `slow` | 控场 | `amplifier` 1 · `duration_ticks` 100 | — | 原版 `slowness`，走 `MobEffect` |
 | 9 | `dash` | 位移 | `distance` 4 · `duration_ticks` 6 | — | 分帧给速度，一次性 `setDeltaMovement` 会被服务端校正拉回 |

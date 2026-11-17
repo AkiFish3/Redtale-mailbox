@@ -1227,7 +1227,7 @@ fi
 
 - 2026-11-17 13:0x · **S7 验收通过（3/3 + 功能四组）** · ①`gradle build --offline` exit 0（jar 399417 B）；②`grep -c "new BuffEffect()"` = **1**、`grep -c 'return "buff"'` = **1**；③jar 内 `script/builtin/BuffEffect.class` = **1**。功能（测试服 RCON，起停 2 次已停）：`skill probe t_buff` → `[script] buff · Cow + minecraft:instant_damage 20t×0`；`t_buff_self` → `buff · [Minecraft] + minecraft:strength 200t×1`；**真实体**：附魔 `post_attack` → 脚本 buff caster → 尸壳 `active_effects` = `{duration: 387, amplifier: 0b, id: "minecraft:glowing"}`（写 600，已过 213 tick）；坏 id 连跑两次只 1 条 WARN（去重成立）。**两处偏差采纳**：`duration_ticks<=0` 补 WARN 合理；`pick` 的 `args.target` 非字符串会抛（与 `HealEffect` 同源），不改、记 `PLAN.md` §13.35-c。**另记（口径，写进 SKILLS §4 第 15 行）**：瞬时效果（`instant_damage` 等）走 `addEffect` **不结算伤害**，连原版 `/effect give` 都不掉血 —— 别拿 `buff` 当直伤。
 
-### T-0027 · [OPEN] `/redtale content list` 补「技能」列（M5-B 的运营可见性）
+### T-0027 · [VERIFIED] `/redtale content list` 补「技能」列（M5-B 的运营可见性）
 
 - 派单：S7 · 2026-11-17 11:48
 - 目标：`ItemContent` 第 16 字段 `abilities`（M5-B）已经写进 `ContentData`、tooltip 也会打「技能 N」，
@@ -1256,6 +1256,8 @@ fi
      （或该件当前 `abilities` 的实际值），汇总行出现 `带技能 1 件`（实测有几件就报几件）。S8 只需在进度行贴 build 退出码与两条 grep 的实测数字。
 
 - 进度：
+- 2026-11-17 13:26 · 完成 · 只改 `core/command/ContentListCommand.java`（67→78 行，+11；新增唯一 `private static String abilitiesText(ItemContent)`，汇总行末尾 +` · 带技能 K 件`，每行 `· rev N` 后 +` · 技能 N: id1 · id2`，计数 `withAbilities` 同 `withWeaponAttributes` 写法无 stream）· build `--offline` EXIT=0（jar 407814 B）· `grep -c abilitiesText`=**2**、`grep -c "带技能 "`=**1**、jar 内该类=**1**、常量池 ` · 技能 `×1 / `带技能 `×1 / ` · 套装定义 `×1；探针 `build/probe/AbilListProbe.java` **7/7**（空→`-`、单条→`1: redtale_project:gale_slash`、两条→`2: a · b`、三条计数、分隔符、无内部类）
+- 2026-11-17 14:05 · **S7 验收通过（3/3）** · ①`gradle build --offline` EXIT=0（jar 407814 B）；②`grep -c abilitiesText`=**2**、`grep -c "带技能 "`=**1**；③jar 内 `core/command/ContentListCommand.class`=**1**；测试服（`Done` 后 RCON）`/redtale content list` → 10 行每行末尾都有 `· 技能 `、`demo_longsword` = `技能 1: redtale_project:gale_slash`、汇总行 `带技能 1 件`（与实测 1 件一致）；redtale 零 ERROR/WARN。S8 自写探针 `AbilListProbe` 7/7 未复跑（本就与卡面断言同源），以线上输出为准。
 
 ### T-0028 · [OPEN] `tools/check_defaults.py` —— 默认配置清单双向对账
 
@@ -1291,6 +1293,70 @@ fi
      + 该路径；**还原**后 `EXIT=0`，且 `git status --short src/main/resources` 为空
 
   三条都由 S8 自己跑并在进度行贴实测数字（第 2、3 条要贴「还原后 EXIT=0」那一次）。
+
+- 进度：
+
+### T-0029 · [OPEN] `core/skill/ManaPool` —— 法力池（M5 收口第一层，纯数据 + 注入 tick）
+
+- 派单：S7 · 2026-11-17 14:05
+- 目标：SKILLS §6「法力」一栏现在是「不耗」。本卡只做**一个纯数据类**：谁的当前法力是多少、够不够花、每秒回多少。
+  **不读属性、不读配置、不碰 `SkillEngine`、不持久化**——接线（登录还原 / `max_mana` 属性 / 施法扣蓝）由 S7 在合流后做。
+  这样切的原因与 `SkillCooldowns`（T-0022）相同：门槛层的记账逻辑能离线断言，接线一次只有一处。
+
+- 独占文件（**唯一可写文件**）：
+  - `src/main/java/com/redtale/project/core/skill/ManaPool.java`（**新建**，≤200 行）
+  - 你自己的探针可放 `build/probe/ManaPoolProbe.java`（`build/` 不入库，随你写）
+
+- 接口（**逐字照抄，不许改名/加参数/换返回类型**）：
+  ```java
+  package com.redtale.project.core.skill;
+
+  public final class ManaPool {
+      public static final double DEFAULT_MAX = 100.0D;   // 没有显式 setMax 过的玩家用这个上限
+
+      public enum Reason { PAID, NOT_ENOUGH, NO_COST }
+
+      public record Payment(boolean paid, double cost, double before, double after, Reason reason) {}
+
+      public ManaPool();
+
+      public static double effectiveCost(double rawCost, double reduction);
+
+      public double current(java.util.UUID player);
+      public double max(java.util.UUID player);
+      public boolean canAfford(java.util.UUID player, double rawCost, double reduction);
+      public Payment spend(java.util.UUID player, double rawCost, double reduction);
+      public double regen(java.util.UUID player, double perSecond, long ticks);
+      public void setMax(java.util.UUID player, double max);
+      public void set(java.util.UUID player, double current, double max);
+      public void restore(java.util.UUID player, double current);
+      public void clear(java.util.UUID player);
+      public int tracked();
+  }
+  ```
+
+- 行为（每条都是断言点，别自由发挥）：
+  1. `effectiveCost`：`rawCost <= 0` → `0`；`reduction` 非有限/负数 → 当 `0`；`reduction` 夹到上限 **0.9**；
+     结果 `round(rawCost × (1 - r))`，且**地板 1.0**（`rawCost > 0` 时；与 `SkillCooldowns.effectiveTicks` 的 1 tick 地板同口径，别让满减免变免费）。
+  2. `max(player)`：没 `setMax`/`set` 过 → `DEFAULT_MAX`；`set` 传的 `max <= 0` → 记 0（**不是**回落到 `DEFAULT_MAX`）。
+  3. `current(player)`：没记录过 → 等于 `max(player)`（新玩家满蓝，不写盘也自洽）。
+  4. `spend`：先算 `effectiveCost`；`cost == 0` → `Payment(true, 0, cur, cur, NO_COST)` 且**什么都不改**（不能因免费而清零）；
+     `cost > cur` → `Payment(false, cost, cur, cur, NOT_ENOUGH)` 且**不扣**；否则扣掉、返回 `PAID`。全程不抛。
+  5. `regen(player, perSecond, ticks)`：`perSecond <= 0` 或 `ticks <= 0` → `0` 且不改状态；
+     否则加 `perSecond × ticks / 20.0`（`double`，**不取整**——取整会让 1 秒回 0.5 蓝变成永远回 0），封顶到 `max(player)`；
+     返回**实际**回复量（已封顶后的差值，可能是 0）。**不做 tick 累积器**，小数余额就存在 `current` 里。
+  6. `set` / `restore` / `setMax`：`current` 夹到 `[0, max]`；`NaN`/`Inf` 一律当 `0`（`setMax` 里的 `max` 当 `0`）。
+     这三种写操作都对未知玩家可用（会建新记录）。
+  7. `clear(player)`：删记录（退出登录时用），`tracked()` 随之减少。
+  8. 前提写明：**只在服务端主线程调用**，所以 `HashMap` 就够，不要 `synchronized`、不要 `ConcurrentHashMap`。
+- 不要做：不 import 任何 `net.minecraft.*` / `net.neoforged.*`；不读 `AttributeMap`、不读配置、不写 `LOG`；
+  不碰 `SkillEngine` / `SkillCooldowns` / `Builtins` / `ContentData` / `docs/`；不加 `main` 方法（探针另开文件）。
+- 验收（全部由你自己跑，进度行贴实测数字）：
+  1. `gradle build --offline` → `EXIT=0`
+  2. `grep -c "net.minecraft" src/main/java/com/redtale/project/core/skill/ManaPool.java` = **0**，
+     `grep -c "synchronized\|ConcurrentHashMap" …` = **0**，行数 ≤ 200
+  3. 自写探针 ≥ **24** 条断言覆盖上面 8 条行为（重点：`NO_COST` 不改状态 / `NOT_ENOUGH` 不扣 / 满减免地板 1.0 /
+     小数回复不丢 / 夹取 / 未知玩家 = 满蓝），跑出 `PASS` 总数并贴上来
 
 - 进度：
 

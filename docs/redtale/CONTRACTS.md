@@ -461,6 +461,23 @@ SkillCooldowns.effectiveTicks(cd, reduction)            // 夹 [0, 0.9]，结果
 | 数值保护 | 负数/非数字回缺省、`1e9` 硬顶（D16）。**这不是平衡钳制** | 加 `percentCap` 之类的上限 = 推翻 D16 |
 | 验证手法 | `skill probe` 的木桩会被 `discard()` → 效果类原语要验「真挂上了」必须走附魔 `post_attack` 打真实体，再 `data get entity … active_effects` | 只验日志 = 验日志；`FakePlayer` 不在实体表里，查不到 `active_effects` |
 
+### 4.19 M5-C 原语批次二：`knockback` / `pull`（R33 定稿）
+
+两条位移原语**共用一份实现**：`KnockbackEffect.shove(ctx, args, defaultRadius, towards)`（包内可见），`PullEffect` 只传 `towards = true` 与缺省半径。
+
+| 原语 | 参数（缺省见括号） | 打谁 | 硬约束 |
+|---|---|---|---|
+| `knockback` | `strength`(0.4) · `radius`(**0** = 只推受害者，上限 32) | `radius 0` → `ctx.target()`；`>0` → 圈心内所有活体（圈心 = 有受害者在受害者脚下，否则施法者脚下），**施法者永不被自己推** | `strength <= 0` → 一条 WARN 后**真的不位移**（R33-c）；位移只走原版 `LivingEntity#knockback`，吃 `KNOCKBACK_RESISTANCE` |
+| `pull` | `strength`(0.4) · `radius`(**6**) | 同上（半径内一圈） | 方向取反；其余同 `knockback` |
+
+| 契约点 | 值 | 改了会怎样 |
+|---|---|---|
+| 位移实现 | `LivingEntity#knockback(strength, x, z)` + `hurtMarked = true`。**不许** `setDeltaMovement` | 自己拼速度 = 绕过 `KNOCKBACK_RESISTANCE`（抗性 1.0 的目标会被推飞），且日志看不出是谁给的 |
+| 方向符号 | 原版内部算 `-normalize(x, z)` → 推离传 `-normalize(目标−施法者)`，拉向传 `+normalize(...)` | 传反 = 击退把人吸过来，无任何日志可查 |
+| 水平重合 | 退化为 `+X` + 一条 WARN | 零向量归一化 → NaN 速度（实体瞬移/消失） |
+| 数值保护 | 自己写 `raw()` 读参：缺键/非数字/`NaN`/`Inf` → 缺省，**非正数原样返回**交调用方判跳过；`1e9` 硬顶 | 用 `DamageEffect.num` 会把 `strength: 0` 静默换成 0.4（实测踩过，R33-c） |
+| 验收手法 | 在**旁观者**的 `Motion` 上对账（`NoAI` 旁观者不动、不吃原版平砍击退、不吃实体碰撞），不看受害者 `Pos` | 受害者同时吃三份力，`Pos` 读不出归因（R33-d）。注意 `Motion` 会收敛到 0.8 不动点，此时本轮 `Δ` 显示 `0.00` 但仍在推 |
+
 ## 5. 路径约定
 
 | 用途 | 路径 |
