@@ -1699,7 +1699,7 @@ fi
   3. **`speed` 非有限（NaN/Inf）静默回落 2.0 不告警**：与 `KnockbackEffect.raw` 同口径（只对「非数字」告警），`speed <= 0` 才告警跳过。
   4. **`type.create(Level)` 后再判 null**：`containsKey` 已挡住未注册 id，create 仍可能返回 null（如无默认构造），故保留 `proj_create_null` 一条去重 WARN。
 
-### T-0034 · [OPEN] `tools/gen_entity_lang.py` —— 8 个模板实体 lang 键生成器（M6 第三步配套）
+### T-0034 · [VERIFIED] `tools/gen_entity_lang.py` —— 8 个模板实体 lang 键生成器（M6 第三步配套）
 
 - 派单：S7 · 2026-11-17 20:12
 - 背景（R37 实测）：8 个 `EntityType` 已注册、`/summon` 8/8 成功，但显示的是**裸键** `entity.redtale_project.melee`
@@ -1750,10 +1750,12 @@ fi
      `wc -l tools/gen_entity_lang.py` ≤ **130**；`python -m py_compile tools/gen_entity_lang.py` → `EXIT=0`
 
 - 进度：
+- 2026-11-17 21:30 · 完成 · `tools/gen_entity_lang.py`（新建，117 行；lang 两份由脚本运行时写盘） · build `--offline` EXIT=0（jar 474730 B） · `解析到 8 个原型 id：melee, ranged, caster, summoner, charger, flyer, elite, ambient`；zh/en 各 `93 键 / entity 8 / attribute 66 / item 14`；md5 跑 1 次变（zh 86f8569f→73193e14、en b677ada7→2afe2065）、跑 2 次逐字相同；`py_compile` EXIT=0；脚本 117 行 / 无 BOM / CR=0；`.class` 无关；负向 /tmp 假仓：无 Proto→EXIT 2 且不写盘、坏 JSON→EXIT 1 且跳过该文件、顶层非对象→EXIT 1
+- 注（S8）：卡面 rule 4 要求 `dict(sorted(...))`，故 T-0017 追加在文件末尾的两条 `enchantment.*` 被排进字母序中间 → 每份 diff 11+/3-（键值与键集不变，`git show HEAD` 逐条比对：新增 8 / 改动 0 / 丢失 0）。若 S7 要求 diff 只增不删，需统一「末尾追加」口径，改脚本一行即可。
+- 2026-11-18 05:37 · **S7 验收 → `[VERIFIED]`（3/3）** · ①`python tools/gen_entity_lang.py` EXIT=0，输出 `解析到 8 个原型 id：melee, ranged, caster, summoner, charger, flyer, elite, ambient`（顺序与 `RedtaleEntities.java` 一致）；②zh_cn/en_us 各 `93 键 / entity 8 / attribute 66 / item 14`；③连跑两次 md5 **逐字相同**（zh `73193e14a1820b7271746feeacec80b9`、en `2afe20656e5f1a8de76b9282cc609501`），计数 `entity 键 8 → 8`；`wc -l`=117 ≤130、`py_compile` EXIT=0。**采纳 S8 的排序偏差**：`dict(sorted(...))` 会让 `enchantment.*` 落进字母序中间，键集不变即为合规 —— 排序口径统一为「整体键排序」，不要求 diff 只增不删。
 
 
-
-### T-0035 · [OPEN] `mobs/DropSpec` —— 掉落表解析器 v1（M6 第四层，纯解析）
+### T-0035 · [VERIFIED] `mobs/DropSpec` —— 掉落表解析器 v1（M6 第四层，纯解析）
 
 - 派单：S7 · 2026-11-17 21:25
 - 目标：把 `drops/*.json5` 解析成 `Map<String, Definition>`。**只解析、只校验，不生成战利品表、不接任何注册表**（接线归 S7）。
@@ -1812,6 +1814,75 @@ fi
      把 `PASS n / FAIL 0 / TOTAL n` 贴上来。**只断言 `parse`，别断言「文件被写出来」**
 
 - 进度：
+  - 2026-11-17 23:10 · 完成 · `src/main/java/com/redtale/project/mobs/DropSpec.java`（新建 118 行）+ `build/probe/DropSpecProbe.java`（新建，build/ 不入库）；卡外零改动 · build `--offline` EXIT=0（jar `mobs/DropSpec.class`=1） · 自测：`wc -l`=118（≤190）、`net.minecraft`=1、`Registr`=0、探针 **PASS 48 / FAIL 0 / TOTAL 48**（覆盖行为 3~11 + 保序 + Map/drops 双不可变）。待 S7 验收：本卡纯解析，无测试服项。
+  - 口径备注（S8，请 S7 裁，不影响接口与验收计数）：①`id` 按本项目 `MobSpec`/`SetSpec` 既有惯例 **trim 后保留**，卡面「原样保留」理解为「不补命名空间而非保留首尾空格」；②「非整数」按字面含小数与超 int 的有限数（如 1.5 → 0/1 + WARN），整数超上限静默夹取（D16）；③`chance` 用 `Double.isFinite` 挡 NaN/Inf（`1e999` 探针实测 → 1.0 + WARN）；④验收 2 的「git status 只出现两个文件」在本轮不可能字面成立：开工基线已含 S7 未提交的 `MobSpawnCommand`/`GameHooks`/`SkillEngine`/两份 lang + 未跟踪 `MobSkillCaster.java`/`gen_entity_lang.py`/`tools/__pycache__`；S8 仅碰卡上两文件（探针在 build/ 被 gitignore），未改上述任何一项。
+  - 2026-11-18 05:38 · **S7 验收 → `[VERIFIED]`（3/3）** · ①`build --offline` EXIT=0，`unzip -l` 内 `mobs/DropSpec.class`=1；②`wc -l`=**118** ≤190、`net.minecraft`=1、`Registr`=0；③**S7 独立探针 `build/probe/S7DropProbe.java` PASS 52 / FAIL 0 / TOTAL 52**（自编 A~J 十组，不复用 S8 的 `DropSpecProbe`）：null configs / warnings=null 不 NPE、路径过滤（非 `drops/`、非 `.json5`、子目录合法）、根 null、id 缺失/非字符串/空白/trim、重复 id 保留先出现且 source 为首文件、xp 缺省/小数/负数/超上限夹取不告警/非数字、drops 缺键/非数组/非对象逐项、item 缺失与坏 id（告警含原始文本）、min/max 缺省与夹取、`max<min`、chance 缺省/夹取/NaN、rolls 夹取、Map 与 drops 双不可变、保序（非字典序）、自定义命名空间 id 通过形态校验。**四条口径备注全采纳**（trim 视为「不补命名空间」；非整数含小数；`Double.isFinite`；卡面第 2 条在脏基线下的判定按「只碰卡上两文件」解释）。**发现一条卡面没写死的边界**（记录不改码）：`drops/归档/q.json5` 这类子目录会被解析 —— 卡面只规定前缀与后缀，属预期行为，已写进 R40 台账。
+
+### T-0036 · [OPEN] `mobs/DropRoll` —— 掉落掷骰纯函数（M6 第四层第二步，纯函数）
+
+- 派单：S7 · 2026-11-18 05:46
+- 目标：把 `DropSpec.Definition`（掉落表快照）+ 一个 `Random` 变成「这次死了掉什么」。**纯函数、零 MC import、不生成战利品表、不接任何事件**
+  —— 接线（`MobSpec.drops` 引用 + `LivingDropsEvent`）归 S7。
+  这一层成立后，「掉几件」才是可离线复现的，而不是只有开服打死怪才能看见。
+- **不要做**：不改 `DropSpec` / `MobSpec` / `MobRegistry` / `MobSpawner` / `RedtaleCore`（一个字符都不许动，R41 要改前四个）；
+  不写 loot table JSON；不 import `net.minecraft`；不查 `BuiltInRegistries`；不加静态可变状态 / 缓存 / 单例。
+
+- 独占文件（**唯一可写的两个**）：
+  - `src/main/java/com/redtale/project/mobs/DropRoll.java`（**新建**，≤ 120 行）
+  - `build/probe/DropRollProbe.java`（新建，`build/` 不入库）
+
+- 接口（**逐字照抄**，不得增删方法 / 不得改字段顺序）：
+  ```java
+  package com.redtale.project.mobs;
+
+  import java.util.List;
+  import java.util.Random;
+
+  public final class DropRoll {
+      /** 一次掷骰的结果：某物品的最终件数（同 item 已聚合）。 */
+      public record Rolled(String item, int count) {}
+      /** 整张表的产出：xp 是白值（原样带出），items 不可变。 */
+      public record Result(int xp, List<Rolled> items) {}
+
+      private DropRoll() {}
+
+      /** 按一张掉落表掷一次；def 为 null → Result(0, List.of())。random 为 null → 用 new Random(0L)。 */
+      public static Result roll(DropSpec.Definition def, Random random);
+  }
+  ```
+
+- 行为（每条都是断言点，**顺序照此实现**）：
+  1. `def == null` → `new Result(0, List.of())`，**不消耗任何随机数**（random 用 Mock 也不行 —— 直接不碰）。
+  2. `random == null` → 内部 `new Random(0L)`；同一张表两次 `roll(def, null)` 结果**逐条相同**。
+  3. 遍历 `def.drops()` 原顺序；每条掷 `rolls()` 次。
+  4. **每次掷骰都先调 `random.nextDouble()` 判命中**（`< chance()` 即命中），**即使 `chance() == 1.0` 也调** ——
+     同一种子下的随机序列必须与配置无关地稳定（跳过调用会让「改一个 chance 就整表错位」）。
+  5. 命中后件数：`max > min` → `min + random.nextInt(max - min + 1)`；`max <= min` → 直接 `min`，**不调 `nextInt`**。
+  6. 单次件数 `<= 0`（`min` 允许为 0）→ 不产出；仍算已消耗那次掷骰。
+  7. 同一 `item` 多次命中**聚合成一条**，位置 = **首次出现的位置**；聚合后 `count <= 0` 的条目不出现在结果里。
+  8. 聚合后单条 `count > 64` → 夹到 `64`（D16 异常保护，**不告警**、不抛）。
+  9. `xp` = `def.xp()` 原样带出（不掷骰、不乘任何东西）。
+  10. `Result.items()` 不可变（`List.copyOf`），顺序 = 首次出现顺序；`Result` 本身是 record（无 setter）。
+  11. `import` 白名单：`java.util.List`、`java.util.Random`（可加 `java.util.ArrayList`/`java.util.LinkedHashMap`）。**零** `net.minecraft`、零 `com.google.gson`。
+  12. 无静态可变字段（`private static final` 常量除外；本卡不需要常量）。
+
+- 验收（1、2、3 你自己跑）：
+  1. `gradle build --offline` → `EXIT=0`；`unzip -l build/libs/*.jar | grep -c "mobs/DropRoll"` = **3**（`DropRoll` / `$Rolled` / `$Result`）
+  2. `wc -l src/main/java/com/redtale/project/mobs/DropRoll.java` ≤ **120**；`grep -c "net.minecraft"` = **0**；
+     `grep -c "nextInt"` = **1**；`git diff --stat` 只出现上面两个文件（`build/` 被 gitignore）
+  3. 探针 `build/probe/DropRollProbe.java` ≥ **20** 条断言，覆盖行为 1~10，必须含：
+     ① `def=null` 空结果；② 同种子两次逐条相同（`Random(42)`）；③ `chance 0` → items 空、xp 仍带出；
+     ④ `chance 1.0 + rolls 3 + min2/max2` → 聚合后 `6`；⑤ `min0/max0` → 不出现在结果；
+     ⑥ 同 item 分两条配置 → 聚合为一条且位置为首次出现；⑦ 单条聚合超 64 → 夹到 64；
+     ⑧ items 不可变（`add` 抛 `UnsupportedOperationException`）；⑨ 顺序 = 首次出现顺序（不是字典序）。
+     把 `PASS n / FAIL 0 / TOTAL n` 贴上来。**只断言 `roll`，别断言文件/事件**
+
+- 进度：
+
+### T-0036 备注（S7 预留，S8 不看）
+
+`rolls()` 上限 16、`chance` 已在 `DropSpec` 夹到 `[0,1]`，所以 `roll` 里**不再做参数校验**（第二份真相）。
+`count` 夹 64 是唯一一处防御：15 条 × 16 rolls × 64 件 = 15360 件，聚合时不夹会让 `ItemStack` 数量溢出 —— 那是本层唯一的溢出面。
 
 ## 6. 派单池（S7 用，S8 不看）
 

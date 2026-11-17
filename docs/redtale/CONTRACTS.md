@@ -24,7 +24,7 @@
 | `com.redtale.project.items` | `ContentData` / 基底 / 解析 / 建栈 / tooltip / `ContentItem`（唯一物品行为类，R15）/ `Repairer`（修理唯一结算点，R16） | 有 |
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
-| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）**。**技能释放与刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
+| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）**。**刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
 | `com.redtale.project.progression` | 等级/技能树（M7） | **未建** |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
@@ -637,3 +637,42 @@ public ReloadResult reload(boolean allowResourceReload);   // /redtale reload �
 
 **调用方义务**：任何往 `<world>/datapacks/redtale_project/` 写文件的生成器，①必须走 `TagJson`（拿到幂等 + 统一失败文案）；
 ②必须把 `true` 的条数累加进 `written`，否则 `/redtale reload` 不知道自己要不要重载资源。
+
+### 4.25 怪物技能释放 `MobSkillCaster` + `SkillEngine.castMob`（M6 第三步第 3 小步，R40 定稿）
+
+```java
+// com.redtale.project.mobs.MobSkillCaster（零成员状态：冷却在 SkillCooldowns、随机数用 mob.getRandom()）
+public static final int INTERVAL_TICKS = 10;
+public record Result(boolean cast, String skillId, SkillEngine.Status status, int effects, String detail) {}
+public static int tick(MinecraftServer server);                          // GameHooks 每 tick 调，内部判节拍
+public static Result tryCast(Mob mob, MobSpec.Definition def, LivingEntity target);    // 真掷骰（与周期入口同方法）
+public static Result forceCast(Mob mob, MobSpec.Definition def, LivingEntity target);  // 忽略 chance，验执行链
+
+// com.redtale.project.core.skill.SkillEngine
+public Result castMob(LivingEntity caster, Entity target, String skillId, int cooldownTicks);
+```
+
+`castMob` 与 `cast(player,…)` **同序同源**：条件 → 冷却**只查** → 记冷却 → effects。差异只有两处：
+
+| 差异 | 规则 | 理由 |
+|---|---|---|
+| 法力 | **不扣、不判** | `max_mana` / `mana_regeneration` 是玩家面板属性，自建怪基值 0（R35-a）→ 套上去恒「蓝不够」 |
+| 冷却时长 | `cooldownTicks > 0` 用调用方给的；`<= 0` 回落 `SkillSpec.Definition.cooldownTicks()` | 同一个技能玩家 120 tick、精英怪 100 tick 是合法内容 |
+
+生物施法者（非 `ServerPlayer`）会写 `vars.attacker`，`damage` / `heal` 原语靠它认攻击者（R24/R27 既有约定）。
+
+**`tick` 的三条门禁**：① `server.getTickCount() % 10 != 0` → 直接返回；② 实体必须带 scoreboard tag `redtale_mob/<内容id>`（手动 `/summon` 的怪不参与）；
+③ `mob.getTarget()` 为空/已死 → **不掷骰**（否则冷却被「空放」吃掉）。
+
+命令行（`core/command/MobSpawnCommand`，验收入口）：
+
+```
+/redtale mob cast <id>                  # FORCE：忽略 chance，按配置顺序试到放出去
+/redtale mob cast <id> roll             # ROLL：走 tryCast（真掷骰）
+/redtale mob cast <id> "<ns:skill>"     # EXPLICIT：只放点名的那条（arg 是 string()，word() 不吃冒号）
+```
+
+**复用语义（R40-c，别改回去）**：先找 16 格内带同一 tag 的同类怪，没有才 `MobSpawner.spawn`；输出带 `（复用）` / `（新生）`。
+每次现生成会拿新 UUID → 冷却表干净 → 「连放第二次被拦」这条断言恒假通过。
+
+失败输出**必须带状态**（R40-d）：`COOLDOWN 112t` / `(chance 0)` / `(未掷中)` / `没配 skills`；`detail` 为 null 属缺陷。
