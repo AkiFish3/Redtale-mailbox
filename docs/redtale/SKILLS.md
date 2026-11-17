@@ -38,6 +38,7 @@
   name: "skill.redtale.gale_slash",   // 可选，缺省 skill.redtale.<id 的 path>
   icon: "minecraft:iron_sword",       // 可选，缺省 minecraft:paper（只给 GUI 用，服务端不管）
   cooldown_ticks: 120,                // 可选，缺省 0 = 无冷却；负数/非数字 → 0 + 一条 WARN
+  mana_cost: 40.0,                    // 可选，缺省 0 = 不耗法力（R35）；负数/非数字 → 0 + 一条 WARN，硬顶 1e9
 
   // 可选，脚本层 condition 原语，全部 true 才释放；某项坏掉只丢该项
   conditions: [
@@ -62,6 +63,7 @@
 | 单项 `type` 缺失或非字符串 | 丢该项 + 1 条 WARN，其余照跑 |
 | `args` 非对象 | 该项按空 args 处理 + 1 条 WARN |
 | `cooldown_ticks` 越界 | 负数 → 0；`> 1e9` → `1e9`（D16 只留异常保护，不设玩法上限） |
+| `mana_cost` 非数字 / 负数 / 非有限 | 一律按 `0`（不耗法力）+ 1 条 WARN；`> 1e9` 夹到 `1e9` |
 
 **解析层不校验原语是否存在**：那需要 `ScriptRegistries`，属启动期冻结的注册表，交给运行期（`runCalls` 对未知 type 打一行 WARN）与 `/redtale validate`（后续并入）。解析器保持纯函数 = 可离线探针。
 
@@ -128,7 +130,7 @@ LivingIncomingDamageEvent（LOWEST）
 | 项 | v1（M5-A） | 之后 |
 |---|---|---|
 | 冷却 | `SkillEngine` 内存表 `key = (玩家 UUID, 技能 id)` → 到期 tick；重启清零 | **已接入（R30）**：`SkillEngine.cooldownReduction()` 读 `redtale_project:cooldown_reduction`，公式 `cd × (1 - min(0.9, 值))` 在 `SkillCooldowns.effectiveTicks` 单点换算，**不设 0 冷却**（下限 1 tick，理由同 D19 的物理地板） |
-| 法力 | 不耗 | M5-B：`max_mana` 上限 + `mana_regeneration`/秒回复 + `mana_cost_reduction` 折算；当前法力是**玩家持久状态**（`PlayerData`），登录同步 |
+| 法力 | **已接入（R35）**：`mana_cost` 白值 → `ManaPool.effectiveCost(raw, mana_cost_reduction)`（上限 0.9 + 地板 1 点）→ 扣蓝 | 上限 = `redtale_project:max_mana` **绝对值**（`0` = 没配 → 默认 100，R35-a；**换装抬上限不补蓝**）；回复 = `mana_regeneration`/秒，`<=0` = 不回蓝（R35-b，不给缺省值）；门槛顺序 **条件 → 冷却查询 → 扣蓝 → 记冷却 → effects**（R35-c：蓝不够不吃冷却）；`ManaPool` 挂在 `SkillEngine` 上跨 reload 存活，**重登仍满蓝**（持久化 = M5 收口第二步 `PlayerData`，R35-e） |
 | 物品消耗 | 无 | M5-C：`cost.item` / `cost.durability`，复用 `Repairer` 的扣件口径 |
 
 冷却文案：`技能 <id> 冷却中：<剩余tick> tick`（写死便于 grep）。**冷却按 UUID 不按名字**（改名清冷却是个漏洞）。

@@ -388,27 +388,38 @@ public final class EnchantObtainTags {
 package com.redtale.project.core.skill;
 
 public final class SkillEngine {
-    public enum Status { CAST, NO_SKILL, NO_PLAYER, CONDITION, COOLDOWN }
+    public enum Status { CAST, NO_SKILL, NO_PLAYER, CONDITION, COOLDOWN, NO_MANA }   // NO_MANA = R35
     public record Result(Status status, String skillId, int remainingTicks, int effects, String failedCondition) {
         public boolean cast();
     }
     public static final double AIM_RANGE = 8.0D;
 
     public SkillCooldowns cooldowns();
+    public ManaPool mana();                                                  // R35：跨 reload 存活
     public Result cast(net.minecraft.server.level.ServerPlayer player, String skillId);
+    public static double maxManaOf(net.minecraft.server.level.ServerPlayer player);      // R35
+    public static double manaRegenOf(net.minecraft.server.level.ServerPlayer player);    // R35
+    public static double manaCostReduction(net.minecraft.server.level.ServerPlayer player); // R35
+    public void syncMax(net.minecraft.server.level.ServerPlayer player);     // R35：属性上限变了才写
+    public double tickMana(net.minecraft.server.level.ServerPlayer player);  // R35：每 tick，ticks=1
+    public String manaText(net.minecraft.server.level.ServerPlayer player);  // "法力 42.0/100.0"
+    public String noManaText(net.minecraft.server.level.ServerPlayer player, double rawCost);
     public static String cooldownText(String skillId, int remainingTicks);   // "技能 <id> 冷却中：<N> tick"
     public static net.minecraft.world.entity.Entity aimedTarget(net.minecraft.server.level.ServerPlayer player);
 }
 ```
 
-**顺序是硬约束**（R29-a）：③ conditions 全 true → ④ `cooldowns().tryStart(...)` → ⑤ `runCalls`。
+**顺序是硬约束**（R29-a + R35-c）：③ conditions 全 true → ④a `cooldowns().remaining(...)`（**只查不记**）
+→ ④b `mana.spend(...)`（`NO_MANA` 在这里返回，冷却**未记**）→ ④c `cooldowns().start(...)` → ⑤ `runCalls`。
 条件不过**不记冷却**、冷却不过**不跑 effects**。未知 condition type 跳过（与 `ScriptEngine#passConditions` 同口径，
 解析层按 R28-d 不校验原语）。目标来自视线 raycast `AIM_RANGE` 格（只认活体、排除自己），打不中就是 null，
 由 `damage` 原语自己跳过 + WARN（R29-c）。
 
 命令：`/redtale skill list` · `cast <id>`（要玩家，取 UUID）· `probe <id>`（FakePlayer + 木桩牛，A/B 两组数值对照，
 会 `cooldowns().clear()`，**验收工具不进玩法路径**，R29-e）· `cd <id>`（只读剩余冷却）· `info <id>`（只读全貌：条件/效果
-逐条标注册状态 + 被哪些内容绑定，R31 补）。
+逐条标注册状态 + 被哪些内容绑定，R31 补）· `mana`（自己那管蓝：当前/上限/回蓝/减免/在册人数，R35）·
+`mana set <current> [max]`（运维写回，R35）· `mana probe <id>`（FakePlayer 六组：扣蓝 / 累减 / 蓝不够不扣且不记冷却 /
+消耗降低 50% / 回蓝 20 tick / 上限跟属性且不补蓝，R35）。
 
 `ScriptEngine.runCalls` 另有 `(calls, ctx, String owner)` 重载（R29-d）：技能传 `"技能 <id>"`，日志不再是「物品脚本的 effect」；
 旧的两参版委托并传 `"物品脚本"`，行为零变更。
@@ -494,6 +505,25 @@ SkillCooldowns.effectiveTicks(cd, reduction)            // 夹 [0, 0.9]，结果
 | 续定语义 | 同一实体被重复命中时**沿用首次记录的 `wasNoAi`**，只把截止时刻往后推（R34-b） | 每次重读当前状态 → 第二次读到的是「已被我们置 true」，解除时把怪**永久定住**（实测踩过） |
 | 重启残留 | `EntityJoinLevelEvent` → 带标记的实体入世即 `setNoAi(false)` + 清标记，恢复值取 `false` | 原 `wasNoAi` 已随重启丢失，「能动」比「永久定住」安全；不清则关服时正在挨打的怪下次上线就成木桩 |
 | 验收手法 | 看 `Tags` 是否有 `redtale_stunned` + `data get entity … NoAI`（1b）+ 日志 `[script] stun · <名> <n>t` / `stun 解除 · <名>（到点）` | 只看日志 = 验日志；`Tags` 是唯一能区分「本来就没 AI」与「被我们定住」的凭据 |
+
+
+### 4.21 法力 `ManaPool` 接线（M5 收口，R35 定稿）
+
+```java
+// 定义层：SkillSpec.Definition 7 → 8 字段（位置固定，构造点只有 SkillSpec.parse 一处）
+public record Definition(String id, String name, String icon, int cooldownTicks, double manaCost,
+                         List<ScriptCall> conditions, List<ScriptCall> effects, String source) {}
+```
+
+| 契约点 | 值 | 改了会怎样 |
+|---|---|---|
+| 上限口径 | `max_mana` **绝对值**；`<=0` / 非有限 → `ManaPool.DEFAULT_MAX`（100），即「0 = 没配」（R35-a） | 按「加成」解释会让一件 +20 的戒指把上限从 100 降到 20（本轮 F 组就是这么红过一次）。备选口径见 Q-019 |
+| 回复口径 | `mana_regeneration`/秒；`<=0` = **不回蓝**，不给缺省值（R35-b） | 给一个隐式缺省 = 第二份真相（D18），且「没配」与「配了」在面板上无法区分 |
+| 门槛顺序 | 条件 → `cooldowns().remaining()`（只查）→ `mana.spend()` → `cooldowns().start()` → effects（R35-c） | 直接用 `tryStart` 会让「蓝不够」那次吃冷却 → 空蓝连按两下，回蓝后还要等满冷却 |
+| 扣蓝公式 | `ManaPool.effectiveCost(raw, reduction)`：`reduction` 夹 `[0, 0.9]`、结果 `round` + **地板 1 点**（`raw>0` 时） | 满减免变免费；在引擎里另写一份换算 = 第二个公式（与 `SkillCooldowns.effectiveTicks` 的同一条纪律） |
+| 状态隔离 | `ManaPool` 挂在 `SkillEngine` 上，随 reload 存活；`cooldowns` 与 `mana` 是两张独立的表 | 放进 `RedtaleCore` 的 reload 重建链会「reload 即回满蓝」 |
+| 持久化 | **本轮不做**：重登 = 满蓝（R35-e）；`restore`/`clear` 两个口子已就位，等 `PlayerData` | 现在落盘要在「什么时候写 / 丢多少 / 多世界」三件事上先拍板，格式定错会连带改结算 |
+| 观测面 | `/redtale skill list` 与 `info` 每行带 `法力 <n>`；`/redtale skill mana probe` A~F 六组；`mana` 只读当前/上限/回蓝/减免 | 没有观测面时「蓝不扣」只能靠人肉感觉，六组探针是唯一能定位到「哪一段断」的东西 |
 
 
 ## 5. 路径约定

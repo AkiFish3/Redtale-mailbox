@@ -1298,7 +1298,7 @@ fi
 2026-11-17 14:40 · 完成 · 新建 `tools/check_defaults.py`（81 行，纯标准库，零依赖；`DEFAULT_FILES` 块按 `);` 截断后正则取字面量）· 本卡不涉构建（卡面「不碰构建」），未取锁、未跑 gradle · 自测 5 项：①基线（从 `/` 调用亦可）`EXIT=0`、`清单 21 条 · 磁盘 21 个 · 问题 0 条`；②临时加 `"items/__probe__.json5"` → `EXIT=1` + `[仅清单有] items/__probe__.json5`；③移走 `crit.json5` → `EXIT=1` + `[仅清单有] crit.json5`；④额外放 `crit_extra.json5` → `EXIT=1` + `[仅磁盘有] crit_extra.json5`；⑤沙箱（`/tmp` 假仓库）造重复项 → `EXIT=1` + `[清单重复] crit.json5`，删 `ConfigStore.java` / 删 `defaults/` → `EXIT=2` + `找不到 …`（无 traceback）· 偏差：卡面验收第 3 条把「移走真实默认文件」预期成 `仅磁盘有`，语义上应为 `仅清单有`（已按实数贴）；`仅磁盘有` 方向另用 ④ 补测，两条方向都实测到 · 还原：`git diff --stat ConfigStore.java` 空、`git status --short src/main/resources` 空、`git status --short` 仅 `?? tools/check_defaults.py`
    - **S7 验收（2026-11-17 15:16）→ VERIFIED，3/3，另补 exit 2 与反向分支**：①基线 `EXIT=0`、`清单 21 条 · 磁盘 21 个 · 问题 0 条`；②临时插 `"items/__probe__.json5"` → `[仅清单有] items/__probe__.json5` + `问题 1 条` + `EXIT=1`，还原后 `EXIT=0`、`git diff --stat ConfigStore.java` 空；③移走真实 `crit.json5` → `[仅清单有] crit.json5` + `EXIT=1`（**卡面第 3 条写成「仅磁盘有」是我写错，语义上就是「仅清单有」，采纳 S8 的偏差说明，不打回**）；另外补测 S8 未贴的一支：多放一份未登记 `crit_extra.json5` → `[仅磁盘有] crit_extra.json5` + `EXIT=1`，还原后 `EXIT=0`、`git status --short src/main/resources` 空；沙箱（只有 tools/ 的空目录）→ 打印 `找不到 src/.../ConfigStore.java` + `EXIT=2` 无 traceback。脚本 81 行、零第三方依赖、只读、路径自定位（从 `/tmp` 调用同样 21/21）。
 
-### T-0029 · [OPEN] `core/skill/ManaPool` —— 法力池（M5 收口第一层，纯数据 + 注入 tick）
+### T-0029 · [VERIFIED] `core/skill/ManaPool` —— 法力池（M5 收口第一层，纯数据 + 注入 tick）
 
 - 派单：S7 · 2026-11-17 14:05
 - 目标：SKILLS §6「法力」一栏现在是「不耗」。本卡只做**一个纯数据类**：谁的当前法力是多少、够不够花、每秒回多少。
@@ -1361,6 +1361,10 @@ fi
      小数回复不丢 / 夹取 / 未知玩家 = 满蓝），跑出 `PASS` 总数并贴上来
 
 - 进度：
+- 2026-11-17 15:36 · 完成 · 新建 `core/skill/ManaPool.java`（138 行，单文件；`DEFAULT_MAX=100.0`、`enum Reason`、`record Payment`、私有 `record Entry` + 私有 `sanitize/capOf/clamp`），卡外零改动、未接线 · build `--offline` EXIT=0（jar 425611 B）· `grep -c net.minecraft`=**0**、`grep -c "synchronized|ConcurrentHashMap"`=**0**、行数 **138**≤200、jar 内 `core/skill/ManaPool*`=4（主类+Entry+Payment+Reason，卡面未限类数）；探针 `build/probe/ManaPoolProbe.java` **88/88**（effectiveCost 13 / 未知玩家=满蓝 5 / spend 三态与不扣不改账 20 / regen 小数不丢+封顶+零参 11 / set·setMax·restore 夹取与 NaN 21 / clear·tracked 3 / null 玩家不抛 4）
+- 四处卡面未写死的口径（请 S7 裁，不改接口与验收计数）：①`setMax`/`restore` 给**未知**玩家建记录时，先按「新玩家满蓝」取 `DEFAULT_MAX` 再夹到新上限（即 `setMax(u,50)` 后 current=50，直接就是满的）；②`regen` 正数分支若实际回复量为 0（已满蓝）则不建记录、`tracked()` 不涨；③`effectiveCost` 对 `rawCost=NaN` 走 `!(rawCost>0)` 返回 0（卡面只写 `rawCost<=0`，NaN 未定义，取「免费」以免 1.0 地板凭空扣蓝）；④`max<=0` 含负数统一记 0（`capOf`），`set(…,-10)` 同样记 max=0 并把 current 夹到 0
+
+- 2026-11-17 16:40 · [S7 验收] **VERIFIED（3/3）** · build `--offline` EXIT=0（jar 425611 B，与你报的一致）· `grep -c net.minecraft`=**0**、`grep -c "synchronized\|ConcurrentHashMap"`=**0**、`wc -l`=**138**、jar 内 `core/skill/ManaPool*`=4 · S7 独立探针 `build/probe/S7ManaProbe.java` **85/85**（不复用 ManaPoolProbe）· 卡面 8 条行为逐条断言过；四处口径全采纳（①`setMax` 抬高上限**不补蓝**只夹取 —— 实测 `setMax(u,250)` 后 current 仍 100，这是对的，卡面写的是「current 夹到 [0,max]」，「新玩家满蓝」只在降上限时表现为满；②`regen` 满蓝不建记录；③`NaN` 成本按免费；④`max<=0` 记 0）
 
 ### T-0030 · [OPEN] `mobs/MobSpec` —— 怪物定义解析器 v1（M6 第一层，纯解析）
 
@@ -1436,6 +1440,83 @@ fi
 
 - 进度：
 
+
+### T-0031 · [OPEN] `dash` 原语 —— 位移类第一条（M5-C，纯数学可离线断言）
+
+- 派单：S7 · 2026-11-17 16:45
+- 目标：`SKILLS.md` §4 位移栏第 2 条（`dash`，冲刺）。**与 `knockback`/`pull` 的语义区别必须分清**：
+  那两条是「把别人推走」（走原版 `LivingEntity#knockback`，吃目标的击退抗性）；
+  `dash` 是「**施法者自己冲出去**」——自己位移不吃自己的击退抗性，所以直接用 `setDeltaMovement`。
+- 独占文件（**唯一可改的两个文件**）：
+  - `src/main/java/com/redtale/project/core/script/builtin/DashEffect.java`（**新建**，≤ 160 行）
+  - `src/main/java/com/redtale/project/core/script/builtin/Builtins.java`（**只加 2 行**：一行注释 + 一行 `registries.register(new DashEffect());`，
+    放在 `StunEffect` 那行之后。**其它行一个字符都不许动**，尤其不许重排已有注册顺序）
+  - 探针放 `build/probe/DashProbe.java`（`build/` 不入库）
+
+- 接口（**逐字照抄**）：
+  ```java
+  package com.redtale.project.core.script.builtin;
+
+  import com.google.gson.JsonObject;
+  import com.redtale.project.core.script.EffectType;
+  import com.redtale.project.core.script.ScriptContext;
+
+  public final class DashEffect implements EffectType {
+      /** 水平方向长度小于它视为重合（再除就出 NaN）。 */
+      public static final double EPS = 1.0e-4D;
+      public static final double MAX_POWER = 5.0D;
+      public static final double MIN_UP = -1.0D;
+      public static final double MAX_UP = 2.0D;
+
+      @Override
+      public String id();                       // 返回 "dash"
+      @Override
+      public String description();              // 一句中文，含「施法者自己」「不吃击退抗性」
+
+      /** 纯函数：算出要写进 setDeltaMovement 的速度。无任何 MC import，可离线断言。 */
+      public static double[] motion(double lookX, double lookZ, double power, double up);
+
+      @Override
+      public void apply(ScriptContext ctx, JsonObject args);   // args 可为 null
+  }
+  ```
+
+- 行为（每条都是断言点）：
+  1. **`motion` 是唯一的数学实现**，`apply` 只负责取参数、取视线、落地。不许在 `apply` 里再算一遍向量。
+  2. `motion(lookX, lookZ, power, up)`：
+     - `power` 非有限（NaN/Inf）→ 当 `0` → 返回 `{0,0,0}`；
+     - `power` 夹到 `[0, MAX_POWER]`（**夹取本身不告警**，D16 异常保护）；`power <= 0` → `{0,0,0}`；
+     - `up` 非有限 → 当 `0`；夹到 `[MIN_UP, MAX_UP]`；
+     - `h = hypot(lookX, lookZ)`；`h < EPS` → 单位向量退化为 `(1, 0)`（**不随机、不朝视线**，见 R33-b 同思路）；
+       否则单位向量 = `(lookX/h, lookZ/h)`；
+     - 返回长度 3 的 `double[]`：`{ux*power, up, uz*power}`（数组下标 0/1/2 = x/y/z）。
+     - 必过例：`motion(1,0,0.8,0.2)` = `{0.8,0.2,0}`；`motion(3,4,1,0)` = `{0.6,0,0.8}`；
+       `motion(0,0,2,-1)` = `{2,-1,0}`；`motion(1,0,10,5)` = `{5,2,0}`；`motion(1,0,Double.NaN,0)` = `{0,0,0}`。
+  3. `apply` 取参：`power` 缺省 **0.8**；`up` 缺省 **0.2**；`direction` 缺省 **`"look"`**。
+     - `power` 写了但不是数字 → 用缺省 + 1 条 WARN；`power <= 0` → **一条 WARN 直接返回，不位移**（不是「按 0.8 冲」，这是 R33-c 踩过的坑）；
+     - `up` 写了但不是数字 → 用缺省 + 1 条 WARN；
+     - `direction` 只认 `"look"`（沿视线）与 `"back"`（视线反向，即 `lookX/lookZ` 取反）；其它值 → 按 `"look"` + 1 条 WARN。
+       写 `"away"` 也是 WARN（同义词不收，避免两种写法一种行为）。
+  4. `apply` 的目标**永远是施法者**（`ctx.caster()`），忽略 `ctx.target()`：
+     施法者不是 `LivingEntity`（控制台 / 命令方块 / null）→ 1 条 WARN 返回，不抛。
+  5. 落地只有一句：`caster.setDeltaMovement(x, y, z)` + `caster.hurtMarked = true`
+     （后者让 `ServerPlayer` 走运动包下发，与 `Explosion` 同做法）。**不许**调 `knockback`、**不许**写 `Pos`、**不许** `teleport`。
+  6. WARN 去重：同一句文案只打一次（参照 `KnockbackEffect.WARNED` 的 `Set<String>` 写法），避免每 tick 刷屏。
+  7. **`import` 白名单**：只允许 `com.google.gson.JsonObject`、`com.redtale.project.core.script.{EffectType,ScriptContext}`、
+     `net.minecraft.world.entity.{Entity,LivingEntity}`、`org.slf4j.{Logger,LoggerFactory}`、`java.util.*`。
+     不许 import `ScriptEngine` / `RedtaleCore` / `Builtins` / 任何 `items` 包。
+
+- 不要做：不改 `SKILLS.md`（状态列归 S7）、不改 `Builtins` 之外的任何已有类、不删不改已有注册顺序、
+  不加 `main`、不写 `setAmount`、不碰 `PlayerData` / 法力。
+
+- 验收（全部自己跑，进度行贴实测数字）：
+  1. `gradle build --offline` → `EXIT=0`；`cd build/libs && unzip -l *.jar | grep -c "script/builtin/DashEffect.class"` = **1**
+  2. `wc -l src/.../DashEffect.java` ≤ **160**；`grep -c "setDeltaMovement" ` = **1**；
+     `grep -c "setAmount\|teleport\|knockback(" ` = **0**；`git diff --stat -- .../Builtins.java` 只 +2 行
+  3. 探针 `build/probe/DashProbe.java` ≥ **20** 条断言覆盖「行为 2 的五个必过例 + 夹取 + 退化 + 符号」，
+     跑出 `PASS` 总数并贴上来（**只断言 `motion` 的数值，别断言 `apply`** —— `apply` 由 S7 在测试服验）
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 
