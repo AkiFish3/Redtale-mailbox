@@ -407,7 +407,8 @@ public final class SkillEngine {
 由 `damage` 原语自己跳过 + WARN（R29-c）。
 
 命令：`/redtale skill list` · `cast <id>`（要玩家，取 UUID）· `probe <id>`（FakePlayer + 木桩牛，A/B 两组数值对照，
-会 `cooldowns().clear()`，**验收工具不进玩法路径**，R29-e）· `cd <id>`（只读剩余冷却）。
+会 `cooldowns().clear()`，**验收工具不进玩法路径**，R29-e）· `cd <id>`（只读剩余冷却）· `info <id>`（只读全貌：条件/效果
+逐条标注册状态 + 被哪些内容绑定，R31 补）。
 
 `ScriptEngine.runCalls` 另有 `(calls, ctx, String owner)` 重载（R29-d）：技能传 `"技能 <id>"`，日志不再是「物品脚本的 effect」；
 旧的两参版委托并传 `"物品脚本"`，行为零变更。

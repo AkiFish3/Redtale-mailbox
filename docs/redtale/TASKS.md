@@ -1129,7 +1129,7 @@ fi
   `demo_longsword · 孔位 2 · 套装 emberforged · rev 2` —— 卡面写的 `rev 1` 是陈旧期望（R20 改 `set_id` 时已 +1 到 2），实测 2 与定义一致，判过
 
 
-### T-0025 · [OPEN] `/redtale validate` 补第 6 条 —— 技能引用的原语是否存在（R28-d 收口）
+### T-0025 · [VERIFIED] `/redtale validate` 补第 6 条 —— 技能引用的原语是否存在（R28-d 收口）
 
 - 派单：S7 · 2026-11-17 09:20
 - 目标：解析层按 R28-d **不校验原语存在**（那需要启动期冻结的 `ScriptRegistries`），但「技能写了 `type: "dash"` 而 `dash` 还没实现」
@@ -1171,6 +1171,9 @@ fi
      删掉该文件再 reload → 问题数回落到原值、两次输出逐字相同。S8 只需在进度行贴 build 退出码与两条 grep 的实测数字。
 
 - 进度：
+- 2026-11-17 11:28 · 完成 · `ValidateCommand.java`（142→167 行；新增 `checkSkillPrimitives(RedtaleCore, List<String>)` + 1 行调用 + 头部追加 `· 技能 N 条` + 2 个 import `ScriptCall`/`SkillSpec`） · 只改本卡独占文件，卡外零改动、`RedtaleCommand` 未碰 · build `--offline` EXIT=0（jar 393750 B） · 自测：`checkSkillPrimitives`=2、`引用了未注册的原语`=2、jar 内该类=1、`javap -p` 签名 `private static void checkSkillPrimitives(RedtaleCore, java.util.List<String>)` 与 `public static int validate(CommandContext<CommandSourceStack>)` 均在、常量池 `引用了未注册的原语`×2 / ` 个套装 · 技能 `×1 / ` 条 · 问题 `×1 / `（没有引用问题）`×1（顺序即拼接顺序）· 功能项（t_bad.json5 → reload → 恰多 2 条、头部技能 2→3、删除后逐字回落）待 S7 测试服验收
+
+- 2026-11-17 11:46 · **S7 验收通过（3/3）** · ①`gradle build --offline` BUILD SUCCESSFUL exit 0（jar 393750 B，`compileJava UP-TO-DATE` 与 S8 报的 11:15 产物一致）；②`grep -c "checkSkillPrimitives"` = **2**、`grep -c "引用了未注册的原语"` = **2**；`javap -p` 复核 `private static void checkSkillPrimitives(RedtaleCore, java.util.List<String>)` 与 `public static int validate(CommandContext)` 均在；③测试服 `E:\server-test` 实测（`console_r31.log`，`Done (2.276s)`，已停、25567 无 LISTEN）：基线 `技能 2 条 · 问题 0 条`；写 `skills/t_bad.json5`（`conditions:[no_such_condition]` + `effects:[dash, console_log]`）→ reload `3 条技能（26 份配置文件）` → validate **`技能 3 条 · 问题 2 条`**，两条文案逐字 = `redtale_project:t_bad: conditions 引用了未注册的原语 no_such_condition` / `... effects 引用了未注册的原语 dash`；连跑两次逐字相同；删文件再 reload（`2 条技能 / 25 份配置文件`）→ 回到 `技能 2 条 · 问题 0 条` + `（没有引用问题）`。同技能同 type 只报一次成立（`dash` 在 effects 里只出现 1 条）。redtale 零 ERROR（4 条 RecipeManager 既有噪声）
 
 ### T-0026 · [OPEN] `buff` 原语 —— 增益类第一条（M5-C）
 
@@ -1217,6 +1220,36 @@ fi
 
   三条都由 S8 自己跑并在进度行贴实测数字；功能验收（写一份 `skills/t_buff.json5` → reload → 放技能看目标身上的效果与时长）
   由 S7 在测试服跑，**S8 不启停测试服、不发游戏内指令**。
+
+- 进度：
+
+### T-0027 · [OPEN] `/redtale content list` 补「技能」列（M5-B 的运营可见性）
+
+- 派单：S7 · 2026-11-17 11:48
+- 目标：`ItemContent` 第 16 字段 `abilities`（M5-B）已经写进 `ContentData`、tooltip 也会打「技能 N」，
+  但 `content list` 一行一件的清单里**看不出来哪件武器带技能** —— 运营要判断「这份配置到底绑上没有」只能挨个 `/give` 再看 tooltip。
+  本卡只补清单的显示，**不做**技能释放、不做写回。
+- 独占文件（**唯一可写文件**）：
+  - `src/main/java/com/redtale/project/core/command/ContentListCommand.java`（现 67 行，本卡预计 +12 行以内）
+- 接口：不改任何方法签名（`public static int list(CommandContext<CommandSourceStack>)` 保持原样），
+  只允许新增**一个** `private static` 辅助方法：
+  ```java
+  private static String abilitiesText(ItemContent content)
+  ```
+- 行为（逐条照做，**不要自由发挥**）：
+  1. `abilitiesText` 返回：`abilities` 为空 / `null` → `"-"`；否则 `"N: id1 · id2"`（`N` = 条数，分隔符是两个空格夹一个 `·`，与 `ContentListCommand` 现有风格一致）。
+  2. 每件内容那一行的**末尾**（`· rev N` **之后**）追加 `" · 技能 " + abilitiesText(content)`。已有字段的顺序与文案一个不动。
+  3. 汇总行（`[redtale] 内容 N 件 · … · 套装定义 M 个`）**末尾**追加 `" · 带技能 K 件"`，`K` = `abilities` 非空的内容件数
+     （与现有 `withWeaponAttributes` 同样的计数写法，别用 stream）。
+  4. 只读：不写盘、不改内存、不打 `LOG`、不新增命令节点。
+- 不要做：不改 `ItemContent` / `ContentData` / `ItemFactory` / `ContentTooltip` / `SkillCommand` / `RedtaleCommand`；
+  不碰 `docs/`；不加依赖、不改 `build.gradle`；不引入 `stream()` / `var` 以外的新风格。
+- 验收：
+  1. `gradle build --offline` 退出码 0（取锁，见 §3）
+  2. `grep -c "abilitiesText" src/main/java/com/redtale/project/core/command/ContentListCommand.java` = **2**（1 定义 + 1 调用），且
+     `grep -c "带技能 " src/main/java/com/redtale/project/core/command/ContentListCommand.java` = **1**
+  3. S7 在测试服跑（**S8 不跑服**）：`/redtale content list` 每行末尾都有 `· 技能 `，`demo_longsword` 显示 `1: redtale_project:gale_slash`
+     （或该件当前 `abilities` 的实际值），汇总行出现 `带技能 1 件`（实测有几件就报几件）。S8 只需在进度行贴 build 退出码与两条 grep 的实测数字。
 
 - 进度：
 
