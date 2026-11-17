@@ -1818,7 +1818,7 @@ fi
   - 口径备注（S8，请 S7 裁，不影响接口与验收计数）：①`id` 按本项目 `MobSpec`/`SetSpec` 既有惯例 **trim 后保留**，卡面「原样保留」理解为「不补命名空间而非保留首尾空格」；②「非整数」按字面含小数与超 int 的有限数（如 1.5 → 0/1 + WARN），整数超上限静默夹取（D16）；③`chance` 用 `Double.isFinite` 挡 NaN/Inf（`1e999` 探针实测 → 1.0 + WARN）；④验收 2 的「git status 只出现两个文件」在本轮不可能字面成立：开工基线已含 S7 未提交的 `MobSpawnCommand`/`GameHooks`/`SkillEngine`/两份 lang + 未跟踪 `MobSkillCaster.java`/`gen_entity_lang.py`/`tools/__pycache__`；S8 仅碰卡上两文件（探针在 build/ 被 gitignore），未改上述任何一项。
   - 2026-11-18 05:38 · **S7 验收 → `[VERIFIED]`（3/3）** · ①`build --offline` EXIT=0，`unzip -l` 内 `mobs/DropSpec.class`=1；②`wc -l`=**118** ≤190、`net.minecraft`=1、`Registr`=0；③**S7 独立探针 `build/probe/S7DropProbe.java` PASS 52 / FAIL 0 / TOTAL 52**（自编 A~J 十组，不复用 S8 的 `DropSpecProbe`）：null configs / warnings=null 不 NPE、路径过滤（非 `drops/`、非 `.json5`、子目录合法）、根 null、id 缺失/非字符串/空白/trim、重复 id 保留先出现且 source 为首文件、xp 缺省/小数/负数/超上限夹取不告警/非数字、drops 缺键/非数组/非对象逐项、item 缺失与坏 id（告警含原始文本）、min/max 缺省与夹取、`max<min`、chance 缺省/夹取/NaN、rolls 夹取、Map 与 drops 双不可变、保序（非字典序）、自定义命名空间 id 通过形态校验。**四条口径备注全采纳**（trim 视为「不补命名空间」；非整数含小数；`Double.isFinite`；卡面第 2 条在脏基线下的判定按「只碰卡上两文件」解释）。**发现一条卡面没写死的边界**（记录不改码）：`drops/归档/q.json5` 这类子目录会被解析 —— 卡面只规定前缀与后缀，属预期行为，已写进 R40 台账。
 
-### T-0036 · [OPEN] `mobs/DropRoll` —— 掉落掷骰纯函数（M6 第四层第二步，纯函数）
+### T-0036 · [DONE] `mobs/DropRoll` —— 掉落掷骰纯函数（M6 第四层第二步，纯函数）
 
 - 派单：S7 · 2026-11-18 05:46
 - 目标：把 `DropSpec.Definition`（掉落表快照）+ 一个 `Random` 变成「这次死了掉什么」。**纯函数、零 MC import、不生成战利品表、不接任何事件**
@@ -1878,11 +1878,60 @@ fi
      把 `PASS n / FAIL 0 / TOTAL n` 贴上来。**只断言 `roll`，别断言文件/事件**
 
 - 进度：
+  - 2026-11-18 06:19 · 完成 · `src/main/java/com/redtale/project/mobs/DropRoll.java`（新建 43 行）+ `build/probe/DropRollProbe.java`（新建，build/ 不入库）；卡外零改动 · build `--offline` EXIT=0（jar 493780 B，`mobs/DropRoll` 宽匹配=3） · 自测：`wc -l`=43 ≤120、`net.minecraft`=0、`com.google.gson`=0、`nextInt`=1、探针 **PASS 26 / FAIL 0 / TOTAL 26**（14 组覆盖行为 1~10：def=null 空结果且零随机消耗、Random(42) 两次逐条相同、chance0 items 空而 xp 带出、chance1+min2/max2+rolls3→6、min0/max0 不产出仍消耗一次、同 item 跨两条聚合且位置=首次、聚合超 64 夹到 64、items 不可变、首现顺序非字典序、max>min 才调 nextInt）。待 S7 验收：纯函数，无测试服项。
+  - 口径备注（S8，请 S7 裁，不影响接口与验收）：①卡面验收 2 写「`git diff --stat` 只出现两文件」，但新文件未跟踪时 `git diff --stat` 不显示，实际 `git status --short` 仅 `docs/TASKS.md` + `mobs/DropRoll.java` 两项；②为守住 import 白名单，聚合用 `LinkedHashMap.keySet()` 迭代、未引入 `java.util.Map`；③行为 6 已在入表前挡掉 `count<=0`，结果侧再留一道 `<=0` 防御，可观测行为与卡面一致。
+
+  - 2026-11-18 06:50 · **S7 验收 → `[VERIFIED]`（3/3）** · ①`build --offline` EXIT=0；`unzip -l build/libs/*.jar | grep -c "mobs/DropRoll"` = **3**（`DropRoll` / `$Rolled` / `$Result`）；②`wc -l` = **43** ≤120、`net.minecraft` = **0**、`nextInt` = **1**；③**S7 独立探针 `build/probe/S7DropRollProbe.java` PASS 27 / FAIL 0 / TOTAL 27**（自编 A~M 组，不复用 S8 的 `DropRollProbe`：null 定义零随机消耗、`random=null` 两次逐条相同且等价 `Random(0L)`、chance 0 仍消耗 nextDouble、chance 1.0 + rolls3 + min2/max2 → 6 且不调 nextInt、件数 0 不产出仍消耗掷骰、同 item 跨两条聚合且位置=首次出现、顺序非字典序、聚合 180 夹 64、`items` 不可变、`max>min` 才调 nextInt、空 drops 表、未命中/命中混排、多物品独立、自建命名空间 id 原样带出）。三条口径备注全采纳（`git status` 用未跟踪口径解释；`LinkedHashMap.keySet()` 守 import 白名单；`count<=0` 双层防御）。**新增一条卡面没写死的边界**（记录不改码）：`roll` 不校验 `DropSpec` 已夹过的参数（`rolls`/`chance`），属「第二份真相」的正确取舍 —— 已写进 R41 台账。
 
 ### T-0036 备注（S7 预留，S8 不看）
 
 `rolls()` 上限 16、`chance` 已在 `DropSpec` 夹到 `[0,1]`，所以 `roll` 里**不再做参数校验**（第二份真相）。
 `count` 夹 64 是唯一一处防御：15 条 × 16 rolls × 64 件 = 15360 件，聚合时不夹会让 `ItemStack` 数量溢出 —— 那是本层唯一的溢出面。
+
+### T-0037 · [OPEN] `/redtale drop list` —— 掉落表只读清单（M6 第四层的运营可见性）
+
+- 派单：S7 · 2026-11-18 06:58
+- 目标：一条只读命令，把 `drops/*.json5` 的全部表列出来，并反查「哪些怪引用它」。掉落表是纯数据，配错了（id 写歪、表不存在）只有死怪才看得见；这条命令把它变成一张能对账的清单。
+- **不要做**：不改 `RedtaleCore` / `DropSpec` / `DropRoll` / `MobDrops` / `MobSpec` / `MobRegistry` / `MobCheckCommand`（一个字符都不许动）；不掷骰（不 import 也不调用 `DropRoll`）；不写盘、不改任何状态；不加 `list` 以外的子命令（`info` 以后再说）。
+
+- 独占文件（**唯一可写的两个**）：
+  - `src/main/java/com/redtale/project/core/command/DropListCommand.java`（**新建**，≤ 160 行）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**仅追加 ≤2 行**：`drop` 分支一行 `.then(DropListCommand.node())`；**不得删改任何已有行**，违者打回）
+
+- 接口（**逐字照抄**，不得增删方法）：
+  ```java
+  package com.redtale.project.core.command;
+
+  public final class DropListCommand {
+      private DropListCommand() {}
+      public static com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> node();
+      public static int list(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> ctx);
+  }
+  ```
+
+- 数据来源（**只读现成快照，不重新解析**）：
+  - `RedtaleCore.get().drops()` → `java.util.Map<String, DropSpec.Definition>`，键 = **裸 id**（不带 `redtale_project:`）
+  - `DropSpec.Definition` 的访问器：`id()` / `xp()` / `drops()`（`java.util.List<DropSpec.Entry>`）/ `source()`
+  - `DropSpec.Entry` 是 `record Entry(String item, int min, int max, double chance, int rolls)`
+  - 反查引用：`RedtaleCore.get().mobs().all()` → 每只 `MobSpec.Definition` 的 `id()` / `name()` / `drops()`（`""` = 不引用任何表）
+
+- 输出（逐字照抄文案，**按 id 升序**）：
+  - 头行：`[redtale] 掉落表 N 张 · 条目合计 K 条 · 被引用 M 张`
+  - 每张表一行：`  <id> · xp <xp> · 条目 <k> · 引用 <n> 只<：名称1, 名称2>`
+    - `n == 0` → 这一段整体写成 `未被引用`（即行尾是 `· 未被引用`）
+    - `n > 0` → `：` 后按怪物配置顺序列 `name()`（不是 id），多于 5 个只列前 5 个并在末尾加 `…`
+  - 0 张表：`[redtale] 没有掉落表（读 <配置目录>/drops/*.json5）`，**返回 0**
+  - 返回值 = **表张数**（不是问题条数，与 `mob check` 口径不同，卡面写死）
+  - 只 `sendSuccess(..., false)`，不广播
+
+- 验收（1、2 你自己跑，3 归 S7）：
+  1. `gradle build --offline` → `EXIT=0`；`unzip -l build/libs/*.jar | grep -c "command/DropListCommand"` = **1**
+  2. `wc -l src/main/java/com/redtale/project/core/command/DropListCommand.java` ≤ **160**；`grep -c "DropRoll"` = **0**；
+     `git status --short` 只出现上面两个文件 + `docs/TASKS.md`（`build/` 被 gitignore）
+  3. 测试服 `/redtale drop list` → 头行 `[redtale] 掉落表 1 张 · 条目合计 3 条 · 被引用 1 张` +
+     表行 `  ember_guard · xp 12 · 条目 3 · 引用 1 只：炽焰守卫`（S7 跑 RCON，贴回原文给你）
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 

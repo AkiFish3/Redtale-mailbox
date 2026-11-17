@@ -567,6 +567,7 @@ public final class MobSpawner {
 | 技能定义（M5，R25 定稿） | `config/redtale_project/skills/<id>.json5`（一个文件一条技能，schema 见 `docs/SKILLS.md` §3）；默认两份 `gale_slash` / `ember_burst` 属 `DEFAULT_FILES`，**删文件会被 reload 重建**（想停用就改文件内容，别删） |
 | 怪物定义（M6，R36） | `config/redtale_project/mobs/<id>.json5`（一个文件一只怪，schema 见 `MobSpec` 卡 T-0030）；默认 `ember_guard` / `ash_caster` 属 `DEFAULT_FILES`，**删文件会被 reload 重建** |
 | 怪物实体（M6，R38） | 不落盘：`/redtale mob spawn` 现生成；识别靠 scoreboard tag `redtale_mob/<怪id>`（1.21.1 无 `getPersistentData`，R34 事实） |
+| 掉落表（M6，R41） | `config/redtale_project/drops/<文件名>.json5`（`id` 是**裸名**，一个文件一张表）；默认 `ember_guard.json5` 属 `DEFAULT_FILES`。**注意**：`DEFAULT_FILES` 只在文件缺失时落地，老配置里的 `mobs/*.json5` 不会自动长出 `drops:` 键（R41 实测：测试服 R38 的 ember_guard 副本没有该键 → 死怪零产出） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 
 运行期生成物**不进 jar、不进 config**；jar 内的 `data/` 只放不会变的东西（如 `damage_type`）。
@@ -676,3 +677,35 @@ public Result castMob(LivingEntity caster, Entity target, String skillId, int co
 每次现生成会拿新 UUID → 冷却表干净 → 「连放第二次被拦」这条断言恒假通过。
 
 失败输出**必须带状态**（R40-d）：`COOLDOWN 112t` / `(chance 0)` / `(未掷中)` / `没配 skills`；`detail` 为 null 属缺陷。
+
+### 4.26 怪物掉落 `MobSpec.drops` + `MobDrops` + `DropRoll`（M6 第四层，R41 定稿）
+
+```java
+// com.redtale.project.mobs.MobSpec.Definition —— 10 → 11 字段，drops 在 skills 之后、source 之前
+public record Definition(String id, String name, String base, double scale, int level, boolean undead,
+                         Map<String, StatValue> attributes, Equipment equipment,
+                         List<SkillRef> skills, String drops, String source) {}
+
+// com.redtale.project.mobs.MobDrops —— GameHooks 构造期注册到 EVENT_BUS
+@SubscribeEvent public void onDrops(net.neoforged.neoforge.event.entity.living.LivingDropsEvent event);
+
+// com.redtale.project.core.RedtaleCore
+public java.util.Map<String, com.redtale.project.mobs.DropSpec.Definition> drops();   // 键 = 裸 id
+
+// com.redtale.project.mobs.DropRoll（纯函数，零 MC import）
+public static Result roll(DropSpec.Definition def, java.util.Random random);
+```
+
+四条口径（改之前先读 `PLAN.md` §13.44）：
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R41-a | `MobSpec.drops` 是**裸 id**，不补 `redtale_project:` | `DropSpec` 的 `id` 本来就是裸名；补前缀 = R22 的 `script` 字段那个坑（永远对不上） |
+| R41-b | 掉落表的 `item` 两种写法：**内容 id 用裸名**（`gem_ruby`）、**物品 id 带命名空间**（`minecraft:gold_nugget`）；写 `redtale_project:gem_ruby` 也会被容错认成内容 id | 内容栈 = 基底 id + `redtale_project:content` 组件（R5/R23），`BuiltInRegistries.ITEM` 里没有 `redtale_project:gem_ruby` |
+| R41-c | xp 走 `ExperienceOrb.award`（挂在 `LivingDropsEvent`），**不挂** `LivingExperienceDropEvent` | 后者只在「原版要发经验」时触发 = 有玩家击杀；`/kill` 一只原版牛 → 0 个经验球（实测对照）→ 无客户端验收永远看不见 |
+| R41-d | 掉落是**加项**：不 `clear()` 原版战利品、不重设经验 | 与 D15「只乘不覆盖」同一条纪律；自建怪的装备照掉 |
+
+`/redtale mob check` 的头行也变了（多了「掉落表 N 张」）：
+`[redtale] 怪物检查：<只数> 只 / 技能引用 <k> 条 / 掉落表 <t> 张[ · 引用完整 ✓ | / 问题 <n> 个]`，
+问题行格式：`  <名称> <id>: 掉落表 <ref> 不存在（现有 <t> 张：a, b…）`。
+
