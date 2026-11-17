@@ -478,6 +478,24 @@ SkillCooldowns.effectiveTicks(cd, reduction)            // 夹 [0, 0.9]，结果
 | 数值保护 | 自己写 `raw()` 读参：缺键/非数字/`NaN`/`Inf` → 缺省，**非正数原样返回**交调用方判跳过；`1e9` 硬顶 | 用 `DamageEffect.num` 会把 `strength: 0` 静默换成 0.4（实测踩过，R33-c） |
 | 验收手法 | 在**旁观者**的 `Motion` 上对账（`NoAI` 旁观者不动、不吃原版平砍击退、不吃实体碰撞），不看受害者 `Pos` | 受害者同时吃三份力，`Pos` 读不出归因（R33-d）。注意 `Motion` 会收敛到 0.8 不动点，此时本轮 `Δ` 显示 `0.00` 但仍在推 |
 
+### 4.20 M5-C 原语批次三：`stun`（R34 定稿）
+
+「定住」在 1.21.1 没有现成接口，本原语的做法与理由全部写在这里，改之前先读。
+
+| 原语 | 参数（缺省见括号） | 打谁 | 硬约束 |
+|---|---|---|---|
+| `stun` | `target`(`target`) · `radius`(**0** = 只定住目标，上限 32) · `duration_ticks`(60，`<=0` 跳过，上限 1200) | `radius 0` → `ctx.target()`；`>0` → 圈心内所有活体（圈心 = 受害者脚下），**施法者永不被自己定住** | `Mob#setNoAi(true)` + `Navigation#stop()` + 水平 `setDeltaMovement(0,·,0)`；非 `Mob`（玩家）退路 = `slowness` 7 级，**不是等价替代** |
+
+| 契约点 | 值 | 改了会怎样 |
+|---|---|---|
+| 定住手段 | 只对 `Mob` 用 `setNoAi(true)`。**不**用 `slowness 255` | `slowness` 是移动速度乘数，会被任何速度修正（装备 / 药水 / 第三方 modifier）抵消成「慢慢挪」，而且怪照样能打人 |
+| 在册标记 | 实体 scoreboard tag `redtale_stunned`（1.21.1 **已无** `Entity#getPersistentData()`），随 NBT 保存、`/data get entity @e[…] Tags` 可读 | 换回持久化 NBT 写法会编译不过；不写标记则重启后留下永久 `NoAI` 的怪，且没有任何日志能看出是谁干的 |
+| 恢复驱动 | `GameHooks#onServerTickPost` → `StunEffect.tick()`，按「截止时刻」轮询在册表（空闲时一次 `isEmpty`） | 用延时任务（`TickTask`）在关服/`/reload` 时会丢，怪就永久定住 |
+| 续定语义 | 同一实体被重复命中时**沿用首次记录的 `wasNoAi`**，只把截止时刻往后推（R34-b） | 每次重读当前状态 → 第二次读到的是「已被我们置 true」，解除时把怪**永久定住**（实测踩过） |
+| 重启残留 | `EntityJoinLevelEvent` → 带标记的实体入世即 `setNoAi(false)` + 清标记，恢复值取 `false` | 原 `wasNoAi` 已随重启丢失，「能动」比「永久定住」安全；不清则关服时正在挨打的怪下次上线就成木桩 |
+| 验收手法 | 看 `Tags` 是否有 `redtale_stunned` + `data get entity … NoAI`（1b）+ 日志 `[script] stun · <名> <n>t` / `stun 解除 · <名>（到点）` | 只看日志 = 验日志；`Tags` 是唯一能区分「本来就没 AI」与「被我们定住」的凭据 |
+
+
 ## 5. 路径约定
 
 | 用途 | 路径 |

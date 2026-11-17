@@ -78,8 +78,8 @@
 | 4 | `execute` | 直伤 | `threshold` 0.2（目标血量比例）· `damage_type` | — | 达标直接结算，不走倍率也不会暴击 |
 | 5 | `knockback` | 控场 | `strength` 0.4 · `radius` 0 | ✅ R33 | 推离施法者，走原版 `knockback`（吃 `KNOCKBACK_RESISTANCE`，抗性 1.0 位移逐位不变）；`radius 0` = 只推受害者 |
 | 6 | `pull` | 控场 | `strength` 0.4 · `radius` 6 | ✅ R33 | 反向击退（拉向施法者）+ 缺省半径 6；与 5 共用 `KnockbackEffect.shove` 一份位移实现（R32-d 口径）；玩家抗性由原版 `knockback` 打折，不需要额外 `no_knockback` 判断 |
-| 7 | `stun` | 控场 | `duration_ticks` 40 | — | 停 AI + 禁移动，**不**用 `slowness 255`（会被抗性减免） |
-| 8 | `slow` | 控场 | `amplifier` 1 · `duration_ticks` 100 | — | 原版 `slowness`，走 `MobEffect` |
+| 7 | `stun` | 控场 | `target` target · `radius` 0 · `duration_ticks` 60 | ✅ R34 | 停 AI（`Mob#setNoAi`）：不移动 / 不攻击 / 不放技能，**不**用 `slowness 255`（那是速度乘数，会被速度修正抵消成「慢慢挪」）。`radius 0` = 只定住目标；玩家没有「禁移动」接口，退路为 `slowness` 7 级（R34-a）。恢复按截止时刻轮询 + 进世界兜底清重启残留 |
+| 8 | `slow` | 控场 | `amplifier` 1 · `duration_ticks` 100 | — (不做) | **R34 拍：不单独做原语** —— `debuff` 写 `minecraft:slowness` 与它完全等价，多一条实现只会让「减益」与「控场」两套语义漂移；内容作者需要减速就用第 19 条 |
 | 9 | `dash` | 位移 | `distance` 4 · `duration_ticks` 6 | — | 分帧给速度，一次性 `setDeltaMovement` 会被服务端校正拉回 |
 | 10 | `teleport` | 位移 | `distance` 8 · `require_line_of_sight` true | — | 视线 raycast 落点，落点必须在可站立方块上 |
 | 11 | `leap` | 位移 | `up` 0.5 · `forward` 0.3 | — | |

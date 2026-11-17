@@ -1259,7 +1259,7 @@ fi
 - 2026-11-17 13:26 · 完成 · 只改 `core/command/ContentListCommand.java`（67→78 行，+11；新增唯一 `private static String abilitiesText(ItemContent)`，汇总行末尾 +` · 带技能 K 件`，每行 `· rev N` 后 +` · 技能 N: id1 · id2`，计数 `withAbilities` 同 `withWeaponAttributes` 写法无 stream）· build `--offline` EXIT=0（jar 407814 B）· `grep -c abilitiesText`=**2**、`grep -c "带技能 "`=**1**、jar 内该类=**1**、常量池 ` · 技能 `×1 / `带技能 `×1 / ` · 套装定义 `×1；探针 `build/probe/AbilListProbe.java` **7/7**（空→`-`、单条→`1: redtale_project:gale_slash`、两条→`2: a · b`、三条计数、分隔符、无内部类）
 - 2026-11-17 14:05 · **S7 验收通过（3/3）** · ①`gradle build --offline` EXIT=0（jar 407814 B）；②`grep -c abilitiesText`=**2**、`grep -c "带技能 "`=**1**；③jar 内 `core/command/ContentListCommand.class`=**1**；测试服（`Done` 后 RCON）`/redtale content list` → 10 行每行末尾都有 `· 技能 `、`demo_longsword` = `技能 1: redtale_project:gale_slash`、汇总行 `带技能 1 件`（与实测 1 件一致）；redtale 零 ERROR/WARN。S8 自写探针 `AbilListProbe` 7/7 未复跑（本就与卡面断言同源），以线上输出为准。
 
-### T-0028 · [OPEN] `tools/check_defaults.py` —— 默认配置清单双向对账
+### T-0028 · [VERIFIED] `tools/check_defaults.py` —— 默认配置清单双向对账
 
 - 派单：S7 · 2026-11-17 13:05
 - 目标：`ConfigStore.DEFAULT_FILES` 是**白名单**：只把配置文件放进 `resources/redtale/defaults/**` **不会**落地
@@ -1295,6 +1295,8 @@ fi
   三条都由 S8 自己跑并在进度行贴实测数字（第 2、3 条要贴「还原后 EXIT=0」那一次）。
 
 - 进度：
+2026-11-17 14:40 · 完成 · 新建 `tools/check_defaults.py`（81 行，纯标准库，零依赖；`DEFAULT_FILES` 块按 `);` 截断后正则取字面量）· 本卡不涉构建（卡面「不碰构建」），未取锁、未跑 gradle · 自测 5 项：①基线（从 `/` 调用亦可）`EXIT=0`、`清单 21 条 · 磁盘 21 个 · 问题 0 条`；②临时加 `"items/__probe__.json5"` → `EXIT=1` + `[仅清单有] items/__probe__.json5`；③移走 `crit.json5` → `EXIT=1` + `[仅清单有] crit.json5`；④额外放 `crit_extra.json5` → `EXIT=1` + `[仅磁盘有] crit_extra.json5`；⑤沙箱（`/tmp` 假仓库）造重复项 → `EXIT=1` + `[清单重复] crit.json5`，删 `ConfigStore.java` / 删 `defaults/` → `EXIT=2` + `找不到 …`（无 traceback）· 偏差：卡面验收第 3 条把「移走真实默认文件」预期成 `仅磁盘有`，语义上应为 `仅清单有`（已按实数贴）；`仅磁盘有` 方向另用 ④ 补测，两条方向都实测到 · 还原：`git diff --stat ConfigStore.java` 空、`git status --short src/main/resources` 空、`git status --short` 仅 `?? tools/check_defaults.py`
+   - **S7 验收（2026-11-17 15:16）→ VERIFIED，3/3，另补 exit 2 与反向分支**：①基线 `EXIT=0`、`清单 21 条 · 磁盘 21 个 · 问题 0 条`；②临时插 `"items/__probe__.json5"` → `[仅清单有] items/__probe__.json5` + `问题 1 条` + `EXIT=1`，还原后 `EXIT=0`、`git diff --stat ConfigStore.java` 空；③移走真实 `crit.json5` → `[仅清单有] crit.json5` + `EXIT=1`（**卡面第 3 条写成「仅磁盘有」是我写错，语义上就是「仅清单有」，采纳 S8 的偏差说明，不打回**）；另外补测 S8 未贴的一支：多放一份未登记 `crit_extra.json5` → `[仅磁盘有] crit_extra.json5` + `EXIT=1`，还原后 `EXIT=0`、`git status --short src/main/resources` 空；沙箱（只有 tools/ 的空目录）→ 打印 `找不到 src/.../ConfigStore.java` + `EXIT=2` 无 traceback。脚本 81 行、零第三方依赖、只读、路径自定位（从 `/tmp` 调用同样 21/21）。
 
 ### T-0029 · [OPEN] `core/skill/ManaPool` —— 法力池（M5 收口第一层，纯数据 + 注入 tick）
 
@@ -1359,6 +1361,81 @@ fi
      小数回复不丢 / 夹取 / 未知玩家 = 满蓝），跑出 `PASS` 总数并贴上来
 
 - 进度：
+
+### T-0030 · [OPEN] `mobs/MobSpec` —— 怪物定义解析器 v1（M6 第一层，纯解析）
+
+- 派单：S7 · 2026-11-17 15:25
+- 目标：D4「8 个模板实体 + 数据驱动」里**唯一能离线断言的那一层**——把 `mobs/*.json5` 解析成不可变快照。
+  本卡只做「身份 / 基础属性 / 装备 / 技能引用」四组字段；EntityType 注册、GeckoLib 模型、刷怪替换都由 S7 在后面接。
+  **不碰注册表、不碰实体类、不碰 `RedtaleCore`**（接线由 S7 在合流后做）。
+
+- 独占文件（**唯一可写文件**）：
+  - `src/main/java/com/redtale/project/mobs/MobSpec.java`（**新建**，≤200 行）
+  - 你自己的探针可放 `build/probe/MobSpecProbe.java`（`build/` 不入库）
+
+- 接口（**逐字照抄，不许改名/加参数/换返回类型**）：
+  ```java
+  package com.redtale.project.mobs;
+
+  import com.redtale.project.core.config.ConfigFile;
+  import java.util.List;
+  import java.util.Map;
+  import java.util.Set;
+
+  public final class MobSpec {
+      public static final Set<String> BASES;   // 8 个原型 id，不可变
+
+      public record SkillRef(String skillId, int cooldownTicks, double chance) {}
+
+      public record Equipment(String mainhand, String offhand, String head,
+                              String chest, String legs, String feet) {
+          public static final Equipment EMPTY;             // 六槽全 ""
+          public String slot(String name);                 // 认 6 个槽名，未知槽 / 空值 → ""
+      }
+
+      public record Definition(String id, String name, String base, double scale, int level,
+                               Map<String, com.redtale.project.core.math.StatValue> attributes,
+                               Equipment equipment, List<SkillRef> skills, String source) {}
+
+      public static Map<String, Definition> parse(List<ConfigFile> configs, List<String> warnings);
+  }
+  ```
+
+- 行为（每条都是断言点，别自由发挥）：
+  1. 只吃 `path` 以 `mobs/` 开头且以 `.json5` 结尾的配置，其余静默跳过；`configs == null` → 空表不抛。
+  2. `id`：`root.id` 必须是非空字符串且 `trim` 后非空，否则**跳过该条** + 1 条告警
+     `"<path>: id 缺失或不是字符串（必填），已跳过这条怪物"`。id **不做命名空间补全**（原样保留）。
+  3. `id` 重复：**保留先出现的**，后一条跳过 + 1 条告警（文案里带上先出现的 path）。
+  4. `name`：缺省 = `id`；写了但不是字符串 → 回落 `id` + 1 条告警；空串按缺省处理。
+  5. `base`：**必填**，必须是 `BASES` 之一，否则跳过该条 + 1 条告警。
+     `BASES` 逐字 = `melee` / `ranged` / `caster` / `summoner` / `charger` / `flyer` / `elite` / `ambient`。
+  6. `scale`：缺省 `1.0`；`<=0` / 非有限 / 非数字 → `1.0` + 1 条告警（非数字才告警）；合法值夹到 `[0.25, 4.0]`，**夹取本身不告警**。
+  7. `level`：缺省 `1`；小数**向下取整**，夹到 `[1, 1000]`；非数字 → `1` + 1 条告警。
+  8. `attributes`：直接调 `com.redtale.project.items.AffixPools.parseStats(JsonObject, String, List<String>)`，
+     返回 `Map<String, StatValue>`（与词条 / 套装 / 宝石同一条归一与曲线规则，**不要自己写第二份**，也**不要**降级成裸 `double`）；
+     缺失 / 不是对象 → 空表不告警。
+  9. `equipment`：认 6 个槽名（`mainhand` / `offhand` / `head` / `chest` / `legs` / `feet`）；
+     值必须是**非空字符串**，否则该槽记 `""` + 1 条告警；未知键 1 条告警（只报键名，不报值）。
+  10. `skills`：数组，每项对象；`skill` 必须是非空字符串（原样保留，**不做命名空间补全**），否则跳过该项 + 1 条告警；
+      `cooldown_ticks` 缺省 `100`，夹到 `[0, 1000000]`；`chance` 缺省 `1.0`，夹到 `[0.0, 1.0]`，非数字 → `1.0` + 1 条告警。
+  11. 三处不可变：`attributes` / `skills` / 返回的 `Map` 都包成不可变（`put` 抛 `UnsupportedOperationException`）；
+      返回用 `LinkedHashMap` 保文件顺序。
+  12. 告警一律「文件路径 + 文案」，**只进 `warnings`，不写日志、不抛异常**（与 `SkillSpec` / `SocketSpec` 同口径）。
+
+- 不要做：不 import 任何 `net.minecraft.*` / `net.neoforged.*`（**验收要 grep 为 0**）；
+  不读磁盘（`ConfigFile` 已解析好）、不写文件、不建快照类（`SkillRegistry` 那一层由 S7 写）；
+  不改 `ConfigStore` / `RedtaleCore` / `Builtins` / `docs/`；不加 `main` 方法。
+
+- 验收（全部自己跑，进度行贴实测数字）：
+  1. `gradle build --offline` → `EXIT=0`
+  2. `grep -c "net.minecraft" src/main/java/com/redtale/project/mobs/MobSpec.java` = **0**；
+     `wc -l` ≤ **200**；`grep -c "Map<String, Definition> parse(" ` = **1**
+  3. 自写探针 ≥ **30** 条断言覆盖上面 12 条（重点：id 三态 / 重复保先 / base 非白名单跳过 /
+     `scale` 夹取与非法回落 / `level` 向下取整 / `attributes` 与 `AffixPools` 同源 / 未知装备槽 / `skills` 坏项跳过 /
+     三处不可变 / 键序不随解析变化），跑出 `PASS` 总数并贴上来
+
+- 进度：
+
 
 ## 6. 派单池（S7 用，S8 不看）
 
