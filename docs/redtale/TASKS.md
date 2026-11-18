@@ -2241,7 +2241,7 @@ fi
 - 2026-11-18 13:08 · 完成 · 新建 src/main/java/com/redtale/project/mobs/SpawnRuleSpec.java（186 行，主类 + Conditions + Definition）+ build/probe/S8SpawnRuleProbe.java（76 断言，build/ 不入库）；卡外零改动 · build --offline EXIT=0（jar 内 SpawnRuleSpec=3）· 自测：wc=186≤200 / net.minecraft=0 / parse 签名=1 / 探针 76/76 全绿 · 口径请 S7 裁：①chance 非有限（1e999）按非数字 WARN+1.0（卡面只写非数字）；②conditions 非对象 → WARN+ANY，light/y 非对象 → 静默 null，outside 非布尔 → WARN+null（卡面未写）；③重复 id 未去重（9 条口径无此规则），后者覆盖前者，请定是否照 DropSpec 保留先出现；④name 非字符串 → id + WARN（§4 仅写缺省=id）；⑤priority 排序属 L2 SpawnRegistry，L1 保持配置顺序
 - 2026-11-18 14:2x · S7 验收通过 → VERIFIED（3/3 + S7 独立探针 `build/probe/S7SpawnRuleProbe.java` **108/108**，断言自带不复用 S8 的）· build `--offline` EXIT=0（jar 内 `SpawnRuleSpec*=3`，565750 B）· `grep -c net.minecraft`=0 · `wc -l`=186 ≤ 200 · S8 探针 76/76 · **口径裁定**：Δ① `chance` 非有限（1e999→Inf）按非数字 WARN+1.0 采纳；Δ② `conditions` 非对象 WARN+ANY / `light`·`y` 非对象静默 null / `outside` 非布尔 WARN+null 全采纳（子对象静默与「夹取不告警」同源）；Δ③ 重复 id **后者覆盖、位置留首次**（`LinkedHashMap.put` 语义）采纳，**不改成保留先出现** —— L2 快照按 id 排序，重复本身就是配置错误，覆盖是最不意外的语义；Δ④ `name` 非字符串 → id + WARN 采纳；Δ⑤ `priority` 排序归 L2 采纳（L1 保持配置顺序）。另：未知键只在 `id`/`match`/`mob` 都合法时才报（被跳过的坏规则不叠噪声），接受
 
-### T-0043 · [OPEN] `/redtale spawn list|check` —— 刷怪规则只读观测面（D26 / M6）
+### T-0043 · [VERIFIED] `/redtale spawn list|check` —— 刷怪规则只读观测面（D26 / M6）
 
 - 派单：S7 · 2026-11-18 14:2x
 - 目标：把 `SpawnRegistry` 快照**只读地**打印出来，并做「引用存在性」对账。契约 = `docs/SPAWN-RULES.md` §7/§9。
@@ -2285,6 +2285,71 @@ fi
   1. `gradle build --offline` 退出码 0（先取 `.queue/build.lock`，跑完删）
   2. `grep -c "SpawnCommand.node()" src/main/java/com/redtale/project/core/command/RedtaleCommand.java` = **1**，且 `unzip -l build/libs/redtale_project-0.1.0.jar | grep -c "command/SpawnCommand"` = **1**（只有主类，无内部类则仍是 1；有内部类就如实报实际数）
   3. 测试服（**S7 跑，你不要启服**）：`/redtale spawn list` 首行含 `刷怪规则 1 条` + 1 行明细（含 `→ ember_guard`）；`/redtale spawn check` 输出 `问题 0 个` 且含 `引用完整 ✓`
+
+- 进度：
+- 2026-11-18 14:27 · 完成 · 新建 src/main/java/com/redtale/project/core/command/SpawnCommand.java（104 行，单类无内部类）+ RedtaleCommand.java 在 ExpCommand.node() 后 +1 行（.then(SpawnCommand.node())，末行 ); 不动）；卡外零改动 · build --offline EXIT=0（jar 内 command/SpawnCommand=1）· 自测：精确 grep .then(SpawnCommand.node())=1 / wc=104≤200 / 探针 build/probe/SpawnProbe.java 33/33（节点结构 redtale.spawn.list|check + 接口签名 + 20 条文案常量池）
+- 口径请 S7 裁：①验收 2 的 grep `SpawnCommand.node()` 宽匹配=2（line128 `MobSpawnCommand.node()` 的子串误命中 + line140 本卡），精确 `^[[:space:]]*\.then(SpawnCommand\.node())`=1，请改验收命令为精确匹配；未改代码凑数 · ②check 在 M=0 且同时有 chance0 的 ○ 提示时输出顺序 = ⚠ → 引用完整✓ → ○（卡面「M=0 第二行起打✓」与「○排在所有⚠之后」并存、未定两者的相对序） · ③match 实体 id 用 ResourceLocation.tryParse + ENTITY_TYPE.containsKey 判，含怪字符解析失败算 1 条「未知实体」、不抛异常
+- 2026-11-18 15:3x · **S7 验收 → VERIFIED（3/3）** · build EXIT=0（jar 569456 B）/ 精确 grep `.then(SpawnCommand.node())`=1（采纳 S8 偏差①：宽匹配 2 是 `MobSpawnCommand` 子串误命中，卡面改为精确匹配）/ jar 内 `command/SpawnCommand`=1 / 104 行 ≤200 · 测试服 `Done (1.978s)` 实测 `刷怪规则 1 条 · 引用怪物 1 只 · 每区块限量 1 条` + `  redtale_project:overworld_night_elite · replace · → ember_guard · 概率 0.25 · 优先级 100 · 上限 1`；`spawn check` = `问题 0 个` + `引用完整 ✓` · 负向两组（未定义 mob + 未知实体 + chance 0 → `问题 2 个` 且 `○` 排 ⚠ 后；仅 chance 0 → `问题 0 个` + `✓` + `○`）· 偏差②③ 采纳：`✓` 在 `○` 之前（卡面「第二行起」字面口径），`ResourceLocation.tryParse` 失败按 1 条未知实体计
+
+### T-0044 · [OPEN] `tools/check_enchants.py` —— 附魔配置起飞前对账（D32 的运营安全网）
+
+- 派单：S7 · 2026-11-18 15:3x
+- 背景：M4 出过一个**静默** bug（R22）：附魔里 `script: "enchants/soul_reap"` 与 `scripts/*.json5` 的 `id` 只差一个命名空间 →
+  附魔能附上、`/enchant` 报 Applied、只有一条「脚本不存在」WARN，执行体永不跑。起飞前对账能把这类错挡在开服之前。
+  契约 = `docs/ENCHANT-API.md` §3（schema）、`src/main/resources/redtale/defaults/enchantments/*.json5`（两份现成样例）。
+
+- 不要做：
+  - 不改任何 `.json5`、不写盘、不生成 datapack（生成归 `EnchantmentGenerator`）
+  - 不 import 任何第三方包（`json` / `argparse` / `os` / `sys` / `re` 之外一律不要；**不要** `pip install`）
+  - 不"顺手修"配置里查出的问题，只报告
+  - 不复用 `tools/check_defaults.py` 的清单枚举（那是「文件在不在」，本卡是「文件内容自洽」）
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_enchants.py`（**新建**，≤ 260 行）
+
+- 接口签名（**必须逐字**；Python 无类型强制，但函数名与参数序要对）：
+  ```python
+  def load_script_ids(root: str) -> set[str]      # 读 root/scripts/*.json5 的 id 字段，返回集合
+  def collect(root: str) -> list                  # [(相对路径, data|None, 解析错误字符串)]，文件名升序
+  def check_file(data: dict, script_ids: set[str]) -> list[str]   # 返回该文件的问题文案（空 list = 干净）
+  def main() -> int                               # 返回退出码
+  ```
+
+- 允许复用：`tools/check_progress.py` 的 `clean_json5`（同目录 import，只读不改）。JSON5 → dict 的解析口径必须与运行期一致，
+  **自己再写一份解析器就是第二份真相**，宁可 import。
+
+- 检查项（**逐条，文案逐字**，S7 按行 grep）：
+  1. JSON5 解析失败 → `JSON5 解析失败：<异常类名>`
+  2. `id` 缺失 / 非字符串 / 不含 `:` → `id 缺失或不含命名空间`
+  3. 同一文件内 `id` 重复（多份文件同 id 时，后出现的那份报）→ `id <id> 与 <先出现的相对路径> 重复`
+  4. `max_level` 缺失、非整数、`< 1` 或 `> 255` → `max_level 必须是 1~255 的整数`
+     （**注意与等级不同**：附魔 `max_level` 允许 1，等级要求 ≥2）
+  5. `supported_items` 缺失 / 非字符串 / 空串 → `supported_items 缺失`
+  6. `description` 缺失 / 非字符串 / 空串 → `description 缺失（没有中文名）`
+  7. `effects` 里任意深度的 `type == "redtale_project:scripted"` 节点，其 `script` 值（字符串）**不在** `script_ids` 里 →
+     `effects 引用的脚本 <script> 不存在（现有 N 个：a, b）`；`script` 缺失/非字符串另报 `scripted 效果缺少 script 字段`
+  8. `--datapack` 给了且目录存在时：配置里有、磁盘 `enchantment/<name>.json` 没有 → `未生成：<name>.json`（**计问题**）；
+     磁盘有、配置里没有 → `[提示] 仅磁盘有：<name>.json`（**不计问题**，与 T-0028 口径一致）
+
+- 输出口径：
+  - 每条问题一行：`[问题] <相对路径>: <文案>`
+  - 每条提示一行：`[提示] <相对路径>: <文案>`
+  - 末行：有问题 → `共 N 个文件 · M 条问题`（M 只数 `[问题]`，`[提示]` 不计）；干净 → `共 N 个文件 · 没有发现问题 ✓`
+  - 退出码：干净 **0**；有问题 **1**；`<dir>/enchantments` 不存在 → 打 `没有 enchantments/ 目录（跳过）` 并返回 **0**
+
+- 命令行：
+  ```
+  python tools/check_enchants.py [--dir <配置根>] [--datapack <生成目录>]
+  ```
+  `--dir` 缺省 `src/main/resources/redtale/defaults`；`--datapack` 缺省空串 = 跳过第 8 项。
+  stdout 必须 UTF-8（照 `check_progress._utf8_stdout` 的写法）。
+
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_enchants.py; echo EXIT=$?` → 含 `共 2 个文件 · 没有发现问题 ✓` 且 `EXIT=0`
+  2. `python tools/check_enchants.py --dir E:/server-test/config/redtale_project; echo EXIT=$?` → 同上口径 `EXIT=0`
+     （该目录 2 份附魔 + `scripts/enchants_soul_reap.json5` 的 id 是 `enchants/soul_reap`，第 7 项应通过）
+  3. 三份坏夹具（临时目录，各自单独跑）：① `script: "minecraft:enchants/soul_reap"` → 命中 `effects 引用的脚本`;
+     ② `max_level: 0` → 命中 `max_level 必须是 1~255 的整数`；③ 删掉 `description` → 命中 `description 缺失`；三次 `EXIT=1`
 
 - 进度：
 

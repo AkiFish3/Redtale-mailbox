@@ -24,7 +24,7 @@
 | `com.redtale.project.items` | `ContentData` / 基底 / 解析 / 建栈 / tooltip / `ContentItem`（唯一物品行为类，R15）/ `Repairer`（修理唯一结算点，R16） | 有 |
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
-| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）**。**刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
+| `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）** + **`SpawnReplacer`（自然刷怪替换执行层，L3，R48）**。M6 四条链路齐全（生成 / 技能 / 掉落 / 刷怪替换） | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
 | `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，L1）+ `ProgressSpec` 定义解析（T-0039，L2）+ **`ProgressRegistry` 快照（R44，L2，属性键过 80 条表并归一）+ `ProgressRules`（`progression.json5`）** + `ProgressStore` 存档 `SavedData`（R43，L3）+ **`ProgressService` 服务层（R45，L4：经验分配 / 等级派生 / 按级属性下发）** | 有：`RedtaleCore.progress()`（`ProgressRegistry`）/ `progressRules()`；`ProgressStore.get(server)` / `factory()`、`ProgressService.award/applyAttributes/mainLevel` 直接可用；契约见 `docs/PROGRESSION.md` |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
@@ -551,6 +551,7 @@ public final class MobSpawner {
 | 不做 | 技能释放（M6 第 4 步）、刷怪替换、AI 差异、落盘等级字段 |
 
 命令面：`/redtale mob list`（id / 原型 / 等级 / 装备件数 / 技能条数 / 体积）、`/redtale mob spawn <id> [x y z]`（坐标缺省取命令源位置，返回 1/0）。**验收前先 `forceload`**（R38-d）。
+刷怪替换观测面（R48）：`/redtale spawn replace`（开关 + 已命中规则数）、`replace on|off`、`replace probe <实体> <x> <y> <z>`（只读决策树）、`replace fire <实体> <x> <y> <z>`（造真事件 POST 到总线，返回 DEFAULT/FAIL/SUCCEED）。
 
 
 ## 5. 路径约定
@@ -837,3 +838,42 @@ public com.redtale.project.mobs.SpawnRegistry spawnRules();
 | R47-b | 悬空 `mob` → **1 条 WARN + 规则保留**；L3 见悬空**不拦**（回落原版照生成） | 「先写规则、后补怪物定义」是正常运营动作；执行层不拦是 SPAWN-RULES §8 红线 5：宁可少替换，不可把刷怪量改小 |
 | R47-c | 排序 = `priority` 降序 → `id` 升序（全序，结果唯一） | 只按 `priority` 排时同优先级顺序取决于配置加载顺序，换机器就漂 |
 | R47-d | L1 保持配置顺序、**排序只在 L2**；`declared()` / `ordered()` 两个视图并存 | 一个视图两用会逼调用方自己再排一次 = 第二份真相（R36-a） |
+
+### 4.29 刷怪替换 `SpawnReplacer`（D26 / M6 第三层，R48 定稿）
+
+```java
+package com.redtale.project.mobs;
+
+// com.redtale.project.mobs.SpawnReplacer —— 单例；GameHooks 构造期 install()，tick 尾 drain
+public static void install();                                   // 注册到 NeoForge.EVENT_BUS，幂等之外无副作用
+public static com.redtale.project.mobs.SpawnReplacer get();
+public boolean enabled();
+public boolean setEnabled(boolean value);                       // 只影响后续刷怪；已入队的补生成照跑
+public int hitRules();                                          // 已命中过的规则数（观测用）
+
+// 唯一判定点：match → conditions → 可行性 → 每区块上限 → 掷骰
+public Verdict decide(net.minecraft.server.level.ServerLevel level, net.minecraft.world.entity.EntityType<?> type,
+                      double x, double y, double z, java.util.function.DoubleSupplier roll);
+public String explain(net.minecraft.server.level.ServerLevel level, net.minecraft.world.entity.EntityType<?> type,
+                      double x, double y, double z);             // 决策树逐条文字化，只读
+public void tick(net.minecraft.server.MinecraftServer server);   // 每 tick ≤8 只排空队列
+
+// record Verdict(boolean replace, boolean add, String ruleId, String mobId, String reason)
+```
+
+事件钩子：`net.neoforged.neoforge.event.entity.living.MobSpawnEvent.PositionCheck`（**唯一**钩子，`FinalizeSpawn` 在 21.1.257 只覆盖刷怪笼，见 R42-c）。
+
+六条口径（改之前先读 `PLAN.md` §13.51）：
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R48-a | 事件里**只**决策 + 入队 + `setResult(FAIL)`；生成一律 `ServerTickEvent.Post` 排空（每 tick ≤8） | 事件在 `NaturalSpawner` 循环里，同步生成撞并发修改；限量防一批命中多只时同 tick 堆实体 |
+| R48-b | `decide()` 是唯一判定点（事件与命令共用），判定顺序固定；`explain()` 只读 | 命令自己再判一遍 = 第二份真相（R36-a）；顺序固定保证 RNG 消耗不依赖实体数 |
+| R48-c | 可行性（`mobs().get(rule.mob()) == null`）必须在 `setResult(FAIL)` **之前**判；不可行 → 不拦 | `FAIL` 之后无法回滚（SPAWN-RULES §8 红线 5）。代价：`FAIL` 了但 spawn 失败 = 少一只，只留一条 WARN |
+| R48-d | `action`：`replace` = 拦 + 生成；`add` = 不拦 + 额外生成 | `add` 是加量，不是「换成两只」 |
+| R48-e | 无玩家在线 → 自然刷怪不跑 ⇒ 验收用 `spawn replace fire` 造真事件；真人验收挂账 | `fire` 走同一根总线、同一批监听器、同一条决策链 |
+| R48-f | 生成沿用事件坐标（不做落地校正）；高空 `fire` 会落地吃摔伤 | 验「有没有生成」看 `Tags` / `type`，不看血量绝对值（R40-c 同源） |
+
+**新坑（R48 实测）**：`BuiltInRegistries.ENTITY_TYPE.get(未知 id)` 返回 **`pig`**（注册表默认值），必须 `containsKey` 先判；
+srg 编译面 `Entity` **没有** `entityTags()`（用 `getTags()`）；`BlockPosArgument.getLoadedBlockPos` 声明受检异常而 `getBlockPos` 不声明；
+实体 id 参数用 `ResourceLocationArgument.id()`（`StringArgumentType.string()` 不吃冒号，R40 老坑第三次复发）。
