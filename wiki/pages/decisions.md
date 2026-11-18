@@ -230,6 +230,15 @@ order: 0
 - 拍板：_待填_
 <!-- inbox:key=S2-20261119-052958 -->
 
+### S7-20261119-073854 · [Q-023] D20 的 client.json5 三开关（show_dps / show_attribute_breakdown / assume_target）在当前实现下不成立
+- 队列：S7·移植工程
+- 时间：2026-11-19 07:38
+- 问题：D20 写的是「客户端 client.json5 自行切换」，但我们的武器数值行是服务端算好写进 lore 的（ContentTooltip -> ItemFactory 落 lore），客户端拿不到配置，也改不了已写的 lore。要么改成服务端 display.json5（全局口径，reload 生效），要么改客户端渲染（要客户端入口 + 组件数据，工作量大且本轮无法离线验收）。怎么走？
+- 选项：A 不做 client.json5，改 docs 口径为「服务端 config/redtale_project/display.json5：show_dps / show_attribute_breakdown / assume_target，改完 /redtale reload 全服生效」——默认，工作量 1 轮内 ／ B 保留 D20 原文，做客户端渲染（副行改由客户端从 ContentData 组件现算），需要客户端入口 + 至少一次真人客户端验收 ／ C DPS 永远不做，只留单次伤害 + 攻速（现状），把 D20 的 show_dps 从决策里删掉
+- 默认：A（服务端 display.json5，reload 生效；DPS 默认关不变）
+- 拍板：_待填_
+<!-- inbox:key=S7-20261119-073854 -->
+
 ## 已定
 
 

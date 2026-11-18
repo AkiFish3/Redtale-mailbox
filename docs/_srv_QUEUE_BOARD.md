@@ -227,6 +227,10 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-19 06:4x · S7 · 验收 **T-0056 → VERIFIED**（3/3：基线 `共 3 份来源 · 0 条问题` / 五组独立负向夹具全 EXIT=1（删行·改字母·改落点·重复 id·缺 lang 键）/ `wc`=150 ≤200、无第二份清洗器、未碰 check_all；边界 4 组独立复核全对） · **接线** `check_all.py` 追加 `check_attrs.py` → 末行 `共 10 个脚本 …` → **`共 11 个脚本 · 跑成 11 · 跳过 0 · 红 0`** · **派 T-0057**（`tools/check_numeric.py` 数值面四份配置起飞前对账：D19 `min_attack_delay_ticks ≥ 1.0` 红线 / 属性 token 三形态 / `conditional_attributes` 只认 pvp·pve·undead / `hardCeiling ≤ 1e9`；5 类负向）→ 在制品 **1/3** · 本轮无 Java 改动、未构建、未启测试服 · 下一步：验 T-0057
 
+- 2026-11-19 06:36 · S8 · T-0057（tools/check_numeric.py 数值面四份配置起飞前对账）做完自测 → DONE：基线 EXIT=0「共 4 个文件 · 0 条问题」；负向夹具 EXIT=1 五类全命中（物理地板 / crit 未知属性 / percent_attributes 拼错 / conditional 未知键 boss / hardCeiling 超顶）+ crit 截断解析失败且其余三份照查；边界 --java 读不到时跳过属性检查但物理地板照报；wc=178≤200、clean_json5 复用 0 份、check_scripts 回归 EXIT=0 · 改 tools/check_numeric.py（新建 178 行，唯一文件）、docs/TASKS.md（本卡 DONE/进度）、协作板 §3 · 纯 Python 卡未取锁未 build、未启停任何服务器 · 下一步：待 S7 验收 T-0057；接线 check_all 归 S7
+
+- 2026-11-19 07:4x · S7 · 验收 **T-0057 → VERIFIED**（3/3：基线 `check_numeric.py` EXIT=0 末行逐字 `共 4 个文件 · 0 条问题` / 夹具 A 五类负向全命中 5 条（物理地板 `0.0`·`critical_strike_pwer`·`phsical_damage`·`boss` 未知键·`hardCeiling 2.0e9`）、夹具 B（截断 `crit` + 地板 0）得 `解析失败`+`attack_speed` 各 1 条 ⇒ 单份坏掉不连带其余三份 / `wc`=178≤200、`grep def clean_json5`=0、`check_scripts` EXIT=0；S7 另跑 14 组边界全对） · **接线** `check_all` 追加 `check_numeric` → **`共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0`** · **派 T-0058**（`tools/check_contracts.py` 契约文档 ↔ 源码单向漂移检测：只扫 `### 4.x` 标题行、正文原版类不扫、成员只验标识符不验形态、反向只作提示；三组负向）→ 在制品 **1/3** · **新增 `docs/REALPLAYER-WINDOW.md`**：把散在 20 多轮的真人挂账收成 A~E 五组 29 条可勾选清单（命令+期望+判据），标明 D1~D3=M4 出口、B2~B3=M6 出口、C1~C7=M7 出口 · 本轮无 Java 改动、未构建、未启测试服（正式服/测试服整轮未动）、无构建锁 · 留下 `E:\RedtaleProject`（`PLAN.md` §13 R62 + §13.65、`docs/TASKS.md`、`docs/REALPLAYER-WINDOW.md`、`tools/check_all.py`） · 下一步：验 T-0058；真人窗口照清单一次收完（等 Aki）；**新开 Q-023**（D20 的 `client.json5` 三开关在「服务端写 lore」模型下不成立）
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -257,6 +261,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-021 | S7 | `[Q-021]` 技能树洗点（`respec`）收不收费：`SKILL-TREE.md` §3 示例写 `respec: { cost: { currency: "coin", amount: 500 }, cooldown_hours: 24 }`，但 D28 经济是「可选桥接」，**当前没有货币实现**，扣钱无处可扣 | **默认：洗点免费，`respec` 段只解析不执行**（不扣 coin、不做 24h 冷却），L2 只保证不告警；等 D28 经济桥接上线再按配置启用，届时「扣什么」由经济层给。备选 B = 先上冷却不扣钱（挡频繁洗点）；C = 洗点要管理员命令（`/redtale tree respec <player>`），玩家自助关闭 |
 
 | Q-022 | S7 | `[Q-022]` M5 原语范围：`docs/SKILLS.md` §4 定了 25 条，**实际注册 13 条**（buff/console_log/damage/damage_aoe/dash/debuff/grant_exp/heal/knockback/message/projectile/pull/stun）；`execute`/`ignite`/`cleanse`/`shield`/`damage_over_time`/`teleport`/`leap`/`beam`/`aura`/`summon`/`trap`/`fx` 未实现（`slow` 与 `debuff` 语义重叠，可裁）。加原语 = 换 jar（D17），一次补齐还是按需补 | **默认：按需补，不一次补齐**——先用现有 13 条 + 条件/args 组合做内容，真拼不出来再补（每补一批换一次 jar）；`slow` 直接裁掉（`debuff` + `minecraft:slowness` 已覆盖）。若 Aki 要「25 条一次到位」，下轮按 5 张卡拆给 S8（每卡 2~3 条原语） |
+
+| Q-023 | S7 | `[Q-023]` D20 原文「武器 tooltip 由客户端 `client.json5` 自行切换（`show_dps` / `show_attribute_breakdown` / `assume_target`）」——但我们的数值行是**服务端算好写进 lore** 的（`ContentTooltip` → `ItemFactory`），客户端既读不到配置也改不了已写好的 lore；三个开关**至今一行未实现**（`grep show_dps` 全仓 0 命中） | **默认：A = 不做 client.json5**，改口径为「服务端 `config/redtale_project/display.json5`，三个开关改完 `/redtale reload` 全服生效；DPS 默认仍关」。理由：①不需要客户端入口，也不需要真人客户端验收（可直接 RCON 验）；②与 D14「全内容可配 + 热重载」同一条路；③`assume_target` 本来就只影响 DPS 计算，服务端算更准。备选 B = 保留原文做客户端渲染（要客户端入口 + 至少一次真人验收）；C = 砍掉 `show_dps`（DPS 永不做，现状即终态） |
 
 ---
 

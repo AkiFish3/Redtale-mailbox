@@ -3005,7 +3005,7 @@ fi
   **已知噪声（不判退，记 §13.64 R61-a）**：删 1 行会连锁报 75~78 条 `序号不连续`（第 7 条按卡面「断 → 报一行」逐行实现，卡面未写「只报第一处」），真信号（条数不一致）被淹到第 1 行之后仍是首行、可读，故不判缺陷；若要收敛需另开卡改「只报第一处」。
   **连带**：`check_all.py` 末尾追加 `check_attrs.py` → 末行 `共 11 个脚本 · 跑成 11 · 跳过 0 · 红 0`（R60 §13.63 下一步第 1 条的预判当场兑现）。
 
-### T-0057 · [OPEN] `tools/check_numeric.py` —— 数值面四份配置起飞前对账（`attack_speed` / `crit` / `damage` / `progression`）
+### T-0057 · [VERIFIED] `tools/check_numeric.py` —— 数值面四份配置起飞前对账（`attack_speed` / `crit` / `damage` / `progression`）
 
 - 派单：S7 · 2026-11-19 06:3x（R61）
 - 背景：这四份配置是**运行期「写错不报错，只 WARN 然后回落默认」**的那一类（`AttackSpeedRules.parse` / `CritRules.parse` / `MultiplierRules.parse` / `DamageRules` 全部走「坏值 → 默认值 + 一条 warnings」）。后果是：`percent_attributes` 里把 `physical_damage` 拼成 `phsical_damage`，玩家伤害**静默掉 100%**，日志只有一条 WARN 淹在 reload 输出里；`min_attack_delay_ticks` 写成 0.5 会让「物理地板」失效（D19 唯一保留的硬红线）；`conditional_attributes` 写了 `boss:` 这个键会被直接跳过（`TargetClass.KEYS` 只有 pvp/pve/undead）。编译器一条都管不到，`/redtale validate` 也不看这四份。本卡做只读对账，套路与 `check_scripts.py` 一致。
@@ -3075,6 +3075,52 @@ fi
   2. 自编负向夹具（临时目录复制四份 json5，`--dir` 指过去，跑完删除）：退出码 1，必须命中 **5 类** —— ①`min_attack_delay_ticks: 0` → 物理地板问题 ②`crit.power_attribute` 改成 `critical_strike_pwer` → 未知属性 ③`damage.multiplier.percent_attributes` 追加一项 `phsical_damage` → 未知属性 ④`damage.multiplier.conditional_attributes` 加 `boss: []` → 未知键 ⑤`damage.sanity.hardCeiling` 改 `2.0e9` → 超硬顶；另需命中 **1 条**文件截断的 `解析失败`（截断 `crit.json5`），并确认**其余三份照查**（`attack_speed` 的问题仍出现）
   3. `wc -l < tools/check_numeric.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_numeric.py` → **0**；`python tools/check_scripts.py >/dev/null; echo $?` → **0**（既有工具零回归）
 
+- 进度：
+- 2026-11-19 06:36 · 完成 · tools/check_numeric.py（新建 178 行，唯一文件） · 构建退出码：未构建（纯 Python 卡，验收不含 build） · 自测：验收 1 基线 EXIT=0 末行逐字「共 4 个文件 · 0 条问题」；验收 2 负向夹具 EXIT=1 五类全命中（①min_attack_delay_ticks=0 物理地板 ②crit.power_attribute=critical_strike_pwer 未知属性 ③percent_attributes 追加 phsical_damage 未知属性 ④conditional_attributes 加 boss:[] 未知键 ⑤hardCeiling=2.0e9 超硬顶）+ crit 截断「解析失败」且 attack_speed 问题仍出现（其余三份照查）；验收 3 wc=178≤200、grep -c def clean_json5=0、python tools/check_scripts.py EXIT=0（零回归）；边界补测 --java 读不到 → 记 1 条「属性表读不到」并跳过所有属性解析类检查、物理地板检查照做（EXIT=1，2 条问题）；py_compile OK，夹具与临时脚本已清，git status 仅 TASKS.md + 新脚本
+- 备注：本卡为纯只读对账，接线进 check_all.py 是 S7 在 VERIFIED 之后的事，S8 未碰 check_all.py；测试服启停/游戏内指令均未涉及，待 S7 验收。
+- 验收：2026-11-19 07:4x · S7 · **通过（VERIFIED）** · 3/3 —— ①基线 EXIT=0、末行逐字 `共 4 个文件 · 0 条问题`；②夹具 A（五项同时改）EXIT=1 五类全命中（物理地板 0.0 / `critical_strike_pwer` / `phsical_damage` / `boss` 未知键 / `hardCeiling 2.0e9`）共 5 条、夹具 B（截断 crit + 地板 0）EXIT=1 得 `解析失败` 与 `attack_speed` 问题各 1 条 ⇒ 单文件坏掉不连带其余三份；③`wc`=178≤200、`grep -c "def clean_json5"`=0、`check_scripts` EXIT=0、`py_compile` OK。S7 另跑 14 组边界：缺文件 / `--java` 读不到（只报 1 条并跳过属性类检查，地板照查）/ `progression` 顶层数组 / haste `per_level` 非 0 / `damage_types ["*"]` / `condCount` 布尔与 1.5 / category `type` 重复 / `mob_exp_multiplier` 2e9·-0.5·`"fast"` / `max_chance -1` / `effect_attack_speed` 值非对象 —— 全部按卡面文案命中。裁定：`condCount=true` 打印 `True`（Python `str(True)`），文案仍逐字一致，不判退。接线进 `check_all.py` 后末行 `共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0`（R62 已做，见 §13 R62）。
+
+
+### T-0058 · [OPEN] `tools/check_contracts.py` —— 契约文档 ↔ 源码对账（`docs/CONTRACTS.md` 的单向漂移检测）
+
+- 派单：S7 · 2026-11-19 07:4x（R62）
+- 背景：`docs/CONTRACTS.md` 有 **38 段** `### 4.x` 契约，声明了 24 个类 + 10 个 `类.成员` 签名。这份文档是 S8 唯一能看的「接口真相」，但**没有任何机器检查**——类一改名（或成员被挪走），文档继续写旧名字，下一个人按文档写码就编译不过，而且没人知道是文档旧了还是代码错了。`check_attrs` 管的是属性表、`check_deps` 管的是依赖面，没有一个管契约文档本身。本卡做**单向** docs→java 对账。
+- 独占文件（**唯一可写**）：
+  - `tools/check_contracts.py`（**新建**，≤ 200 行）
+- 入参（两个都给默认值，负向夹具靠它们指到临时副本）：
+  ```
+  --docs  默认 docs/CONTRACTS.md
+  --java  默认 src/main/java
+  ```
+- 解析口径（写死，别「聪明」到正文里去）：
+  - 只处理以 `### 4.` 开头的标题行（到文件末尾或下一个 `### ` / `## ` 前即段落边界；**本卡只看标题行本身**，正文不扫）。
+  - 标题行里反引号包起来的 token：`` `Xxx` ``。
+  - **类名 token**：`^[A-Z][A-Za-z0-9]{2,}$` 且至少含一个小写字母（排除 `V11` / `D25` / `M4` / `JAVA` 这类全大写或纯编号）。
+  - **成员 token**：`^([A-Z][A-Za-z0-9]{2,})\.([A-Za-z_][A-Za-z0-9_]*)$`，前段是类名、后段是成员名（**不要求带括号**，`MobSpec.undead` / `MultiplierRules.Category` 这类字段/嵌套类型也算合法写法，只验标识符在不在，不验形态）。
+  - 其它（`use` / `repair` / `/redtale tree` / `unlock_skill` / `tree info` / `buff`）**一律忽略**，不计入任何统计。
+- 检查项（每条问题一行 `[问题] <文案>`；提示行 `[提示] <文案>`，提示**不计问题数**）：
+  1. `--docs` 读不到 → `[问题] 契约文档读不到：<路径>`，退出码 1
+  2. 标题行里一段 `### 4.` 都没有 → `[问题] 没有找到任何 ### 4.x 契约段`，退出码 1
+  3. `--java` 目录不存在 → `[问题] 源码目录不存在：<路径>`，退出码 1
+  4. 类名 token 在 `--java` 树里没有同名 `<Class>.java` → `[问题] 第 <行号> 行声明的类 <Class> 不存在`
+  5. 成员 token 的类存在、但该 `.java` 文件正文里搜不到 `\b<成员>\b` → `[问题] 第 <行号> 行声明的 <Class>.<成员> 在 <相对路径> 里找不到`
+     - 类本身不存在时只报第 4 条，**不要**再叠一条第 5 条
+  6. 反向提示（不计问题、不影响退出码）：`--java` 树下 `core/` 里、**排除** `core/command/` 与 `core/script/builtin/` 的类，若整份 CONTRACTS.md 从未出现该类名 → `[提示] 未登记的实现类：<Class>`。子目录递归，但只这两处排除
+  7. 收尾固定一行：`共 <段数> 条契约 · <声明类数> 个声明类 · <提示数> 条提示 · <问题数> 条问题`（声明类数 = 去重后的类名 token 数，含成员 token 的前段）；问题数 > 0 → 退出码 1，否则 0
+- 不要做：
+  - 不改 `docs/CONTRACTS.md`、不改任何 `*.java`、不碰 `check_all.py`（**接线是 S7 在 VERIFIED 之后做的事**）
+  - 不扫契约段正文里的类名（正文引用大量原版类 `ServerPlayer` / `Entity` / `LivingDropsEvent`，扫正文必红，噪声无价值）
+  - 不校验方法参数、返回值、可见性、`record` 形态——只验「名字还在不在」
+  - 不检查 `### 5.` / `### 6.` / `### 7.` 段；不检查 `PLAN.md`
+  - 不做 `--fix`、不连服务器、不读 `E:\server-test`
+  - **基线若红**（文档声明了源码里没有的类）：停手，在进度行写 `NEED-S7: 基线红 <类名>`，**不许**改文档、也不许放宽规则让基线变绿
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_contracts.py` → **退出码 0**，输出末行匹配 `^共 38 条契约 · \d+ 个声明类 · \d+ 条提示 · 0 条问题$`
+  2. 负向夹具（`cp docs/CONTRACTS.md` 到临时目录后改，`--docs` 指过去，跑完删除），三组都要 `EXIT=1`：
+     - ① 把 `4.33` 标题里的 `TreeService` 改成 `TreeServiceX` → 命中 `第 <行号> 行声明的类 TreeServiceX 不存在`
+     - ② 把 `4.35` 标题里的 `TreeCommand.levelLine` 改成 `TreeCommand.levelLineX` → 命中 `TreeCommand.levelLineX 在 … 里找不到`（且**不要**同时报类不存在）
+     - ③ 把指向一个不存在的 java 目录（`--java nope/java`）→ 命中 `源码目录不存在`
+  3. `wc -l < tools/check_contracts.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_contracts.py` → **0**；`python tools/check_all.py 2>&1 | tail -1` → 逐字 `共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0`（既有工具零回归，且本卡没碰 `check_all.py`）
 - 进度：
 
 
