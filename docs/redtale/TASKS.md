@@ -2144,7 +2144,7 @@ fi
   - 注：`level info` 带冒号 id 在 RCON 下必须写成 `level info "ns:path"`（裸写报 `Expected whitespace to end one argument` —— Brigadier 裸串不吃冒号，R29 老坑）
 
 
-### T-0041 · [OPEN] `tools/check_progress.py` —— 等级 / 职业配置的起飞前对账
+### T-0041 · [VERIFIED] `tools/check_progress.py` —— 等级 / 职业配置的起飞前对账
 
 - 派单：S7 · 2026-11-18 11:56（12:05 改卡：原定 `LevelModifiers` 被 S7 在 L4 里内联，改派本卡）
 - 目标：不启服务端也能查出「等级/职业配置会静默丢东西」的那几类错 —— R44 就是默认 `jobs/miner.json5` 写了 80 条表里不存在的 `mining_speed`，运行时被校验层丢弃、只留一条 WARN（真键是 `mining_efficiency`）。
@@ -2189,7 +2189,55 @@ fi
   3. **真实回归**：`python tools/check_progress.py --dir E:/server-test/config/redtale_project` → 0，末行 `共 2 个文件 · 没有发现问题 ✓`（与测试服实际加载的 2 条定义一致）
 
 - 进度：
+- 2026-11-18 12:03 · 完成 · 新建 tools/check_progress.py（219 行，5 import 全在白名单，两处 open 全只读）· 未取构建锁/未 build（纯 Python 卡，卡面验收不含构建）· 自测：基线 EXIT=0 末行「共 2 个文件 · 没有发现问题 ✓」；真实回归 --dir E:/server-test/config/redtale_project EXIT=0 同末行；坏夹具 ①mining_speed ②max_level:1 ③跨目录同 id 各 1 条问题 EXIT=1，JSON5 损坏 1 条问题；属性表读不到 EXIT=1；归一变体 attack_damage / generic.attack_damage / minecraft:generic.attack_damage / redtale_project:mining_efficiency 全过；py_compile OK · 口径请 S7 裁：①卡面要求 generic.attack_damage 归一到 minecraft:generic.attack_damage，但 Java AttributeSpecs#resolve 不认该写法（会拼成 minecraft:generic.generic.attack_damage），按卡面实现；②空串 id 单报一条「id 为空」（本就属不含冒号一类）；③curve 非对象只报一条，不按 mode 拆两条；④属性表读不到时汇总打「共 0 个文件 · 1 条问题」· 功能面（S7 三份坏夹具）待 S7 验
+- 2026-11-18 13:06 · S7 验收通过 → VERIFIED（3/3 + 附加两条）· 基线 `共 2 个文件 · 没有发现问题 ✓` EXIT=0；`--dir E:/server-test/config/redtale_project` 同末行 EXIT=0；三份坏夹具各 1 条问题 EXIT=1（`mining_speed` / `max_level: 1` / 跨目录同 id，另补 JSON5 损坏 1 条、无 `levels/`+`jobs/` 打「跳过」EXIT=0）· 5 个 import 全在白名单、219 行 · **口径裁定**：Δ① 采纳「`generic.attack_damage` 也算合法写法」，但改的是 **Java 侧**（`AttributeSpecs.resolve` 加 `generic.` 别名，R46-a），不是改检查器 —— 检查器比运行期宽松就会「放行、运行期静默丢」，那正是本卡要消灭的失败类型；Δ②③④ 全采纳（空串单条、curve 非对象单条、读不到表打 `共 0 个文件`）
 
+
+### T-0042 · [OPEN] `mobs/SpawnRuleSpec` —— 刷怪规则解析器 v1（D26 / M6 最后一块，纯解析）
+
+- 派单：S7 · 2026-11-18 13:10
+- 目标：把 `config/redtale_project/spawn_rules/*.json5` 解析成不可变记录，**只做解析 + 夹取 + 告警**。契约 = `docs/SPAWN-RULES.md` §3/§4/§5/§9（**逐字照它写，别自己加字段**）。
+
+- 不要做：
+  - 不挂任何事件、不生成任何实体、不读 `Level` / `ServerLevel`（执行层 `SpawnReplacer` 归 S7）
+  - 不做「`mob` 是否存在」的交叉校验（那是 L2 快照 + `/redtale spawn check` 的事）
+  - 不改 `MobSpec` / `MobSpawner` / `MobRegistry` / `RedtaleCore`（接线由 S7 做）
+  - 不加 `SPAWN-RULES.md` 里没有的键（`radius` / `weight` / `max_group` 之类一律不收）
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/mobs/SpawnRuleSpec.java`（**新建**，≤ 200 行）
+
+- 接口签名（**必须逐字**）：
+  ```java
+  public final class SpawnRuleSpec {
+      public record Conditions(List<String> worlds, List<String> biomes, Integer lightMin, Integer lightMax,
+                               String time, Integer yMin, Integer yMax, Boolean outside, List<String> difficulties) {
+          public static final Conditions ANY = new Conditions(List.of(), List.of(), null, null, "any", null, null, null, List.of());
+      }
+      public record Definition(String id, String name, List<String> match, String action, String mob,
+                               double chance, int priority, int perChunkCap, Conditions conditions, String source) {}
+      public static Map<String, Definition> parse(List<com.redtale.project.core.config.ConfigFile> configs, List<String> warnings);
+  }
+  ```
+  `parse` 返回 `LinkedHashMap` 包 `Collections.unmodifiableMap`（**保序，不许 `Map.copyOf`**，R43-b）；非 `spawn_rules/*.json5` 静默跳过；`configs == null` → 空表。
+
+- 解析口径（逐条）：
+  1. `id` 缺失/非字符串/不含 `:` → 整条跳过 + 1 条 WARN `"<路径>: id 缺失或不是字符串（含 ':' 必填），已跳过这条刷怪规则"`
+  2. `match` 缺失/空数组/元素非字符串 → 整条跳过 + 1 条 WARN；`["*"]` 原样保留（**不要**展开成实体表）
+  3. `action` 只认 `replace`/`add`，其它值 → WARN + 回落 `"replace"`
+  4. `mob` 缺失/空串 → 整条跳过 + 1 条 WARN（`action=add` 也要，v1 不区分）
+  5. `chance` 夹 `[0,1]`**不告警**；非数字 → WARN + 1.0
+  6. `priority` 非整数 → WARN + 0；`per_chunk_cap` 负数 → 0 不告警
+  7. `conditions.light/y` 的 `min>max` → 交换 + 1 条 WARN（不要静默取一个）
+  8. `conditions.time` 只认 `day`/`night`/`any`，其它 → WARN + `any`
+  9. 未知键（顶层与 conditions 内）→ 1 条 WARN，**不影响其它字段**
+
+- 验收（**三条，全部可机器执行**）：
+  1. `gradle build --offline` 退出码 0（先取 `.queue/build.lock`，跑完删）
+  2. `grep -c "net.minecraft" src/main/java/com/redtale/project/mobs/SpawnRuleSpec.java` = **0**（纯解析层，不许碰 MC）
+  3. `wc -l` ≤ 200，且自己写一支离线探针（`build/probe/S8SpawnRuleProbe.java`，照 T-0035 的形态）**≥ 24 条断言**覆盖上面 9 条口径 + 保序 + `parse(null)` 空表，全绿
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 

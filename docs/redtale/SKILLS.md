@@ -1,4 +1,4 @@
-# 技能（M5）：schema、24 条原语、释放链路
+# 技能（M5）：schema、25 条原语、释放链路
 
 2026-11-17 · R25 定稿。回答「右键释放技能，冷却消耗正确」这一出口条件具体长什么样。
 本文件是 **M5 的接口契约**：`skills/*.json5` 的字段、原语清单、伤害口径由这里定，S8 只照卡实现，不设计。
@@ -67,7 +67,7 @@
 
 **解析层不校验原语是否存在**：那需要 `ScriptRegistries`，属启动期冻结的注册表，交给运行期（`runCalls` 对未知 type 打一行 WARN）与 `/redtale validate`（后续并入）。解析器保持纯函数 = 可离线探针。
 
-## 4. 24 条原语总表（8 类）
+## 4. 25 条原语总表（8 类，R46 已扩到 25）
 
 状态：`✅` 已注册 · `—` 待实现（**加原语 = 换 jar，D17 必须记账**）。
 已注册的 4 条 effect（`message` / `console_log` / `heal` / `damage`）里 `heal` 与 `damage` 计入 24 条，前两条是 M0 的调试原语。
@@ -98,9 +98,10 @@
 | 22 | `summon` | 召唤 | `entity` · `count` 1 · `lifetime_ticks` 0=永久 · `inherit_owner` true | — | M6 的模板实体就位后才有内容价值 |
 | 23 | `trap` | 召唤 | `radius` 2 · `trigger_radius` 1.5 · `duration_ticks` 200 · `on_trigger` 原语序列 | — | 落一个不可见标记实体（`Marker`），踩到即触发 |
 | 24 | `fx` | 表现 | `particle` · `sound` · `count` 8 | — | 纯客户端表现；**不带任何数值**，单独一条便于给技能加手感而不改结算 |
+| 25 | `grant_exp` | 表现 | `amount`（必填）· `target` caster\|target | ✅ R46 | **不是技能效果，是 M7 经验来源 `primitive`**（`PROGRESSION.md` §5 三条来源之一）。只对玩家生效、走 `ProgressService.award` 同一入口（R45-b 口径：`kill` 才吃 `mob_exp_multiplier`）；非正数 WARN 跳过、`1e9` 硬顶。D17 记账：原语预算 24 → **25**（换 jar 加的） |
 
-**计数口径**：24 = 直伤 4 + 控场 4 + 位移 3 + 投射 3 + 增益 4 + 减益 3 + 召唤 2 + 表现 1。
-`grep -c "^| [0-9]" docs/SKILLS.md` = 24 是本表唯一机器可判的断言，S7 每轮加原语时同步改这一行。
+**计数口径**：25 = 直伤 4 + 控场 4 + 位移 3 + 投射 3 + 增益 4 + 减益 3 + 召唤 2 + 表现 2（`fx` + R46 的 `grant_exp`）。
+`grep -c "^| [0-9]" docs/SKILLS.md` = 25 是本表唯一机器可判的断言，S7 每轮加原语时同步改这一行。
 
 ## 5. 伤害口径（三层模型不许破）
 

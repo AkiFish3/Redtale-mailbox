@@ -36,7 +36,7 @@ S8 只在卡指定的包内新建文件；新建包需卡上写明。
 | 组件 | `redtale_project:content` | 唯一内容组件（`ContentData`） |
 | 自建属性 | `redtale_project:<snake>` × 66 | 见 `docs/ATTRIBUTE-REGISTRY.md` §2，**不得增删改名** |
 | 原版属性引用 | `minecraft:<...>` × 14 | 同上表「落点 = 原版」行 |
-| 脚本 effect | `message` / `console_log` / `heal`（R24） | `ScriptRegistries` 注册 |
+| 脚本 effect | `message` / `console_log` / `heal`（R24）/ `damage`（R27）/ `buff`·`damage_aoe`·`debuff`（R32）/ `knockback`·`pull`（R33）/ `stun`（R34）/ `dash`（R37）/ `projectile`（R39）/ `grant_exp`（R46） | `ScriptRegistries` 注册 |
 | 脚本 condition | `always` / `health_below` / `chance` | 同上 |
 | 脚本 trigger | `manual` / `player_join` | 同上 |
 | 伤害类型 | `redtale_project:verification_strike` | 仅验收用（`scaling: never`） |
@@ -785,7 +785,11 @@ public final class ProgressService {
 
 - **id 拼法**（`PROGRESSION.md` §6）：主等级 `level/<属性 path>`、职业 `job/<职业 path>/<属性 path>`；写进 `AttributeMap` 时统一加本模组命名空间 → `redtale_project:level/generic.max_health`。
 - **属性键两种形态**（R45-a）：原版 `minecraft:generic.max_health`（带命名空间）、自建**裸 path** `mining_efficiency`。查属性一律 `AttributeSpecs.resolve` → `RedtaleAttributes.holder`，**禁止 `ResourceLocation.parse`**（裸 path 会被补成 `minecraft:x` → 静默不下发）。
+  R46-a 补：`resolve` 现在也认**省略命名空间的 `generic.xxx`**（`generic.attack_damage` → `minecraft:generic.attack_damage`），因为 `tools/check_progress.py` 按这条宽松口径判「在不在 80 条表内」——对账工具比运行期宽松就是「放行 + 静默丢」，两边必须同一个口径。
 - **数值**：`amount = per_level × (level - 1)`，四舍五入 6 位；`ADD_VALUE`；`level < 2` 只移除不加；到顶保留顶级值。
 - **经验入口**：只有 `MobDrops`（`kill`，同一处记 `total_exp`）/ `/redtale exp add`（`command`）/ `grant_exp` 原语（`primitive`）。`kill` 是唯一吃 `mob_exp_multiplier` 的来源；经验球金额保持原版口径。
-- **命令面**：`/redtale exp [add <amount>|sync|probe]`（`core/command/ExpCommand`）。前三项需真人；`probe` 走 `FakePlayerFactory`**控制台可跑**，7 组断言（A 首次加 / E 双累加器 / F kill 倍率 / G Σplan 对账 / B 到顶 / C 到顶不加 / D 归零清场）。
+- **命令面**：`/redtale exp [add <amount>|sync|primitive <amount>|probe]`（`core/command/ExpCommand`）。`add` / `sync` 需真人；`primitive`（R46 新增）与 `probe` 走 `FakePlayerFactory`，**控制台可跑**。
+  `probe` 7 组断言（A 首次加 / E 双累加器 / F kill 倍率 / G Σplan 对账 / B 到顶 / C 到顶不加 / D 归零清场）；
+  `primitive` 把 `grant_exp` 当**真实原语调用**跑（`ScriptEngine.runCalls` → 注册表 → 原语 → `award`），打印「累计前→后 / Δ / 期望 / 主等级前→后 / 职业合计 Δ」并返回 1=通过、0=不符。
+- **`grant_exp` 原语**（R46，`core/script/builtin/GrantExpEffect`，id = `grant_exp`）：`args.amount`（必填，`<=0` WARN 跳过、`>1e9` 按硬顶 `GrantExpEffect.HARD_CAP` 发并记日志）、`args.target`（`caster` 缺省 / `target`）；**只对玩家生效**（怪物没有累加器 → WARN 跳过）。来源固定 `primitive`，**不吃** `mob_exp_multiplier`（那个只给 `kill`）。加原语 = 换 jar（D17）；`SKILLS.md` §4 预算 24 → **25**。
 - **重算点三处**：登入（`GameHooks.onPlayerJoin`）、`/redtale reload`（`RedtaleCore.reload` 在线全量）、等级变化（`award` 内部）。死亡 / 换维度**不重算**（modifier 随实体存活）。

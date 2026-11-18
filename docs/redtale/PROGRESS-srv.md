@@ -1,30 +1,30 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-18 11:55 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-18 13:04 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
 ## 1. 当前里程碑
 
-**M7**（依据：最近一条提到里程碑的台账标题「**验收 T-0040 + M7 L4 服务层（`ProgressService`）+ 派 T-00」）
+**M7**（依据：最近一条提到里程碑的台账标题「**验收 T-0041 + M7 L5 收尾（`grant_exp` 原语）+ D26 契约定稿（`」）
 
 ## 2. 进行中（在制品上限 3 张）
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0041 | OPEN | `tools/check_progress.py` —— 等级 / 职业配置的起飞前对账 |
+| T-0042 | OPEN | `mobs/SpawnRuleSpec` —— 刷怪规则解析器 v1（D26 / M6 最后一块，纯解析） |
 
-已验完 **38** 张 / 共 **41** 张。
+已验完 **39** 张 / 共 **42** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R41 | 2026-11-18 | **验收 T-0036 + M6 第四层接线（掉落：`MobSpec.drops` → `DropSpec` → `Dr |
 | R42 | 2026-11-18 | **验收 T-0037 + M7 契约定稿（`docs/PROGRESSION.md`）+ 派 T-0038 + D26 |
 | R43 | 2026-11-18 | **验收 T-0038 + M7 第三层存档落地（`ProgressStore` SavedData + `/redta |
 | R44 | 2026-11-18 | **验收 T-0039 + M7 第二层快照（`ProgressRegistry` + `ProgressRules`） |
 | R45 | 2026-11-18 | **验收 T-0040 + M7 L4 服务层（`ProgressService`）+ 派 T-0041** |
+| R46 | 2026-11-18 | **验收 T-0041 + M7 L5 收尾（`grant_exp` 原语）+ D26 契约定稿（`SPAWN-RULE |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
