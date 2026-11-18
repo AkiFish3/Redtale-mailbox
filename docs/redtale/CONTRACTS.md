@@ -25,7 +25,7 @@
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
 | `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）** + **`SpawnReplacer`（自然刷怪替换执行层，L3，R48）**。M6 四条链路齐全（生成 / 技能 / 掉落 / 刷怪替换） | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
-| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，L1）+ `ProgressSpec` 定义解析（T-0039，L2）+ **`ProgressRegistry` 快照（R44，L2，属性键过 80 条表并归一）+ `ProgressRules`（`progression.json5`）** + `ProgressStore` 存档 `SavedData`（R43，L3）+ **`ProgressService` 服务层（R45，L4：经验分配 / 等级派生 / 按级属性下发）** | 有：`RedtaleCore.progress()`（`ProgressRegistry`）/ `progressRules()`；`ProgressStore.get(server)` / `factory()`、`ProgressService.award/applyAttributes/mainLevel` 直接可用；契约见 `docs/PROGRESSION.md` |
+| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，L1）+ `ProgressSpec` 定义解析（T-0039，L2）+ **`ProgressRegistry` 快照（R44，L2，属性键过 80 条表并归一）+ `ProgressRules`（`progression.json5`）** + `ProgressStore` 存档 `SavedData`（R43，L3）+ **`ProgressService` 服务层（R45，L4：经验分配 / 等级派生 / 按级属性下发）**；技能树（D25）：`SkillTreeSpec` 解析（T-0045，L1）+ **`SkillTreeRegistry` 快照（R50，L2：classes 对齐 jobs/ 按 path 比、unlock_skill 对齐 skills/、属性键归一）** | 有：`RedtaleCore.progress()`（`ProgressRegistry`）/ `progressRules()` / **`skillTrees()`（`SkillTreeRegistry`，R50）**；`ProgressStore.get(server)` / `factory()`、`ProgressService.award/applyAttributes/mainLevel` 直接可用；契约见 `docs/PROGRESSION.md` / `docs/SKILL-TREE.md` |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
 
@@ -558,7 +558,7 @@ public final class MobSpawner {
 
 | 用途 | 路径 |
 |---|---|
-| 运行配置（玩家/管理员可改） | `config/redtale_project/`（`items/`、`sets/`、`scripts/`、`affixes/`、`affix_pools/`、`weapon_attributes/`、`enchantments/`、`skills/`（M5 起）、`mobs/`、`drops/`、`levels/`、`jobs/`（M7 R44 起）、`attack_speed.json5`、`damage.json5`、`crit.json5`、`progression.json5`（M7 R44 起）） |
+| 运行配置（玩家/管理员可改） | `config/redtale_project/`（`items/`、`sets/`、`scripts/`、`affixes/`、`affix_pools/`、`weapon_attributes/`、`enchantments/`、`skills/`（M5 起）、`mobs/`、`drops/`、`levels/`、`jobs/`（M7 R44 起）、`skill_trees/`（M7 R50 起）、`attack_speed.json5`、`damage.json5`、`crit.json5`、`progression.json5`（M7 R44 起）） |
 | 内置默认配置（首次启动落地） | `src/main/resources/redtale/defaults/` |
 | 静态数据包（随 jar） | `src/main/resources/data/redtale_project/` |
 | 运行期生成的数据包 | `<world>/datapacks/redtale_project/data/<ns>/...`（`weapon_attributes/` 与 `enchantment/` 共用同一个包根） |
@@ -573,6 +573,8 @@ public final class MobSpawner {
 | 等级曲线（M7，R42 定稿；R44 起进 `DEFAULT_FILES`） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3）；默认 `main.json5` 会**在文件缺失时被重建** |
 | 职业定义（M7，R44 起进 `DEFAULT_FILES`） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4）；默认 `miner.json5` |
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
+| 技能树（D25 / M7，R50 起进 `DEFAULT_FILES`） | `config/redtale_project/skill_trees/<文件名>.json5`（一个文件一棵树，schema 见 `docs/SKILL-TREE.md` §3；`id` 缺省不补命名空间）。默认 `warrior_vanguard.json5` **删文件会被 reload 重建**；它依赖 `jobs/warrior.json5` 与 `skills/quake_slam.json5` 同时存在（否则 reload 会打两条交叉校验告警） |
+| 技能树里的 `classes` | 写**职业裸名**（`warrior`），与 `jobs/*.json5` 的全名 id（`redtale_project:warrior`）**按 path 比较**（R50-a）；空数组 = 所有职业可用 |
 | 等级存档（M7） | `world/data/redtale_project_progress.dat`（`SavedData`，**不落** `playerdata`，也不进 config） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 
@@ -897,3 +899,42 @@ public static String currentLine(com.redtale.project.core.progression.ExpCurve c
 | R49-a | 文案生成是**纯函数**（零 MC 依赖），上下文绑定单独 5 行 | 纯函数可离线探针直测（16/16）；控制台执行输出**逐字不变**，既有 `[VERIFIED]` 卡的文案断言零回归 |
 | R49-b | 等级一律 `ExpCurve.levelFor()` 现算，不读缓存；`level >= maxLevel` 优先判，`expForLevel(maxLevel)` 返回 0 故**绝不出 `/0`** | 等级是派生值（R42-b）；`/0` 会在 tooltip 与观测面同时炸 |
 | R49-c | `ExpCurve` 构造为 `maxLevel = Math.max(2, n)` → 「上限 1」实际是 2 级曲线；写探针期望时按 `maxLevel()` 取值，别按入参假设 | 实测踩到（期望错、代码对，同 R43-a） |
+
+### 4.31 技能树快照 `SkillTreeRegistry`（D25 / M7 L2，R50 定稿）
+
+```java
+package com.redtale.project.core.progression;
+
+// com.redtale.project.core.progression.SkillTreeRegistry —— 不可变快照，跨 reload 整份替换
+public static final SkillTreeRegistry EMPTY;                       // 0 棵树
+public static SkillTreeRegistry load(List<ConfigFile> all,         // 全部已加载配置，只挑 skill_trees/ 前缀
+                                     ProgressRegistry progress,    // 校验 classes；null = 跳过该条校验
+                                     SkillRegistry skills,         // 校验 unlock_skill；null = 跳过该条校验
+                                     List<String> warnings);       // 告警汇聚点；null 时内部自建
+public Map<String, SkillTreeSpec.Definition> all();                // 不可变、保配置文件顺序
+public SkillTreeSpec.Definition get(String id);                    // 不存在 / null → null
+public boolean has(String id);
+public int size();                                                 // 棵数
+public int nodeCount();                                            // 节点数合计
+public int pointTotal();                                           // max_points 合计（仅摘要，不参与判定）
+public List<String> sortedIds();                                   // 升序
+public List<String> treesForJob(String job);                       // classes 空 = 全职业可用；按 path 比；null → 空表
+public List<String> warnings();
+public String describe();                                          // "1 棵技能树（10 个节点，21 点上限）"
+```
+
+三条交叉校验（文案逐字，S7 按行 grep）：
+
+```
+<source>: 树 <id> 的职业 <job> 不在 jobs/ 里（树仍保留，职业过滤时不会命中）
+<source>: 树 <id> 的节点 <node> 引用的技能 <skill> 不存在（该节点点了也不给技能）
+<source>: 树 <id> 的节点 <node> 的属性 <attr> 不在 80 条属性表里，已丢弃（该条不会下发）
+```
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R50-a | `classes` 与 `jobs/` id **按 path 比**（`redtale_project:warrior` ≡ `warrior`） | §3 schema 写裸名、`jobs/` 写全名；直接 `containsKey` 会让默认树一上线就告警（本轮实测） |
+| R50-b | 属性效果键在 L2 归一成 `AttributeSpec.id()`（原版 = `minecraft:generic.*`，自建 = **裸 path**）；不在表 → 丢弃该条 + 告警；**L1 产物不改** | 与 R44-b 同构；L1 保持原文才能让探针证明归一发生过，也保住 L1 零 `core.attr` 依赖 |
+| R50-c | 悬空 classes / 悬空 skill **告警但保留**，执行层自然点不了 | 同 R47-b：先写树后补职业是正常顺序，丢弃会静默失败 |
+| R50-d | 调用顺序：**必须排在 `progress` 与 `skills` 之后** | 交叉校验查「另一边有没有」，任一侧 EMPTY 时满屏告警且不抛异常（R47-a 第三次复现） |
+| R50-e | 默认件三件套（树 + `jobs/warrior` + `skills/quake_slam`）必须同时进 `DEFAULT_FILES`；§3 示例里三个不在 80 表的键按表改写并在文件头记偏差 | 少一件 = 一启动三条告警；表是 D17 冻结的，改示例不改表 |

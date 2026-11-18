@@ -1222,3 +1222,22 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **开关持久化**：`spawn replace on|off` 现只在内存（重启回 ON）→ 新建 `spawn.json5`（`replacer_enabled` / `per_tick_cap`）+ 记账 §5 路径。
 4. 挂账不变，另加 **R49 的 `current()` 玩家路径**（需 Aki 上线，与控制台零回归已验）。
 
+| R50 | 2026-11-18 | **验收 T-0045（`SkillTreeSpec`）+ M7 技能树 L2 快照层（`SkillTreeRegistry`）+ 派 T-0046** | ①卡板：T-0045 `[DONE]` → **`[VERIFIED]`**（3/3：`build --offline` RC=0 / jar 内 `SkillTreeSpec` 宽匹配 **4**（主类 + 3 record）、`wc -l`=**167** ≤200、`net.minecraft`=0 / S8 探针 **67/67**；另跑 S7 独立探针 `build/probe/S7TreeProbe.java` **117/117**，A~O 十五组）。裁定卡面「9 节点 / 21 点」为**笔误**（§3 实为 10 节点，cost 合计 19，`max_points: 21` 是显式值，同 R43-a / R49-c 口径）；S8 另外四条口径（悬空 requires 保留条目 / 非字符串元素静默 / effect 内未知键不告警 / 顶层 name 不回落）全采纳。**派 T-0046**（`core/progression/TreePoints` 点数派生纯函数，M7 L3 第一块），在制品 **1/3**。②自研 M7 技能树 L2：新类 `core/progression/SkillTreeRegistry`（`load(all, progress, skills, warnings)` + 三条交叉校验 + 属性键归一 + `treesForJob`/`nodeCount`/`pointTotal`/`describe`，**重建新 Definition 对象不就地改 L1 产物**）+ `RedtaleCore.skillTrees()` + reload 接线（**排在 progress 与 skills 之后**）+ 日志/回显带棵数 + `DEFAULT_FILES` 加 `skill_trees/warrior_vanguard.json5` / `jobs/warrior.json5` / `skills/quake_slam.json5`。③实测（测试服 **1 次启动 `Done (2.010s)`**，已停、25567/25577 无 LISTEN）：启动日志 `1 棵技能树（10 个节点，21 点上限）`、**36 份配置 / 零配置告警**；`/redtale reload` 回显含「1 棵技能树」；坏夹具 `t_bad.json5`（悬空职业 + 悬空技能 + 不在表的属性）→ `2 棵技能树 / 37 份配置 / 3 条告警`，**三条文案逐字对且只来自夹具**；连跑同 → 幂等；删夹具 → 回落 1 棵 / 零告警；`validate 问题 0 条`、`exp probe 7/7`（E 组自动认了第二个职业）、`level list` 主等级 1 + 职业 2。④数字：`build --offline` exit 0（jar **599247 B**）、`selftest` 78 PASS、S7 独立探针 `S7TreeRegProbe` **61/61**（含「仓库那份默认文件解出来零告警」离线断言）。 | **§13.53 R50-a~e**。本轮最值钱的一条：`classes` 写裸名（`warrior`，§3 原话），而 `jobs/*.json5` 的 id 是带命名空间的全名（`redtale_project:warrior`）—— 第一版直接 `progress.jobs().containsKey(job)` → 默认树上线即告警「职业 warrior 不在 jobs/ 里」。与 R45-a 是**同一类键形态错误**，只是这次发生在「两个都合法的字符串集合」之间。同时确认 `AttributeSpec.id()` 对自建属性返回**裸 path**（`physical_damage`），所以归一的终点形态是全名/裸 path 混排，L3 下发必须走 `AttributeSpecs.resolve` 而不是自己拼 `redtale_project:` 前缀。 |
+
+### 13.53 R50 的五条口径（技能树快照层）+ 下一步（R51）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R50-a | 技能树的 `classes` 与 `jobs/` 的 id **按 path 比较**（`redtale_project:warrior` ≡ `warrior`），`treesForJob(job)` 同样两向都认 | §3 的 schema 写 `classes: ["warrior"]`（裸名），而 `jobs/*.json5` 的 id 是 `redtale_project:warrior`（全名）。第一版用 `containsKey` 直接比 → 仓库默认树上线就一条告警「职业 warrior 不在 jobs/ 里」，而两边的字符串各自都合法。这与 R45-a（`ResourceLocation.parse` 把自建裸 path 补成 `minecraft:`）是同一类错误：**同一概念在两处用了不同形态**，只能靠「比较前归一」而不是「猜测写哪边」来消灭 |
+| R50-b | 属性效果的键**在 L2 归一成 `AttributeSpec.id()`**，不在表的直接丢弃该条并告警；L1 (`SkillTreeSpec`) 的产物一个字节都不改 | 与 R44-b（`ProgressRegistry.normalise`）完全同构：归一放在「进快照」这一个点，L3/L4 下发时不用再考虑写法。L1 产物保持原文的价值在于**探针能证明归一真的发生了**（`S7TreeRegProbe` H1/H2 断言同一份文件在 L1 是 `generic.armor`、在 L2 是 `minecraft:generic.armor`），也保证 L1 可以零 `core.attr` 依赖 |
+| R50-c | classes 悬空 / `unlock_skill` 悬空一律**告警但保留**（树与节点都不删），执行层 L3 见悬空自然点不了 | 与 R47-b 同一条纪律：先写树、后补职业/技能是正常运营顺序，丢弃会让这个顺序静默失败。区别只在「谁来兜」：`classes` 悬空的后果是「职业过滤时反而不命中」，所以文案里明写 (`树仍保留，职业过滤时不会命中`)，避免运营以为树被吃了 |
+| R50-d | `SkillTreeRegistry.load` **必须排在 `progress` 与 `skills` 之后**调用（`RedtaleCore.reload()` 里硬编顺序），不靠调用方自觉 | 两条交叉校验都查「另一边有没有」，任一侧还是 `EMPTY` 时每棵树都会报悬空 —— 症状是「一开服满屏告警」，且不会抛异常。这是 R47-a（快照顺序即依赖）的第三次复现，两个方向都已写进注释：被引用者在前，引用者在后 |
+| R50-e | 默认件三件套必须**自洽**：`skill_trees/warrior_vanguard.json5` 依赖 `jobs/warrior.json5`（classes）与 `skills/quake_slam.json5`（unlock_skill），三条一起进 `DEFAULT_FILES`；同时 §3 例子里 `blunt_power` / `armor_toughness` / `attack_knockback` 三个键**不在 80 条表里**（表已冻结），默认件按表改写成 `physical_damage` / `minecraft:generic.armor_toughness` / `knockback_power`，并在文件头注释写清四处偏差 | 默认件的用途是「新服第一眼能跑起来且零告警」—— 少一件就变成「一启动就三条告警」，运营会以为系统坏了。而 §3 的示例键属于「写文档时的设想」，属性表 D17 冻结后没有 `blunt_power` 这类条目：**按表改示例，不改表**（ATTRIBUTE-REGISTRY 是 D17 的硬约束，80 条不许增删） |
+
+下一步（R51）：
+
+1. **验收 T-0046**（`TreePoints`：build + jar 类 + 探针 ≥25 条覆盖 A~I 九组）。
+2. **M7 L3 落地点**：`/redtale tree list|info`（只读观测面，独占 `TreeCommand.java` + `RedtaleCommand` 1 行）—— 有了它才能验「节点前置 / 点数 / 状态」三类信息真能看见，而不是只看日志里的棵数。
+3. **技能树的持久化**：已点节点要落 `ProgressStore`（`redtale_project_progress.dat` 升 version 2，`trees: {treeId: [nodeId]}`）—— 这是 L3 的 `PlayerTreeData`，改存档结构，归 S7。
+4. **`spawn replace` 开关持久化**（R49 遗留）：新建 `spawn.json5`（`replacer_enabled` / `per_tick_cap`）+ 记账 §5 路径。
+5. 挂账不变：V4「附魔台真刷出」、tooltip 真人客户端、pvp 真目标、玩家被 `stun`、真人 `/redtale skill mana` 面板、`mob spawn` 客户端体积/名牌、客户端侧 `dash`、`tick` 路径真人 AI、自然刷怪替换真人验收、真人 `progress add` / 等级属性面板、真人击杀 → `MobDrops → ProgressService.award(kill)` 全链、`grant_exp` 在真实脚本里的落地、**R49 的 `current()` 玩家路径**、**技能树的真人在线路径（R50 只验了服务端快照层，`treesForJob` 的玩家上下文尚未接任何调用方）**。

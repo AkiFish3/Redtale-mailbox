@@ -2357,7 +2357,7 @@ fi
 - 2026-11-18 16:4x · **VERIFIED（3/3）**：①默认 `共 2 个文件 · 没有发现问题 ✓` EXIT=0 ②`--dir E:/server-test/config/redtale_project` 同口径 EXIT=0 ③三份坏夹具（`script` 带命名空间 / `max_level: 0` / 删 `description`）各命中指定文案且 EXIT=1。补测 4 项：跨文件重复 id（`id … 与 enchantments/a.json5 重复`）、datapack 双向（`未生成：x.json` 计问题 / `仅磁盘有：x.json` 计提示）、签名四函数齐、189 行
 - S7 裁四条口径（全采纳）：①**卡面「同一文件内」是笔误**，跨文件重复才是对的（文案自己就写了「与先出现的相对路径重复」）；②`scripts/*.json5` 全部 id 计入 N（含 greeting）——对账工具列举的是「运行期真能加载到的脚本」，多列不算错；③`[提示] enchantment/x.json: 仅磁盘有：x.json` 双段重复文件名，**不改**（稳定可 grep 优于好看）；④单引号→双引号预转换**接受**，但要写清边界：**块注释 `/* */` 两边都不支持**（Java `Json5` 只认 `//`，实测 `/* */` 文件双方都判解析失败）→ 工具与运行期口径一致，**不是**假阳性
 
-### T-0045 · [OPEN] `core/progression/SkillTreeSpec` —— 技能树解析器 v1（D25 / M7 最后一块的 L1）
+### T-0045 · [VERIFIED] `core/progression/SkillTreeSpec` —— 技能树解析器 v1（D25 / M7 最后一块的 L1）
 
 - 派单：S7 · 2026-11-18 16:5x
 - 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §3（schema，字段一个不加）/ §5 第 1、2 条（点数是派生值、modifier id 口径——L1 只解析，不碰修饰符）
@@ -2410,6 +2410,55 @@ fi
   1. `cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
   2. `cd build/libs && unzip -l *.jar | grep -c "SkillTreeSpec"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/progression/SkillTreeSpec.java` → `≤ 200`
   3. `python tools/probe_run.py SkillTreeSpecProbe` → 末行 `全绿`（`0 fail`），断言 **≥ 25** 条，必须覆盖：A 正常树（§3 例子逐字抄成探针夹具，9 节点 / 21 点）/ B `requires` 悬空保留 / C 重复 id 后者覆盖 / D `cost` 负数归零 / E `max_points` 缺失取合计 / F `points_per_level` 负数归零 / G 四类 effect 丢弃各一条 / H `pos` 无效回落 / I `name` 回落 `tree.node.x` / J 保序（插入序 = 遍历序）
+
+- 进度：
+- 2026-11-18 16:52 · 完成 · 新建 `core/progression/SkillTreeSpec.java`（167 行，3 record：Effect/Node/Definition + parse）+ `build/probe/SkillTreeSpecProbe.java`（探针，build/ 不入库）；卡外零改动、`RedtaleCore` 未碰 · 构建 `EXIT=0`（jar 592171 B，jar 内 `SkillTreeSpec` 宽匹配 4 = 主类 + 3 record）· 自测：`wc`=167≤200 / `net.minecraft`=0 / import 全在白名单（gson Json* + ConfigFile + java.util.*）/ 探针 `SkillTreeSpecProbe` **67/67 全绿**（A-J 十组全覆盖，A 组 §3 例子逐字抄，10 节点 / max_points=21 / classes=[warrior] / 9 个非空 cost 节点合计 19）
+- 口径请 S7 裁（不影响接口与验收）：①验收 A 写「9 节点 / 21 点」，但 §3 schema 实际列 **10 个节点**（root + 9 子节点），`max_points: 21` 是显式给定值（非 cost 合计，cost 合计=19）→ 探针按 §3 逐字抄断言 10 节点 / maxPoints=21，卡面「9 节点」疑为「9 子节点」笔误；②`requires` 悬空条目**保留在 list 里**（只告警不删条目，避免打断 L2 拓扑），「保留节点」按卡面字面理解；③非字符串 `requires` 元素静默跳过（卡面未定义）；④`effect` 内未知键（如 §3 的 `args`）不告警——卡面口径 13 只规定顶层与节点内未知键，effect 层未列；⑤顶层 `name` 非字符串/缺失原样取 `stringOf`（null），未回落、不告警（卡面未定义，只有节点 name 规定回落）
+
+- 2026-11-18 17:5x · **S7 验收 → `[VERIFIED]`（3/3 + 独立探针 117/117）** · ①`gradle build --offline` `RC=0`；②`unzip -l` 内 `SkillTreeSpec` 宽匹配 **4**（主类 + 3 record）、`wc -l`=**167** ≤200、`net.minecraft`=0；③`python tools/probe_run.py SkillTreeSpecProbe` → `PASS 67 / FAIL 0 / TOTAL 67`（末行 `全绿`），≥25 条达标。**S7 独立探针 `build/probe/S7TreeProbe.java` PASS 117 / FAIL 0 / TOTAL 117**（自编 A~O 十五组，不复用 S8 断言）。
+  **五条口径裁定**：①**卡面「9 节点 / 21 点」是笔误** —— `SKILL-TREE.md` §3 实为 **10 个节点**（root + 9 子节点），`max_points: 21` 是显式给定值而 cost 合计 **19**（探针 A23 断言 19）。按语义判（R43-a / R49-c 同源），不改代码；②`requires` 悬空**保留条目 + 保留节点**（只告警），采纳；③非字符串 `requires` 元素静默跳过（卡面未定义），采纳；④`effect` 内未知键（如 §3 的 `args`）不告警（口径 13 只管顶层与节点内），采纳；⑤顶层 `name` 非字符串/缺失原样取 null 不回落（卡面只规定节点 name 回落），采纳。
+  **补测边界**（卡面未写死，记录不改码）：`max_points` **非整数**按「缺失」处理并取 cost 合计（E5/E6）；`cost` 小数回落 0（D3）；`pos` 负数**不夹取**（H8）；`nodes` 数组形态与空对象同文案（M7/M8）。
+- 2026-11-18 17:5x · **S7 合流**：本类归 S7；L2 快照层 `SkillTreeRegistry` 已落地（见 `PLAN.md` §13 R50），只读本类输出、**不就地改 L1 产物**（重建新 Definition 对象，探针 H1~H4 证明）。
+
+### T-0046 · [OPEN] `core/progression/TreePoints` —— 点数派生与可点判定（M7 / D25 第三层，纯函数）
+
+- 派单：S7 · 2026-11-18 17:5x
+- 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §5 第 2 条（**点数是派生值，不是独立货币**：`已用 = Σ(已点节点 cost)`、`可用 = max_points - 已用`、不做「先发点数再消耗」）
+
+- 不要做：
+  - **零 MC import**（不 `import net.minecraft.*`、不读配置、不接存档、不下发 modifier、不做 GUI、不加新字段）
+  - 不做环检测 / 拓扑排序 / `exclusive_with` 互斥 / 职业过滤（`treesForJob` 已在 L2 快照层）/ 洗点扣钱
+  - 不改 `SkillTreeSpec`、不改 `SkillTreeRegistry`、不改 `RedtaleCore`、不动 `build/probe/` 之外的文件
+  - **不要自己发明「点数上限」类的钳制**（D16：不设平衡上限）；`available` 允许为负并在注释里说明含义
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/progression/TreePoints.java`（**新建**，≤ 150 行）
+  - `build/probe/TreePointsProbe.java`（**新建**，探针）
+
+- 接口签名（**逐字**，S7 按行 grep）：
+  ```java
+  public record State(int maxPoints, int used, int available, int taken, int unknown) {}
+  public enum Status { OK, UNKNOWN_NODE, ALREADY_TAKEN, MISSING_PREREQ, NO_POINTS }
+  public static State state(SkillTreeSpec.Definition def, Collection<String> selected)
+  public static List<String> missingPrereqs(SkillTreeSpec.Definition def, Collection<String> selected, String nodeId)
+  public static Status canTake(SkillTreeSpec.Definition def, Collection<String> selected, String nodeId)
+  public static Map<String, Status> statusAll(SkillTreeSpec.Definition def, Collection<String> selected)
+  ```
+  允许 import 只有：`java.util.*`（`SkillTreeSpec` 同包，不用 import）。
+
+- 语义（**逐条写死**，探针按此断言）：
+  1. `state`：`def == null` → `State(0,0,0,0,0)`；`selected == null` 视作空集；每个 id **先去重**再遍历 —— 命中 `def.nodes()` → `used += cost`、`taken++`，未命中 → `unknown++`（**不扣点**）；`available = maxPoints - used`，**不夹取**（负数 = 超点，如实报）
+  2. `missingPrereqs`：返回 `requires` 里**未被选中**的条目，按 `requires` 原序、**去重**（同一条目出现两次只报一次）；`nodeId` 不存在 → 空 list；`selected == null` → 全部 `requires` 都算缺
+  3. `canTake` 判定顺序**固定**：① `def`/`nodeId` 为 null 或节点不存在 → `UNKNOWN_NODE`；② 已选中 → `ALREADY_TAKEN`；③ `missingPrereqs` 非空 → `MISSING_PREREQ`；④ `node.cost() > state(def, selected).available()` → `NO_POINTS`；⑤ 否则 `OK`
+  4. `cost == 0` 且 `available >= 0` → `OK`；`cost == 0` 且 `available < 0` → `NO_POINTS`（超点状态下连免费节点也不给点）
+  5. `statusAll`：`LinkedHashMap`，键序 **= `def.nodes()` 的遍历序**；`def == null` → 空 map
+  6. 所有返回**不可变**：`List.copyOf`、`Collections.unmodifiableMap(new LinkedHashMap<>(src))`（`Map.copyOf` 不保序，R43-b）
+  7. 纯函数：不读文件、不打印、无静态可变状态；同一输入两次调用结果逐字相同
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
+  2. `cd build/libs && unzip -l *.jar | grep -c "TreePoints"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/progression/TreePoints.java` → `≤ 150`；`grep -c "net.minecraft" <同文件>` → `0`
+  3. `python tools/probe_run.py TreePointsProbe` → 末行 `PASS n / FAIL 0`，断言 **≥ 25** 条，必须覆盖：A `state` 基本（3 节点 / 选 2 / used·available·taken）/ B `unknown` 不扣点 / C 重复 id 只算一次 / D `available` 为负不夹取 / E `missingPrereqs` 保序去重 / F `canTake` 五种 Status 各一条 / G `cost 0` 在 `available<0` 时 `NO_POINTS` / H `statusAll` 键序 = `def.nodes()` 序且不可变 / I 全部 `null` 入参不 NPE
 
 - 进度：
 
