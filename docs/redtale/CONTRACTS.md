@@ -1067,3 +1067,30 @@ public static int TreeService.levelOf(ServerPlayer player);   // 主等级；pla
 | R54-d | 探针先写 `1e9` 经验把主等级顶到上限之上，再跑 A~M；门槛由 N 组单独验 | L1 只有 1 点，否则整套被 `NO_POINTS` 拦成假红 |
 | R54-e | 探针收尾 `store.clear(uuid)`，不用「再写大经验值」 | FakePlayer UUID 固定，残留的 `1e9` 会污染 `exp probe` 基线 |
 
+
+### 4.35 `tree info` 的「当前等级能拿多少点」段 `TreeCommand.levelLine`（D25 / M7，R56 定稿）
+
+```java
+package com.redtale.project.core.command;
+
+// 纯函数，零 MC 依赖；上限一律走 TreePoints.capFor（R54-a 的唯一派生点），不在此处重算。
+public static String TreeCommand.levelLine(SkillTreeSpec.Definition def, int level);
+//   → "\n  当前等级 " + level + " · 可拿 " + capFor(def.maxPoints(), def.pointsPerLevel(), level) + " 点"
+//   例：max_points=21 / points_per_level=1 / level=5   → "\n  当前等级 5 · 可拿 5 点"
+//       max_points=21 / points_per_level=0 / level=99  → "\n  当前等级 99 · 可拿 21 点"（关门槛）
+//       max_points=0  / points_per_level=1 / level=7   → "\n  当前等级 7 · 可拿 7 点"（不限）
+//       level<=0                                        → 可拿 0 点（capFor 已夹 0，不抛）
+```
+
+```text
+/redtale tree info <tree>   控制台（无玩家）：11 行，**逐字不变**（T-0047 基线）
+                            玩家上下文：在「职业…· 来源 …」之后、节点行之前**多一行**
+                            「  当前等级 L · 可拿 N 点」
+```
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R56-a | 追加行**只在玩家上下文**出现，控制台分支一个字节不改 | `tree info` 的 11 行是 T-0047 的验收基线；同类做法见 R49（`level info` 的「当前」段）——观测面加信息不能打破既有基线 |
+| R56-b | 这一段**只报上限**（可拿多少点），不报已用/剩余 | 已用/剩余是 `tree state` 的职责（R53/R54 已定），两处都报会让「同一条信息两个来源」漂移 |
+| R56-c | `levelLine` 是**纯函数**且上线（public），探针直接断言字符串 | 玩家分支没有真人在线，只能靠纯函数段离线验；玩家胶水只有「取 level → 拼串」两行 |
+| R56-d | 该行**不写「已触顶」之类判断**，`可拿 N 点` 的 N 本身就是真话 | `points_per_level = 0`（关门槛）与 `max_points = 0`（不限）两种语义下，「5 点」不等于「等级 5」，多写一句注释反而会与 `capFor` 打架 |

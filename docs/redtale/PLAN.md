@@ -1335,3 +1335,22 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **`tree info` 补「当前等级能拿多少点」**：R54 的下一步第 4 条。控制台分支（无玩家）逐字不变，只有玩家上下文追加；验收需真人或 FakePlayer 走 `TreeCommand` 玩家分支。
 3. **真人一次性验收窗口**（需 Aki 上线，全部挂账在同一处收）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/技能树 take·untake + 武器 tooltip（D20 显示口径）+ `#minecraft:undead` 条件乘区。
 4. `respec` 扣费仍挂 Q-021（默认免费），等 D28 经济桥接，不排期。
+
+| R56 | 2026-11-19 | **验收 T-0051（`check_items.py`）+ `tree info` 补「当前等级能拿多少点」+ 派 T-0052** | ①卡板：T-0051 `[DONE]` → **`[VERIFIED]`**（3/3：基线 EXIT=0 末行逐字 `共 12 个文件 · 0 条问题` / S7 自编六类负向夹具 **18 文件 6 问题 EXIT=1** 全命中，重复 id 报在**后出现**文件 / `wc -l`=**178** ≤200、`grep -c "def clean_json5"`=0）+ S7 独立边界补测 **20 条**全对（JSON5 截断 / 顶层数组 / 缺 `sets/` 目录 / `rarity` 越界 / `gem.tier` 0 / `sockets.count` 7 / `types` 含数字 / `weapon_attributes` 裸名 / `rev` 0 / `abilities` 悬空 / `kind` 越界 / `weight` 0 / `item_level` min>max / `applies_to` 错命名空间 / `slots` 负值与未知键 / 词条权重 0）。**S8 提问裁定**：`ATTR_IDS` 模块级注入**采纳**（卡面签名不带 `ids` 又要求归一到 80 表 = 卡面自相矛盾，同 R43-a 不打回）。**派 T-0052**（`core/progression/TreeUnlocks` 纯派生：`unlocked`/`passives`/`gained`/`lost`/`describe`，定义序、去重保首次），在制品 **1/3**。②自研：`TreeCommand.info` 在「职业… · 来源 …」之后按玩家上下文追加 `levelLine` 段；`TreeCommand.levelLine(def, level)` **纯函数**（上限走 `TreePoints.capFor`，不重算 `points_per_level × level`）+ `info` 里 3 行胶水。③实测（测试服 **1 次启停** `Done (2.068s)`，已停、25567/25577 无 LISTEN）：`tree info warrior_vanguard` 控制台 **11 行逐字同 R52 基线、无「当前等级」行**（T-0047 基线零回归）、`tree list` 逐字同 R54、`tree probe` **14/14**、`validate 0 问题`、`reload 37 份`、redtale 零 ERROR（4 条 `RecipeManager` 噪声来自 simplyswords / brewinandchewin）。④数字：`build --offline` exit 0（jar **635391 B**）、`selftest` **102 PASS**（不变，`TreeCommand` 不在 selftest 源码集）、探针 `S7InfoLineProbe` **8/8**、构建锁取删两次。 | **§13.59 R56-a~d**。M7 的观测面补齐：`tree state` 报「已用/剩余」，`tree info` 报「当前等级能拿多少点」，两处口径各管一段、不互相复述（R56-b）。`levelLine` 做成 public 纯函数是为了让玩家分支（无真人在线）至少能被离线断言，胶水只剩「取 level → 拼串」。 |
+
+### 13.59 R56 的四条口径（观测面补一段）+ 下一步（R57）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R56-a | 追加行**只在玩家上下文**出现，控制台 `tree info` 11 行一个字节不改 | 那 11 行是 T-0047 的验收基线。同类先例：R49 给 `level info` 加「当前」段，控制台输出必须逐字不变 —— 观测面加信息不能拿既有基线做代价 |
+| R56-b | `tree info` 只报**上限**（当前等级可拿多少点），已用/剩余归 `tree state` | 同一条信息两个来源必然漂移。R53 已把「已用/剩余」钉在 `state` 上，`info` 再报一遍就是第二份真相 |
+| R56-c | `levelLine` 做成 **public 纯函数**，探针直接断言字符串；玩家胶水只有「`getPlayer()` → `levelOf` → 拼串」 | 玩家分支至今无真人调用方（与 M6/M7 其它真人路径同批挂账），纯函数化是唯一能离线证伪的切法 |
+| R56-d | 该行**不做「已触顶 / 未触顶」判断**，`可拿 N 点` 的 N 就是全部真话 | `points_per_level = 0`（关门槛）与 `max_points = 0`（不限）两种语义下「5 点」都不等于「等级 5」，多写一句判断就会与 `capFor` 打架 |
+
+下一步（R57）：
+
+1. **验收 T-0052**（`TreeUnlocks`：五签名逐字、定义序而非 selected 序、同技能去重保首次、`describe` 空为 `  （无）`、零 `net.minecraft`、`wc ≤ 150`、探针 ≥25 断言）。
+2. **`unlock_skill` 接服务层**：`TreeService.applyTree` 之后按 `TreeUnlocks.unlocked` 下发/回收玩家技能解锁集 —— M7 出口「点满一条分支并解锁技能」的最后一块（现在 `unlock_skill` 只有解析、零消费方）。
+3. **`tree skills <tree>`** 观测面（列已解锁技能），依赖第 2 条。
+4. **真人一次性验收窗口**（需 Aki 上线，一次收完）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/`take`·`untake` + `tree info` 玩家段 + 武器 tooltip（D20）+ `#minecraft:undead` 条件乘区。
+5. `respec` 扣费仍挂 Q-021（默认免费），等 D28 经济桥接，不排期。

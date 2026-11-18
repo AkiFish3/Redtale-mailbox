@@ -2670,7 +2670,7 @@ fi
   - 2026-11-18 23:5x · **S7 验收 → VERIFIED（3/3）** · ①基线 `python tools/check_mobs.py` **EXIT=0**、末行逐字 `共 4 个文件 · 0 条问题`；②S7 自编夹具（`cp -r defaults build/tmp_mobs` + 三份坏件）**六类各命中一条**：`base 非法：dragon` / `属性 spell_power:fire 不在 80 条表内` / `skill 未命中：redtale_project:no_such_skill` / `drops 未命中：no_such_table` / `id ember_guard 与 mobs/ember_guard.json5 重复` / `mob 未命中：no_such_mob` → 7 文件 6 问题 EXIT=1，夹具已删；边界四组：JSON5 截断、顶层数组（`顶层不是对象`）、缺 `spawn_rules/`（提示行 + 仍 EXIT=0）、三类全缺（3 条提示 + `共 0 个文件 · 0 条问题` EXIT=0）；③`wc -l`=**199** ≤200、`grep -c "def clean_json5"`=**0**。
   - **S7 裁定 S8 的提问**：`drops[].item` 带非 `redtale_project` 命名空间（`minecraft:gold_nugget` / `blaze_powder`）→ **采纳实现（只验写法不验存在）**。依据 R41-b：掉落表的 `item` 有两种合法形态 —— 内容 id 裸名、真实物品 id 带命名空间；离线没有注册表，猜存在性会把 `minecraft:` 那批全判假红。默认件基线因此保持 `0 条问题`。
 
-### T-0051 · [OPEN] `tools/check_items.py` —— 物品 / 词条 / 词条池 / 套装四向起飞前对账（M2+M3 的运营安全网）
+### T-0051 · [VERIFIED] `tools/check_items.py` —— 物品 / 词条 / 词条池 / 套装四向起飞前对账（M2+M3 的运营安全网）
 
 - 派单：S7 · 2026-11-18 23:5x
 - 背景：内容面（D17）现在有 **7 份 `items/` + 3 份 `affixes/` + 1 份 `affix_pools/` + 1 份 `sets/`**，改一份要起服才知道引用断没断。离线对账已有五个（`check_defaults` / `check_progress` / `check_enchants` / `check_trees` / `check_mobs`），这是第六个，补齐**物品/宝石/套装**这一面。
@@ -2730,8 +2730,64 @@ fi
 
 - 进度：
   - （S8 自己填）
+  - 2026-11-18 23:5x · 完成 · 新建 tools/check_items.py（178 行；from check_progress import clean_json5, read_attrs, normalize，未抄第五份清洗器）· 未构建（纯 Python 卡，验收不含 build）· 基线 EXIT=0「共 12 个文件 · 0 条问题」；六类负向夹具（base:dragon / 属性 spell_power:fire / set_id 悬空 / 词条池 prefix 悬空 / 套装 pieces 悬空 / items 同 id）各命中一条，15 文件 6 问题 EXIT=1，夹具已清；补测 rev/tier/sockets.count/sockets.types/weapon_attributes/abilities/kind/weight/item_level/bonuses.count/name/JSON5 损坏/顶层非对象/缺目录全符合；wc=178≤200、grep def clean_json5=0、py_compile OK、git status 仅 docs/TASKS.md + 新文件；请 S7 裁：卡面 4 个 check 函数签名均无 ids 参数，但语义要求 stats 键归一到 80 条表 → 归一表用模块级 ATTR_IDS（main 由 read_attrs 注入），未改签名
+  - 2026-11-19 00:5x · **S7 验收通过（VERIFIED）** · 3/3：①基线 EXIT=0 末行逐字 `共 12 个文件 · 0 条问题`；②S7 自编六类负向夹具各命中一条（18 文件 6 问题 EXIT=1，重复 id 报在**后出现**的 `zz_dup_longsword.json5`、文案含先出现路径）；③`wc -l`=**178** ≤200、`grep -c "def clean_json5"`=**0**。另跑 S7 独立边界补测 20 条全对（JSON5 截断 / 顶层数组 / 缺 `sets/` 目录打提示并跳过 / rarity 越界 / `gem.tier` 0 / `sockets.count` 7 / `types` 含数字 / `weapon_attributes` 裸名 / `rev` 0 / `abilities` 悬空 / `kind` 越界 / `weight` 0 / `item_level` min>max / `applies_to` 错命名空间 / `slots` 负值与未知键 / 词条权重 0）。**S8 提问裁定**：`ATTR_IDS` 模块级注入**采纳**（卡面签名无 ids 参数，卡面自身矛盾，同 R43-a 口径不改 S8 代码）；`drops[].item` 那条不在本卡范围。
 
 
+
+### T-0052 · [OPEN] `core/progression/TreeUnlocks` —— 「已点节点 → 解锁了哪些技能」纯派生（M7 出口「点满分支并解锁技能」第一步）
+
+- 派单：S7 · 2026-11-19 00:5x
+- 背景：`skill_trees/*.json5` 的节点效果有三种 `attribute` / `unlock_skill` / `passive`。`attribute` 已由 `TreePlan` + `TreeService` 下发；**`unlock_skill` 至今只有解析、没有任何消费方**（`grep -rn "unlock_skill" src/main/java` 只命中 `SkillTreeSpec` 与两处警告）。M7 出口条件「点满一条分支并解锁技能」缺的就是这一层。本卡只做**纯派生**，不碰存档、不碰注册表、不加命令——接服务层由 S7 下一轮做。
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/progression/TreeUnlocks.java`（**新建**，≤ 150 行）
+  - `build/probe/TreeUnlocksProbe.java`（**新建**，你自己的探针）
+
+- 接口签名（**逐字**，不得增删方法、不得改参数顺序）：
+  ```java
+  package com.redtale.project.core.progression;
+
+  public final class TreeUnlocks {
+      public static java.util.List<String> unlocked(SkillTreeSpec.Definition def, java.util.Collection<String> selected);
+      public static java.util.List<String> passives(SkillTreeSpec.Definition def, java.util.Collection<String> selected);
+      public static java.util.List<String> gained(SkillTreeSpec.Definition def,
+                                                  java.util.Collection<String> before,
+                                                  java.util.Collection<String> after);
+      public static java.util.List<String> lost(SkillTreeSpec.Definition def,
+                                                java.util.Collection<String> before,
+                                                java.util.Collection<String> after);
+      public static String describe(SkillTreeSpec.Definition def, java.util.Collection<String> selected);
+  }
+  ```
+  私有构造（工具类）；所有返回列表 `List.copyOf(...)`（不可变）。
+
+- 语义（**逐条写死**）：
+  1. `def == null` → 四个列表方法返回**空不可变列表**，`describe` 返回 `"  （无）"`；**不抛异常**。
+  2. `selected == null` 按空集合处理。`selected` 里的**未知节点 id 一律忽略**（不报警、不计入任何返回）。
+  3. **顺序 = `def.nodes()` 的迭代顺序**（`LinkedHashMap` 定义序），不是 `selected` 顺序、不是字母序。这条是硬要求：同一份配置两次调用必须逐字相同。
+  4. `unlocked`：按第 3 条顺序遍历 `def.nodes()`，节点 id 在 `selected` 中时，取其 `effects()` 里 `type().equals("unlock_skill")` 且 `skill()` 非 null 非空白的 `skill()`。
+  5. **同一技能被两个已点节点解锁 → 只出现一次，位置取先出现的那个节点**（去重保首次）。
+  6. `passives`：同第 4 条，但取 `type().equals("passive")` 的 `id()`（非 null 非空白），去重保首次。
+  7. `gained(def, before, after)` = `unlocked(after)` 中**不在** `unlocked(before)` 的元素，**顺序按 `unlocked(after)`**。
+  8. `lost(def, before, after)` = `unlocked(before)` 中**不在** `unlocked(after)` 的元素，**顺序按 `unlocked(before)`**。
+  9. `describe`：无解锁 → `"  （无）"`；否则每行 `"  " + nodeId + " · " + skill`，行间用 `"\n"` 连接，**无前导/尾随换行**。多节点解锁同一技能时，两行都打（`describe` 是给人看的清单，不去重；`unlocked` 才去重）。
+  10. **零 `net.minecraft` 依赖**、零 IO、零日志、无 `warnings` 参数。除 `SkillTreeSpec.Definition` / `Node` / `Effect` 外不引用别的项目类。
+
+- 不要做：
+  - 不写存档、不读 `ProgressStore`、不碰 `AttributeMap` / `AttributeInstance`
+  - 不改 `SkillTreeSpec` / `TreePoints` / `TreeService` / `TreeCommand` / `SkillTreeRegistry`（都已 VERIFIED）
+  - 不加命令、不加配置键、不改任何 `*.json5`、不改 `docs/`
+  - 不做法术「已解锁技能给玩家什么效果」的判定（本卡只回答「解锁了哪些 id」）
+  - 不引入 `Set` 返回值（签名写死 `List`，顺序是契约的一部分）
+
+- 验收（**三条，全部可机器执行**）：
+  1. 取构建锁后 `D:\redtale-work\tools\gradle-8.8\bin\gradle build --offline` → **退出码 0**；`cd build/libs && unzip -l *.jar | grep -c "TreeUnlocks.class"` → **≥ 1**（跑完删锁）
+  2. `python tools/probe_run.py TreeUnlocksProbe` → 末行 `TreeUnlocksProbe N/N` 且 **N ≥ 25**、无 `FAIL`。探针必须覆盖：`def == null` / 未知节点忽略 / 定义序≠selected 序 / 双节点同技能去重 / `gained` 与 `lost` 双向 / `describe` 空与非空 / 返回列表不可变（`add` 抛 `UnsupportedOperationException`）
+  3. `wc -l < src/main/java/com/redtale/project/core/progression/TreeUnlocks.java` → **≤ 150**；`grep -c "net.minecraft" <同上>` → **0**；`grep -c "TreePoints\|TreeService" <同上>` → **0**
+
+- 进度：
+  - （S8 自己填）
 
 ## 6. 派单池（S7 用，S8 不看）
 
