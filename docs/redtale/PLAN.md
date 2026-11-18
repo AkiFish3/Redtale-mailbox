@@ -1409,3 +1409,21 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **真人一次性验收窗口**（M6/M7 唯一出口阻塞，需 Aki 上线）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/`take`·`untake` + `tree info`/`tree skills` 玩家段 + 武器 tooltip（D20）+ `#minecraft:undead` 条件乘区。**不排期，等人**。
 3. **Q-022（M5 原语范围）** 未答复，默认「按需补」已在协作板写明；答复 B 则按 5 张卡拆给 S8。
 4. `respec` 扣费挂 Q-021（默认免费），等 D28 经济桥接。
+
+| R60 | 2026-11-19 | **验收 T-0055（`check_lang.py`）+ 新增 `tools/check_deps.py`（依赖面 / 命名面起飞前对账，D6/D11/D12）+ 接进 `check_all`（9→10）+ 派 T-0056（`check_attrs.py`）** | ①卡板：T-0055 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `EXIT=0` 末行逐字 `共 2 个文件 · 0 条问题` / S7 自编夹具 `EXIT=1` 末行 `共 2 个文件 · 6 条问题`，五类负向 + 反向对称 + 孤儿键提示不计问题数全命中 / `wc`=122≤200、`grep -c "def clean_json5"`=0、`gen_attr_lang --check` 独立 `EXIT=0`）+ S7 独立探针 `S7LangProbe` **23/23**（A~E 五组，含坏 JSON、顶层非对象、纯空白值、附魔文件截断）。**派 T-0056**（`tools/check_attrs.py`：`docs` §2 ↔ `AttributeSpecs.java` ↔ lang 三向对账，9 检查项、5 类负向夹具、三个入参默认值写死），在制品 **1/3**。②自研 `tools/check_deps.py`（新建 158 行）：`neoforge.mods.toml` 依赖面（只允许 `neoforge`/`minecraft`，D11 白名单 9 个可声明但当前一条都不该有）/ `gradle.properties` 的 `mod_id` 不得改名 / `build.gradle` 禁 `implementation|api` 与 ModDevGradle / 133 个 java 文件的 import 白名单（9 个允许前缀）/ 39 个资源文件的 D6 禁用专名。基线 `java 133 个 · 资源 39 个` 末行 `共 4 份来源 · 0 条问题`；接进 `check_all` 后末行 `共 10 个脚本 · 跑成 10 · 跳过 0 · 红 0`。③S7 探针 `S7DepsProbe` **14/14**（五类红路径 + `geckolib optional` 放行 + 缺 mods.toml + 注释里的 import 不算 + 真仓库回归）。④本轮**无 Java 改动**（`src/` 零 diff）→ 未构建、未启测试服（正式服/测试服均未动）。 | **§13.63 R60-a~d**。`check_lang` 的连带预判当场兑现（`跑成 8 · 跳过 1` → `跑成 9 · 跳过 0`）——这条比脚本本身更能证明「九个脚本原先有缺口」。新件补的是**编译器管不到的那一面**：越界 import 换台构建机就绿、`mods.toml` 多一条 required 编译期完全不看。 |
+
+### 13.63 R60 的四条口径（编译期管不到的那一面）+ 下一步（R61）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R60-a | 「依赖面」也算配置面：`neoforge.mods.toml` 的 `[[dependencies]]`、`build.gradle` 的 `implementation`、java 的 import，三者都要**起飞前对账**，不能靠「本机能编过」 | 越界 import 只在「构建机恰好有那个 jar」时才报错（我们直吃 `E:/server-test/libraries`，天生容易碰上）；`mods.toml` 多一条 `required` 编译期零反应，装到玩家机器才拒绝加载。两者都是「本地绿、上线红」 |
+| R60-b | D11 白名单里的 9 个前置**允许声明、当前一条都不声明**；白名单只约束「能写什么」，不要求「必须写什么」 | 现在代码零 mod 依赖（`mods.toml` 只有 neoforge + minecraft），这是最好的状态。把白名单写成「必须有」会逼着以后为 GeckoLib 之类补依赖，反而增加装机失败面 |
+| R60-c | D6 禁用专名只扫**资源**（`lang`/`json5`/`toml`），不扫 java 注释 | 实测 java 里有 2 处注释写「上游 MMOItems 的观感」「上游 MMOItems 的物品数值模型」——那是溯源注释，不是玩家可见文案。禁到注释层等于逼人删掉历史依据（且要改已 VERIFIED 的文件） |
+| R60-d | `check_all.py` 的脚本清单**只加不改**：新脚本一律追加到末尾 | 顺序是台账习惯（地基 → 内容面 → 运营面），改顺序会让「红在第几行」失去可比性；`check_deps` 属最后一类（发布面），追加在 `check_lang` 之后 |
+
+下一步（R61）：
+
+1. **验收 T-0056**（`check_attrs.py`：基线 `共 3 份来源 · 0 条问题` + 5 类负向 + `wc ≤ 200`）；过验收后把 `check_attrs` 接进 `check_all`（末行 `共 11 个脚本 · 跑成 11 · 跳过 0 · 红 0`）。
+2. **真人一次性验收窗口**（M6/M7 唯一出口阻塞，需 Aki 上线）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/`take`·`untake` + `tree info`/`tree skills` 玩家段 + 武器 tooltip（D20）+ `#minecraft:undead` 条件乘区。**不排期，等人**。
+3. **Q-022（M5 原语范围）** 未答复，默认「按需补」；答复 B 则按 5 张卡拆给 S8。
+4. `respec` 扣费挂 Q-021（默认免费），等 D28 经济桥接。

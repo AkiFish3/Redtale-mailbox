@@ -220,6 +220,9 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-19 05:0x · S7 · 验收 **T-0054 → VERIFIED**（3/3 + S7 边界 13 文件 11 问题：8 类全命中、跨文件重复 id 报在**后出现**的文件、`ignite` 带 `（M5 未实现）`/`drain` 不带、`wc`=192≤200、`check_enchants` 回归 EXIT=0） · **修 `gen_attr_lang.py` 的破坏性覆写**：`--check` 原报「过期（67 键）」，照提示跑一次会把 lang 从 **93 键削到 67 键**（`item.*` 14 / `entity.*` 8 / `enchantment.*` 2 / 他人 `death.*` 2）；改「只拥有自有前缀」的合并语义 + 坏 JSON 拒绝覆盖（`SystemExit(2)`）+ `newline="
 "`；实测写盘与 HEAD **零 diff**、人工删 1 条属性键 + 塞 1 条外壳键后跑一次「属性键补回 + 外壳键仍在」 · **新增 `tools/check_all.py`** 对账总入口（末行 `共 9 个脚本 · 跑成 8 · 跳过 1 · 红 0`，红路径用桩脚本验过） · **派 T-0055**（`tools/check_lang.py` lang 键覆盖对账，在制品 1/3） · 本轮**无 Java 改动**，未构建未启测试服 · 留下 `E:\RedtaleProject`（`PLAN.md` §13 R59 + §13.62、`docs/ROUND-R59-LANG.md`、`docs/TASKS.md`） · 下一步：验 T-0055；真人一次性验收窗口仍等 Aki
+- 2026-11-19 04:23 · S8 · T-0055（tools/check_lang.py lang 键覆盖对账：属性66/物品14/实体8/附魔N 全现读源码与配置）做完自测 → DONE：基线 EXIT=0「共 2 个文件 · 0 条问题」；负向夹具 EXIT=1 7 条问题、5 类全命中 + 孤儿提示不计入；wc=122、clean_json5 复用、gen_attr --check 回归 EXIT=0；改 tools/check_lang.py（新建 122 行，唯一文件）、docs/TASKS.md（本卡状态/进度）、协作板 §3；纯 Python 卡未取锁未 build · 下一步：待 S7 验收 T-0055，按 id 升序领下一张卡
+
+- 2026-11-19 05:4x · S7 · 验收 **T-0055 → VERIFIED**（3/3 + S7 独立探针 `S7LangProbe` **23/23**：五类负向 + 反向对称 + 孤儿键提示不计问题数；连带证据 `check_all` 末行 `共 9 个脚本 · 跑成 9 · 跳过 0 · 红 0`，R59 的「跳过 1」当场归零） · **新增 `tools/check_deps.py`**（依赖面 / 命名面：`mods.toml` 只许 neoforge+minecraft、`build.gradle` 禁 `implementation|api|ModDevGradle`、133 java 文件 import 白名单、39 资源文件 D6 专名）+ 接进 `check_all`（9→10，末行 `共 10 个脚本 · 跑成 10 · 跳过 0 · 红 0`）；探针 `S7DepsProbe` **14/14** · **派 T-0056**（`tools/check_attrs.py` 80 条属性表三向对账：docs §2 ↔ `AttributeSpecs.java` ↔ lang，5 类负向夹具，在制品 1/3） · 本轮**无 Java 改动**，未构建未启测试服（正式服/测试服均未动） · 留下 `E:\RedtaleProject`（`PLAN.md` §13 R60 + §13.63、`docs/TASKS.md`） · 下一步：验 T-0056；真人一次性验收窗口仍等 Aki；Q-022 未答复
 
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 

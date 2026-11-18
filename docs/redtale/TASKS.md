@@ -2905,7 +2905,7 @@ fi
 
   - 2026-11-19 04:3x · **S7 验收通过（3/3）** · ①基线 EXIT=0 末行逐字 `共 2 个文件 · 0 条问题`；②S7 自编 **10 文件 10 问题 EXIT=1**，8 类全命中（`on_kill` 未知 trigger / `effects` 是对象 / `effects: []` 无 effect / `cooldown_ticks:"20"` / `args:[1,2]` / `conditions[0].type 非法：moon_phase` / **跨文件重复 id 报在后出现的 `a8_second.json5`** / JSON5 截断）+ 文案差异命中（`ignite` 带 `（M5 未实现）`、`drain` 不带后缀）；③`wc`=192≤200、`grep -c "def clean_json5"`=0、`check_enchants` 回归 EXIT=0 · 另补边界 **13 文件 11 条问题**：单引号+注释的单条形态通过、顶层未知键仅提示、`cd:true` 与 `1000000001` 判错而 `1000000000` 通过、`" b_trim "` 与 `b_trim` trim 后判重、`effects[0] 不是对象` / `effects[1] 缺少 type` / `conditions[0].args 不是对象` / `顶层不是对象` / `既没有 scripts…` / `scripts 必须是数组`、无 `scripts/` 目录 EXIT=1「共 0 个文件 · 1 条问题」 · 无裁定项（`ATTR` 式争议本轮未出现）
 
-### T-0055 · [OPEN] `tools/check_lang.py` —— lang 键覆盖起飞前对账（显示层的安全网）
+### T-0055 · [VERIFIED] `tools/check_lang.py` —— lang 键覆盖起飞前对账（显示层的安全网）
 
 - 派单：S7 · 2026-11-19 04:3x
 - 背景：现有四个 `gen_*_lang.py` 各自「只拥有自己的前缀」写入（R59 刚把 `gen_attr_lang.py` 从整体覆写改成合并，之前跑一次就把 93 键削成 67 键）。但**没有任何脚本检查四类前缀是不是真的齐**——缺键不报错、不崩、不刷日志，客户端直接显示裸键（R8 已栽一次：`/give` 显示 `item.redtale_project.sword`）。本卡做只读对账，套路与 `check_scripts.py` 一致。
@@ -2949,6 +2949,57 @@ fi
   3. `wc -l < tools/check_lang.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_lang.py` → **0**；`python tools/gen_attr_lang.py --check; echo $?` → **0**（R59 刚修的合并语义零回归）
 
 - 进度：
+  - 2026-11-19 04:23 · 完成 · tools/check_lang.py（新建，122 行，唯一文件） · 构建退出码：未构建（纯 Python 卡，验收不含 build） · 自测：验收 1 基线 EXIT=0 末行逐字「共 2 个文件 · 0 条问题」；验收 2 负向夹具 EXIT=1「共 2 个文件 · 7 条问题」——两侧都缺属性键×2 / 只在 zh_cn 存在 item.amulet / 只在 en_us 存在 item.axe / 空串 / 数字 / 占位符两侧不一致（5 类全命中 + 反向对称），另 1 条提示「zh_cn 孤儿键：item.redtale_project.ghost」不计问题数；验收 3 wc=122≤200、grep -c def clean_json5=0、gen_attr_lang.py --check 独立跑 EXIT=0；边界补测：坏 JSON/顶层非对象各 1 条、附魔 JSON5 截断 1 条、纯空白值 2 条均命中，py_compile OK，夹具已清；git status 仅 TASKS.md + 新脚本
+
+- S7 验收（R60 · 2026-11-19 05:2x）：**3/3 通过 + 独立探针 `S7LangProbe` 23/23**。①基线 `EXIT=0` 末行逐字 `共 2 个文件 · 0 条问题`。②S7 自编夹具（真 lang 副本 + 六处改动）`EXIT=1` 末行 `共 2 个文件 · 6 条问题`：两侧缺 `air_damage`（2 条）、只在 zh_cn 有 `axe`、空串 `amulet`、数字 `boots`、`soul_reap` 占位符不一致，孤儿键 `ghost` 两侧各 1 条提示且**不计问题数**；另验类序（attribute 问题排在 item 之前）。③`wc`=122 ≤200、`grep -c "def clean_json5"`=0、`gen_attr_lang.py --check` 独立跑 `EXIT=0`（93 键 / 自有 67）。边界：坏 JSON → 只报 1 条（另一份完整不误报缺键）、顶层非对象、反向对称（只在 en_us）、纯空白值、附魔文件截断均命中。**连带证据**：`tools/check_all.py` 末行从「跑成 8 · 跳过 1」变 `共 9 个脚本 · 跑成 9 · 跳过 0 · 红 0`，即 PLAN §13.62「过验收后跳过数应归零」的预判成立。
+
+### T-0056 · [OPEN] `tools/check_attrs.py` —— 80 条属性表三向对账（`docs` ↔ `AttributeSpecs.java` ↔ lang）
+
+- 派单：S7 · 2026-11-19 05:2x（R60）
+- 背景：属性是**唯一不能热加**的注册表（D17：加一条要换 jar），所以 `AttributeSpecs.ALL` 与 `docs/ATTRIBUTE-REGISTRY.md` §2 必须逐条对齐。今天这份对齐**只靠手**：`EXPECTED_COUNT = 80` 只拦「条数少写」，拦不住「id 拼错 / 文档删了一行没改代码 / 两条同名 / 顺序错位」。而 `check_lang.py` 只查「属性 id 有没有 lang 键」，查不出文档与代码漂移。本卡做只读三向对账，套路与 `check_skills.py` 一致。
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_attrs.py`（**新建**，≤ 200 行）
+
+- 入参（三个都给默认值，负向夹具靠它们指到临时目录）：
+  ```
+  --doc   默认 docs/ATTRIBUTE-REGISTRY.md
+  --java  默认 src/main/java/com/redtale/project/core/attr/AttributeSpecs.java
+  --lang  默认 src/main/resources/assets/redtale_project/lang
+  ```
+
+- 解析规则（**写死，不要「聪明」地兼容别的写法**）：
+  1. **文档**：只取 `## 2.` 标题之后、`## 3.` 标题之前的文本（用 `text.split("## 2.")[1].split("## 3.")[0]`，拿不到任一段 → 记一条问题 `文档缺 §2 或 §3 标题，无法定位属性表` 并退出 1）。行正则 `^\|\s*(\d+)\s*\|\s*`([^`]+)`\s*\|`：第 1 组 = 序号，第 2 组 = id。
+  2. **段落计数**：`^### ([A-F])\..*?(\d+)`（第 1 组 = 段字母，第 2 组 = 该段条数）。注意 **F 段标题是「预留 16 条（65~80，…）」，数字不在全角括号里**，所以别用 `（(\d+)）`。
+  3. **代码**：`^\s+(v|c|cb)\("([^"]+)",` → `(op, id)`；`v` = 原版，`c` / `cb` = 自建。
+  4. **`EXPECTED_COUNT`**：`EXPECTED_COUNT\s*=\s*(\d+)`；读不到 → 问题 `代码里读不到 EXPECTED_COUNT`。
+  5. **lang**：`<lang>/zh_cn.json` / `en_us.json`，`json.load`；坏 JSON → 问题 `<lang>.json 无法解析：<异常>` 并跳过该份。
+
+- 检查项（每条问题一行 `[问题] <文案>`；`<id>` 原样打印，不加反引号）：
+  1. 条数三方一致：`[问题] 条数不一致：文档 N / 代码 M / EXPECTED_COUNT K`（三者不等就报一条，不逐项展开）
+  2. 段落计数：`[问题] 段落 <字母> 计数不符：标题 <t> / 实际 <n>`
+  3. id 集合双向：`[问题] 文档有、代码无：<id>`（按文档顺序）、`[问题] 代码有、文档无：<id>`（按代码顺序）
+  4. 落点：判据 `id.startswith("minecraft:")` 应等价于 `op == "v"`；不符 → `[问题] 落点不一致：<id>（文档 原版/自建 / 代码 <op>）`（文档侧写「原版」当 id 以 `minecraft:` 开头，否则写「自建」）
+  5. 顺序：两条 id 序列逐位比较，**只报第一处** → `[问题] 顺序不一致：第 <i> 位 文档 <a> / 代码 <b>`（`i` 从 1 起）
+  6. 重复：两侧各自查，第二次起报 → `[问题] 重复 id：<id>（文档 第 <n> 次）` / `[问题] 重复 id：<id>（代码 第 <n> 次）`
+  7. 序号连续：文档序号应从 1 起、每次 +1；断 → `[问题] 序号不连续：第 <i> 行是 <实际序号>`
+  8. lang 覆盖（**只查自建**）：id 不以 `minecraft:` 开头 → 键 `attribute.redtale_project.<id.split(":",1)[-1]>`，两份 lang 都要有 → `[问题] <lang> 缺属性键：<key>`
+  9. 收尾固定一行 `共 3 份来源 · M 条问题`（M 只数 `[问题]`）；M > 0 → 退出码 1，否则 0
+
+- 不要做：
+  - 不写任何文件（不修文档、不修 java、不调 `gen_attr_lang.py`）
+  - 不改任何 `*.json5` / `*.java` / `docs/` / 其它 `tools/*.py`
+  - 不校验「默认上限（attrCap）」列、不校验中英文案、不校验 `AttributeGroup` 分组
+  - 不校验原版属性的 lang 键（原版属性走 `minecraft:` 命名空间，不归我们管）
+  - 不做 `--fix`、不连服务器、不读 `E:\server-test`
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_attrs.py` → **退出码 0**，末行逐字 `共 3 份来源 · 0 条问题`
+  2. 自编负向夹具（临时目录复制一份文档 + 一份 java + 一份 lang，三个参数指过去，跑完删除）：退出码 1，必须命中 **5 类** —— ①文档删 1 行（条数不一致 + 顺序不一致）②代码把 1 条 id 改个字母（文档有、代码无 + 代码有、文档无）③把 1 条自建改成 `v("minecraft:xxx")`（落点不一致）④文档里同一条 id 出现两次（重复 id）⑤lang 删 1 条属性键（缺属性键）
+  3. `wc -l < tools/check_attrs.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_attrs.py` → **0**（本卡不吃 JSON5）；`python tools/check_all.py` 末行仍为 `共 10 个脚本 · 跑成 10 · 跳过 0 · 红 0`（**接进 `check_all.py` 是 S7 在 VERIFIED 之后做的事，你不要动那个文件**）
+
+- 进度：
+
 
 ## 6. 派单池（S7 用，S8 不看）
 
