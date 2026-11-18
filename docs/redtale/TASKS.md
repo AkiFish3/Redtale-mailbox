@@ -2193,7 +2193,7 @@ fi
 - 2026-11-18 13:06 · S7 验收通过 → VERIFIED（3/3 + 附加两条）· 基线 `共 2 个文件 · 没有发现问题 ✓` EXIT=0；`--dir E:/server-test/config/redtale_project` 同末行 EXIT=0；三份坏夹具各 1 条问题 EXIT=1（`mining_speed` / `max_level: 1` / 跨目录同 id，另补 JSON5 损坏 1 条、无 `levels/`+`jobs/` 打「跳过」EXIT=0）· 5 个 import 全在白名单、219 行 · **口径裁定**：Δ① 采纳「`generic.attack_damage` 也算合法写法」，但改的是 **Java 侧**（`AttributeSpecs.resolve` 加 `generic.` 别名，R46-a），不是改检查器 —— 检查器比运行期宽松就会「放行、运行期静默丢」，那正是本卡要消灭的失败类型；Δ②③④ 全采纳（空串单条、curve 非对象单条、读不到表打 `共 0 个文件`）
 
 
-### T-0042 · [OPEN] `mobs/SpawnRuleSpec` —— 刷怪规则解析器 v1（D26 / M6 最后一块，纯解析）
+### T-0042 · [VERIFIED] `mobs/SpawnRuleSpec` —— 刷怪规则解析器 v1（D26 / M6 最后一块，纯解析）
 
 - 派单：S7 · 2026-11-18 13:10
 - 目标：把 `config/redtale_project/spawn_rules/*.json5` 解析成不可变记录，**只做解析 + 夹取 + 告警**。契约 = `docs/SPAWN-RULES.md` §3/§4/§5/§9（**逐字照它写，别自己加字段**）。
@@ -2236,6 +2236,55 @@ fi
   1. `gradle build --offline` 退出码 0（先取 `.queue/build.lock`，跑完删）
   2. `grep -c "net.minecraft" src/main/java/com/redtale/project/mobs/SpawnRuleSpec.java` = **0**（纯解析层，不许碰 MC）
   3. `wc -l` ≤ 200，且自己写一支离线探针（`build/probe/S8SpawnRuleProbe.java`，照 T-0035 的形态）**≥ 24 条断言**覆盖上面 9 条口径 + 保序 + `parse(null)` 空表，全绿
+
+- 进度：
+- 2026-11-18 13:08 · 完成 · 新建 src/main/java/com/redtale/project/mobs/SpawnRuleSpec.java（186 行，主类 + Conditions + Definition）+ build/probe/S8SpawnRuleProbe.java（76 断言，build/ 不入库）；卡外零改动 · build --offline EXIT=0（jar 内 SpawnRuleSpec=3）· 自测：wc=186≤200 / net.minecraft=0 / parse 签名=1 / 探针 76/76 全绿 · 口径请 S7 裁：①chance 非有限（1e999）按非数字 WARN+1.0（卡面只写非数字）；②conditions 非对象 → WARN+ANY，light/y 非对象 → 静默 null，outside 非布尔 → WARN+null（卡面未写）；③重复 id 未去重（9 条口径无此规则），后者覆盖前者，请定是否照 DropSpec 保留先出现；④name 非字符串 → id + WARN（§4 仅写缺省=id）；⑤priority 排序属 L2 SpawnRegistry，L1 保持配置顺序
+- 2026-11-18 14:2x · S7 验收通过 → VERIFIED（3/3 + S7 独立探针 `build/probe/S7SpawnRuleProbe.java` **108/108**，断言自带不复用 S8 的）· build `--offline` EXIT=0（jar 内 `SpawnRuleSpec*=3`，565750 B）· `grep -c net.minecraft`=0 · `wc -l`=186 ≤ 200 · S8 探针 76/76 · **口径裁定**：Δ① `chance` 非有限（1e999→Inf）按非数字 WARN+1.0 采纳；Δ② `conditions` 非对象 WARN+ANY / `light`·`y` 非对象静默 null / `outside` 非布尔 WARN+null 全采纳（子对象静默与「夹取不告警」同源）；Δ③ 重复 id **后者覆盖、位置留首次**（`LinkedHashMap.put` 语义）采纳，**不改成保留先出现** —— L2 快照按 id 排序，重复本身就是配置错误，覆盖是最不意外的语义；Δ④ `name` 非字符串 → id + WARN 采纳；Δ⑤ `priority` 排序归 L2 采纳（L1 保持配置顺序）。另：未知键只在 `id`/`match`/`mob` 都合法时才报（被跳过的坏规则不叠噪声），接受
+
+### T-0043 · [OPEN] `/redtale spawn list|check` —— 刷怪规则只读观测面（D26 / M6）
+
+- 派单：S7 · 2026-11-18 14:2x
+- 目标：把 `SpawnRegistry` 快照**只读地**打印出来，并做「引用存在性」对账。契约 = `docs/SPAWN-RULES.md` §7/§9。
+  **快照层已由 S7 落地**（`RedtaleCore.spawnRules()`，R47），本卡只做观测面 —— 不许自己再解析一遍配置。
+
+- 不要做：
+  - 不挂 `MobSpawnEvent` / 不生成实体 / 不读 `Level`（L3 `SpawnReplacer` 归 S7，红线见 SPAWN-RULES §8）
+  - 不改 `SpawnRuleSpec` / `SpawnRegistry` / `MobRegistry` / `RedtaleCore` / `ConfigStore`
+  - 不加子命令、不加参数（`spawn` 下只有 `list` 与 `check` 两个字面量，v1 不接受 id 参数）
+  - 不写盘、不动配置、不改快照
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/command/SpawnCommand.java`（**新建**，≤ 200 行）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**只许追加 1 行**：在 `.then(ExpCommand.node())` 之后插入 `.then(SpawnCommand.node())`；不许删/改别的行）
+
+- 接口签名（**必须逐字**）：
+  ```java
+  public final class SpawnCommand {
+      public static com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> node();
+      public static int list(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> ctx);
+      public static int check(com.mojang.brigadier.context.CommandContext<net.minecraft.commands.CommandSourceStack> ctx);
+  }
+  ```
+  数据来源只用 `RedtaleCore.get().spawnRules()` 与 `RedtaleCore.get().mobs()`；`node()` = `Commands.literal("spawn").then(list).then(check)`。
+
+- 输出口径（**文案逐字，S7 按行 grep 验收**）：
+  - `spawn list`：空表 → 单行 `[redtale] 没有刷怪规则（读 <config根>/spawn_rules/*.json5）`，返回 0。
+  - `spawn list`：非空 → 首行 `[redtale] 刷怪规则 N 条 · 引用怪物 M 只 · 每区块限量 K 条`
+    （N = `size()`；M = **去重后**的 `mob` 个数；K = `perChunkCap() > 0` 的条数）。
+    然后按 `core.spawnRules().ordered()` 顺序每条一行（两空格缩进）：
+    `  <id> · <action> · → <mob> · 概率 <chance> · 优先级 <priority> · 上限 <cap|不限>`
+    `chance` 用 `String.format(java.util.Locale.ROOT, "%.2f", chance)`；`cap` 为 0 时打 `不限`。返回 N。
+  - `spawn check`：首行 `[redtale] 刷怪规则 N 条 · 问题 M 个`，随后每个问题一行（两空格缩进、`⚠ ` 前缀）：
+    ① `mob` 在 `core.mobs()` 查不到 → `  ⚠ <id>: mob <mob> 未定义`（计 1 个问题）
+    ② `match` 中除 `"*"` 外的实体 id 在 `BuiltInRegistries.ENTITY_TYPE` 查不到 → `  ⚠ <id>: match 引用了未知实体 <e>`（**每个坏 id 各计 1**）
+    ③ `chance == 0.0` → `  ○ <id>: chance 0（永不生效）`（`○` 不是 `⚠`，**只提示不计问题**，排在所有 `⚠` 之后）
+    M = 0 时第二行起打 `  引用完整 ✓`。返回 M。
+  - 全程 `sendSuccess(..., false)`；不许抛异常（`mobs()` 空表、`match` 为空、id 含怪字符都要能走完）。
+
+- 验收（**三条，全部可机器执行**）：
+  1. `gradle build --offline` 退出码 0（先取 `.queue/build.lock`，跑完删）
+  2. `grep -c "SpawnCommand.node()" src/main/java/com/redtale/project/core/command/RedtaleCommand.java` = **1**，且 `unzip -l build/libs/redtale_project-0.1.0.jar | grep -c "command/SpawnCommand"` = **1**（只有主类，无内部类则仍是 1；有内部类就如实报实际数）
+  3. 测试服（**S7 跑，你不要启服**）：`/redtale spawn list` 首行含 `刷怪规则 1 条` + 1 行明细（含 `→ ember_guard`）；`/redtale spawn check` 输出 `问题 0 个` 且含 `引用完整 ✓`
 
 - 进度：
 

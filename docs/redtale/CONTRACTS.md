@@ -568,6 +568,7 @@ public final class MobSpawner {
 | 怪物定义（M6，R36） | `config/redtale_project/mobs/<id>.json5`（一个文件一只怪，schema 见 `MobSpec` 卡 T-0030）；默认 `ember_guard` / `ash_caster` 属 `DEFAULT_FILES`，**删文件会被 reload 重建** |
 | 怪物实体（M6，R38） | 不落盘：`/redtale mob spawn` 现生成；识别靠 scoreboard tag `redtale_mob/<怪id>`（1.21.1 无 `getPersistentData`，R34 事实） |
 | 掉落表（M6，R41） | `config/redtale_project/drops/<文件名>.json5`（`id` 是**裸名**，一个文件一张表）；默认 `ember_guard.json5` 属 `DEFAULT_FILES`。**注意**：`DEFAULT_FILES` 只在文件缺失时落地，老配置里的 `mobs/*.json5` 不会自动长出 `drops:` 键（R41 实测：测试服 R38 的 ember_guard 副本没有该键 → 死怪零产出） |
+| 刷怪规则（D26 / M6，R47 起进 `DEFAULT_FILES`） | `config/redtale_project/spawn_rules/<文件名>.json5`（`id` 是**身份**、文件名随意；schema 见 `docs/SPAWN-RULES.md`）；默认 `overworld_night_elite.json5` 属 `DEFAULT_FILES`，**删文件会被 reload 重建** |
 | 等级曲线（M7，R42 定稿；R44 起进 `DEFAULT_FILES`） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3）；默认 `main.json5` 会**在文件缺失时被重建** |
 | 职业定义（M7，R44 起进 `DEFAULT_FILES`） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4）；默认 `miner.json5` |
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
@@ -793,3 +794,46 @@ public final class ProgressService {
   `primitive` 把 `grant_exp` 当**真实原语调用**跑（`ScriptEngine.runCalls` → 注册表 → 原语 → `award`），打印「累计前→后 / Δ / 期望 / 主等级前→后 / 职业合计 Δ」并返回 1=通过、0=不符。
 - **`grant_exp` 原语**（R46，`core/script/builtin/GrantExpEffect`，id = `grant_exp`）：`args.amount`（必填，`<=0` WARN 跳过、`>1e9` 按硬顶 `GrantExpEffect.HARD_CAP` 发并记日志）、`args.target`（`caster` 缺省 / `target`）；**只对玩家生效**（怪物没有累加器 → WARN 跳过）。来源固定 `primitive`，**不吃** `mob_exp_multiplier`（那个只给 `kill`）。加原语 = 换 jar（D17）；`SKILLS.md` §4 预算 24 → **25**。
 - **重算点三处**：登入（`GameHooks.onPlayerJoin`）、`/redtale reload`（`RedtaleCore.reload` 在线全量）、等级变化（`award` 内部）。死亡 / 换维度**不重算**（modifier 随实体存活）。
+
+### 4.28 刷怪规则 `SpawnRuleSpec` + `SpawnRegistry`（D26 / M6，R47 定稿）
+
+```java
+package com.redtale.project.mobs;
+
+// L1 解析（S8 写的，T-0042 VERIFIED）—— 零 net.minecraft import
+public final class SpawnRuleSpec {
+    public record Conditions(List<String> worlds, List<String> biomes, Integer lightMin, Integer lightMax,
+                             String time, Integer yMin, Integer yMax, Boolean outside, List<String> difficulties) {}
+    public record Definition(String id, String name, List<String> match, String action, String mob,
+                             double chance, int priority, int perChunkCap, Conditions conditions, String source) {}
+    public static Map<String, Definition> parse(List<ConfigFile> configs, List<String> warnings); // LinkedHashMap，保序
+}
+
+// L2 快照（S7，R47）
+public final class SpawnRegistry {
+    public static final SpawnRegistry EMPTY;
+    public static SpawnRegistry load(List<ConfigFile> all, MobRegistry mobs, List<String> warnings);
+    public List<SpawnRuleSpec.Definition> ordered();    // priority 降序 → id 升序（执行层只认这个）
+    public List<SpawnRuleSpec.Definition> declared();   // 配置文件顺序
+    public SpawnRuleSpec.Definition get(String id);
+    public boolean has(String id);
+    public int size();
+    public List<String> sortedIds();
+    public List<String> warnings();
+    public Map<String, Integer> countByAction();
+    public int danglingCount(MobRegistry mobs);
+    public String describe();                           // "1 条刷怪规则（replace 1）"
+}
+
+// com.redtale.project.core.RedtaleCore
+public com.redtale.project.mobs.SpawnRegistry spawnRules();
+```
+
+四条口径（改之前先读 `PLAN.md` §13.50）：
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R47-a | `SpawnRegistry.load(all, mobs, warnings)` **必须排在 `MobRegistry.load` 之后**（`RedtaleCore.reload()` 已按此顺序硬排） | 交叉校验要查 `mob` 是否存在；`mobs` 还是 `EMPTY` 时每条规则都会报悬空，且**不报错**，只表现为「一改配置就满屏告警」 |
+| R47-b | 悬空 `mob` → **1 条 WARN + 规则保留**；L3 见悬空**不拦**（回落原版照生成） | 「先写规则、后补怪物定义」是正常运营动作；执行层不拦是 SPAWN-RULES §8 红线 5：宁可少替换，不可把刷怪量改小 |
+| R47-c | 排序 = `priority` 降序 → `id` 升序（全序，结果唯一） | 只按 `priority` 排时同优先级顺序取决于配置加载顺序，换机器就漂 |
+| R47-d | L1 保持配置顺序、**排序只在 L2**；`declared()` / `ordered()` 两个视图并存 | 一个视图两用会逼调用方自己再排一次 = 第二份真相（R36-a） |
