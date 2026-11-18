@@ -2464,7 +2464,7 @@ fi
 2026-11-18 18:01 · 完成 · src/main/java/com/redtale/project/core/progression/TreePoints.java（新建58行）+ build/probe/TreePointsProbe.java（新建探针）· build EXIT=0 · jar 内 TreePoints=3 / wc=58≤150 / net.minecraft=0 / python tools/probe_run.py TreePointsProbe → PASS 42 / FAIL 0（A~I 全覆盖）
 - 2026-11-18 19:05 · **S7 验收 → `[VERIFIED]`（3/3 + 独立探针 41/41）** · ①`gradle build --offline` `RC=0`；②`unzip -l` 内 `TreePoints`=**3**、`wc -l`=**58** ≤150、`net.minecraft`=**0**；③`python tools/probe_run.py TreePointsProbe` → `PASS 42 / FAIL 0`（≥25 达标）。**S7 独立探针 `build/probe/S7TreePointsProbe.java` PASS 41 / FAIL 0 / TOTAL 41**（自编 A~L 十二组，不复用 S8 断言：state 五元组、unknown 不扣点、重复 id 只算一次、available 负不夹取、missingPrereqs 保序去重 + selected=null 全缺、五种 Status 各一条 + 优先级两条（已选 > 缺前置 > 点数）、cost 0 两分支、statusAll 键序/不可变、全 null 不 NPE、cost==available 仍 OK 与 cost>available 才 NO_POINTS、幂等、空节点表）。**卡面 7 条语义逐条对上，零偏差，无打回。**
 
-### T-0047 · [OPEN] `/redtale tree list|info` —— 技能树只读观测面（M7 / D25）
+### T-0047 · [VERIFIED] `/redtale tree list|info` —— 技能树只读观测面（M7 / D25）
 
 - 派单：S7 · 2026-11-18 19:05
 - 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §5 第 2 条 —— **点数是派生值**。本卡只报**静态定义**，不判定点数、不算 `used/available`。
@@ -2513,6 +2513,58 @@ fi
   1. 构建（带锁，照 `docs/TASKS.md` §3）：`cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
   2. `cd build/libs && unzip -l *.jar | grep -c "TreeCommand"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/command/TreeCommand.java` → `≤ 200`；`grep -c "TreePoints" <同文件>` → `0`
   3. **（S7 跑，需要测试服）** `redtale tree list` 首行逐字等于 `[redtale] 技能树 1 棵 · 节点 10 个 · 点数上限 21`；`redtale tree info warrior_vanguard` 以 `  节点 ` 开头的行数 = **10** 且首行含 `上限 21 点 · 每级 1 点 · 节点 10`；`redtale tree info nope` 含 `没有技能树 nope`
+
+- 进度：
+2026-11-18 19:12 · 完成 · `src/main/java/com/redtale/project/core/command/TreeCommand.java`（新建 80 行）+ `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（`.then(LevelCommand.node())` 后仅追加 1 行 `.then(TreeCommand.node())`，零删改）· build `--offline` EXIT=0（RC=0）· 自测：`wc`=80≤200 / `grep -c TreePoints`=0 / `unzip -l | grep -c TreeCommand`=1 / 常量池 11 组词全命中 / 探针 `python tools/probe_run.py TreeProbe` → **PASS 38 / FAIL 0**（节点结构 `redtale.tree.list|info` + `info.id` 参数、接口签名、文案常量池、无 TreePoints 引用）。
+注（S8）请 S7 裁：卡面「无树时第 1 行 `[redtale] 技能树 0 棵`」与通用首行模板「… · 节点 <nodeCount> 个 · 点数上限 <pointTotal>」在 size=0 时冲突；实现按无树专门规则输出严格逐字的两行（不带 `· 节点 0 个 · 点数上限 0`），有树时走通用模板。未接 `TreePoints` / `ProgressStore` / 玩家上下文，零写操作；第 3 条测试服验收待 S7。
+
+- 2026-11-18 20:2x · **S7 验收 → `[VERIFIED]`（3/3 + 无树分支补测）** · ①`gradle build --offline` `BUILD SUCCESSFUL`/`RC=0`；②`unzip -l` 内 `TreeCommand.class`=**1**、`wc -l`=**80** ≤200、`grep -c "TreePoints"`=**0**；③测试服（`Done (2.353s)` 起停一次，已停、25567/25577 无 LISTEN）RCON 逐字对：`[redtale] 技能树 1 棵 · 节点 10 个 · 点数上限 21` / 第二行 `  warrior_vanguard · 战士 · 先锋 · 职业 warrior · 节点 10 · 点数 21` / `info warrior_vanguard` 首行含 `上限 21 点 · 每级 1 点 · 节点 10` 且 `  节点 ` 段落 **10 行**（root/atk_spd_1/atk_spd_2/gale/heavy_1/heavy_2/quake/armor_1/armor_2/unyielding，节点序 = 配置序未排序）/ `info nope` → `[redtale] 没有技能树 nope（现有 1 棵：warrior_vanguard）`。
+  **无树分支补测**（S8 请裁的那条）：把 `skill_trees/warrior_vanguard.json5` 内容改成 `{}` 再 reload → `tree list` 输出严格两行 `[redtale] 技能树 0 棵` + `  （没有技能树定义：读 config/redtale_project/skill_trees）`；还原后 reload 回落 1 棵。**裁定：采纳 S8 实现** —— 卡面「无树时第 1 行」与通用首行模板在 `size=0` 时确实互斥，按「专门规则优先、有树才走通用模板」解；同 R43-a 口径（语义判、不改代码）。
+  **回归**：`reload` 36 份 / `validate` 问题 0 / `level list` 三行逐字同 R45 / 日志 redtale 零 ERROR·零 WARN。
+- 2026-11-18 20:2x · **S7 合流**：`TreeCommand.java` + `RedtaleCommand` 那一行归 S7；R53 起 `TreeCommand` 由 S7 接 `take|untake` 子命令（观测面 → 写面，见 PLAN §13 R53）。
+
+### T-0048 · [OPEN] `core/progression/TreePlan` —— 技能树属性下发的纯函数（M7 / D25 第五层第一步）
+
+- 派单：S7 · 2026-11-18 20:2x
+- 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §5 第 4 条（**洗点必须能完整回滚**：`attribute` 效果的 modifier id 写成固定形态，洗点时按前缀批量移除；「属性残留」是这类系统最常见的 bug）
+
+- 不要做：
+  - **零 MC import**（不 `import net.minecraft.*`、不读配置、不接存档、不下发 modifier、不加新字段、不打印）
+  - **不 import / 不调 `TreePoints`**（点数判定已 VERIFIED，归 L3；`grep -c "TreePoints"` 必须为 0）
+  - 不做前置校验 / 职业过滤（`treesForJob` 已在 L2）/ `exclusive_with` 互斥 / 洗点扣钱 / GUI
+  - 不改 `SkillTreeSpec` / `SkillTreeRegistry` / `TreePoints` / `ProgressStore` / `RedtaleCore` / `docs/`
+  - **不要自己发明任何钳制**（D16）：`amount` 原样（只做 6 位四舍五入），不加负数归零、不加上限
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/progression/TreePlan.java`（**新建**，≤ 150 行）
+  - `build/probe/TreePlanProbe.java`（**新建**，探针）
+
+- 接口签名（**逐字**，S7 按行 grep）：
+  ```java
+  public record Modifier(String id, String attribute, String operation, double amount) {}
+  public static List<Modifier> plan(SkillTreeSpec.Definition def, Collection<String> selected)
+  public static List<Modifier> declared(SkillTreeSpec.Definition def)
+  public static String modifierPrefix(String treeId)
+  public static String operationOf(String raw)
+  public static String pathOf(String id)
+  ```
+  允许 import 只有：`java.util.*`（`SkillTreeSpec` 同包，不用 import）。
+
+- 语义（**逐条写死**，探针按此断言）：
+  1. `pathOf`：`"redtale_project:warrior_vanguard"` → `"warrior_vanguard"`（取第一个 `:` 之后）；无冒号原样返回；`null` → `""`
+  2. `modifierPrefix(treeId)` = `"tree/" + pathOf(treeId) + "/"`（例：`tree/warrior_vanguard/`）
+  3. `plan`：`def == null` → 空 list；`selected == null` 视作空集。遍历顺序 **= `def.nodes()` 的遍历序**（**不是** `selected` 的序）；只处理 `node.id()` 在 `selected`（先转 `Set` 去重）里的节点
+  4. 每个节点内按 `effects()` 原序遍历；只取 `type()` 满足 `equalsIgnoreCase("attribute")` 且 `attribute()` trim 非空的条目；`unlock_skill` / `passive` / 其它类型**跳过**
+  5. `operationOf`：先 trim + 转小写；`"add"` 与 `"add_value"` → `"add_value"`；`"add_multiplied_base"` / `"add_multiplied_total"` → 原串；`null`、空串、其它任何值 → `"add_value"`
+  6. `amount` = `Math.round(effect.value() * 1_000_000.0) / 1_000_000.0`（与 `ProgressService.plan` 同口径）
+  7. **modifier id**：某节点的**属性效果条数** == 1 → `modifierPrefix(treeId) + nodeId`（裸 id，§3 的「固定 id = 树 + 节点」）；> 1 → `modifierPrefix(treeId) + nodeId + "/" + i`，`i` 是**该节点内属性效果的序号（0 起，不按全部 effects 序）**。理由：一条节点挂两条同属性效果时裸 id 会互相覆盖
+  8. `declared(def)`：与 `plan` 同一套遍历与 id 规则，但**不看 `selected`**、遍历全部节点 —— 「洗点 / 降级先移除」要按它清场（R20 同源）
+  9. 全部返回**不可变**（`List.copyOf`）；纯函数、无静态可变状态、同一输入两次调用结果逐字相同
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
+  2. `cd build/libs && unzip -l *.jar | grep -c "TreePlan"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/progression/TreePlan.java` → `≤ 150`；`grep -c "net.minecraft" <同文件>` → `0`；`grep -c "TreePoints" <同文件>` → `0`
+  3. `python tools/probe_run.py TreePlanProbe` → 末行 `PASS n / FAIL 0`，断言 **≥ 25** 条，必须覆盖：A 只出选中节点 / B 未选节点零输出 / C 输出顺序 = `def.nodes()` 序（**故意让 selected 倒序**）/ D `unlock_skill`+`passive` 跳过 / E 单属性效果 → 裸 id / F 双效果 → 带 `/0` `/1` / G 下标按属性效果序（混杂 `passive` 在首位不影响 `i`）/ H `operationOf` 三种入参 + `null`/空串/`"weird"`/`" ADD_VALUE "` 四类回落与归一 / I `amount` 6 位四舍五入（`0.1+0.2` 型尾巴）/ J `declared` 含未选节点且 id 与 `plan` 同规则 / K 全 `null` 入参不 NPE / L 返回值不可变（`add` 抛 `UnsupportedOperationException`）/ M `modifierPrefix` 剥命名空间 / N `selected` 空集与 `def` 无节点 / O 幂等
 
 - 进度：
 

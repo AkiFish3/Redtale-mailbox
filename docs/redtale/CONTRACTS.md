@@ -570,6 +570,7 @@ public final class MobSpawner {
 | 怪物实体（M6，R38） | 不落盘：`/redtale mob spawn` 现生成；识别靠 scoreboard tag `redtale_mob/<怪id>`（1.21.1 无 `getPersistentData`，R34 事实） |
 | 掉落表（M6，R41） | `config/redtale_project/drops/<文件名>.json5`（`id` 是**裸名**，一个文件一张表）；默认 `ember_guard.json5` 属 `DEFAULT_FILES`。**注意**：`DEFAULT_FILES` 只在文件缺失时落地，老配置里的 `mobs/*.json5` 不会自动长出 `drops:` 键（R41 实测：测试服 R38 的 ember_guard 副本没有该键 → 死怪零产出） |
 | 刷怪规则（D26 / M6，R47 起进 `DEFAULT_FILES`） | `config/redtale_project/spawn_rules/<文件名>.json5`（`id` 是**身份**、文件名随意；schema 见 `docs/SPAWN-RULES.md`）；默认 `overworld_night_elite.json5` 属 `DEFAULT_FILES`，**删文件会被 reload 重建** |
+| 刷怪替换开关（D26 / M6 收口，R52 起进 `DEFAULT_FILES`） | `config/redtale_project/spawn.json5`：v1 只有 `replace_enabled`（缺省 `true`；非布尔的坏值 → 回落缺省 + 一条 WARN）。**运行期可写**：`/redtale spawn replace on|off` 会立刻回写这份文件（R52-a），`/redtale reload` 按文件重设内存；删文件会被 reload 重建为「开」 |
 | 等级曲线（M7，R42 定稿；R44 起进 `DEFAULT_FILES`） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3）；默认 `main.json5` 会**在文件缺失时被重建** |
 | 职业定义（M7，R44 起进 `DEFAULT_FILES`） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4）；默认 `miner.json5` |
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
@@ -952,3 +953,29 @@ public String describe();                                          // "1 棵技�
 | R50-c | 悬空 classes / 悬空 skill **告警但保留**，执行层自然点不了 | 同 R47-b：先写树后补职业是正常顺序，丢弃会静默失败 |
 | R50-d | 调用顺序：**必须排在 `progress` 与 `skills` 之后** | 交叉校验查「另一边有没有」，任一侧 EMPTY 时满屏告警且不抛异常（R47-a 第三次复现） |
 | R50-e | 默认件三件套（树 + `jobs/warrior` + `skills/quake_slam`）必须同时进 `DEFAULT_FILES`；§3 示例里三个不在 80 表的键按表改写并在文件头记偏差 | 少一件 = 一启动三条告警；表是 D17 冻结的，改示例不改表 |
+
+### 4.32 刷怪替换开关 `SpawnSettings`（D26 / M6 收口，R52 定稿）
+
+```java
+package com.redtale.project.mobs;
+
+// com.redtale.project.mobs.SpawnSettings —— 纯解析，零 MC import
+public record SpawnSettings(boolean replaceEnabled) {
+    public static final boolean DEFAULT_REPLACE_ENABLED = true;
+    public static final SpawnSettings DEFAULT;
+    public static SpawnSettings parse(com.google.gson.JsonObject root, java.util.List<String> warnings);
+    public String describe();                                   // "刷怪替换开关 开|关"
+}
+
+// com.redtale.project.mobs.SpawnReplacer —— 新增两个方法（R52），判定与事件钩子不变
+public void applySettings(SpawnSettings settings);              // reload 调；内部走 setEnabled（变了才留日志）
+public boolean persist();                                       // replace on|off 调；写 config/redtale_project/spawn.json5
+```
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R52-a | 开关**落盘**且与配置同源：`spawn.json5` 是唯一真相，`reload` 读它重设内存，`on\|off` 写完立刻回写 | 只改内存时 `replace off` 一重启就回「开」，运营以为关了其实没关 —— 静默回滚比缺功能更难查 |
+| R52-b | 全局开关放配置根 `spawn.json5`，**不**混进 `spawn_rules/*.json5`（一文件一规则）、**不**塞进 `progression.json5`（经验面） | 目录结构即语义；混进去会让 `SpawnRuleSpec` 对每份规则文件都报「未知键」 |
+| R52-c | `persist()` 失败只 WARN 不抛，命令文案里如实写「落盘失败（内存已生效，重启会回缺省）」 | 开关已经在内存生效，落盘失败不该让运营命令报错；但也不能假装成功 |
+
+未落盘项（挂账）：`per_tick_cap` 现硬编 `DRAIN_PER_TICK = 8`，开关文件只收 `replace_enabled`（见 `PLAN.md` §13.55 下一步第 4 条）。

@@ -1226,6 +1226,8 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 
 | R51 | 2026-11-18 | **验收 T-0046（`TreePoints`）+ 存档 v2（技能树分树持久化）+ 派 T-0047** | ①卡板：T-0046 `[DONE]` → **`[VERIFIED]`**（3/3：`build --offline` RC=0 / jar 内 `TreePoints`=**3**、`wc -l`=**58** ≤150、`net.minecraft`=0 / S8 探针 **42/42**；另跑 S7 独立探针 `build/probe/S7TreePointsProbe.java` **41/41**，自编 A~L 十二组）。**派 T-0047**（`/redtale tree list|info` 只读观测面，独占 `TreeCommand.java` + `RedtaleCommand` 1 行，文案逐字写死），在制品 **1/3**。②自研 `ProgressStore` v1→**v2**：`trees: {treeId: [nodeId]}` + `trees(id)` / `nodes(id,treeId)` / `hasNode` / `addNode` / `removeNode` / `setNodes` / `clearTree`；**按树分桶**（PLAN §13.53 第 3 条原案），不是扁平 list。③实测（测试服 2 次启停 `Done` 均干净，已停、25567/25577 无 LISTEN）：**A 组 v1 真档**（R50 留在 `world/data` 的 126 B、`version=1`、`main=3000`）直接读起、零告警，`exp probe 7/7`；`exp primitive` 弄脏 → `save-all` → 文件变 `version=2` 且出现 `trees` 复合键、`main 3000` 逐字保留；**B 组带旧扁平 `nodes` 键的档**（本轮第一版写的 139 B）也能读起（旧键忽略）→ 再存时旧键消失、只剩 `trees`。④数字：`build --offline` exit 0（jar **604428 B**）、`selftest` 78 PASS、S7 独立探针 `S7ProgressStoreProbe` **53/53**（A~J 十组）。 | **§13.54 R51-a~d**。方向修正一次：第一版按「扁平 `nodes: [nodeId]`」写，做到一半发现 **节点 id 只在树内唯一**（`root` 这种名字每棵树都有）→ 按 §13.53 原案改回 `trees: {treeId: [...]}`；这正是「派单前先读 PLAN 的下一轮清单」的价值，省的是一次静默的数据模型返工。另一条：`ProgressStore.load` 里已有 `ListTag list`（players），新增分支再用 `list` 直接编译失败 —— 局部变量重名是加密代码时的常见坑。
 
+| R52 | 2026-11-18 | **验收 T-0047（`/redtale tree list|info`）+ `spawn.json5` 开关持久化（M6 收口）+ 派 T-0048** | ①卡板：T-0047 `[DONE]` → **`[VERIFIED]`**（3/3：`build --offline` `RC=0` / jar 内 `TreeCommand.class`=**1**、`wc -l`=**80** ≤200、`TreePoints`=0 / 测试服 RCON 三组文案逐字对：`[redtale] 技能树 1 棵 · 节点 10 个 · 点数上限 21`、`info warrior_vanguard` 的 `  节点 ` 段 **10 行**（配置序未排序，root→atk_spd_1→…→unyielding）、`info nope` → `没有技能树 nope（现有 1 棵：warrior_vanguard）`）。**无树分支补测**：把默认树内容改成 `{}` → `tree list` 严格两行 `[redtale] 技能树 0 棵` + `  （没有技能树定义：读 config/redtale_project/skill_trees）`，还原后回落 → **裁定采纳 S8 实现**（卡面通用首行与无树首行在 `size=0` 时互斥，按「专门规则优先」解，同 R43-a）。**派 T-0048**（`core/progression/TreePlan` 属性下发纯函数，M7 L5 第一块，独占新类 ≤150 行 + 探针 ≥25），在制品 **1/3**。②自研 M6 收口：新类 `mobs/SpawnSettings`（`spawn.json5` 纯解析，`replace_enabled` 缺省 true、坏值回落并告警）+ `SpawnReplacer.applySettings/persist` + `RedtaleCore.reload` 接线（`spawnRules` 之后）+ `SpawnCommand.toggle` 落盘 + `DEFAULT_FILES` 加 `spawn.json5`。③实测（测试服 **3 次启停** `Done 1.974/1.956/…s`，均已停、25567/25577 无 LISTEN）：默认件首启落地；`replace off` → 文案尾部 `· 已写入 spawn.json5`、磁盘 `replace_enabled: false`；**reload 后仍「关」**（读回而不是重置）；**重启后仍「关」**（这是本条真正要证的东西）；坏值夹具 `replace_enabled: 'yes'` → `1 条告警` 且文案逐字 `spawn.json5: replace_enabled 不是布尔值，已改用 true`；还原 `on` 后 `tree list`/`level list`/`validate 0 问题` 零回归。④数字：`build --offline` exit 0（jar **611877 B**）、配置文件 **36 → 37 份**、redtale 零 ERROR（4 条 RecipeManager 既有噪声）。 | **§13.55 R52-a~c**。本轮顺序调整：PLAN 原定 R52 第 2 项是 `TreeService`，实际先做了第 3 项（开关持久化）—— 因为 `TreeService` 的属性下发要以 `TreePlan` 的 id 规则为唯一真相，而 `TreePlan` 刚派给 S8；先写 `TreeService` 会把 id 拼法抄成第二份，等 T-0048 落地再合流只需一次接线。开关持久化则是「小而完整、当轮能验穿」的一块。 | 
+
 ### 13.53 R50 的五条口径（技能树快照层）+ 下一步（R51）
 
 | # | 口径 | 理由 |
@@ -1259,3 +1261,18 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **M7 L3 落地（归 S7）**：`TreeService`（`take` / `untake`：`TreePoints.canTake` → `ProgressStore.addNode` → 按 `effects` 下发属性 + 撤销；洗点走 `clearTree`）+ `/redtale tree take|untake`。**这是技能树第一次真正影响面板**，验收必须读 `AttributeMap` 差值而不是看返回值。
 3. **`spawn.json5` 开关持久化**（R48/R49 遗留）：`replacer_enabled` / `per_tick_cap` 落盘 + 记账 §5 路径。
 4. 挂账不变，另加**技能树真人在线路径**：`treesForJob` 与 `take` 的玩家上下文至今无调用方。
+
+### 13.55 R52 的三条口径（开关持久化）+ 下一步（R53）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R52-a | 运行期开关**必须落盘**，且落盘文件与配置同源：`spawn.json5` 放 `replace_enabled`，`reload` 按文件重设内存，`on|off` 写完立刻回写文件 | R48/R49 的 `replace off` 只改内存，**重启回「开」** —— 运营以为关了其实没关，这类「静默回滚」比功能缺失更难查（日志里两种状态都正常）。写回文件而不是另存 `world/`：开关是运营配置，跟其它 `*.json5` 同一处可见、可手改、可进模板 |
+| R52-b | 开关文件与「规则目录」分开：`spawn.json5` 在配置根，`spawn_rules/*.json5` 只放规则；**不塞进 `progression.json5`** | 目录结构即语义（`SPAWN-RULES` §3）：`spawn_rules/` 每份文件是一条规则，混入全局键会让 `SpawnRuleSpec` 对每个文件都报「未知键」。而 `progression.json5` 属经验面，塞刷怪开关等于让两个里程碑共用一个文件 |
+| R52-c | 观测面与写面**同一张卡里不许同时改**：`TreeCommand` 在 T-0047 阶段 `grep -c TreePoints = 0` 是硬验收；`take|untake` 另开一轮（合流后归 S7），且必须先有 `TreePlan`（id 规则唯一真相） | 卡面把「不接判定层」写成可机器执行的 grep 是为了防止 S8 顺手把 `TreePoints` 接进来（那样 `used/available` 就有两套算法）。合流后同一个类加写面是允许的，但**顺序不能反**：先观测面（能看见）→ 再写面（能改），否则出问题时分不清是「算错了」还是「写错了」 |
+
+下一步（R53）：
+
+1. **验收 T-0048**（`TreePlan`：build + jar 类 + 探针 ≥25 条覆盖 A~O 十五组）。**S8 探针必须自证 id 规则**：单效果裸 id、双效果带 `/0` `/1`，以及「混杂 `passive` 在首位不影响下标」。
+2. **M7 L5 `TreeService`**（归 S7）：`take` / `untake` → `TreePoints.canTake`（已 VERIFIED）→ `ProgressStore.addNode` → `TreePlan.plan/declared` 下发/清场（`tree/<tree>/<node>` 前缀移除）；`/redtale tree take|untake`。**验收读 `AttributeMap` 差值**，不看返回值。
+3. **洗点（`respec`）**：`clearTree` + 前缀批清；扣费仍挂 Q-021（默认免费）。
+4. 挂账不变，另加：**技能树真人在线路径**（`take` 的玩家上下文）、`spawn replace per_tick_cap`（现硬编 8，开关文件只落了 `replace_enabled`）。
