@@ -1296,3 +1296,24 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **`respec` 扣费**：Q-021 仍挂（默认免费），等 D28 经济桥接；`skill_trees/*.json5` 的 `respec` 段现在只解析不执行。
 4. **技能树真人在线路径**：`take`/`untake` 的 `src.getPlayer()` 分支至今无真人调用方（探针走 FakePlayer）；与既有挂账同批。
 5. 挂账不变，另加：`spawn replace per_tick_cap`（现硬编 8）、`per_tick_cap` 落盘。
+
+| R54 | 2026-11-18 | **验收 T-0049（`check_trees.py`）+ M7 出口「等级 → 技能点」（`TreePoints.capFor`）+ 派 T-0050** | ①卡板：T-0049 `[DONE]` → **`[VERIFIED]`**（3/3：基线 EXIT=0 末行逐字 `共 1 个文件 · 0 条问题` / S7 自编五类负向夹具 6 条问题 EXIT=1 全命中 + 四类边界 / `wc -l`=200、`grep -c "def clean_json5"`=0）。**派 T-0050**（`tools/check_mobs.py` 怪物/掉落/刷怪三向起飞前对账：`base` 八原型、`attributes`→80 表、`skills[].skill`→`skills/`、`drops`→`drops/`、`spawn_rules.mob`→`mobs/`、跨文件重复 id），在制品 **1/3**。②自研：`TreePoints.capFor(maxPoints, pointsPerLevel, level)` = `min(max_points, 每级点数 × 等级)`（`points_per_level <= 0` = 关掉等级门槛，D16 风格）；新增 `state(def, selected, level)` / `canTake(def, selected, nodeId, level)` 两个重载，**旧两参/三参入口一行未改语义**（仍按 `max_points`）；`TreeService.levelOf(ServerPlayer)` + `state`/`take` 改走等级派生；`TreeCommand` 的 `state` 行尾追加 `· 等级 L（1 点/级，上限 21）`。③实测（测试服 **2 次启停** `Done (2.022s)` / `Done (2.261s)`，均已停、25567/25577 无 LISTEN）：`/redtale tree probe` **14/14**（A~M 与 R53 逐条一致 + 新增 **N 组**：主等级 1 → 上限 **1**、cost1 `OK`、cost2 `NO_POINTS`）；连跑两次 14/14（幂等 + 收尾清场有效）。回归 `tree list` 逐字同 R52、`tree state` 控制台分支、`exp probe 7/7`、`validate 0 问题`、`reload 37 份`、redtale 零 ERROR·零 WARN。④数字：`build --offline` exit 0（jar **633988 B**）、`selftest` **94 PASS**（78→94，新增 `tree()` 16 条）、构建锁取删两次、`sources` 无新增文件。 | **§13.57 R54-a~e**。M7 出口的最后一块落地：点数上限从「写死的 `max_points`」变成「等级派生」。三处刻意的取舍见口径表——尤其 **R54-b**：等级回档后 `available` 会变负，但**不自动退已点节点**（静默扣点比负剩余更糟），也**不拦新点**（`NO_POINTS` 天然拦住）。 |
+
+### 13.57 R54 的五条口径（等级换点数）+ 下一步（R55）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R54-a | 点数上限 = **`min(max_points, points_per_level × 主等级)`**；`points_per_level <= 0` = **关掉等级门槛**（退回 `max_points`，`max_points = 0` 则不设上限） | 与 `SKILL-TREE.md` §3 `points_per_level: 1` 的注释「从 1 级开始，每级 1 点」对齐；`0 = 关闭` 与 D16 全套旋钮同一语义，运营想退回 R53 行为只需把 `points_per_level` 写 0，不改代码 |
+| R54-b | 等级**只改上限**，不动「已用」；等级回档导致 `available` 变负时**不自动退节点、不拦已点**，只让新的 `canTake` 返回 `NO_POINTS` | 点数是从已点集合现算的派生值。自动退点会静默丢掉玩家花过点数的节点（且顺序不可预期）；负剩余是「配置/等级回档」的如实反映，下一次点任何东西都会被 `NO_POINTS` 拦住，不会继续恶化 |
+| R54-c | `TreePoints` 的**旧两参 `state` / 三参 `canTake` 语义一行不改**（= `max_points`），等级派生走新增重载；`TreePoints` 是 T-0046 已 VERIFIED 文件，本次属「加方法不改旧路径」，已在本行记原因 | 探针（`tree probe` L 组）与离线断言全走旧入口，改旧语义会让 R53 的 13/13 变红却没暴露真问题。重载分开 = 两套口径各自可测 |
+| R54-d | `tree probe` **必须先把 FakePlayer 主等级顶到 `max_points` 之上**（写 `1e9` 经验）再跑 A~M，否则整套会被 `NO_POINTS` 拦成假红；门槛本身由 **N 组**（等级 1 → 上限 1）单独验 | 验收环境默认 L1 = 1 点，`atk_spd_1` 之后就点不动了。这不是 bug 而是新口径的必然结果；把「环境准备」写进探针，比让每条断言都自带等级更少出错 |
+| R54-e | 探针收尾用 **`store.clear(uuid)`**（清等级 + 节点），不用「再写一个大经验值」 | FakePlayer 的 UUID 固定，`1e9` 经验会留在 `redtale_project_progress.dat` 里被别的探针读到（本轮首版即如此，`exp probe` 的基线会被污染）。清场是唯一零残留的收尾 |
+
+下一步（R55）：
+
+1. **验收 T-0050**（`tools/check_mobs.py`：默认件 `共 4 个文件 · 0 条问题` + 六类负向全命中 + `wc ≤ 200` / `grep -c "def clean_json5" = 0`）。
+2. **`respec` 扣费**：Q-021 仍挂（默认免费）；`skill_trees/*.json5` 的 `respec` 段现在只解析不执行，等 D28 经济桥接。
+3. **技能树 / 升级真人在线路径**：`take`/`untake`/`currentLine`/`ProgressService` 的玩家分支至今无真人调用方（探针全走 FakePlayer）。
+4. **`tree info` 补「等级门槛」一行**：现在只报 `上限 21 · 每级 1`，没有「当前等级能拿多少点」——观测面在 R54 后少一条信息。
+5. 挂账不变：`spawn replace per_tick_cap`（硬编 8）、`per_tick_cap` 落盘、`#minecraft:undead` 与 tag 层的真人验证。
+

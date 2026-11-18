@@ -1014,7 +1014,7 @@ public static UUID idOf(ServerPlayer player);                       // null → 
 /redtale tree take <tree> <node>              只能由玩家执行
 /redtale tree untake <tree> <node>            有已点节点依赖它 → HAS_DEPENDENTS（不级联）
 /redtale tree respec <tree>                   清空 + 前缀批清，回「退回 N 个节点」
-/redtale tree probe                           控制台可跑，FakePlayer 13 条断言
+/redtale tree probe                           控制台可跑，FakePlayer 14 条断言（A~M + R54 的 N）
 ```
 
 | # | 口径 | 理由 |
@@ -1025,4 +1025,40 @@ public static UUID idOf(ServerPlayer player);                       // null → 
 | R53-d | 点数上限暂取 `def.maxPoints()`，等级换点数未接（M7 剩余项） | `TreePoints` 契约已 VERIFIED；等级换点是取舍题，不在服务层发明 |
 | R53-e | `TreeCommand` 由观测面扩为观测+写面（改已 VERIFIED 文件，PLAN §13 R53 记原因）；`list\|info` 输出逐字不变 | R52-c：先观测面（能看见）→ 再写面（能改），顺序不能反 |
 | R53-f | `ProgressService.onLogin` / `applyAll` 各补一行 `TreeService.applyAll`，与等级属性同一次重算 | 两套 modifier 同源（都从存档派生），分两次重算就会出现「等级涨了、技能树属性还是旧的」的中间态 |
+
+### 4.34 等级 → 技能点（D25 / M7 出口，R54 定稿）
+
+```java
+package com.redtale.project.core.progression;
+
+// 纯函数，零 MC 依赖。capFor 是「点数上限」的唯一派生点。
+public static int TreePoints.capFor(int maxPoints, int pointsPerLevel, int level);
+//   pointsPerLevel <= 0            → maxPoints（0 则不限）  【关掉等级门槛，D16 风格】
+//   level <= 0                     → 0
+//   否则                           → maxPoints > 0 ? min(maxPoints, pointsPerLevel*level) : pointsPerLevel*level
+
+public static TreePoints.State TreePoints.state(def, Collection<String> selected, int level);   // 上限走 capFor
+public static TreePoints.Status TreePoints.canTake(def, Collection<String> selected,
+                                                   String nodeId, int level);                   // NO_POINTS 走 capFor
+
+// 旧入口语义不变（= max_points），探针 / 离线断言仍走它们：
+public static TreePoints.State  TreePoints.state(def, selected);
+public static TreePoints.Status TreePoints.canTake(def, selected, nodeId);
+
+public static int TreeService.levelOf(ServerPlayer player);   // 主等级；player==null 或没定义 → 0
+```
+
+```text
+/redtale tree state <tree>   玩家上下文行尾多一段：· 等级 L（P 点/级，上限 M）
+                             控制台分支**逐字不变**：· 上限 M 点 · 节点 N 个（控制台不读玩家存档）
+/redtale tree probe          A~M（R53 基线，主等级先顶到 max_points 之上）+ N（等级 1 → 上限 1 → cost2 NO_POINTS）
+```
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R54-a | 上限 = `min(max_points, points_per_level × level)`；`points_per_level <= 0` = 关门槛 | 与 `SKILL-TREE.md` §3 的注释一致；`0 = 关闭` 与 D16 同语义，运营可零改码退回 R53 行为 |
+| R54-b | 等级只改上限；回档后 `available` 可为负，**不自动退点、不拦已点**，只让新 `canTake` 报 `NO_POINTS` | 点数派生自已点集合；自动退点会静默丢节点且顺序不可预期 |
+| R54-c | 旧两参 `state` / 三参 `canTake` 语义**一行不改**（T-0046 已 VERIFIED 文件，本次只加重载） | 探针 L 组与离线断言全走旧入口，改旧语义 = R53 的 13/13 假红 |
+| R54-d | 探针先写 `1e9` 经验把主等级顶到上限之上，再跑 A~M；门槛由 N 组单独验 | L1 只有 1 点，否则整套被 `NO_POINTS` 拦成假红 |
+| R54-e | 探针收尾 `store.clear(uuid)`，不用「再写大经验值」 | FakePlayer UUID 固定，残留的 `1e9` 会污染 `exp probe` 基线 |
 

@@ -2570,7 +2570,7 @@ fi
   - 2026-11-18 20:23 · 完成 · 新建 `core/progression/TreePlan.java`（62 行，单类 + `record Modifier`）+ `build/probe/TreePlanProbe.java`（探针，build/ 不入库）；卡外零改动 · build `--offline` EXIT=0（RC=0） · 自测：`unzip -l | grep -c TreePlan`=2（主类 + `$Modifier`，卡面只要求 ≥1）、`wc`=62≤150、`grep net.minecraft`=0、`grep TreePoints`=0；`python tools/probe_run.py TreePlanProbe` → **41/41 PASS**（A~O 全覆盖 + 3 条附加：type 大小写不敏感 / attribute 空白跳过 / operation 落进 Modifier）。功能面（真下发 modifier / 洗点按前缀 `tree/<tree>/<node>/` 批量移除）待 S7 测试服验。
   - 2026-11-18 21:3x · **S7 验收通过** · 三条验收全绿：①`build --offline` RC=0（UP-TO-DATE，S8 那次产物未变）②jar 内 `TreePlan`=2、`wc`=62、`net.minecraft`=0、`TreePoints`=0 ③S8 探针 41/41。另跑 **S7 独立探针 `build/probe/S7TreePlanProbe.java` 48/48**（自编 A~P 十六组，与 S8 不重叠：`pathOf` 双冒号 / `operationOf` 五种回落 / 三属性效果 `/0 /1 /2` + `passive` 不位移 / `effects=null` 不炸 / 负数与 `1e9` 不钳制（D16）/ 两次调用不同对象且逐元素相同）。**S7 探针首版两条断言写错**（E2 期望 `b` 先、实为 `nodes()` 序 `a` 先；E3 属性名抄成 `attack_speed`）→ 期望错、代码对，同 R43-a / R49-c 口径，不打回。功能面已在 R53 由 `TreeService` 接穿（`/redtale tree probe` 13/13）。
 
-### T-0049 · [OPEN] `tools/check_trees.py` —— 技能树配置起飞前对账（M7 / D25 的运营安全网）
+### T-0049 · [VERIFIED] `tools/check_trees.py` —— 技能树配置起飞前对账（M7 / D25 的运营安全网）
 
 - 派单：S7 · 2026-11-18 21:3x
 - 背景：技能树的引用面是**三向**的（`classes` → `jobs/`、`unlock_skill` → `skills/`、`attribute` → 80 条属性表），现在只有运行期 L2 会告警，**起飞前没有离线对账**；`check_progress.py` / `check_enchants.py` 已各有一个，这是第三个。
@@ -2613,6 +2613,56 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_trees.py` → 退出码 **0**，末行**逐字** `共 1 个文件 · 0 条问题`
   2. 负向夹具（`cp -r src/main/resources/redtale/defaults build/tmp_trees` 后改一份 + 加一份坏的）必须**五类各命中至少一条**：① `requires` 指向不存在节点 ② `attribute` 写 `spell_power:fire` ③ `classes: ["nobody"]` ④ `max_points` 小于 Σcost ⑤ 两个文件同 `id`。跑完 `rm -rf build/tmp_trees`（`build/` 不入库）
   3. `wc -l < tools/check_trees.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_trees.py` → **0**（必须是 import，不许抄第三份）
+
+- 进度：
+  - （S8 自己填）
+  - 2026-11-18 21:32 · S8 完成 · tools/check_trees.py（200 行，from check_progress import clean_json5/read_attrs/normalize，未抄第三份）· 未构建（纯 Python 卡，验收不含 build）· 基线 EXIT=0「共 1 个文件 · 0 条问题」；wc=200≤200、grep def clean_json5=0；五类负向夹具全命中（6 条问题 EXIT=1，已清 build/tmp_trees）；边界探针 13/13
+  - 2026-11-18 22:4x · **S7 验收通过** · 三条全绿：①基线 `python tools/check_trees.py` EXIT=0、末行逐字 `共 1 个文件 · 0 条问题` ②S7 自编五类负向夹具（`build/tmp_trees`，与 S8 不同件）→ 6 条问题 EXIT=1，`requires` 悬空 / `spell_power:fire` 不在 80 表 / `classes: ["nobody"]` / `max_points 1 < Σcost 4` / 两文件同 id 全命中；另加四类边界（`cost: true`、`unlock_skill` 未命中、`passive` 缺 id、`type: weird`）逐条命中 + `max_points` 缺失只提示不算问题；删 `jobs/`+`skills/` 只打两行提示不改退出码；夹具已清 ③`wc -l`=200≤200、`grep -c "def clean_json5"`=0（确为 `from check_progress import`）。 重复 id 报在**后出现**文件 + 文案含先出现路径，与卡面规则 9 一致。**判语**：离线对账与运行期 L2 校验同源（属性键走同一份 80 条表），无口径分叉。
+
+
+### T-0050 · [OPEN] `tools/check_mobs.py` —— 怪物 / 掉落 / 刷怪规则三向起飞前对账（M6 的运营安全网）
+
+- 派单：S7 · 2026-11-18 22:4x
+- 背景：怪物这块的运行期观测面已有四个（`mob check` / `drop list` / `spawn check` / `validate`），但**起飞前零离线对账**——改一份 `mobs/*.json5` 要起服才知道引用断没断。已有 `check_defaults` / `check_progress` / `check_enchants` / `check_trees`，这是第五个。
+
+- 不要做：
+  - **不要复制第四份 JSON5 清洗器**：`from check_progress import clean_json5, read_attrs, normalize`（同目录，`sys.path` 已含 `tools/`）
+  - **不校验原版物品 id 是否存在**（离线没有注册表）→ `equipment` 只判「像不像一个带命名空间的 id」，别猜它存不存在
+  - 不读 jar、不起服、不调 Java、不联网；只读文件系统
+  - 不改 `src/main/java/**`、不改任何 `*.json5`、不改其它 `tools/*.py`、不改 `docs/`
+  - 不实现运行期告警文案的复刻（措辞不必与 L2 相同）；不做自动修复 / 不写回 / 不加 `--fix`
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_mobs.py`（**新建**，≤ 200 行）
+
+- 接口签名（**逐字**）：
+  ```python
+  def clean_json5(text) -> str                       # 从 check_progress 导入，别重写
+  def read_attrs() -> tuple[set|None, str]           # 同上
+  def normalize(token, ids) -> str|None              # 同上
+  def path_of(token: str) -> str                     # 取第一个 ':' 之后；无冒号原样；None → ""
+  def ids_of(root: str, sub: str) -> set[str]        # 读 <root>/<sub>/*.json5 的 `id`，按 path_of 归一
+  def collect(root: str, sub: str) -> list[tuple[str, dict|None, str|None]]   # [(rel, data, err)]
+  def check_mob(rel: str, data: dict, ids: set, skill_ids: set, drop_ids: set) -> list[str]
+  def check_drop(rel: str, data: dict, content_ids: set) -> list[str]
+  def check_rule(rel: str, data: dict, mob_ids: set) -> list[str]
+  def main() -> int                                  # 退出码 0=干净 1=有问题
+  ```
+
+- 语义（**逐条写死**）：
+  1. `<dir>` 默认 `src/main/resources/redtale/defaults`，可 `--dir` 覆盖；三类各自**文件名升序**：`mobs/*.json5`、`drops/*.json5`、`spawn_rules/*.json5`
+  2. 顶层不是对象 / JSON5 解析失败 → 一条问题（`JSON5 解析失败：<原因>`），继续下一个文件
+  3. `mobs`：`id` 缺失/非字符串 → 问题；`base` 必须 ∈ `{melee,ranged,caster,summoner,charger,flyer,elite,ambient}`；`scale` 若给出必须是 `0 < scale <= 4` 的数；`attributes` 每个键必须 `normalize()` 到 80 条表（**报原始写法**）；`equipment` 每个非空值必须含 `:`（裸名 = 问题）；`skills[].skill` 必须 `path_of` 命中 `skills/` 的 id 集合；`drops` 非空时必须 `path_of` 命中 `drops/` 的 id 集合
+  4. `drops`：`id` 缺失/非字符串 → 问题；`drops[]` 每项 `item` 必须 `path_of` 命中 `items/*.json5` 的 `id` 集合（**内容 id ≠ 物品 id**，R41-a）；`min <= max`、`chance ∈ [0,1]`、`rolls >= 1`；`xp >= 0`
+  5. `spawn_rules`：`id` 缺失/非字符串 → 问题；`action ∈ {replace,add}`；`mob` 必须 `path_of` 命中 `mobs/` 的 id 集合；`chance ∈ [0,1]`；`per_chunk_cap >= 0`；`priority` 必须是整数
+  6. 跨文件 `id` 重复 → 一条问题（写在**后出现**的那份文件上，文案含先出现的相对路径）；三类**各自独立**判重
+  7. 某类目录不存在 → 打一行 `提示 没有 <sub>/ 目录，跳过` 并跳过该类，不算问题
+  8. 输出：逐条 `[问题] <相对路径> · <一句话>`；末行 `共 N 个文件 · M 条问题`（N = 三类合计）
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_mobs.py` → 退出码 **0**，末行**逐字** `共 4 个文件 · 0 条问题`
+  2. 负向夹具（`cp -r src/main/resources/redtale/defaults build/tmp_mobs` 后改一份 + 加两份坏的）必须**六类各命中至少一条**：① `base: "dragon"` ② `skills[].skill` 指向不存在技能 ③ `attributes` 写 `spell_power:fire` ④ `drops` 指向不存在掉落表 ⑤ `spawn_rules.mob` 指向不存在怪物 ⑥ 两个文件同 `id`。跑完 `rm -rf build/tmp_mobs`
+  3. `wc -l < tools/check_mobs.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_mobs.py` → **0**
 
 - 进度：
   - （S8 自己填）
