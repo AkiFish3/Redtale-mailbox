@@ -1118,3 +1118,19 @@ public static String                 unlockedText(ServerPlayer player);       //
 - **存放**：不落存档 —— 解锁集是「已点节点 + 树配置」的派生值（R57-b）。
 - **谁消费**：`SkillCommand.cast` —— `gated(id) && !isUnlocked(player, id)` → 拒绝并回 `[redtale] 技能 <id> 未解锁（需要技能树节点，/redtale tree state 看已点）`。`SkillEngine.cast` 本身**不判**（R57-c）。
 - **探针**：`/redtale tree probe` O / P / Q 三组（`TreeCommand.probe`，17/17）。
+
+### 4.37 `/redtale tree skills <tree>` 声明/解锁观测面 `TreeCommand.skillsText`（D25 / M7，R58 定稿）
+
+**性质**：只读观测面，零存档变更、零注册表变更、零新配置键。`list` / `info` / `state` / `take` / `untake` / `respec` 的文案与本版**无关**（T-0047 基线逐字不变）。
+
+```java
+public static String       skillsText(SkillTreeSpec.Definition def, ServerPlayer viewer);  // viewer 可空
+public static java.util.List<String> declaredSkills(SkillTreeSpec.Definition def);
+```
+
+- **`declaredSkills(def)`** = `TreeUnlocks.unlocked(def, def.nodes().keySet())`（假装全点 → 声明集），`def == null` → 空列表。顺序 = `def.nodes()` 迭代序（`TreeUnlocks` 契约）。
+- **`skillsText(def, null)`**（控制台）→ 严格 `声明技能 N 条（控制台不读玩家存档）` 一行标题 + 每条 `"\n  " + 技能原写法`；声明集为空 → 标题下一行 `"\n  （该树没有 unlock_skill 声明）"`。**不猜玩家状态**（R58-a）。
+- **`skillsText(def, player)`** → 标题 `声明技能 N 条 · 已解锁 M 条`（M = `TreeUnlocks.unlocked(def, selected(player, def)).size()`）+ 每条 `"\n  " + 技能 + (" · 已解锁" | " · 未解锁")`；标注走 `TreeService.isUnlocked`（全名/裸名同一条，R58-c）。
+- **命令**：`/redtale tree skills <tree>` —— 树不存在 → `[redtale] 没有技能树 <id>（现有 N 棵：<逗号分隔>）`（与 `state` 同一文案），返回 0；否则发送全文，返回声明集条数。
+- **谁消费**：运营 / 玩家自查「这棵树管着哪些技能、我拿到了哪些」；`skill cast` 的门槛拒绝文案指向 `tree state`，本条是它的补充观测面。
+- **探针**：`/redtale tree probe` **R 组**（`TreeCommand.probe`，18/18）。

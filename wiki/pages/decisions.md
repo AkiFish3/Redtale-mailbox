@@ -210,6 +210,16 @@ order: 0
 - 拍板：_待填_
 <!-- inbox:key=S7-20261118-190856 -->
 
+### S7-20261119-031318 · [Q-022] M5 技能原语范围：25 条规划只注册 13 条，一次补齐还是按需补
+- 队列：S7·移植工程
+- 时间：2026-11-19 03:13
+- 问题：docs/SKILLS.md §4 定了 25 条原语，实际注册 13 条（buff/console_log/damage/damage_aoe/dash/debuff/grant_exp/heal/knockback/message/projectile/pull/stun）。execute/ignite/cleanse/shield/damage_over_time/teleport/leap/beam/aura/summon/trap/fx 未实现，slow 与 debuff 语义重叠。加原语=换 jar（D17），一次性补齐还是按需补？
+- 选项：A 按需补（默认）：先用 13 条 + 条件/args 组合做内容，真拼不出来再补，每补一批换一次 jar；slow 裁掉 ／ B 一次补齐 25 条：下轮拆 5 张卡给 S8，每卡 2~3 条原语
+- 默认：A 按需补；slow 裁掉
+- 相关：[[plans/redtale-project]]
+- 拍板：_待填_
+<!-- inbox:key=S7-20261119-031318 -->
+
 ## 已定
 
 

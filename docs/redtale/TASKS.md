@@ -2791,7 +2791,7 @@ fi
   - 2026-11-19 00:59 · 完成 · 新建 src/main/java/com/redtale/project/core/progression/TreeUnlocks.java（73 行，5 public + 3 private helper，私有构造，签名逐字 java.util.List/java.util.Collection）+ build/probe/TreeUnlocksProbe.java（探针，build/ 不入库）；卡外零改动 · build --offline EXIT=0（jar 内 TreeUnlocks.class=1，锁已释放）；wc=73≤150 / net.minecraft=0 / TreePoints|TreeService=0 / List.copyOf=2 · python tools/probe_run.py TreeUnlocksProbe → 36/36 PASS、无 FAIL（覆盖 def==null、selected==null、未知节点忽略、定义序≠selected 序、双节点同技能去重、passive 去重、gained/lost 双向与顺序、describe 空与非空且无首尾换行、四表 add 抛 UnsupportedOperationException） · 三条验收全过；无待 S7 裁定口径
   - 2026-11-19 02:1x · **S7 验收 → VERIFIED**（3/3：`build --offline` EXIT=0 + jar 内 `TreeUnlocks.class`=1 / S8 探针 36/36 ≥25 无 FAIL / `wc`=73 ≤150、`net.minecraft`=0、`TreePoints|TreeService`=0）+ S7 独立探针 `S7UnlockProbe` **54/54**（A~N 十四组：定义序≠selected 序含 `HashSet` 入参、双节点同技能去重保首次、gained/lost 双向顺序、`describe` 不去重且无首尾换行、四表不可变、`def`/`selected` 双 null、空树、null 效果容错）。无返工。
 
-### T-0053 · [OPEN] `tools/check_skills.py` —— 技能配置起飞前对账（M5 内容的安全网）
+### T-0053 · [VERIFIED] `tools/check_skills.py` —— 技能配置起飞前对账（M5 内容的安全网）
 
 - 派单：S7 · 2026-11-19 02:2x
 - 背景：`skills/*.json5` 是 25 条原语里**唯一没有任何起飞前对账**的配置面（`check_trees` 只交叉校验 `unlock_skill → skills/` 的引用是否存在，不看技能文件本身）。运行期 `SkillSpec` 对坏输入只「告警 + 跳过/缺省」，原语名拼错要到真人施放时才报。本卡做**只读对账脚本**，套路与 `check_trees.py` 一致。
@@ -2835,6 +2835,70 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_skills.py` → **退出码 0**，末行逐字 `共 4 个文件 · 0 条问题`
   2. 自编负向夹具（临时目录 + `--dir` 指向它，跑完删除）：至少 8 条问题、退出码 1，必须命中这 8 类 —— ①原语名拼错 ②`effects` 不是数组 ③`cooldown_ticks` 是字符串 ④`mana_cost` 是 `true` ⑤`args` 是数组 ⑥`conditions[i].type` 非法 ⑦**跨文件**重复 id（报在**后出现**的文件）⑧JSON5 截断
   3. `wc -l < tools/check_skills.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_skills.py` → **0**；`python tools/check_trees.py >/dev/null; echo $?` → **0**（既有工具零回归）
+
+- 进度：
+  - 2026-11-19 02:08 · 完成 · tools/check_skills.py（新建，164 行，唯一文件） · 构建退出码：未构建（纯 Python 卡，验收不含 build） · 自测：基线 EXIT=0「共 4 个文件 · 0 条问题」；8 类负向夹具 EXIT=1「共 4 个文件 · 8 条问题」全覆盖（拼错原语/effects 非数组/cooldown_ticks 字符串/mana_cost true/args 数组/conditions.type 非法/跨文件重复 id/JSON5 截断）；边界：无 skills/ 目录→EXIT=1、空 effects 与未知键仅提示不计问题；wc=164≤200、def clean_json5=0、check_trees 回归 EXIT=0、py_compile OK
+  - 2026-11-19 03:1x · **S7 验收 → VERIFIED**（3/3：基线 EXIT=0 末行逐字 `共 4 个文件 · 0 条问题` / S7 自编 **9 文件 8 问题 EXIT=1**，8 类全命中且跨文件重复 id 报在**后出现**的 `a8.json5` / `wc`=164 ≤200、`grep -c "def clean_json5"`=0、`check_trees` 回归 EXIT=0）+ S7 边界补测：`message`/`console_log` 两条 M0 调试原语**接受**（白名单并集生效）、`cooldown_ticks: true` 判错、`mana_cost: 2.5` 判对、`icon: "Red_Icon"` 判错、空 `effects` 与未知键仅提示、无 `skills/` 目录 → EXIT=1 且末行 `共 0 个文件 · 1 条问题`、`docs/SKILLS.md` §4 表抽出的 **25 条原语逐条接受**（25 文件 0 问题）。无返工。
+
+### T-0054 · [OPEN] `tools/check_scripts.py` —— 脚本层起飞前对账（M0/M5 脚本链的安全网）
+
+- 派单：S7 · 2026-11-19 03:1x
+- 背景：`scripts/*.json5` 是**唯一没有起飞前对账**的配置面 —— `check_enchants.py` 只做「附魔 → 脚本 id 是否存在」这一个方向，脚本自身（trigger / effect / condition / cooldown / 重复 id）全靠运行期 `ScriptEngine.parseOne` 记进 `errors` 列表，而那份列表只在 `/redtale reload` 的输出里数一个总数，运营看不到是哪条。本卡做只读对账脚本，套路与 `check_skills.py` 一致。
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_scripts.py`（**新建**，≤ 200 行）
+
+- 必须复用，不得抄第 N 份 JSON5 清洗器：
+  ```python
+  from check_progress import clean_json5
+  ```
+
+- 输入：`--dir`，默认 `src/main/resources/redtale/defaults`；扫 `<dir>/scripts/*.json5`，**文件名升序**。输出相对路径一律 `scripts/<文件名>`。
+
+- 两种文件形态（**逐字对齐 `ScriptEngine.extract`**）：
+  1. 顶层有 `scripts` 键 → 取该数组的每个元素当一条脚本；文件顶层**只允许** `scripts` 这一个键，其余键 → 提示 `未知键 <k>（运行期忽略）`
+  2. 否则顶层有 `id` **或** `trigger` 键 → 整个对象当一条脚本；允许的顶层键只有 `id` / `trigger` / `cooldown_ticks` / `conditions` / `effects`，其余 → 提示 `未知键 <k>（运行期忽略）`
+  3. 两者都没有 → 问题 `既没有 scripts 数组，也不像单条脚本（缺 id / trigger）`
+
+- 白名单（写死，不读文档 —— 这三个集合就是**已注册**的注册表项）：
+  ```python
+  TRIGGERS = {"manual", "player_join"}          # Builtins 里仅这两个 TriggerType 实现
+  EFFECTS = {                                    # core/script/builtin/ 下 13 个 EffectType 实现
+      "buff", "console_log", "damage", "damage_aoe", "dash", "debuff", "grant_exp",
+      "heal", "knockback", "message", "projectile", "pull", "stun",
+  }
+  CONDITIONS = {"always", "health_below", "chance"}
+  ```
+  另需运行时读 `docs/SKILLS.md` §4 表格（行形如 `| 3 | \`damage_over_time\` |`）取第 2 个反引号内 id，得到**规划中的 25 条**，仅用于给第 11 条加后缀；表里读不到任何一行不算问题（只是不加后缀）。
+
+- 检查项（每条问题一行 `[问题] <rel> · <文案>`；提示一行 `提示 <rel> · <文案>`）：
+  1. JSON5 解析失败 → `JSON5 解析失败：<异常文本>`
+  2. 顶层不是对象 → `顶层不是对象`
+  3. 有 `scripts` 但值不是数组 → `scripts 必须是数组`
+  4. `scripts[i]` 不是对象 → `scripts[i] 不是对象`
+  5. `id` 缺失 / 非字符串 / 空白 → `id 缺失或不是字符串`
+  6. `id` 重复（先 `strip()` 再比；**跨文件与文件内都算**，报在**后出现**的那条）→ `id <id> 与 <先出现的 rel> 重复`
+  7. `trigger` 缺失 / 非字符串 / 空白 → `trigger 缺失或不是字符串`；不在 `TRIGGERS` → `未知 trigger '<trigger>'（现有 manual,player_join）`
+  8. `effects` 缺失 → `脚本 <id> 没有可执行的 effect`；存在但不是数组 → `effects 必须是数组`；是空数组 → 同上第一条文案
+  9. `effects[i]` 不是对象 → `effects[i] 不是对象`；缺 `type` 或 `type` 不是字符串 → `effects[i] 缺少 type`
+  10. `effects[i].type` 不在 `EFFECTS` → `effects[i].type 未注册：<type>`；**若该 type 在 25 条规划表里**，文案改为 `effects[i].type 未注册（M5 未实现）：<type>`
+  11. `effects[i].args` 存在但不是对象 → `effects[i].args 不是对象`
+  12. `conditions` 存在但不是数组 → `conditions 必须是数组`；`conditions[i]` 不是对象 → `conditions[i] 不是对象`；`conditions[i].type` 不在 `CONDITIONS` → `conditions[i].type 非法：<type>`；`conditions[i].args` 存在但不是对象 → `conditions[i].args 不是对象`
+  13. `cooldown_ticks` 存在时必须是 **0..1000000000 的整数**（`bool` / 浮点 / 字符串都算错）→ `cooldown_ticks 必须是 0..1000000000 的整数`
+  14. 收尾固定一行 `共 N 个文件 · M 条问题`；`M > 0` 退出码 1、否则 0。`scripts/` 目录不存在 → `[问题] 没有 scripts/ 目录（<dir>）` + `共 0 个文件 · 1 条问题` + 退出码 1
+
+- 不要做：
+  - 不改任何 `*.json5` / `src/` / `docs/` / 其它 `tools/*.py`
+  - 不做 `--fix`、不连服务器、不读 `E:\server-test`
+  - 不校验 `args` 里的**键名与取值**（`heal` 的 `ratio`、`buff` 的 `effect` 是各原语的语义，属 S7 判断面）
+  - 不校验 `%var.xxx%` / `%player%` 占位符能否解析
+  - 不校验 `docs/SKILLS.md` §4 表自身条数
+  - 不做「脚本有没有被谁引用」的反向孤儿检查（`check_enchants.py` 已管附魔→脚本方向）
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_scripts.py` → **退出码 0**，末行逐字 `共 2 个文件 · 0 条问题`
+  2. 自编负向夹具（临时目录 + `--dir` 指向它，跑完删除）：至少 8 条问题、退出码 1，必须命中这 8 类 —— ①未知 `trigger` ②`effects` 不是数组 ③`effects: []`（`没有可执行的 effect`）④`cooldown_ticks` 是字符串 ⑤`args` 是数组 ⑥`conditions[i].type` 非法 ⑦**跨文件**重复 id（报在**后出现**的文件）⑧JSON5 截断；另需命中两条 effect 文案差异：`ignite`（在 25 条表里）→ 带 `（M5 未实现）`、`drain`（不在表里）→ 不带后缀
+  3. `wc -l < tools/check_scripts.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_scripts.py` → **0**；`python tools/check_enchants.py >/dev/null; echo $?` → **0**（既有工具零回归）
 
 - 进度：
   - （S8 自己填）
