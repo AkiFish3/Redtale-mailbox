@@ -25,7 +25,7 @@
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
 | `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）**。**刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
-| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，第一层） | **在建（T-0038 独占）**；契约见 `docs/PROGRESSION.md` |
+| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，第一层，已 VERIFIED）+ **`ProgressStore` 存档 `SavedData`（R43，第三层）** | 有：`RedtaleCore` 尚未暴露（L2 快照层 R44 才接）；`ProgressStore.get(server)` / `factory()` 直接可用；契约见 `docs/PROGRESSION.md` + §4.24 |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
 
@@ -712,3 +712,36 @@ public static Result roll(DropSpec.Definition def, java.util.Random random);
 `[redtale] 怪物检查：<只数> 只 / 技能引用 <k> 条 / 掉落表 <t> 张[ · 引用完整 ✓ | / 问题 <n> 个]`，
 问题行格式：`  <名称> <id>: 掉落表 <ref> 不存在（现有 <t> 张：a, b…）`。
 
+### 4.24 进度存档 `ProgressStore`（M7 第三层，R43 定稿）
+
+```java
+package com.redtale.project.core.progression;
+
+public final class ProgressStore extends net.minecraft.world.level.saveddata.SavedData {
+    public static final String FILE_NAME = "redtale_project_progress"; // world/data/<FILE_NAME>.dat
+    public static final int VERSION = 1;
+    public static final long MAX_TOTAL_EXP = 1_000_000_000_000_000L;
+
+    public static SavedData.Factory<ProgressStore> factory();     // 三参构造 + DataFixTypes.LEVEL（R43-c）
+    public static ProgressStore get(MinecraftServer server);      // null → 内存态空存档
+    public static ProgressStore load(CompoundTag tag, HolderLookup.Provider provider);
+
+    public long mainExp(UUID id);
+    public long jobExp(UUID id, String jobId);
+    public java.util.Map<String, Long> jobExps(UUID id);  // 保序不可变视图（R43-b）
+    public int size();
+    public java.util.Set<UUID> ids();
+
+    public long addMainExp(UUID id, long delta);          // delta <= 0 忽略；返回加完后的值
+    public long addJobExp(UUID id, String jobId, long delta);
+    public void setMainExp(UUID id, long value);          // <= 0 → 0
+    public boolean clear(UUID id);
+
+    public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider);
+}
+```
+
+- 存档格式 v1：`{ version: 1, players: [ { id: "<uuid-string>", main: <long>, jobs: { "<jobId>": <long> } } ] }`。UUID 存**字符串**；坏行（缺 `id` / 解析失败）整条跳过；负值归零；超 `MAX_TOTAL_EXP` 截断。**不存等级**（R42-b）。
+- 写操作自动 `setDirty()`；落盘时机由原版 `save-all` / 自动保存决定，本类不主动写文件。
+- 命令面：`/redtale progress [status|add <amount>|probe]`（`core/command/ProgressCommand`）。`probe` 用固定 UUID `00000000-0000-0000-0000-0000000000ff` 加 1000 并读回，**控制台可跑**（`add` 需要真玩家）。
+- L4（`ProgressService`，R44）只允许调本类的 `add*` / `setMainExp` 与读方法，**不许自己写 NBT**。

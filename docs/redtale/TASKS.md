@@ -1938,7 +1938,7 @@ fi
 - 2026-11-18 08:12 · **S7 验收 → VERIFIED（3/3）** · build `--offline` EXIT=0（jar 502715 B）· jar 内 `core/command/DropListCommand`=1 · `wc -l`=69≤160 · `grep -c DropRoll`=0 · 测试服 RCON 文案逐字对：`[redtale] 掉落表 1 张 · 条目合计 3 条 · 被引用 1 张` + `  ember_guard · xp 12 · 条目 3 · 引用 1 只：炽焰守卫` · 回归 `validate` 问题 0 / `mob check` 引用完整 ✓ · 测试服已停（25567/25577 无 LISTEN）
 
 
-### T-0038 · [DONE] `core/progression/ExpCurve` —— 等级曲线纯函数（M7 第一层）
+### T-0038 · [VERIFIED] `core/progression/ExpCurve` —— 等级曲线纯函数（M7 第一层）
 
 - 派单：S7 · 2026-11-18 08:20
 - 契约：`docs/PROGRESSION.md` **§3**（曲线数学逐字照抄，不要自己发明公式）
@@ -1988,6 +1988,73 @@ fi
 - 进度：
 - 2026-11-18 08:36 · 完成 · 新建 src/main/java/com/redtale/project/core/progression/ExpCurve.java（90 行，单类无内部类）· build --offline EXIT=0（jar 504603 B）· 自测：wc=90≤180 / net.minecraft=0 / 工厂=2 / jar 内 ExpCurve=1 / 离线探针 268/268 全过（9 定点含 totalExpForLevel(4) + 累加 L=1..50 + 反查双向 L=1..100 + 三条夹取 + expForLevel(0) 抛 IAE + 硬顶 + polynomial sanity）
   - 注（S8）：定点表 `totalExpForLevel(4)=352` 与语义 4（`Σ_[i=1..L-1] exp(i)`）冲突——按语义应为 100+112+125=337，且定点 `totalExpForLevel(3)=212` 印证 L-1 口径。已按语义实现（337），验收第 3 条「累计=单步之和」探针同口径。请 S7 确认定点表 352 是否笔误，勿照抄打回。
+
+  - 2026-11-18 09:20 · **S7 验收 → VERIFIED（3/3）** · ①`build --offline` EXIT=0（jar 504603 B）；`unzip -l | grep -c "core/progression/ExpCurve"` = **1**；②`wc -l` = **90** ≤180、`net.minecraft` = **0**、`grep -cE "public static ExpCurve (geometric|polynomial)"` = **2**；③**S7 独立探针 `build/probe/S7ExpCurveProbe.java` PASS 284 / FAIL 0 / TOTAL 284**（自编 A~J 十组，不复用 S8 的探针：九条定点 + 累计=单步之和 L=1..50 逐一手算 + `levelFor(total(L))==L` L=1..100 + `levelFor(total(L)-1)==L-1` L=2..100 + 三条夹取 + `expForLevel(0)` 抛 IAE + 1e9 硬顶 + polynomial 口径 + 无状态重入 + maxLevel=2/1000 两端）。
+  - **S7 裁定（S8 提的定点表冲突）：卡面 `totalExpForLevel(4)=352` 是笔误，`337` 正确，不打回。** 依据：语义 4 写死 `Σ_{i=1..L-1} expForLevel(i)`，且同卡面 `totalExpForLevel(3)=212` 已印证 L-1 口径（100+112=212）；352 只能是 `212+exp(4)=212+140`（含 L 项）。实现按语义，探针同口径断言 337。**PROGRESSION.md §3 无需改**（那里只写 `exp(L)` 公式，没写累计定点）。
+
+### T-0039 · [OPEN] `core/progression/ProgressSpec` —— 等级 / 职业 schema 解析器（M7 第二层）
+
+- 派单：S7 · 2026-11-18 09:30
+- 契约：`docs/PROGRESSION.md` **§3**（`levels/` schema）/ **§4**（`jobs/` schema）。字段名、缺省值、夹取口径逐字照抄，不许自己发明键名。
+- 目标：把 `levels/*.json5` 与 `jobs/*.json5` 解析成不可变 `Definition`（含曲线对象）。**曲线数学不在这里**（构造 `ExpCurve` 即可），**属性键校验也不在这里**（80 条表校验归 L2 快照层）。
+- **不要做**：
+  - 不碰 `ExpCurve` 之外的 `core/progression` 文件；不碰 `RedtaleCore` / `RedtaleCommand` / `docs/*` / `core/attr` / `core/config`
+  - 不读磁盘（只吃传入的 `List<ConfigFile>`）、不打日志（只往 `warnings` 里塞字符串，**零 `Logger`**）
+  - 不校验属性名是否在 80 条表里、不补命名空间（L2 快照层做，卡面写死）
+  - 不建 `SavedData`、不加命令、不改 `DEFAULT_FILES`
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/progression/ProgressSpec.java`（**新建**，≤ 200 行）
+
+- 接口（**逐字照抄，不得增删 public 成员**）：
+  ```java
+  package com.redtale.project.core.progression;
+
+  public final class ProgressSpec {
+      public static final String LEVEL_DIR = "levels/";
+      public static final String JOB_DIR = "jobs/";
+
+      public record Definition(String id, String name, boolean job, ExpCurve curve,
+                               java.util.Map<String, Double> attributes, java.util.List<String> expSources,
+                               String source) {}
+
+      public static java.util.Map<String, Definition> parse(java.util.List<com.redtale.project.core.config.ConfigFile> configs,
+                                                            java.util.List<String> warnings, boolean job);
+  }
+  ```
+
+- 语义（逐条实现，顺序照此）：
+  1. `job == false` 只吃 `levels/*.json5`；`job == true` 只吃 `jobs/*.json5`；其它路径**静默跳过**（不告警）。`configs == null` → 空 map。
+  2. `file.root() == null` → `path + ": 根节点不是对象，已跳过"` + 跳过。
+  3. `id`：缺失 / 非字符串 / trim 后空 / 不含 `:` → `path + ": id 缺失或不是字符串（必填），已跳过这条"` 并跳过（**不补命名空间**）。
+  4. 同一 id 第二次出现 → 保留先出现的，后者告警 `path + ": id 重复（" + id + "，先出现在 " + prev + "），保留先出现的定义，本条已跳过"`。
+  5. `name`：缺省 = id 的 path 段（`redtale_project:miner` → `miner`）；给了但非字符串或空白 → 用缺省 + `path + ": name 不是字符串，已改用 " + 缺省`。
+  6. `max_level`：缺省 `job ? 50 : 100`；非整数（小数 / 字符串 / 布尔）→ 缺省 + 一条 WARN；`< 2` → 缺省 + 一条 WARN；`> 1000` → 取 `1000` + 一条 WARN。三类 WARN 文案可用同一句：`path + ": max_level 不可用，已改用 " + 采用值`。
+  7. `curve`：缺失或非对象 → 全缺省 + `path + ": curve 缺失或不是对象，已用 geometric/100.0/1.12"`。`mode` 不是 `geometric` / `polynomial` → 当 `geometric` + `path + ": curve.mode 未知（" + mode + "），已改用 geometric"`。
+  8. `base` 缺省 `100.0`，`<= 0` 或非数字 → `100.0` + WARN；`growth` 缺省 `1.12`，`<= 1.0` 或非数字 → `1.12` + WARN；`exponent` 缺省 `1.5`，`<= 0` 或非数字 → `1.5` + WARN。**曲线对象一律由 `ExpCurve.geometric(maxLevel, base, growth)` / `ExpCurve.polynomial(maxLevel, base, exponent)` 构造，别自己算公式、别自己夹取**。
+  9. `attributes`：缺失 = 空 map；非对象 → 空 map + WARN；值为非数字（`JsonPrimitive.isNumber()` 为假）→ 丢该条 + `path + ": 属性 " + key + " 的值不是数字，已丢弃"`；键 trim 后为空 → 丢 + WARN；同键重复 → 后者覆盖 + `path + ": 属性 " + key + " 重复，已用后一个值"`。**键原样保留**（不补 `minecraft:`、不校验 80 表）。
+  10. `exp_sources`：**仅 `job == true` 认这个键**（`job == false` 时整键忽略，`expSources` 恒空列表）。缺省 `["kill"]`；非数组 → 缺省 + WARN；元素非字符串 → 丢 + WARN；不在 `{"kill","command","primitive"}` → 丢 + `path + ": 未知经验来源 " + s + "，已丢弃"`；去重保首次顺序；**显式 `[]` → 空列表（合法：该职业不接收经验），不回落到缺省**。
+  11. 返回 `Collections.unmodifiableMap(LinkedHashMap)`（保文件顺序）；`Definition` 是 record，`attributes` / `expSources` 不可变（`Map.copyOf` / `List.copyOf`）。
+  12. import 白名单：`com.google.gson.*`、`java.util.*`（可 `java.util.ArrayList/Collections/LinkedHashMap/List/Map/LinkedHashSet`）、`com.redtale.project.core.config.ConfigFile`；`ExpCurve` 同包免 import。**零 `net.minecraft`、零 `java.io`、零 `Logger`、零 `static` 可变字段**。
+  13. 全部方法**不抛异常**（坏输入只进 `warnings`）；`warnings == null` → 丢弃告警照常返回结果。
+
+- 验收（1、2 你自己跑，3 归 S7）：
+  1. `gradle build --offline` → `EXIT=0`；`unzip -l build/libs/*.jar | grep -c "core/progression/ProgressSpec"` = **2**（`ProgressSpec` + `$Definition`）
+  2. `wc -l src/main/java/com/redtale/project/core/progression/ProgressSpec.java` ≤ **200**；`grep -c "net.minecraft"` = **0**；`grep -c "Logger"` = **0**；
+     `git status --short` 只出现 `docs/TASKS.md` + 上面那个新文件（`build/` 被 gitignore）
+  3. 探针 `build/probe/ProgressSpecProbe.java` **≥ 24 条断言**，覆盖语义 1~11，必须含：
+     ① levels 单条正常（id 原样、name 缺省 = path 段、`max_level` 缺省 100、`curve.expForLevel(1)` = base 取整）；
+     ② jobs 缺省 `exp_sources == ["kill"]`，且 `attributes` 保留 `redtale_project:mining_speed` 原写法；
+     ③ 跨目录不互吃（`job=false` 传 `jobs/x.json5` → 结果空；`job=true` 传 `levels/x.json5` → 结果空）；
+     ④ id 缺 `:` → 跳过且 warnings 含该 path；⑤ 重复 id → 只留先出现的、size 不变；
+     ⑥ `max_level` 写 `2.5` 与写 `0` 各一条 WARN 且采用缺省；`max_level` 写 `5000` → `maxLevel()==1000`；
+     ⑦ `mode: "quadratic"` → 曲线按 geometric（`expForLevel(2)` = `round(base*growth)`）；`base: 0` → `expForLevel(1)==100`；
+     ⑧ `attributes` 里 `"minecraft:generic.max_health": "lots"` 被丢、warnings 提到该键，其余键仍在；
+     ⑨ `exp_sources: ["kill","levelup","kill"]` → `["kill"]` 且 warnings 提到 `levelup`；`exp_sources: []` → 空列表；
+     ⑩ 返回 map 不可变（`put` 抛 `UnsupportedOperationException`）。
+     把 `PASS n / FAIL 0 / TOTAL n` 贴上来。
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 
