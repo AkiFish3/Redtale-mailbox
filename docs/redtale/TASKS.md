@@ -2735,7 +2735,7 @@ fi
 
 
 
-### T-0052 · [OPEN] `core/progression/TreeUnlocks` —— 「已点节点 → 解锁了哪些技能」纯派生（M7 出口「点满分支并解锁技能」第一步）
+### T-0052 · [VERIFIED] `core/progression/TreeUnlocks` —— 「已点节点 → 解锁了哪些技能」纯派生（M7 出口「点满分支并解锁技能」第一步）
 
 - 派单：S7 · 2026-11-19 00:5x
 - 背景：`skill_trees/*.json5` 的节点效果有三种 `attribute` / `unlock_skill` / `passive`。`attribute` 已由 `TreePlan` + `TreeService` 下发；**`unlock_skill` 至今只有解析、没有任何消费方**（`grep -rn "unlock_skill" src/main/java` 只命中 `SkillTreeSpec` 与两处警告）。M7 出口条件「点满一条分支并解锁技能」缺的就是这一层。本卡只做**纯派生**，不碰存档、不碰注册表、不加命令——接服务层由 S7 下一轮做。
@@ -2785,6 +2785,56 @@ fi
   1. 取构建锁后 `D:\redtale-work\tools\gradle-8.8\bin\gradle build --offline` → **退出码 0**；`cd build/libs && unzip -l *.jar | grep -c "TreeUnlocks.class"` → **≥ 1**（跑完删锁）
   2. `python tools/probe_run.py TreeUnlocksProbe` → 末行 `TreeUnlocksProbe N/N` 且 **N ≥ 25**、无 `FAIL`。探针必须覆盖：`def == null` / 未知节点忽略 / 定义序≠selected 序 / 双节点同技能去重 / `gained` 与 `lost` 双向 / `describe` 空与非空 / 返回列表不可变（`add` 抛 `UnsupportedOperationException`）
   3. `wc -l < src/main/java/com/redtale/project/core/progression/TreeUnlocks.java` → **≤ 150**；`grep -c "net.minecraft" <同上>` → **0**；`grep -c "TreePoints\|TreeService" <同上>` → **0**
+
+- 进度：
+  - （S8 自己填）
+  - 2026-11-19 00:59 · 完成 · 新建 src/main/java/com/redtale/project/core/progression/TreeUnlocks.java（73 行，5 public + 3 private helper，私有构造，签名逐字 java.util.List/java.util.Collection）+ build/probe/TreeUnlocksProbe.java（探针，build/ 不入库）；卡外零改动 · build --offline EXIT=0（jar 内 TreeUnlocks.class=1，锁已释放）；wc=73≤150 / net.minecraft=0 / TreePoints|TreeService=0 / List.copyOf=2 · python tools/probe_run.py TreeUnlocksProbe → 36/36 PASS、无 FAIL（覆盖 def==null、selected==null、未知节点忽略、定义序≠selected 序、双节点同技能去重、passive 去重、gained/lost 双向与顺序、describe 空与非空且无首尾换行、四表 add 抛 UnsupportedOperationException） · 三条验收全过；无待 S7 裁定口径
+  - 2026-11-19 02:1x · **S7 验收 → VERIFIED**（3/3：`build --offline` EXIT=0 + jar 内 `TreeUnlocks.class`=1 / S8 探针 36/36 ≥25 无 FAIL / `wc`=73 ≤150、`net.minecraft`=0、`TreePoints|TreeService`=0）+ S7 独立探针 `S7UnlockProbe` **54/54**（A~N 十四组：定义序≠selected 序含 `HashSet` 入参、双节点同技能去重保首次、gained/lost 双向顺序、`describe` 不去重且无首尾换行、四表不可变、`def`/`selected` 双 null、空树、null 效果容错）。无返工。
+
+### T-0053 · [OPEN] `tools/check_skills.py` —— 技能配置起飞前对账（M5 内容的安全网）
+
+- 派单：S7 · 2026-11-19 02:2x
+- 背景：`skills/*.json5` 是 25 条原语里**唯一没有任何起飞前对账**的配置面（`check_trees` 只交叉校验 `unlock_skill → skills/` 的引用是否存在，不看技能文件本身）。运行期 `SkillSpec` 对坏输入只「告警 + 跳过/缺省」，原语名拼错要到真人施放时才报。本卡做**只读对账脚本**，套路与 `check_trees.py` 一致。
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_skills.py`（**新建**，≤ 200 行）
+
+- 必须复用，不得抄第 N 份 JSON5 清洗器：
+  ```python
+  from check_progress import clean_json5
+  ```
+
+- 输入：`--dir`，默认 `src/main/resources/redtale/defaults`（与 `check_trees.py` 一致）；扫 `<dir>/skills/*.json5`，**文件名升序**。
+
+- 白名单（两处，写法写死）：
+  - **原语**：运行时读 `docs/SKILLS.md` §4 表格（行形如 `| 3 | \`damage_over_time\` |`），取第 2 个反引号内 id → 25 条；再并上手写常量 `DEBUG_PRIMITIVES = {"message", "console_log"}`（这两条 M0 调试原语**已注册但不在 25 条表里**）。表里读不到任何一行 → 打 `[问题] 读不到 docs/SKILLS.md §4 原语表` 并退出码 1。
+  - **条件**：写死 `{"always", "health_below", "chance"}`（`builtin/*Condition.java` 的 `id()`；条件原语不在 25 条表覆盖范围）。
+
+- 检查项（**逐条**，每条问题一行 `[问题] <rel> · <文案>`）：
+  1. JSON5 解析失败 → `JSON5 解析失败：<异常文本>`
+  2. 顶层不是对象 → `顶层不是对象`
+  3. `id` 缺失 / 非字符串 / 空白 → `id 缺失或不是字符串`
+  4. `id` 与**先出现**的文件重复（比较前按 path 归一：有冒号取冒号后）→ `id <id> 与 <先出现的相对路径> 重复`
+  5. `effects` 缺失或不是数组 → `effects 缺失或不是数组`；是**空数组** → **提示**（不算问题）`<rel> · effects 为空`
+  6. `effects[i]` 不是对象 → `effects[i] 不是对象`；`type` 不在白名单 → `effects[i].type 非法：<type>`
+  7. `effects[i].args` 存在但不是对象 → `effects[i].args 不是对象`
+  8. `conditions` 存在但不是数组 → `conditions 不是数组`；`conditions[i].type` 不在条件白名单 → `conditions[i].type 非法：<type>`
+  9. `cooldown_ticks` 存在时必须是 **0..1000000000 的整数**（`bool` 与浮点都算错）→ `cooldown_ticks 必须是 0..1000000000 的整数`
+  10. `mana_cost` 存在时必须是 **0..1e9 的数字**（`bool` 算错、浮点合法）→ `mana_cost 必须是 0..1e9 的数字`
+  11. `icon` 存在时必须是字符串、无空格、无大写字母 → `icon 不是合法 id：<icon>`（**无冒号的裸名合法**）
+  12. 未知顶层键（不在 `id` / `name` / `icon` / `cooldown_ticks` / `mana_cost` / `conditions` / `effects` 这 7 个里）→ **提示**（不算问题）`未知键 <k>（运行期忽略）`
+  13. 收尾固定一行 `共 N 个文件 · M 条问题`；`M > 0` 退出码 1、否则 0。`skills/` 目录不存在 → `[问题] 没有 skills/ 目录（<dir>）` + `共 0 个文件 · 1 条问题` + 退出码 1。
+
+- 不要做：
+  - 不改任何 `*.json5` / `src/` / `docs/` / 其它 `tools/*.py`
+  - 不做 `--fix`、不连服务器、不读 `AttributeSpecs`（技能不直接引属性）
+  - 不校验 `docs/SKILLS.md` 表自身条数（25 由该文档自己维护）
+  - 不校验 `args` 里的**键名**（参数名是原语各自的语义，属 S7 判断面）
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_skills.py` → **退出码 0**，末行逐字 `共 4 个文件 · 0 条问题`
+  2. 自编负向夹具（临时目录 + `--dir` 指向它，跑完删除）：至少 8 条问题、退出码 1，必须命中这 8 类 —— ①原语名拼错 ②`effects` 不是数组 ③`cooldown_ticks` 是字符串 ④`mana_cost` 是 `true` ⑤`args` 是数组 ⑥`conditions[i].type` 非法 ⑦**跨文件**重复 id（报在**后出现**的文件）⑧JSON5 截断
+  3. `wc -l < tools/check_skills.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_skills.py` → **0**；`python tools/check_trees.py >/dev/null; echo $?` → **0**（既有工具零回归）
 
 - 进度：
   - （S8 自己填）

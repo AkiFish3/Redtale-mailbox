@@ -1094,3 +1094,27 @@ public static String TreeCommand.levelLine(SkillTreeSpec.Definition def, int lev
 | R56-b | 这一段**只报上限**（可拿多少点），不报已用/剩余 | 已用/剩余是 `tree state` 的职责（R53/R54 已定），两处都报会让「同一条信息两个来源」漂移 |
 | R56-c | `levelLine` 是**纯函数**且上线（public），探针直接断言字符串 | 玩家分支没有真人在线，只能靠纯函数段离线验；玩家胶水只有「取 level → 拼串」两行 |
 | R56-d | 该行**不写「已触顶」之类判断**，`可拿 N 点` 的 N 本身就是真话 | `points_per_level = 0`（关门槛）与 `max_points = 0`（不限）两种语义下，「5 点」不等于「等级 5」，多写一句注释反而会与 `capFor` 打架 |
+
+---
+
+### 4.36 技能解锁派生 `TreeService`（`unlock_skill` 的唯一消费方，D25 / M7 出口，R57 定稿）
+
+**性质**：`TreeService` 的**只读派生**扩展，零存档变更（`ProgressStore` 不加表）、零注册表变更。上一版见 §4.33。
+
+```java
+public static java.util.Set<String>  gatedSkillPaths();                       // 归一到 path、保定义序、不可变
+public static boolean                gated(String rawSkillId);                // 该技能是否被某棵树声明过
+public static java.util.List<String> unlockedSkills(ServerPlayer player);     // 全名、跨树合并、path 去重保首次、不可变
+public static boolean                isUnlocked(ServerPlayer player, String rawSkillId);
+public static String                 unlockedText(ServerPlayer player);       // 每行 "  " + 全名；空 → "  （无）"
+```
+
+- **语义**
+  - `gatedSkillPaths` = 把每棵树的**全部节点**当「已点」喂给 `TreeUnlocks.unlocked` 的结果（声明全集），按 path 归一后保定义序。
+  - `gated(raw)` = `pathOf(raw)` 属于 `gatedSkillPaths()`；**空串/ null → false**（不设门槛）。
+  - `unlockedSkills(player)` = 逐棵树 `TreeUnlocks.unlocked(def, selected(player, def))` 合并，**返回配置里的原写法（全名）**，去重按 path 保首次；`player == null` → 空列表。
+  - `isUnlocked` 全名 / 裸名都认（比对走 path）。
+  - `unlockedText` 空态固定 `"  （无）"`，非空每行 `"  " + 全名`，行间 `\n`，无首尾换行。
+- **存放**：不落存档 —— 解锁集是「已点节点 + 树配置」的派生值（R57-b）。
+- **谁消费**：`SkillCommand.cast` —— `gated(id) && !isUnlocked(player, id)` → 拒绝并回 `[redtale] 技能 <id> 未解锁（需要技能树节点，/redtale tree state 看已点）`。`SkillEngine.cast` 本身**不判**（R57-c）。
+- **探针**：`/redtale tree probe` O / P / Q 三组（`TreeCommand.probe`，17/17）。

@@ -1354,3 +1354,21 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **`tree skills <tree>`** 观测面（列已解锁技能），依赖第 2 条。
 4. **真人一次性验收窗口**（需 Aki 上线，一次收完）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/`take`·`untake` + `tree info` 玩家段 + 武器 tooltip（D20）+ `#minecraft:undead` 条件乘区。
 5. `respec` 扣费仍挂 Q-021（默认免费），等 D28 经济桥接，不排期。
+
+| R57 | 2026-11-19 | **验收 T-0052（`TreeUnlocks`）+ `unlock_skill` 接服务层（M7 出口最后一块）+ 派 T-0053** | ①卡板：T-0052 `[DONE]` → **`[VERIFIED]`**（3/3：`build --offline` EXIT=0 + jar 内 `TreeUnlocks.class`=1 / S8 探针 **36/36** ≥25 无 FAIL / `wc`=73 ≤150、`net.minecraft`=0、`TreePoints|TreeService`=0）+ S7 独立探针 `S7UnlockProbe` **54/54**（A~N 十四组）。**派 T-0053**（`tools/check_skills.py` 技能配置起飞前对账：25 条原语表 + 2 条 M0 调试原语、13 条检查项、8 类负向夹具），在制品 **1/3**。②自研 M7 出口：`TreeService` 新增 `gatedSkillPaths` / `gated` / `unlockedSkills` / `isUnlocked` / `unlockedText` + 私有 `pathOf`（**不落存档，解锁集是派生值**）+ `SkillCommand.cast` 6 行门槛 + `TreeCommand.probe` 新增 **O/P/Q** 三组。③实测（测试服 **1 次启停** `Done (1.972s)`，已停、25567/25577 无 LISTEN）：`tree probe` **17/17**（O 点 gale → 全名/裸名双认 + `arc_bolt` 免门槛；P 退点 → 解锁集 0 条 + 空态文案；Q 文案两空格前缀），回归 `tree list`/`tree info` 11 行逐字、`validate 0`、`reload 37 份`、`exp probe 7/7`、`skill list`、redtale 零 ERROR（4 条 `RecipeManager` 噪声来自 simplyswords / brewinandchewin）。④数字：jar **640121 B**、`selftest` **102 PASS**、`offline_check sources 133 exit 0`、构建锁取删三次。 | **§13.60 R57-a~d**。M7 出口条件「点满一条分支并解锁技能」至此闭环：`unlock_skill` 从「零消费方」变成 `/redtale skill cast` 的前置判定，且**只拦被树声明过的技能**，历史内容与调试路径零影响。 |
+
+### 13.60 R57 的四条口径（解锁集是派生值）+ 下一步（R58）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R57-a | **只有被某棵树 `unlock_skill` 声明过的技能才设门槛**；没被声明的技能（`arc_bolt` 这类）一律放行 | 一刀切会让所有历史技能配置立刻不可用（现有 4 条技能只有 2 条在树里）。「树管着的才要解锁」既保住老内容，又让新技能只要写进树就自动受管 |
+| R57-b | 解锁集**不落存档**，每次由「已点节点 + 树配置」现算（`TreeUnlocks.unlocked` 的直读）；`ProgressStore` 不加第三张表 | 存档里再存一份就是第二份真相：改树配置 / 退点 / 洗点后必然与已点集合漂移。R50-c 同源 |
+| R57-c | 门槛只装在 **`/redtale skill cast`**（当前唯一的施放入口）；`SkillEngine.cast` 本身不判 | 引擎是探针与（未来的）武器 `abilities` 的共用入口，装进去会立刻把 FakePlayer 的 `skill probe` 全打成「未解锁」。等 M8 内容绑定统一收口时再下沉，届时需要给 FakePlayer 留旁路 |
+| R57-d | `gated` / `isUnlocked` **比对一律走 path**（`redtale_project:gale_slash` 与 `gale_slash` 同一条） | 配置里写全名、命令里可能写裸名，R50-b 已经栽过一次；归一放在 `TreeService` 的私有 `pathOf`，别在调用点各拼一次 |
+
+下一步（R58）：
+
+1. **验收 T-0053**（`check_skills.py`：基线 `共 4 个文件 · 0 条问题` + 8 类负向 + `wc ≤ 200`）。
+2. **`tree skills <tree>`** 观测面（列已解锁技能）：现成数据在 `TreeService.unlockedSkills` / `unlockedText`，只差命令挂载；**TreeCommand 归 S7**（本轮刚改过 probe），不派 S8。
+3. **门槛的真实玩家路径**（`/redtale skill cast` 被拦文案）与 M6 其它真人项同批挂账，等 Aki 一次性验收窗口。
+4. `respec` 扣费仍挂 Q-021（默认免费），等 D28 经济桥接，不排期。

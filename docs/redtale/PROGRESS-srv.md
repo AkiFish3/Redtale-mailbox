@@ -1,30 +1,30 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 00:56 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-19 02:05 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
 ## 1. 当前里程碑
 
-**M6**（依据：最近一条提到里程碑的台账标题「**验收 T-0050（`check_mobs.py`）+ `per_tick_cap` 落盘（M6」）
+**M7**（依据：最近一条提到里程碑的台账标题「**验收 T-0052（`TreeUnlocks`）+ `unlock_skill` 接服务层（M7」）
 
 ## 2. 进行中（在制品上限 3 张）
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0052 | OPEN | `core/progression/TreeUnlocks` —— 「已点节点 → 解锁了哪些技能」纯派生（M7 出口「点满分支并解锁技能」第一步） |
+| T-0053 | OPEN | `tools/check_skills.py` —— 技能配置起飞前对账（M5 内容的安全网） |
 
-已验完 **49** 张 / 共 **52** 张。
+已验完 **50** 张 / 共 **53** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R52 | 2026-11-18 | **验收 T-0047（`/redtale tree list |
 | R53 | 2026-11-18 | **验收 T-0048（`TreePlan`）+ M7 L5 `TreeService`（技能树第一次真正影响面板）+  |
 | R54 | 2026-11-18 | **验收 T-0049（`check_trees.py`）+ M7 出口「等级 → 技能点」（`TreePoints.c |
 | R55 | 2026-11-18 | **验收 T-0050（`check_mobs.py`）+ `per_tick_cap` 落盘（M6 最后一个硬编号挂账 |
 | R56 | 2026-11-19 | **验收 T-0051（`check_items.py`）+ `tree info` 补「当前等级能拿多少点」+ 派 T |
+| R57 | 2026-11-19 | **验收 T-0052（`TreeUnlocks`）+ `unlock_skill` 接服务层（M7 出口最后一块）+  |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
