@@ -25,7 +25,7 @@
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
 | `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）**。**刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
-| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，第一层，已 VERIFIED）+ **`ProgressStore` 存档 `SavedData`（R43，第三层）** | 有：`RedtaleCore` 尚未暴露（L2 快照层 R44 才接）；`ProgressStore.get(server)` / `factory()` 直接可用；契约见 `docs/PROGRESSION.md` + §4.24 |
+| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，L1）+ `ProgressSpec` 定义解析（T-0039，L2）+ **`ProgressRegistry` 快照（R44，L2，属性键过 80 条表并归一）+ `ProgressRules`（`progression.json5`）** + `ProgressStore` 存档 `SavedData`（R43，L3） | 有：`RedtaleCore.progress()`（`ProgressRegistry`）/ `progressRules()`；`ProgressStore.get(server)` / `factory()` 直接可用；契约见 `docs/PROGRESSION.md` |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
 
@@ -557,7 +557,7 @@ public final class MobSpawner {
 
 | 用途 | 路径 |
 |---|---|
-| 运行配置（玩家/管理员可改） | `config/redtale_project/`（`items/`、`sets/`、`scripts/`、`affixes/`、`affix_pools/`、`weapon_attributes/`、`enchantments/`、`skills/`（M5 起）、`attack_speed.json5`、`damage.json5`、`crit.json5`） |
+| 运行配置（玩家/管理员可改） | `config/redtale_project/`（`items/`、`sets/`、`scripts/`、`affixes/`、`affix_pools/`、`weapon_attributes/`、`enchantments/`、`skills/`（M5 起）、`mobs/`、`drops/`、`levels/`、`jobs/`（M7 R44 起）、`attack_speed.json5`、`damage.json5`、`crit.json5`、`progression.json5`（M7 R44 起）） |
 | 内置默认配置（首次启动落地） | `src/main/resources/redtale/defaults/` |
 | 静态数据包（随 jar） | `src/main/resources/data/redtale_project/` |
 | 运行期生成的数据包 | `<world>/datapacks/redtale_project/data/<ns>/...`（`weapon_attributes/` 与 `enchantment/` 共用同一个包根） |
@@ -568,8 +568,9 @@ public final class MobSpawner {
 | 怪物定义（M6，R36） | `config/redtale_project/mobs/<id>.json5`（一个文件一只怪，schema 见 `MobSpec` 卡 T-0030）；默认 `ember_guard` / `ash_caster` 属 `DEFAULT_FILES`，**删文件会被 reload 重建** |
 | 怪物实体（M6，R38） | 不落盘：`/redtale mob spawn` 现生成；识别靠 scoreboard tag `redtale_mob/<怪id>`（1.21.1 无 `getPersistentData`，R34 事实） |
 | 掉落表（M6，R41） | `config/redtale_project/drops/<文件名>.json5`（`id` 是**裸名**，一个文件一张表）；默认 `ember_guard.json5` 属 `DEFAULT_FILES`。**注意**：`DEFAULT_FILES` 只在文件缺失时落地，老配置里的 `mobs/*.json5` 不会自动长出 `drops:` 键（R41 实测：测试服 R38 的 ember_guard 副本没有该键 → 死怪零产出） |
-| 等级曲线（M7，R42 定稿） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3） |
-| 职业定义（M7） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4） |
+| 等级曲线（M7，R42 定稿；R44 起进 `DEFAULT_FILES`） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3）；默认 `main.json5` 会**在文件缺失时被重建** |
+| 职业定义（M7，R44 起进 `DEFAULT_FILES`） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4）；默认 `miner.json5` |
+| 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
 | 等级存档（M7） | `world/data/redtale_project_progress.dat`（`SavedData`，**不落** `playerdata`，也不进 config） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 

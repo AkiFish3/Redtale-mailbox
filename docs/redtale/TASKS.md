@@ -1992,7 +1992,7 @@ fi
   - 2026-11-18 09:20 · **S7 验收 → VERIFIED（3/3）** · ①`build --offline` EXIT=0（jar 504603 B）；`unzip -l | grep -c "core/progression/ExpCurve"` = **1**；②`wc -l` = **90** ≤180、`net.minecraft` = **0**、`grep -cE "public static ExpCurve (geometric|polynomial)"` = **2**；③**S7 独立探针 `build/probe/S7ExpCurveProbe.java` PASS 284 / FAIL 0 / TOTAL 284**（自编 A~J 十组，不复用 S8 的探针：九条定点 + 累计=单步之和 L=1..50 逐一手算 + `levelFor(total(L))==L` L=1..100 + `levelFor(total(L)-1)==L-1` L=2..100 + 三条夹取 + `expForLevel(0)` 抛 IAE + 1e9 硬顶 + polynomial 口径 + 无状态重入 + maxLevel=2/1000 两端）。
   - **S7 裁定（S8 提的定点表冲突）：卡面 `totalExpForLevel(4)=352` 是笔误，`337` 正确，不打回。** 依据：语义 4 写死 `Σ_{i=1..L-1} expForLevel(i)`，且同卡面 `totalExpForLevel(3)=212` 已印证 L-1 口径（100+112=212）；352 只能是 `212+exp(4)=212+140`（含 L 项）。实现按语义，探针同口径断言 337。**PROGRESSION.md §3 无需改**（那里只写 `exp(L)` 公式，没写累计定点）。
 
-### T-0039 · [OPEN] `core/progression/ProgressSpec` —— 等级 / 职业 schema 解析器（M7 第二层）
+### T-0039 · [VERIFIED] `core/progression/ProgressSpec` —— 等级 / 职业 schema 解析器（M7 第二层）
 
 - 派单：S7 · 2026-11-18 09:30
 - 契约：`docs/PROGRESSION.md` **§3**（`levels/` schema）/ **§4**（`jobs/` schema）。字段名、缺省值、夹取口径逐字照抄，不许自己发明键名。
@@ -2054,7 +2054,86 @@ fi
      ⑩ 返回 map 不可变（`put` 抛 `UnsupportedOperationException`）。
      把 `PASS n / FAIL 0 / TOTAL n` 贴上来。
 
+- 验收结论（S7 · 2026-11-18 10:33）：
+  - **PASS 3/3** · build `EXIT=0`（jar 526008 B）/ jar 内 `core/progression/ProgressSpec` = **2** / `wc -l` = **141** ≤200、`net.minecraft` = 0、`Logger` = 0、`git status` 只有本文件 + TASKS
+  - S7 独立探针 `build/probe/S7ProgressSpecProbe.java` **PASS 83 / FAIL 0**（自编 A~K 十一组，不复用 S8 的 `ProgressSpecProbe`）：levels/jobs 缺省、跨目录不互吃、id 四态、重复保先、`max_level` 五态、`curve` 缺失/未知 mode/base·growth 越界、attributes 坏值丢弃且裸键原样、`exp_sources` 去重与显式 `[]`、三处不可变、保文件顺序、`warnings=null`
+  - S8 的两处「卡面未写死文案」**照单采纳**（attributes/exp_sources 的 WARN 文案由实现自定；name 空白与非字符串合并一条）
+  - S7 一处**已改**（记原因）：`Definition` 的 `attributes`/`expSources` 由 `Map.copyOf`/`List.copyOf` 换成 `unmodifiableMap(new LinkedHashMap<>(...))` —— 卡面写的是 `Map.copyOf`，但它与 `PLAN §13.46 R43-b`（对外不可变集合必须保序）冲突，且属性行输出顺序会跨 JVM 抖动；语义不变（仍不可变），探针 D11 复验仍抛 `UnsupportedOperationException`
+
 - 进度：
+  - 2026-11-18 09:52 · 完成 · src/main/java/com/redtale/project/core/progression/ProgressSpec.java（新建 141 行，单类 + record Definition）+ build/probe/ProgressSpecProbe.java（探针，build/ 不入库）· build --offline EXIT=0（jar redtale_project-0.1.0.jar）· jar 内 core/progression/ProgressSpec=2（主类+$Definition）、wc=141≤200、net.minecraft=0、Logger=0、git status 仅 TASKS.md+新文件 · 探针 45/45（覆盖语义 1~11+13、卡面要求 10 组全覆盖）。两处卡面未写死口径已按字面实现请 S7 裁：①attributes 非对象/空键/重复键、exp_sources 非数组/非字符串元素只写「+ WARN」未给文案，已按 path+ 描述各造一条；②name 空白与非字符串合并同一条 WARN。功能面（真接 levels/jobs 配置）待 S7 验。
+
+### T-0040 · [OPEN] `/redtale level list|info` —— 等级 / 职业定义只读清单（M7 的观测面）
+
+- 派单：S7 · 2026-11-18 10:47
+- 契约：`docs/PROGRESSION.md` §3 / §4（schema）+ 本卡写死的输出格式。**只读快照**：不解析配置、不读存档、不下发属性、不写盘。
+- 目标：把 `RedtaleCore.progress()`（`ProgressRegistry`，M7 L2 快照）里的定义打印出来，给运营与后续 L4 一个对账面。
+
+- **不要做**：
+  - 不加 `add` / `set` / `exp` 任何写操作；不读 `ProgressStore`（存档与等级换算归 L4）
+  - 不解析 `levels/*.json5` / `jobs/*.json5`（自己再解析一遍 = 第二份真相，R36-a）
+  - 不改 `ProgressRegistry` / `ProgressSpec` / `ProgressRules` / `RedtaleCore` / `ConfigStore` / `docs/*`
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/command/LevelCommand.java`（**新建**，≤ 160 行）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**只许追加 1 行**：`.then(LevelCommand.node())`，其它行一个字节不许动）
+
+- 接口（**逐字照抄**）：
+  ```java
+  package com.redtale.project.core.command;
+
+  public final class LevelCommand {
+      public static com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> node();
+  }
+  ```
+  节点结构：`level` → `list`（executes）+ `info <id>`（`StringArgumentType.string()` —— **必须 string，word 不吃冒号**，R40 的坑）。
+
+- 输出格式（**逐字**，S7 按此对账）：
+  ```
+  [redtale] 主等级 {L} 条 · 职业 {J} 条 · 按级属性 {K} 条
+    主等级 {id} · {name} · 上限 {max} · L1→L2 {e1} · L2→L3 {e2} · 属性 {n} 条
+    职业 {id} · {name} · 上限 {max} · L1→L2 {e1} · L2→L3 {e2} · 属性 {n} 条 · 经验 {sources}
+  ```
+  - 主等级行在前、职业行在后；块内按 id 升序（用 `progress().sortedIds(false)` / `sortedIds(true)`）
+  - 计数取 `levelCount()` / `jobCount()` / `attributeCount()`
+  - `{e1}` = `def.curve().expForLevel(1)`、`{e2}` = `def.curve().expForLevel(2)`；**`max_level == 2` 时 `{e2}` 打 `-`**（到顶返回 0，别把 0 念成「免费升级」）
+  - `{sources}` = `String.join(",", def.expSources())`，空列表打 `（无）`
+  - 空表：只打头行 + `  （没有等级定义：读 config/redtale_project/levels 与 /jobs）`，返回 0
+
+  ```
+  [redtale] {id} [{等级|职业}] {name} · 上限 {max} · 来源 {source}
+    曲线：L1→L2 {e1} · L2→L3 {e2} · 满级累计 {totalExpAtMax}
+    属性 {n} 条：{key} +{value}/级 · {key} +{value}/级
+    经验来源：{sources}
+  ```
+  - 类型标签：`def.job()` 真 → `职业`，假 → `等级`
+  - `满级累计` = `def.curve().totalExpAtMax()`（long，原样打，不千分位）
+  - 属性按 `def.attributes()` 迭代顺序（已是配置顺序）；值正数带 `+`、负数原样，两位小数去尾零（`0.5` / `+0.02` / `-1.25`）
+  - `属性 0 条：（无）`；`经验来源` 行**只给职业打**，主等级不打
+  - 找不到 id：`[redtale] 没有等级定义 {id}（现有 {n} 条：{升序 id 逗号分隔}）`，返回 0，**不抛异常**（照 R31 `skill info` 口径）
+
+- 返回码：`list` 返回 `progress().size()`；`info` 命中返回 1、未命中返回 0。
+
+- 硬约束：
+  - `grep -c "ProgressSpec"` 必须为 **0**（只许通过 `ProgressRegistry` 与 `Definition` 的访问器取值，不许碰解析层）
+  - 不新增 import 依赖面：只许 Brigadier / `CommandSourceStack` / `Commands` / `Component` / `RedtaleCore` / `ProgressRegistry` / `java.util.*`
+  - 控制台可跑（本卡两个子命令都不需要玩家实体）
+
+- 验收（1、3 你自己跑，2 归 S7）：
+  1. `D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline` → `EXIT=0`；`unzip -l build/libs/*.jar | grep -c "core/command/LevelCommand"` = **1**；
+     `wc -l src/main/java/com/redtale/project/core/command/LevelCommand.java` ≤ **160**；`grep -c "ProgressSpec"` = **0**；
+     `git status --short` 只出现本卡两个文件（外加 `docs/TASKS.md`）
+  2. 测试服 `redtale level list` 逐字等于：
+     ```
+     [redtale] 主等级 1 条 · 职业 1 条 · 按级属性 3 条
+       主等级 redtale_project:main · 主等级 · 上限 100 · L1→L2 100 · L2→L3 112 · 属性 2 条
+       职业 redtale_project:miner · 矿工 · 上限 50 · L1→L2 80 · L2→L3 211 · 属性 1 条 · 经验 kill
+     ```
+     且 `redtale level info redtale_project:miner` 首行 = `[redtale] redtale_project:miner [职业] 矿工 · 上限 50 · 来源 jobs/miner.json5`
+  3. 负向：`redtale level info nope` → `[redtale] 没有等级定义 nope（现有 2 条：redtale_project:main, redtale_project:miner）`，返回 0
+
+- 进度：
+
 
 ## 6. 派单池（S7 用，S8 不看）
 
