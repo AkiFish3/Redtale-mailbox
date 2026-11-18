@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-18 15:36 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-18 16:45 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0044 | OPEN | `tools/check_enchants.py` —— 附魔配置起飞前对账（D32 的运营安全网） |
+| T-0045 | OPEN | `core/progression/SkillTreeSpec` —— 技能树解析器 v1（D25 / M7 最后一块的 L1） |
 
-已验完 **41** 张 / 共 **44** 张。
+已验完 **42** 张 / 共 **45** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R44 | 2026-11-18 | **验收 T-0039 + M7 第二层快照（`ProgressRegistry` + `ProgressRules`） |
 | R45 | 2026-11-18 | **验收 T-0040 + M7 L4 服务层（`ProgressService`）+ 派 T-0041** |
 | R46 | 2026-11-18 | **验收 T-0041 + M7 L5 收尾（`grant_exp` 原语）+ D26 契约定稿（`SPAWN-RULE |
 | R47 | 2026-11-18 | **验收 T-0042 + M6 L2 快照（`SpawnRegistry`）+ 派 T-0043** |
 | R48 | 2026-11-18 | **验收 T-0043 + M6 第三层（`SpawnReplacer` 挂 `MobSpawnEvent.Positi |
+| R49 | 2026-11-18 | **验收 T-0044 + 补 `/redtale level info` 的「当前」段（R45 挂了两轮的漏项）+ 派 |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 

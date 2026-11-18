@@ -877,3 +877,23 @@ public void tick(net.minecraft.server.MinecraftServer server);   // 每 tick ≤
 **新坑（R48 实测）**：`BuiltInRegistries.ENTITY_TYPE.get(未知 id)` 返回 **`pig`**（注册表默认值），必须 `containsKey` 先判；
 srg 编译面 `Entity` **没有** `entityTags()`（用 `getTags()`）；`BlockPosArgument.getLoadedBlockPos` 声明受检异常而 `getBlockPos` 不声明；
 实体 id 参数用 `ResourceLocationArgument.id()`（`StringArgumentType.string()` 不吃冒号，R40 老坑第三次复发）。
+
+### 4.30 等级观测面「当前」段 `LevelCommand.currentLine`（M7，R49 定稿）
+
+```java
+package com.redtale.project.core.command;
+
+// com.redtale.project.core.command.LevelCommand —— 只读观测面；本段只在**玩家上下文**下出现
+public static String currentLine(com.redtale.project.core.progression.ExpCurve curve, long totalExp);
+// 满级（level >= maxLevel）→ "Lv100 · 本级已满 · 累计 <total>"
+// 未满级          → "Lv3 · 本级 21/44 · 累计 65"（cur = total - totalExpForLevel(level)）
+```
+
+绑定方式（`/redtale level info <id>`）：`src.getPlayer() != null` 时追加一行 `"\n  当前 " + currentLine(def.curve(), total)`；
+`total` 取 `ProgressStore.mainExp(uuid)`（主等级）或 `ProgressStore.jobExp(uuid, id)`（职业）。
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R49-a | 文案生成是**纯函数**（零 MC 依赖），上下文绑定单独 5 行 | 纯函数可离线探针直测（16/16）；控制台执行输出**逐字不变**，既有 `[VERIFIED]` 卡的文案断言零回归 |
+| R49-b | 等级一律 `ExpCurve.levelFor()` 现算，不读缓存；`level >= maxLevel` 优先判，`expForLevel(maxLevel)` 返回 0 故**绝不出 `/0`** | 等级是派生值（R42-b）；`/0` 会在 tooltip 与观测面同时炸 |
+| R49-c | `ExpCurve` 构造为 `maxLevel = Math.max(2, n)` → 「上限 1」实际是 2 级曲线；写探针期望时按 `maxLevel()` 取值，别按入参假设 | 实测踩到（期望错、代码对，同 R43-a） |

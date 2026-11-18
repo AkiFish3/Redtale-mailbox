@@ -2291,7 +2291,7 @@ fi
 - 口径请 S7 裁：①验收 2 的 grep `SpawnCommand.node()` 宽匹配=2（line128 `MobSpawnCommand.node()` 的子串误命中 + line140 本卡），精确 `^[[:space:]]*\.then(SpawnCommand\.node())`=1，请改验收命令为精确匹配；未改代码凑数 · ②check 在 M=0 且同时有 chance0 的 ○ 提示时输出顺序 = ⚠ → 引用完整✓ → ○（卡面「M=0 第二行起打✓」与「○排在所有⚠之后」并存、未定两者的相对序） · ③match 实体 id 用 ResourceLocation.tryParse + ENTITY_TYPE.containsKey 判，含怪字符解析失败算 1 条「未知实体」、不抛异常
 - 2026-11-18 15:3x · **S7 验收 → VERIFIED（3/3）** · build EXIT=0（jar 569456 B）/ 精确 grep `.then(SpawnCommand.node())`=1（采纳 S8 偏差①：宽匹配 2 是 `MobSpawnCommand` 子串误命中，卡面改为精确匹配）/ jar 内 `command/SpawnCommand`=1 / 104 行 ≤200 · 测试服 `Done (1.978s)` 实测 `刷怪规则 1 条 · 引用怪物 1 只 · 每区块限量 1 条` + `  redtale_project:overworld_night_elite · replace · → ember_guard · 概率 0.25 · 优先级 100 · 上限 1`；`spawn check` = `问题 0 个` + `引用完整 ✓` · 负向两组（未定义 mob + 未知实体 + chance 0 → `问题 2 个` 且 `○` 排 ⚠ 后；仅 chance 0 → `问题 0 个` + `✓` + `○`）· 偏差②③ 采纳：`✓` 在 `○` 之前（卡面「第二行起」字面口径），`ResourceLocation.tryParse` 失败按 1 条未知实体计
 
-### T-0044 · [OPEN] `tools/check_enchants.py` —— 附魔配置起飞前对账（D32 的运营安全网）
+### T-0044 · [VERIFIED] `tools/check_enchants.py` —— 附魔配置起飞前对账（D32 的运营安全网）
 
 - 派单：S7 · 2026-11-18 15:3x
 - 背景：M4 出过一个**静默** bug（R22）：附魔里 `script: "enchants/soul_reap"` 与 `scripts/*.json5` 的 `id` 只差一个命名空间 →
@@ -2350,6 +2350,66 @@ fi
      （该目录 2 份附魔 + `scripts/enchants_soul_reap.json5` 的 id 是 `enchants/soul_reap`，第 7 项应通过）
   3. 三份坏夹具（临时目录，各自单独跑）：① `script: "minecraft:enchants/soul_reap"` → 命中 `effects 引用的脚本`;
      ② `max_level: 0` → 命中 `max_level 必须是 1~255 的整数`；③ 删掉 `description` → 命中 `description 缺失`；三次 `EXIT=1`
+
+- 进度：
+- 2026-11-18 15:40 · 完成 · 新建 tools/check_enchants.py（189 行，唯一新文件；import check_progress.clean_json5 共用清洗口径，另加单引号字面量转换以吃 scripts/*.json5）· 未取构建锁、未 build（纯 Python 卡，卡面三条验收不含构建）· 自测：默认配置 `共 2 个文件 · 没有发现问题 ✓` EXIT=0 / `--dir E:/server-test/config/redtale_project` 同口径 EXIT=0 / 三份坏夹具（script 带命名空间 / max_level 0 / 删 description）各命中指定文案且 EXIT=1；补测重复 id + JSON5 解析失败 + datapack 双向（未生成计问题、仅磁盘有计提示）+ 缺目录跳过，全部符合 · py_compile OK，临时夹具已清
+- 口径请 S7 裁：①第 3 项「同一文件内 id 重复」与文案「与先出现的相对路径重复」冲突，按跨文件重复实现（后出现的那份报）；②第 7 项脚本清单含 greeting 也计入 N（load_script_ids 读 scripts/*.json5 全部 id）；③第 8 项「仅磁盘有」无固定配置来源，相对路径取 `enchantment/<name>.json`，整行 `[提示] enchantment/<name>.json: 仅磁盘有：<name>.json`；④脚本文件用单引号，clean_json5 只吃双引号，故调用前做单引号→双引号字面量转换，JSON5→dict 仍只走 clean_json5 这一份真相
+- 2026-11-18 16:4x · **VERIFIED（3/3）**：①默认 `共 2 个文件 · 没有发现问题 ✓` EXIT=0 ②`--dir E:/server-test/config/redtale_project` 同口径 EXIT=0 ③三份坏夹具（`script` 带命名空间 / `max_level: 0` / 删 `description`）各命中指定文案且 EXIT=1。补测 4 项：跨文件重复 id（`id … 与 enchantments/a.json5 重复`）、datapack 双向（`未生成：x.json` 计问题 / `仅磁盘有：x.json` 计提示）、签名四函数齐、189 行
+- S7 裁四条口径（全采纳）：①**卡面「同一文件内」是笔误**，跨文件重复才是对的（文案自己就写了「与先出现的相对路径重复」）；②`scripts/*.json5` 全部 id 计入 N（含 greeting）——对账工具列举的是「运行期真能加载到的脚本」，多列不算错；③`[提示] enchantment/x.json: 仅磁盘有：x.json` 双段重复文件名，**不改**（稳定可 grep 优于好看）；④单引号→双引号预转换**接受**，但要写清边界：**块注释 `/* */` 两边都不支持**（Java `Json5` 只认 `//`，实测 `/* */` 文件双方都判解析失败）→ 工具与运行期口径一致，**不是**假阳性
+
+### T-0045 · [OPEN] `core/progression/SkillTreeSpec` —— 技能树解析器 v1（D25 / M7 最后一块的 L1）
+
+- 派单：S7 · 2026-11-18 16:5x
+- 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §3（schema，字段一个不加）/ §5 第 1、2 条（点数是派生值、modifier id 口径——L1 只解析，不碰修饰符）
+
+- 不要做：
+  - **零 MC import**（不 `import net.minecraft.*`、不碰 `AttributeInstance`、不注册、不接存档、不写 defaults、不加新字段、不做 GUI）
+  - **不做环检测/拓扑排序**（L2 才算），不做「点数够不够」判定（L3）
+  - 不改 `docs/SKILL-TREE.md`、不改 `RedtaleCore`、不动 `build/probe/` 之外的文件
+  - 半个字段也别自己发明：`exclusive_with` / `respec` **原样忽略**，不实现、不告警
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/progression/SkillTreeSpec.java`（**新建**，≤ 200 行）
+  - `build/probe/SkillTreeSpecProbe.java`（**新建**，探针）
+
+- 接口签名（**逐字**，S7 按行 grep）：
+  ```java
+  public record Effect(String type, String attribute, String operation, double value, String skill, String id) {}
+  public record Node(String id, String name, int cost, int[] pos, List<String> requires, List<Effect> effects) {}
+  public record Definition(String id, String name, String icon, List<String> classes,
+                           int maxPoints, int pointsPerLevel, Map<String, Node> nodes, String source) {}
+  public static Map<String, Definition> parse(List<ConfigFile> configs, List<String> warnings)
+  ```
+  允许 import 只有：`com.google.gson.Json*`、`com.redtale.project.core.config.ConfigFile`、`java.util.*`。
+  `parse` 对 `configs == null` 返回空表；`warnings == null` 时不得 NPE。
+
+- 解析口径（**告警文案逐字**，S7 按行 grep；W 编号只出现在本卡，不进代码）：
+  1. 只吃路径 `skill_trees/` 前缀 + `.json5` 后缀，其余**静默跳过**（不进 warnings）
+  2. 文件级丢弃（`continue`，该文件不进返回表）：
+     - `id` 缺失/非字符串/空白 → `skill_trees/x.json5：id 缺失，已跳过`
+     - `nodes` 缺失/非对象/空对象 → `skill_trees/x.json5：nodes 为空，已跳过`
+  3. 重复 id：**后者覆盖、位置留首次**（与 T-0042 同口径）→ `skill_trees/b.json5：id warrior_vanguard 与 skill_trees/a.json5 重复（后者覆盖）`
+  4. 节点 `cost`：缺失 → `0`；负数 → 归零 + `节点 x 的 cost 为负（-3），已归零`
+  5. `requires` 悬空 → **保留节点**（不删，删了会把树打断）+ `节点 x 的前置 y 不存在`
+  6. `requires` 含自身 → 去掉该条 + `节点 x 的前置包含自身，已忽略`
+  7. `max_points`：缺失/非整数 → 取 **Σ 所有节点 cost** + `skill_trees/x.json5：max_points 缺失，已取节点 cost 合计 N`；负数 → `0` + `skill_trees/x.json5：max_points 为负，已归零`
+  8. `points_per_level`：缺失/非整数 → `1`；负数 → `0` + `skill_trees/x.json5：points_per_level 为负，已归零`
+  9. `effects[]` 逐条：
+     - `type` 不在 `attribute` / `unlock_skill` / `passive` → 丢弃该条 + `节点 x 的效果类型 y 未知，已丢弃`
+     - `attribute` 且 `attribute` 空 或 `operation` 空 或 `value` 非数 → 丢弃 + `节点 x 的 attribute 效果缺字段，已丢弃`
+     - `unlock_skill` 且 `skill` 空 → 丢弃 + `节点 x 的 unlock_skill 效果缺 skill，已丢弃`
+     - `passive` 且 `id` 空 → 丢弃 + `节点 x 的 passive 效果缺 id，已丢弃`
+     - `effects` 缺失/非数组 → 空 list，**不告警**（根节点就是这形态）
+  10. `pos` 缺失/非 2 元整数数组 → `[0,0]` + `节点 x 的 pos 无效，已用 [0,0]`
+  11. 节点 `name` 缺失 → 回落 `tree.node.<节点id>`，**不告警**（GUI 靠它兜底）
+  12. `icon` 缺失 → `minecraft:stone`；`classes` 缺失/非数组 → 空 list（**空 = 所有职业可用**，§3 原话）；两者都**不告警**
+  13. 顶层未知键 → `未知键 y（已忽略）`；节点内未知键 → `节点 x 的未知键 y（已忽略）`
+  14. **保序**：`nodes` 与返回表一律 `Collections.unmodifiableMap(new LinkedHashMap<>(src))` —— `Map.copyOf` 不保序（R43-b 老坑）
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
+  2. `cd build/libs && unzip -l *.jar | grep -c "SkillTreeSpec"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/progression/SkillTreeSpec.java` → `≤ 200`
+  3. `python tools/probe_run.py SkillTreeSpecProbe` → 末行 `全绿`（`0 fail`），断言 **≥ 25** 条，必须覆盖：A 正常树（§3 例子逐字抄成探针夹具，9 节点 / 21 点）/ B `requires` 悬空保留 / C 重复 id 后者覆盖 / D `cost` 负数归零 / E `max_points` 缺失取合计 / F `points_per_level` 负数归零 / G 四类 effect 丢弃各一条 / H `pos` 无效回落 / I `name` 回落 `tree.node.x` / J 保序（插入序 = 遍历序）
 
 - 进度：
 
