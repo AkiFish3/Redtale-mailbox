@@ -1276,3 +1276,23 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **M7 L5 `TreeService`**（归 S7）：`take` / `untake` → `TreePoints.canTake`（已 VERIFIED）→ `ProgressStore.addNode` → `TreePlan.plan/declared` 下发/清场（`tree/<tree>/<node>` 前缀移除）；`/redtale tree take|untake`。**验收读 `AttributeMap` 差值**，不看返回值。
 3. **洗点（`respec`）**：`clearTree` + 前缀批清；扣费仍挂 Q-021（默认免费）。
 4. 挂账不变，另加：**技能树真人在线路径**（`take` 的玩家上下文）、`spawn replace per_tick_cap`（现硬编 8，开关文件只落了 `replace_enabled`）。
+
+| R53 | 2026-11-18 | **验收 T-0048（`TreePlan`）+ M7 L5 `TreeService`（技能树第一次真正影响面板）+ 派 T-0049** | ①卡板：T-0048 `[DONE]` → **`[VERIFIED]`**（3/3：`build --offline` RC=0 / jar 内 `TreePlan`=**2**（主类 + `$Modifier`）、`wc -l`=**62** ≤150、`net.minecraft`=0、`TreePoints`=0 / S8 探针 **41/41**；另跑 S7 独立探针 `build/probe/S7TreePlanProbe.java` **48/48**，自编 A~P 十六组）。**派 T-0049**（`tools/check_trees.py` 技能树配置起飞前对账，三向交叉：`classes`→`jobs/`、`unlock_skill`→`skills/`、`attribute`→80 条表），在制品 **1/3**。②自研 M7 L5：新类 `core/progression/TreeService`（`take`/`untake`/`respec`/`applyTree`/`applyAll`/`removeAll`/`state`/`resolve`/`prefixOf`/`snapshot` + `Status` 九值 + `Result`）+ `TreeCommand` 加 `state|take|untake|respec|probe` 五个子命令（`list|info` 输出逐字未动）+ `ProgressService.onLogin`/`applyAll` 各补一行 `TreeService.applyAll`（登录 / reload 与等级属性同源重下发）。③实测（测试服 **2 次启停** `Done (1.987s)` / `Done (2.018s)`，均已停、25567/25577 无 LISTEN）：`/redtale tree probe`（FakePlayer）**13/13** —— 基线 攻速 **4.0** / 护甲 **0.0** / 物伤 **0.0** → 点 `atk_spd_1` 攻速 **4.2**（4.0×1.05）→ 重复点 `ALREADY_TAKEN` 且攻速不动 → 退 `root` `HAS_DEPENDENTS · atk_spd_1` → 点 `heavy_2` `MISSING_PREREQ · heavy_1` → 点 `armor_1` 护甲 **2.0** → 点 `heavy_1` 物伤 **0.08**（自建裸 path 复测）→ 退 `atk_spd_1` 攻速回 **4.0** → 洗点退回 **3 个**、三件属性全回基值、前缀残留 **0** → 幽灵 modifier `tree/warrior_vanguard/ghost` 被前缀清场、移速回 **0.10000000149011612**。回归：`tree list`/`info` 逐字同 R52、`tree state` 控制台分支、`take`/`respec` 控制台报「只能由玩家执行」、`validate 0 问题`、`exp probe 7/7`、`level list` 不变、`reload 37 份`。④数字：`build --offline` exit 0（jar **632690 B**）、`selftest` **78 PASS**、构建锁取删三次、源码 `sources: 132 exit 0`。 | **§13.56 R53-a~e**。本轮两处「期望错、代码对」：S7 探针 E2/E3（把 `nodes()` 顺序写成 `selected` 顺序）与 `tree probe` J（洗点前只退了 1 个、却期望退回 2 个）—— 均为自编写错，同 R43-a 口径不打回卡。真正值钱的是 **M 组**：手工挂一个「配置里已经不存在的节点 id」，证明清场走的是**前缀扫描**而不是「按当前声明清单逐条清」，否则改配置后旧 modifier 会永久留在旧属性上（`SKILL-TREE.md` §5 第 4 条要防的正是这个）。 |
+
+### 13.56 R53 的五条口径（技能树服务层）+ 下一步（R54）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R53-a | 存档键一律用 **`def.id()`（快照里的全名）**，不用命令传进来的写法；`resolve()` 先精确再按 `pathOf` 兜底 | `warrior_vanguard` 与 `redtale_project:warrior_vanguard` 是同一棵树的两种写法（默认件用裸名、`jobs/` 用全名，R50-a 的老坑），混用会在 `ProgressStore.trees` 里长出两个桶，症状是「点了一半退另一半」 |
+| R53-b | 下发/洗点的清场一律 **`redtale_project:tree/<path>/` 前缀扫描 `AttributeMap`**，不按「当前声明清单」逐条清 | 配置里改了节点的属性键时，旧 modifier 挂在**旧属性**上，按当前声明清不到 → 属性残留（`SKILL-TREE.md` §5 第 4 条）。本轮 `tree probe` M 组用幽灵 modifier 证死这条：手工挂的 `tree/warrior_vanguard/ghost` 在一次 `applyTree` 后被清、移速回基值 |
+| R53-c | `untake` 遇到「有别的已点节点依赖它」直接拒（`HAS_DEPENDENTS` + 依赖者名单），**不做级联退**；要清一片走 `respec` | 级联退让玩家丢了没打算丢的节点，还静默扣不到点数（点数是从已点集合现算）。拒 + 报名单是唯一不产生歧义的行为；批量场景由 `respec` 显式承担 |
+| R53-d | 点数上限暂时取 `def.maxPoints()`（**不按等级换算**）；「等级 → 技能点」是 M7 剩余项，未接 | `TreePoints.state` 的契约就是 `maxPoints`（已 VERIFIED，不回头改）。等级换点数要先定「`points_per_level` × 等级 还是 每 N 级 +1」，属取舍题，等 Aki 拍板/PLAN 定，不在服务层自己发明 |
+| R53-e | T-0047 的硬验收 `grep -c "TreePoints" = 0` **只对那一轮有效**，合流后作废；`TreeCommand` 由观测面扩成观测+写面，属「改已 VERIFIED 文件」，已在本行与 §13 台账记原因 | R52-c 已写明「合流后同一个类加写面是允许的，但顺序不能反：先观测面 → 再写面」。本轮正是合流：`list|info` 一个字节没动（回归逐字对），新分支全在 `state|take|untake|respec|probe` |
+
+下一步（R54）：
+
+1. **验收 T-0049**（`tools/check_trees.py`：默认件 0 问题 + 五类负向全命中 + 不许抄第三份 JSON5 清洗器）。
+2. **等级 → 技能点**（`points_per_level`）：定口径（等级×每级 还是 每 N 级 +1）→ `TreeService.state` 换成「等级给的点数」而不是 `def.maxPoints()`；这是 M7 出口条件「升级加属性点」的最后一块。
+3. **`respec` 扣费**：Q-021 仍挂（默认免费），等 D28 经济桥接；`skill_trees/*.json5` 的 `respec` 段现在只解析不执行。
+4. **技能树真人在线路径**：`take`/`untake` 的 `src.getPlayer()` 分支至今无真人调用方（探针走 FakePlayer）；与既有挂账同批。
+5. 挂账不变，另加：`spawn replace per_tick_cap`（现硬编 8）、`per_tick_cap` 落盘。

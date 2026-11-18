@@ -2523,7 +2523,7 @@ fi
   **回归**：`reload` 36 份 / `validate` 问题 0 / `level list` 三行逐字同 R45 / 日志 redtale 零 ERROR·零 WARN。
 - 2026-11-18 20:2x · **S7 合流**：`TreeCommand.java` + `RedtaleCommand` 那一行归 S7；R53 起 `TreeCommand` 由 S7 接 `take|untake` 子命令（观测面 → 写面，见 PLAN §13 R53）。
 
-### T-0048 · [OPEN] `core/progression/TreePlan` —— 技能树属性下发的纯函数（M7 / D25 第五层第一步）
+### T-0048 · [VERIFIED] `core/progression/TreePlan` —— 技能树属性下发的纯函数（M7 / D25 第五层第一步）
 
 - 派单：S7 · 2026-11-18 20:2x
 - 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §5 第 4 条（**洗点必须能完整回滚**：`attribute` 效果的 modifier id 写成固定形态，洗点时按前缀批量移除；「属性残留」是这类系统最常见的 bug）
@@ -2567,6 +2567,55 @@ fi
   3. `python tools/probe_run.py TreePlanProbe` → 末行 `PASS n / FAIL 0`，断言 **≥ 25** 条，必须覆盖：A 只出选中节点 / B 未选节点零输出 / C 输出顺序 = `def.nodes()` 序（**故意让 selected 倒序**）/ D `unlock_skill`+`passive` 跳过 / E 单属性效果 → 裸 id / F 双效果 → 带 `/0` `/1` / G 下标按属性效果序（混杂 `passive` 在首位不影响 `i`）/ H `operationOf` 三种入参 + `null`/空串/`"weird"`/`" ADD_VALUE "` 四类回落与归一 / I `amount` 6 位四舍五入（`0.1+0.2` 型尾巴）/ J `declared` 含未选节点且 id 与 `plan` 同规则 / K 全 `null` 入参不 NPE / L 返回值不可变（`add` 抛 `UnsupportedOperationException`）/ M `modifierPrefix` 剥命名空间 / N `selected` 空集与 `def` 无节点 / O 幂等
 
 - 进度：
+  - 2026-11-18 20:23 · 完成 · 新建 `core/progression/TreePlan.java`（62 行，单类 + `record Modifier`）+ `build/probe/TreePlanProbe.java`（探针，build/ 不入库）；卡外零改动 · build `--offline` EXIT=0（RC=0） · 自测：`unzip -l | grep -c TreePlan`=2（主类 + `$Modifier`，卡面只要求 ≥1）、`wc`=62≤150、`grep net.minecraft`=0、`grep TreePoints`=0；`python tools/probe_run.py TreePlanProbe` → **41/41 PASS**（A~O 全覆盖 + 3 条附加：type 大小写不敏感 / attribute 空白跳过 / operation 落进 Modifier）。功能面（真下发 modifier / 洗点按前缀 `tree/<tree>/<node>/` 批量移除）待 S7 测试服验。
+  - 2026-11-18 21:3x · **S7 验收通过** · 三条验收全绿：①`build --offline` RC=0（UP-TO-DATE，S8 那次产物未变）②jar 内 `TreePlan`=2、`wc`=62、`net.minecraft`=0、`TreePoints`=0 ③S8 探针 41/41。另跑 **S7 独立探针 `build/probe/S7TreePlanProbe.java` 48/48**（自编 A~P 十六组，与 S8 不重叠：`pathOf` 双冒号 / `operationOf` 五种回落 / 三属性效果 `/0 /1 /2` + `passive` 不位移 / `effects=null` 不炸 / 负数与 `1e9` 不钳制（D16）/ 两次调用不同对象且逐元素相同）。**S7 探针首版两条断言写错**（E2 期望 `b` 先、实为 `nodes()` 序 `a` 先；E3 属性名抄成 `attack_speed`）→ 期望错、代码对，同 R43-a / R49-c 口径，不打回。功能面已在 R53 由 `TreeService` 接穿（`/redtale tree probe` 13/13）。
+
+### T-0049 · [OPEN] `tools/check_trees.py` —— 技能树配置起飞前对账（M7 / D25 的运营安全网）
+
+- 派单：S7 · 2026-11-18 21:3x
+- 背景：技能树的引用面是**三向**的（`classes` → `jobs/`、`unlock_skill` → `skills/`、`attribute` → 80 条属性表），现在只有运行期 L2 会告警，**起飞前没有离线对账**；`check_progress.py` / `check_enchants.py` 已各有一个，这是第三个。
+
+- 不要做：
+  - **不要复制第三份 JSON5 清洗器**：`from check_progress import clean_json5, read_attrs, normalize`（同目录，`sys.path` 已含 `tools/`），只写技能树自己的规则
+  - **不读 jar、不起服、不调 Java、不联网**；只读文件系统
+  - 不改 `src/main/java/**`、不改任何 `*.json5`、不改其它 `tools/*.py`、不改 `docs/`
+  - 不实现「运行期告警文案」的复刻（这里只报位置 + 一句话，措辞不必与 L2 逐字相同）
+  - 不做自动修复 / 不写回文件 / 不加 `--fix`
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_trees.py`（**新建**，≤ 200 行）
+
+- 接口签名（**逐字**）：
+  ```python
+  def clean_json5(text) -> str            # 从 check_progress 导入，别重写
+  def read_attrs() -> tuple[set|None, str]  # 同上
+  def normalize(token, ids) -> str|None     # 同上
+  def path_of(token: str) -> str            # 取第一个 ':' 之后；无冒号原样；None → ""
+  def collect(root: str) -> list[tuple[str, dict|None, str|None]]   # [(rel, data, err)]
+  def check_tree(rel: str, data: dict, ids: set, job_ids: set, skill_ids: set) -> list[str]
+  def main() -> int                         # 退出码 0=干净 1=有问题
+  ```
+
+- 语义（**逐条写死**）：
+  1. 扫 `<dir>/skill_trees/*.json5`，**文件名升序**；`<dir>` 默认 `src/main/resources/redtale/defaults`，可 `--dir` 覆盖
+  2. 顶层不是对象 / JSON5 解析失败 → 一条问题（`JSON5 解析失败：<原因>`），继续下一个文件
+  3. **id 与文件名必须一致**（`warrior_vanguard.json5` → `id: "warrior_vanguard"`）；`id` 缺失/空/不是字符串 → 问题；含 `:` 时只比 `path_of(id)`
+  4. `nodes` 缺失/不是对象/为空 → 问题
+  5. 每个节点（按文件序）：`requires` 里每一项必须在本文件 `nodes` 的键集合里（自身引用也算问题）；`cost` 必须是 >=0 的整数（`true`/`1.5`/字符串都算问题）
+  6. 每个 `effects` 条目：`type` ∈ `{attribute, unlock_skill, passive}`，其它 → 问题；`attribute` 类型必须 `normalize()` 到 80 条表（解析不了 → 问题，**报原始写法**）；`operation` 若给出必须 ∈ `{add, add_value, add_multiplied_base, add_multiplied_total}`；`unlock_skill` 的 `skill` 必须按 `path_of` 命中 `skills/*.json5` 的 id 集合；`passive` 必须有非空 `id`
+  7. `classes` 每项必须按 **`path_of` 归一**后命中 `jobs/*.json5` 的 id 集合（**不要直接 `in` 比**：`jobs/` 的 id 带命名空间、树里写裸名 —— R50-a 的原坑）
+  8. `max_points` 缺失 → 提示「取 cost 合计 N」不算问题；`max_points < Σcost` → 一条问题（点不满全树）
+  9. 跨文件 `id` 重复 → 一条问题（写在**后出现**的那份文件上，文案含先出现的相对路径）
+  10. `jobs/` 或 `skills/` 目录不存在 → 不报错，跳过对应交叉校验（只打一行提示）
+  11. 输出：逐条 `[问题] <相对路径> · <一句话>`；末行 `共 N 个文件 · M 条问题`
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_trees.py` → 退出码 **0**，末行**逐字** `共 1 个文件 · 0 条问题`
+  2. 负向夹具（`cp -r src/main/resources/redtale/defaults build/tmp_trees` 后改一份 + 加一份坏的）必须**五类各命中至少一条**：① `requires` 指向不存在节点 ② `attribute` 写 `spell_power:fire` ③ `classes: ["nobody"]` ④ `max_points` 小于 Σcost ⑤ 两个文件同 `id`。跑完 `rm -rf build/tmp_trees`（`build/` 不入库）
+  3. `wc -l < tools/check_trees.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_trees.py` → **0**（必须是 import，不许抄第三份）
+
+- 进度：
+  - （S8 自己填）
 
 ## 6. 派单池（S7 用，S8 不看）
 

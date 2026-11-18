@@ -979,3 +979,50 @@ public boolean persist();                                       // replace on|of
 | R52-c | `persist()` 失败只 WARN 不抛，命令文案里如实写「落盘失败（内存已生效，重启会回缺省）」 | 开关已经在内存生效，落盘失败不该让运营命令报错；但也不能假装成功 |
 
 未落盘项（挂账）：`per_tick_cap` 现硬编 `DRAIN_PER_TICK = 8`，开关文件只收 `replace_enabled`（见 `PLAN.md` §13.55 下一步第 4 条）。
+
+### 4.33 技能树服务层 `TreeService` + `/redtale tree` 写面（D25 / M7 L5，R53 定稿）
+
+```java
+package com.redtale.project.core.progression;
+
+// com.redtale.project.core.progression.TreeService —— 服务层，只在服务端主线程调用
+public enum Status { OK, UNKNOWN_TREE, UNKNOWN_NODE, ALREADY_TAKEN, MISSING_PREREQ,
+                     NO_POINTS, NOT_TAKEN, HAS_DEPENDENTS, NO_PLAYER }
+public record Result(Status status, String treeId, String nodeId, List<String> detail,
+                     int removed, int added) {
+    public boolean ok();                    // status == OK
+    public String detailText();             // "," 连接；空 → ""
+}
+
+public static SkillTreeSpec.Definition resolve(String rawId);       // 裸名/全名都认；找不到 → null
+public static List<String> selected(ServerPlayer player, SkillTreeSpec.Definition def);
+public static TreePoints.State state(ServerPlayer player, SkillTreeSpec.Definition def);
+public static Result take(ServerPlayer player, String rawTree, String rawNode);
+public static Result untake(ServerPlayer player, String rawTree, String rawNode);
+public static Result respec(ServerPlayer player, String rawTree);   // clearTree + 前缀批清；扣费挂 Q-021
+public static int applyTree(ServerPlayer player, SkillTreeSpec.Definition def);  // 前缀清场 → 按已点集合重加
+public static int applyAll(ServerPlayer player);                    // 全部树重下发（登录 / reload）
+public static int removeAll(ServerPlayer player);                   // 只清不加（探针清场用）
+public static String prefixOf(String treeId);                       // "redtale_project:tree/<path>/"
+public static AttributeModifier.Operation operationOf(String raw);  // TreePlan 的字符串 → 原版枚举
+public static Map<String, Double> snapshot(ServerPlayer player, SkillTreeSpec.Definition def); // id → amount，观测用
+public static UUID idOf(ServerPlayer player);                       // null → 全 0 UUID
+```
+
+```text
+/redtale tree state <tree>                    玩家上下文：点数/已用/剩余/已点；控制台只看上限
+/redtale tree take <tree> <node>              只能由玩家执行
+/redtale tree untake <tree> <node>            有已点节点依赖它 → HAS_DEPENDENTS（不级联）
+/redtale tree respec <tree>                   清空 + 前缀批清，回「退回 N 个节点」
+/redtale tree probe                           控制台可跑，FakePlayer 13 条断言
+```
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R53-a | 存档键用 `def.id()`（快照全名），不用命令传参原文；`resolve()` 先精确、再按 `pathOf` 兜底 | 同一棵树两种写法会在 `ProgressStore.trees` 长出两个桶，症状「点了一半退另一半」 |
+| R53-b | 清场一律 `redtale_project:tree/<path>/` **前缀扫描**，不按当前声明清单逐条清 | 改配置换了属性键后旧 modifier 挂在旧属性上，按声明清不到 → 属性残留（SKILL-TREE §5 第 4 条） |
+| R53-c | `untake` 有依赖者即拒（带依赖者名单），**不级联**；批量清走 `respec` | 级联会丢玩家没打算丢的节点；点数是从已点集合现算，级联也「扣不回」 |
+| R53-d | 点数上限暂取 `def.maxPoints()`，等级换点数未接（M7 剩余项） | `TreePoints` 契约已 VERIFIED；等级换点是取舍题，不在服务层发明 |
+| R53-e | `TreeCommand` 由观测面扩为观测+写面（改已 VERIFIED 文件，PLAN §13 R53 记原因）；`list\|info` 输出逐字不变 | R52-c：先观测面（能看见）→ 再写面（能改），顺序不能反 |
+| R53-f | `ProgressService.onLogin` / `applyAll` 各补一行 `TreeService.applyAll`，与等级属性同一次重算 | 两套 modifier 同源（都从存档派生），分两次重算就会出现「等级涨了、技能树属性还是旧的」的中间态 |
+
