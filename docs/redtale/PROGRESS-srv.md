@@ -1,30 +1,30 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-18 06:58 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-18 08:05 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
 ## 1. 当前里程碑
 
-**M6**（依据：最近一条提到里程碑的台账标题「**验收 T-0036 + M6 第四层接线（掉落：`MobSpec.drops` → `DropS」）
+**M7**（依据：最近一条提到里程碑的台账标题「**验收 T-0037 + M7 契约定稿（`docs/PROGRESSION.md`）+ 派 T-」）
 
 ## 2. 进行中（在制品上限 3 张）
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0037 | OPEN | `/redtale drop list` —— 掉落表只读清单（M6 第四层的运营可见性） |
+| T-0038 | OPEN | `core/progression/ExpCurve` —— 等级曲线纯函数（M7 第一层） |
 
-已验完 **34** 张 / 共 **37** 张。
+已验完 **35** 张 / 共 **38** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R37 | 2026-11-17 | **验收 T-0031（`dash`）+ M6 第三步第 1 小步（8 个模板 EntityType 冻结）+ 派 T- |
 | R38 | 2026-11-17 | **验收 T-0032（`/redtale mob check`）+ M6 第三步第 2 小步（`MobSpawner` |
 | R39 | 2026-11-17 | **验收 T-0033（`projectile`）+ M6 第三步配套（`#minecraft:undead` 标签）+ |
 | R40 | 2026-11-18 | **验收 T-0034/T-0035 + M6 第三步第 3 小步（怪物技能释放）+ 派 T-0036** |
 | R41 | 2026-11-18 | **验收 T-0036 + M6 第四层接线（掉落：`MobSpec.drops` → `DropSpec` → `Dr |
+| R42 | 2026-11-18 | **验收 T-0037 + M7 契约定稿（`docs/PROGRESSION.md`）+ 派 T-0038 + D26 |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
