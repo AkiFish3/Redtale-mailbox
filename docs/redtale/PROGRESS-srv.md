@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 05:27 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-19 06:32 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0056 | OPEN | `tools/check_attrs.py` —— 80 条属性表三向对账（`docs` ↔ `AttributeSpecs.java` ↔ lang） |
+| T-0057 | OPEN | `tools/check_numeric.py` —— 数值面四份配置起飞前对账（`attack_speed` / `crit` / `damage` / `progression`） |
 
-已验完 **53** 张 / 共 **56** 张。
+已验完 **54** 张 / 共 **57** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R56 | 2026-11-19 | **验收 T-0051（`check_items.py`）+ `tree info` 补「当前等级能拿多少点」+ 派 T |
 | R57 | 2026-11-19 | **验收 T-0052（`TreeUnlocks`）+ `unlock_skill` 接服务层（M7 出口最后一块）+  |
 | R58 | 2026-11-19 | **验收 T-0053（`check_skills.py`）+ `tree skills <tree>` 观测面（M7  |
 | R59 | 2026-11-19 | **验收 T-0054（`check_scripts.py`）+ 修 `gen_attr_lang.py` 的破坏性覆写 |
 | R60 | 2026-11-19 | **验收 T-0055（`check_lang.py`）+ 新增 `tools/check_deps.py`（依赖面 / |
+| R61 | 2026-11-19 | **验收 T-0056（`check_attrs.py`）+ 接进 `check_all`（10→11）+ 派 T-00 |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 

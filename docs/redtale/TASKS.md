@@ -2953,7 +2953,7 @@ fi
 
 - S7 验收（R60 · 2026-11-19 05:2x）：**3/3 通过 + 独立探针 `S7LangProbe` 23/23**。①基线 `EXIT=0` 末行逐字 `共 2 个文件 · 0 条问题`。②S7 自编夹具（真 lang 副本 + 六处改动）`EXIT=1` 末行 `共 2 个文件 · 6 条问题`：两侧缺 `air_damage`（2 条）、只在 zh_cn 有 `axe`、空串 `amulet`、数字 `boots`、`soul_reap` 占位符不一致，孤儿键 `ghost` 两侧各 1 条提示且**不计问题数**；另验类序（attribute 问题排在 item 之前）。③`wc`=122 ≤200、`grep -c "def clean_json5"`=0、`gen_attr_lang.py --check` 独立跑 `EXIT=0`（93 键 / 自有 67）。边界：坏 JSON → 只报 1 条（另一份完整不误报缺键）、顶层非对象、反向对称（只在 en_us）、纯空白值、附魔文件截断均命中。**连带证据**：`tools/check_all.py` 末行从「跑成 8 · 跳过 1」变 `共 9 个脚本 · 跑成 9 · 跳过 0 · 红 0`，即 PLAN §13.62「过验收后跳过数应归零」的预判成立。
 
-### T-0056 · [OPEN] `tools/check_attrs.py` —— 80 条属性表三向对账（`docs` ↔ `AttributeSpecs.java` ↔ lang）
+### T-0056 · [VERIFIED] `tools/check_attrs.py` —— 80 条属性表三向对账（`docs` ↔ `AttributeSpecs.java` ↔ lang）
 
 - 派单：S7 · 2026-11-19 05:2x（R60）
 - 背景：属性是**唯一不能热加**的注册表（D17：加一条要换 jar），所以 `AttributeSpecs.ALL` 与 `docs/ATTRIBUTE-REGISTRY.md` §2 必须逐条对齐。今天这份对齐**只靠手**：`EXPECTED_COUNT = 80` 只拦「条数少写」，拦不住「id 拼错 / 文档删了一行没改代码 / 两条同名 / 顺序错位」。而 `check_lang.py` 只查「属性 id 有没有 lang 键」，查不出文档与代码漂移。本卡做只读三向对账，套路与 `check_skills.py` 一致。
@@ -2997,6 +2997,83 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_attrs.py` → **退出码 0**，末行逐字 `共 3 份来源 · 0 条问题`
   2. 自编负向夹具（临时目录复制一份文档 + 一份 java + 一份 lang，三个参数指过去，跑完删除）：退出码 1，必须命中 **5 类** —— ①文档删 1 行（条数不一致 + 顺序不一致）②代码把 1 条 id 改个字母（文档有、代码无 + 代码有、文档无）③把 1 条自建改成 `v("minecraft:xxx")`（落点不一致）④文档里同一条 id 出现两次（重复 id）⑤lang 删 1 条属性键（缺属性键）
   3. `wc -l < tools/check_attrs.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_attrs.py` → **0**（本卡不吃 JSON5）；`python tools/check_all.py` 末行仍为 `共 10 个脚本 · 跑成 10 · 跳过 0 · 红 0`（**接进 `check_all.py` 是 S7 在 VERIFIED 之后做的事，你不要动那个文件**）
+
+- 进度：
+- 2026-11-19 05:29 · 完成 · tools/check_attrs.py（新建，150 行，唯一文件） · 构建退出码：未构建（纯 Python 卡，验收不含 build） · 自测：验收 1 基线 EXIT=0 末行逐字「共 3 份来源 · 0 条问题」；验收 2 负向夹具 EXIT=1「共 3 份来源 · 52 条问题」，5 类全命中（条数不一致 1 / 顺序不一致 1 / 文档有代码无 1 / 代码有文档无 3 / 落点不一致 2），另命中重复 id 1 与 zh_cn 缺属性键 2；验收 3 wc=150≤200、grep -c def clean_json5=0、python tools/check_all.py 末行「共 10 个脚本 · 跑成 10 · 跳过 0 · 红 0」（check_all.py 未碰）；边界补测：缺 §3 标题 / EXPECTED_COUNT 读不到 / 坏 lang JSON / 三来源文件全缺均按问题报出；py_compile OK，夹具已清，git status 仅 TASKS.md + 新脚本
+
+- S7 验收（R61 · 2026-11-19 06:3x）：**3/3 通过**。①基线 `EXIT=0` 末行逐字 `共 3 份来源 · 0 条问题`。②S7 自编五组独立夹具（三份来源各复制到临时目录、每组只改一处）全部 `EXIT=1`：删 1 行 → 条数不一致 + 段落 A 计数 11/12 + 顺序第 5 位 + 代码有文档无；改 1 字母 → 文档有代码无 + 代码有文档无 + 落点 + 顺序；自建改 `v()` → `落点不一致：physical_damage（文档 自建 / 代码 v）`；同 id 重复 → `重复 id：physical_damage（文档 第 2 次）`；删 1 条 lang 键 → `zh_cn 缺属性键`。③`wc`=150 ≤200、`grep -c "def clean_json5"`=0、未碰 `check_all.py`（当时仍 10 个 · 红 0）。边界独立复核 4 组：缺 `## 3.` 标题 → 首行即 `文档缺 §2 或 §3 标题` 且退出 1；`EXPECTED_COUNT` 改名 → `代码里读不到 EXPECTED_COUNT` + 条数行写「EXPECTED_COUNT 缺失」；`en_us.json` 截断 → 只报 1 条解析失败、**不**连锁误报缺键；java 文件缺失 → `代码文件读不到` + 163 条问题仍带汇总行。整体复原后 `EXIT=0`。
+  **已知噪声（不判退，记 §13.64 R61-a）**：删 1 行会连锁报 75~78 条 `序号不连续`（第 7 条按卡面「断 → 报一行」逐行实现，卡面未写「只报第一处」），真信号（条数不一致）被淹到第 1 行之后仍是首行、可读，故不判缺陷；若要收敛需另开卡改「只报第一处」。
+  **连带**：`check_all.py` 末尾追加 `check_attrs.py` → 末行 `共 11 个脚本 · 跑成 11 · 跳过 0 · 红 0`（R60 §13.63 下一步第 1 条的预判当场兑现）。
+
+### T-0057 · [OPEN] `tools/check_numeric.py` —— 数值面四份配置起飞前对账（`attack_speed` / `crit` / `damage` / `progression`）
+
+- 派单：S7 · 2026-11-19 06:3x（R61）
+- 背景：这四份配置是**运行期「写错不报错，只 WARN 然后回落默认」**的那一类（`AttackSpeedRules.parse` / `CritRules.parse` / `MultiplierRules.parse` / `DamageRules` 全部走「坏值 → 默认值 + 一条 warnings」）。后果是：`percent_attributes` 里把 `physical_damage` 拼成 `phsical_damage`，玩家伤害**静默掉 100%**，日志只有一条 WARN 淹在 reload 输出里；`min_attack_delay_ticks` 写成 0.5 会让「物理地板」失效（D19 唯一保留的硬红线）；`conditional_attributes` 写了 `boss:` 这个键会被直接跳过（`TargetClass.KEYS` 只有 pvp/pve/undead）。编译器一条都管不到，`/redtale validate` 也不看这四份。本卡做只读对账，套路与 `check_scripts.py` 一致。
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_numeric.py`（**新建**，≤ 200 行）
+
+- 必须复用，不得抄第 N 份 JSON5 清洗器：
+  ```python
+  from check_progress import clean_json5
+  ```
+  但这四份里 `attack_speed.json5` 的 `effect_attack_speed` **用单引号写键**（`'minecraft:haste': {...}`），`clean_json5` 不吃。**先做一次 5 行预处理再交给它**（不许自己重写清洗器）：
+  ```python
+  SINGLE_KEY = re.compile(r"'([^'\n]+)'(\s*:)")
+  text = SINGLE_KEY.sub(r'"\1"\2', text)   # 单引号键 → 双引号键
+  data = json.loads(clean_json5(text))
+  ```
+
+- 入参（两个都给默认值，负向夹具靠它们指到临时目录）：
+  ```
+  --dir   默认 src/main/resources/redtale/defaults     （读四份 .json5）
+  --java  默认 src/main/java/com/redtale/project/core/attr/AttributeSpecs.java
+  ```
+  `--java` 只为取属性白名单，正则 `^\s+(v|c|cb)\("([^"]+)",` → `(op, id)`；**不许手抄 80 条 id**，读不到 → 记一条问题 `属性表读不到：<路径>` 并**跳过所有属性解析类检查**（其余检查照做，不许整体退出）。
+
+- 属性 token 合法口径（写死，不要「聪明」地兼容点号写法）：
+  - 自建：`id`（裸名，63 条）或 `redtale_project:<裸名>`
+  - 原版：`minecraft:<name>`（14 条，全名）
+  - 其余一律判未知（配置面不用 Brigadier 的点号口径；报问题时把 token 原样打印）
+
+- 检查项（每条问题一行 `[问题] <文案>`；文件名写 `attack_speed` / `crit` / `damage` / `progression`，不带扩展名）：
+  1. 四份文件任一读不到 / 解析失败 / 顶层不是对象 → `[问题] <文件> 解析失败：<异常文本>` 或 `[问题] <文件> 顶层不是对象`，该文件跳过，其余三份照查
+  2. **`attack_speed`**：
+     - 必需键缺失 → `[问题] attack_speed 缺键：<key>`（`haste_attack_speed_per_level` / `effect_attack_speed` / `soft_cap` / `min_attack_delay_ticks` 四键）
+     - 数值键不是有限 number → `[问题] attack_speed.<key> 必须是数字`
+     - `min_attack_delay_ticks < 1.0` → `[问题] attack_speed.min_attack_delay_ticks = <v> 低于物理地板 1.0（delay 到 0 会让 getAttackCooldownProgress 除零 → 每 tick 出手）`（**D19 唯一保留的红线，不是平衡阀**）
+     - `haste_attack_speed_per_level < 0` → `[问题] attack_speed.haste_attack_speed_per_level 不能为负：<v>`
+     - `soft_cap < 0` → `[问题] attack_speed.soft_cap 不能为负：<v>（0 = 不饱和）`
+     - `effect_attack_speed` 不是对象 → `[问题] attack_speed.effect_attack_speed 必须是对象`；每项值不是对象 → `[问题] attack_speed.effect_attack_speed.<id> 的值必须是对象（{flat|per_level}）`；对象里出现 `flat` / `per_level` 之外的键 → `[问题] attack_speed.effect_attack_speed.<id> 有未知键：<key>`；`flat`/`per_level` 不是数字 → `[问题] attack_speed.effect_attack_speed.<id>.<key> 必须是数字`
+     - `effect_attack_speed["minecraft:haste"]` 的 `per_level` 或 `flat` 非 0 → `[问题] attack_speed.effect_attack_speed 里的 minecraft:haste 必须为 0（急迫只走 haste_attack_speed_per_level，运行期会忽略该条并告警）`
+  3. **`crit`**：
+     - 六键缺失 → `[问题] crit 缺键：<key>`（`enabled` / `chance_attribute` / `power_attribute` / `apply_to_vanilla_crit` / `force_on_roll` / `max_chance`）
+     - 三个布尔键不是 bool → `[问题] crit.<key> 必须是布尔值`
+     - `chance_attribute` / `power_attribute` 不是非空字符串 → `[问题] crit.<key> 必须是非空字符串`；是字符串但属性表里解析不到 → `[问题] crit.<key> 不是已注册属性：<v>`
+     - `max_chance` 不是数字 → `[问题] crit.max_chance 必须是数字`；`< 0` → `[问题] crit.max_chance 不能为负：<v>（0 = 不限；负值运行期会被静默当 0）`
+  4. **`damage`**：
+     - `caps` 段缺失 / 不是对象 → `[问题] damage.caps 缺失或不是对象`；四键缺失 → `[问题] damage.caps 缺键：<key>`；`percentCap` / `condCap` / `damageCap` 不是数字或 `< 0` → `[问题] damage.caps.<key> 必须 ≥ 0：<v>`；`condCount` 不是整数或 `< 0` → `[问题] damage.caps.condCount 必须是 ≥ 0 的整数：<v>`
+     - `sanity` 段缺失 → `[问题] damage.sanity 缺失`；`negativeGuard` 不是 bool → 问题；`hardCeiling` 不是数字或不在 `(0, 1e9]` → `[问题] damage.sanity.hardCeiling 必须在 (0, 1e9] 内：<v>`；`logThreshold` 不是数字或 `<= 0` → 问题；`logSampleRate` 不是数字或不在 `[0, 1]` → 问题
+     - `multiplier` 段缺失 / 不是对象 → `[问题] damage.multiplier 缺失或不是对象`，该段其余检查跳过
+     - `damage_types` 不是非空数组 → 问题；元素不是非空字符串 → 问题；含 `"*"` → `[问题] damage.multiplier.damage_types 不许写 "*"（会把别人的伤害也乘一遍）`
+     - `passthrough_external` 不是 bool → 问题
+     - `percent_attributes` 不是数组 → 问题；任一项属性表解析不到 → `[问题] damage.multiplier.percent_attributes 含未知属性：<token>`
+     - `category_attributes` 不是数组 → 问题；每项不是对象 / 缺非空 `type` / `attributes` 不是数组 → 各报一条；`type` 重复 → `[问题] damage.multiplier.category_attributes type 重复：<type>`；`attributes` 里解析不到 → `[问题] damage.multiplier.category_attributes[<type>] 含未知属性：<token>`
+     - `conditional_attributes` 不是对象 → 问题；键不在 `{pvp, pve, undead}` → `[问题] damage.multiplier.conditional_attributes 未知键：<key>（只能是 pvp / pve / undead，运行期会跳过）`；值不是数组 → 问题；值里解析不到 → `[问题] damage.multiplier.conditional_attributes.<key> 含未知属性：<token>`
+  5. **`progression`**：`mob_exp_multiplier` 缺失 → `[问题] progression 缺键：mob_exp_multiplier`；不是数字 → 问题；`< 0` → `[问题] progression.mob_exp_multiplier 不能为负：<v>`；`> 1e9` → `[问题] progression.mob_exp_multiplier 超过硬顶 1e9：<v>`
+  6. 收尾固定一行 `共 4 个文件 · M 条问题`（M 只数 `[问题]`）；M > 0 → 退出码 1，否则 0
+
+- 不要做：
+  - 不写任何文件（不修 json5、不调 `gen_*`、不碰 `check_all.py`——**接线是 S7 在 VERIFIED 之后做的事**）
+  - 不改任何 `*.json5` / `src/` / `docs/` / 其它 `tools/*.py`
+  - 不校验「数值是否平衡」（`soft_cap` 填 4.0 是玩法选择，不是错）；不校验 `caps` 全 0 是不是「该收紧了」
+  - 不校验 `docs/DAMAGE-PIPELINE.md` 与本卡文案是否一致、不校验 lang
+  - 不做 `--fix`、不连服务器、不读 `E:\server-test`
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_numeric.py` → **退出码 0**，末行逐字 `共 4 个文件 · 0 条问题`
+  2. 自编负向夹具（临时目录复制四份 json5，`--dir` 指过去，跑完删除）：退出码 1，必须命中 **5 类** —— ①`min_attack_delay_ticks: 0` → 物理地板问题 ②`crit.power_attribute` 改成 `critical_strike_pwer` → 未知属性 ③`damage.multiplier.percent_attributes` 追加一项 `phsical_damage` → 未知属性 ④`damage.multiplier.conditional_attributes` 加 `boss: []` → 未知键 ⑤`damage.sanity.hardCeiling` 改 `2.0e9` → 超硬顶；另需命中 **1 条**文件截断的 `解析失败`（截断 `crit.json5`），并确认**其余三份照查**（`attack_speed` 的问题仍出现）
+  3. `wc -l < tools/check_numeric.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_numeric.py` → **0**；`python tools/check_scripts.py >/dev/null; echo $?` → **0**（既有工具零回归）
 
 - 进度：
 
