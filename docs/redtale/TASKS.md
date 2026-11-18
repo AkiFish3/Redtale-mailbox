@@ -2420,7 +2420,7 @@ fi
   **补测边界**（卡面未写死，记录不改码）：`max_points` **非整数**按「缺失」处理并取 cost 合计（E5/E6）；`cost` 小数回落 0（D3）；`pos` 负数**不夹取**（H8）；`nodes` 数组形态与空对象同文案（M7/M8）。
 - 2026-11-18 17:5x · **S7 合流**：本类归 S7；L2 快照层 `SkillTreeRegistry` 已落地（见 `PLAN.md` §13 R50），只读本类输出、**不就地改 L1 产物**（重建新 Definition 对象，探针 H1~H4 证明）。
 
-### T-0046 · [OPEN] `core/progression/TreePoints` —— 点数派生与可点判定（M7 / D25 第三层，纯函数）
+### T-0046 · [VERIFIED] `core/progression/TreePoints` —— 点数派生与可点判定（M7 / D25 第三层，纯函数）
 
 - 派单：S7 · 2026-11-18 17:5x
 - 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §5 第 2 条（**点数是派生值，不是独立货币**：`已用 = Σ(已点节点 cost)`、`可用 = max_points - 已用`、不做「先发点数再消耗」）
@@ -2459,6 +2459,60 @@ fi
   1. `cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
   2. `cd build/libs && unzip -l *.jar | grep -c "TreePoints"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/progression/TreePoints.java` → `≤ 150`；`grep -c "net.minecraft" <同文件>` → `0`
   3. `python tools/probe_run.py TreePointsProbe` → 末行 `PASS n / FAIL 0`，断言 **≥ 25** 条，必须覆盖：A `state` 基本（3 节点 / 选 2 / used·available·taken）/ B `unknown` 不扣点 / C 重复 id 只算一次 / D `available` 为负不夹取 / E `missingPrereqs` 保序去重 / F `canTake` 五种 Status 各一条 / G `cost 0` 在 `available<0` 时 `NO_POINTS` / H `statusAll` 键序 = `def.nodes()` 序且不可变 / I 全部 `null` 入参不 NPE
+
+- 进度：
+2026-11-18 18:01 · 完成 · src/main/java/com/redtale/project/core/progression/TreePoints.java（新建58行）+ build/probe/TreePointsProbe.java（新建探针）· build EXIT=0 · jar 内 TreePoints=3 / wc=58≤150 / net.minecraft=0 / python tools/probe_run.py TreePointsProbe → PASS 42 / FAIL 0（A~I 全覆盖）
+- 2026-11-18 19:05 · **S7 验收 → `[VERIFIED]`（3/3 + 独立探针 41/41）** · ①`gradle build --offline` `RC=0`；②`unzip -l` 内 `TreePoints`=**3**、`wc -l`=**58** ≤150、`net.minecraft`=**0**；③`python tools/probe_run.py TreePointsProbe` → `PASS 42 / FAIL 0`（≥25 达标）。**S7 独立探针 `build/probe/S7TreePointsProbe.java` PASS 41 / FAIL 0 / TOTAL 41**（自编 A~L 十二组，不复用 S8 断言：state 五元组、unknown 不扣点、重复 id 只算一次、available 负不夹取、missingPrereqs 保序去重 + selected=null 全缺、五种 Status 各一条 + 优先级两条（已选 > 缺前置 > 点数）、cost 0 两分支、statusAll 键序/不可变、全 null 不 NPE、cost==available 仍 OK 与 cost>available 才 NO_POINTS、幂等、空节点表）。**卡面 7 条语义逐条对上，零偏差，无打回。**
+
+### T-0047 · [OPEN] `/redtale tree list|info` —— 技能树只读观测面（M7 / D25）
+
+- 派单：S7 · 2026-11-18 19:05
+- 契约（**只读，不许改**）：`docs/SKILL-TREE.md` §5 第 2 条 —— **点数是派生值**。本卡只报**静态定义**，不判定点数、不算 `used/available`。
+- 目标：把已载入的技能树快照摊开给人看：`tree list` 一行汇总 + 每棵树一行；`tree info <id>` 报树头 + 每个节点一行。**零写操作**。
+
+- 不要做（做了一条就算超范围）：
+  - **不调 `TreePoints`**（它是 L3 判定层，本卡不接；`grep -c "TreePoints"` 必须为 0）
+  - 不读/写 `ProgressStore`、不取玩家、不做 `take` / `respec` / 洗点、不下发属性、不加子命令
+  - 不改 `SkillTreeRegistry` / `SkillTreeSpec` / `RedtaleCore` / `LevelCommand` / `PLAN.md` / `docs/CONTRACTS.md`
+  - 不写 lang 键（**不要加 `tree.*`**，中文名直接取 `name()`，同 R28-b / R50 口径）
+  - 不打印每个 effect 的字段明细（只报**条数**），不打印 `requires` 明细（只报**个数**）
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/command/TreeCommand.java`（**新建**，≤ 200 行）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**仅追加 1 行**：`.then(TreeCommand.node())`，紧跟在 `level` 那一行后面；**不许动别的行**）
+
+- 接口签名（**逐字**）：
+  ```java
+  public final class TreeCommand {
+      private TreeCommand() {}
+      public static LiteralArgumentBuilder<CommandSourceStack> node()
+  }
+  ```
+  子命令：`list`（无参）、`info <id>`（`StringArgumentType.string()`，**别用 `word()`** —— 不吃冒号，R2/R49 已复发五次）。
+  `id` 传入前 `trim()`；**不做 `redtale_project:` 前缀补全**（本层 id 就是裸名，见 `SkillTreeSpec.parse`）。
+
+- 只读 API（**已在仓库里，直接用，不许改**）：
+  - `RedtaleCore.get().skillTrees()` → `SkillTreeRegistry`
+  - `SkillTreeRegistry#size()` / `#nodeCount()` / `#pointTotal()` / `#sortedIds()` / `#get(String)` / `#has(String)`
+  - `SkillTreeSpec.Definition#id()` `#name()` `#classes()` `#maxPoints()` `#pointsPerLevel()` `#nodes()`（`Map<String,Node>`，**保配置顺序**）`#source()`
+  - `SkillTreeSpec.Node#id()` `#name()` `#cost()` `#pos()`（`int[2]`）`#requires()` `#effects()`
+  - 挂载样板照抄 `src/main/java/com/redtale/project/core/command/LevelCommand.java`（`src.sendSuccess(() -> Component.literal(text), false)`，**一次发整段多行**，不要一行一个 `sendSuccess`）
+
+- 输出文案（**逐字**，S7 按行 grep；`<>` 是变量，其余字符（含空格、`·`、全角括号）必须一模一样）：
+  - `list` 第 1 行：`[redtale] 技能树 <size> 棵 · 节点 <nodeCount> 个 · 点数上限 <pointTotal>`
+  - `list` 每棵树一行（`sortedIds()` 升序）：`  <id> · <name> · 职业 <classes> · 节点 <nodes().size()> · 点数 <maxPoints>`
+    - `<classes>` = `String.join(",", classes())`；`classes()` 为空 → 写 `全职业`
+  - `list` 无树时：第 1 行 `[redtale] 技能树 0 棵`，第 2 行 `  （没有技能树定义：读 config/redtale_project/skill_trees）`
+  - `info` 第 1 行：`[redtale] <id> · <name> · 上限 <maxPoints> 点 · 每级 <pointsPerLevel> 点 · 节点 <nodes().size()>`
+  - `info` 第 2 行：`  职业：<classes> · 来源 <source>`（`classes` 为空 → `全职业`）
+  - `info` 之后**每个节点一行**，按 `nodes()` 遍历序（**不要排序**）：`  节点 <nodeId> · <name> · cost <cost> · pos <x>,<y> · 需 <requires().size()> · 效果 <effects().size()>`
+  - `info` 找不到：`[redtale] 没有技能树 <id>（现有 <size> 棵：<sortedIds 逗号连接>）`
+  - 返回值：`list` → `size()`；`info` 命中 → 节点数；未命中 → `0`
+
+- 验收（**三条，全部可机器执行**）：
+  1. 构建（带锁，照 `docs/TASKS.md` §3）：`cd /e/RedtaleProject && mkdir -p .queue && if ( set -C; echo "S8 $(date +%s)" > .queue/build.lock ) 2>/dev/null; then D:/redtale-work/tools/gradle-8.8/bin/gradle build --offline; echo RC=$?; rm -f .queue/build.lock; fi` → `RC=0`
+  2. `cd build/libs && unzip -l *.jar | grep -c "TreeCommand"` → `≥ 1`；`wc -l < src/main/java/com/redtale/project/core/command/TreeCommand.java` → `≤ 200`；`grep -c "TreePoints" <同文件>` → `0`
+  3. **（S7 跑，需要测试服）** `redtale tree list` 首行逐字等于 `[redtale] 技能树 1 棵 · 节点 10 个 · 点数上限 21`；`redtale tree info warrior_vanguard` 以 `  节点 ` 开头的行数 = **10** 且首行含 `上限 21 点 · 每级 1 点 · 节点 10`；`redtale tree info nope` 含 `没有技能树 nope`
 
 - 进度：
 

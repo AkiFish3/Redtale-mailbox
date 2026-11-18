@@ -717,14 +717,14 @@ public static Result roll(DropSpec.Definition def, java.util.Random random);
 `[redtale] 怪物检查：<只数> 只 / 技能引用 <k> 条 / 掉落表 <t> 张[ · 引用完整 ✓ | / 问题 <n> 个]`，
 问题行格式：`  <名称> <id>: 掉落表 <ref> 不存在（现有 <t> 张：a, b…）`。
 
-### 4.24 进度存档 `ProgressStore`（M7 第三层，R43 定稿）
+### 4.24 进度存档 `ProgressStore`（M7 第三层，R43 定稿；v2 加技能树，R51）
 
 ```java
 package com.redtale.project.core.progression;
 
 public final class ProgressStore extends net.minecraft.world.level.saveddata.SavedData {
     public static final String FILE_NAME = "redtale_project_progress"; // world/data/<FILE_NAME>.dat
-    public static final int VERSION = 1;
+    public static final int VERSION = 2;   // v2 = 加 trees（R51）；v1 档可直接读
     public static final long MAX_TOTAL_EXP = 1_000_000_000_000_000L;
 
     public static SavedData.Factory<ProgressStore> factory();     // 三参构造 + DataFixTypes.LEVEL（R43-c）
@@ -742,14 +742,28 @@ public final class ProgressStore extends net.minecraft.world.level.saveddata.Sav
     public void setMainExp(UUID id, long value);          // <= 0 → 0
     public boolean clear(UUID id);
 
+    // ---- v2：技能树已点节点（按树分桶，存档层零语义，R51-a/b） ----
+    public java.util.Map<String, java.util.Set<String>> trees(UUID id);          // 树 id → 节点，保序不可变
+    public java.util.Set<String> nodes(UUID id, String treeId);                  // 保序不可变视图
+    public boolean hasNode(UUID id, String treeId, String nodeId);
+    public boolean addNode(UUID id, String treeId, String nodeId);               // 已存在 / 空 id → false，不脏
+    public boolean removeNode(UUID id, String treeId, String nodeId);            // 空桶保留（保树插入序）
+    public void setNodes(UUID id, String treeId, java.util.Collection<String> nodeIds); // null / 空集合 = 清空该树
+    public boolean clearTree(UUID id, String treeId);                            // 洗点用
+
     public CompoundTag save(CompoundTag tag, HolderLookup.Provider provider);
 }
 ```
 
-- 存档格式 v1：`{ version: 1, players: [ { id: "<uuid-string>", main: <long>, jobs: { "<jobId>": <long> } } ] }`。UUID 存**字符串**；坏行（缺 `id` / 解析失败）整条跳过；负值归零；超 `MAX_TOTAL_EXP` 截断。**不存等级**（R42-b）。
+- 存档格式 **v2**：`{ version: 2, players: [ { id: "<uuid-string>", main: <long>, jobs: { "<jobId>": <long> }, trees: { "<treeId>": ["<nodeId>", …] } } ] }`。
+  **v1 档（无 `trees` / `version:1`）可直接读**，`trees` 视为空；旧扁平 `nodes` 键（只在 R51 自测档里出现过）读时忽略、写时丢弃（R51-c）。
+  节点 id 只在**树内唯一**（每棵树都有 `root`），所以必须分桶存（R51-a）。
+  UUID 存**字符串**；坏行（缺 `id` / 解析失败）整条跳过；负值归零；超 `MAX_TOTAL_EXP` 截断。**不存等级**（R42-b）。
 - 写操作自动 `setDirty()`；落盘时机由原版 `save-all` / 自动保存决定，本类不主动写文件。
 - 命令面：`/redtale progress [status|add <amount>|probe]`（`core/command/ProgressCommand`）。`probe` 用固定 UUID `00000000-0000-0000-0000-0000000000ff` 加 1000 并读回，**控制台可跑**（`add` 需要真玩家）。
 - L4（`ProgressService`，R44）只允许调本类的 `add*` / `setMainExp` 与读方法，**不许自己写 NBT**。
+- `trees` 一组方法**零语义**：不校验节点是否存在、前置是否满足、点数够不够、树是否存在（R51-b）。这些判定只在 `TreePoints`（L3 纯函数）与将来的 `TreeService` 里做；存档层再判一遍就是第二份真相。
+- 实测（R51，测试服）：R50 留下的 126 B `version:1` 真档读起零告警 → `exp primitive` 弄脏 → `save-all` → `version:2` + `trees` 键出现、`main` 逐字保留。
 
 ### 4.27 进度服务 `ProgressService`（M7 第四层，R45 定稿）
 

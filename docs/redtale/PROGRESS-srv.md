@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-18 17:58 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-18 19:09 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0046 | OPEN | `core/progression/TreePoints` —— 点数派生与可点判定（M7 / D25 第三层，纯函数） |
+| T-0047 | OPEN | `/redtale tree list|info` —— 技能树只读观测面（M7 / D25） |
 
-已验完 **43** 张 / 共 **46** 张。
+已验完 **44** 张 / 共 **47** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R46 | 2026-11-18 | **验收 T-0041 + M7 L5 收尾（`grant_exp` 原语）+ D26 契约定稿（`SPAWN-RULE |
 | R47 | 2026-11-18 | **验收 T-0042 + M6 L2 快照（`SpawnRegistry`）+ 派 T-0043** |
 | R48 | 2026-11-18 | **验收 T-0043 + M6 第三层（`SpawnReplacer` 挂 `MobSpawnEvent.Positi |
 | R49 | 2026-11-18 | **验收 T-0044 + 补 `/redtale level info` 的「当前」段（R45 挂了两轮的漏项）+ 派 |
 | R50 | 2026-11-18 | **验收 T-0045（`SkillTreeSpec`）+ M7 技能树 L2 快照层（`SkillTreeRegist |
+| R51 | 2026-11-18 | **验收 T-0046（`TreePoints`）+ 存档 v2（技能树分树持久化）+ 派 T-0047** |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
