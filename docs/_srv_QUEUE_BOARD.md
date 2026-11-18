@@ -206,6 +206,9 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-18 21:32 · S8 · T-0049 tools/check_trees.py 完成并自测（DONE，`共 1 个文件 · 0 条问题`，五类负向夹具+边界探针全过）· 改 tools/check_trees.py（新建 200 行）、docs/TASKS.md（本卡状态/进度）· 下一步：等 S7 验收 T-0049；按 id 升序领新卡
 
 - 2026-11-18 22:5x · S7 · 验收 **T-0049 → VERIFIED**（`check_trees.py` 3/3 + S7 自编五类负向 6 条全命中 + 四类边界）· **M7 出口「等级 → 技能点」落地**（`TreePoints.capFor` + 等级重载，旧两参/三参入口语义不动；`tree probe` 14/14、`selftest` 94）· **派 T-0050**（`tools/check_mobs.py` 怪物/掉落/刷怪三向起飞前对账，在制品 1/3）· 留下 `E:\RedtaleProject`（`PLAN.md` §13.57、`docs/ROUND-R54-POINTS.md`、`docs/CONTRACTS.md` §4.34）· 下一步：验收 T-0050、`respec` 扣费（Q-021 仍挂）、真人路径挂账
+- 2026-11-18 22:43 · S8 · T-0050（tools/check_mobs.py 怪物/掉落/刷怪规则三向起飞前对账）做完自测 → DONE：基线「共 4 个文件 · 0 条问题」EXIT=0；六类负向夹具全命中（5 文件 6 问题 EXIT=1，已清 build/tmp_mobs），补测数值越界/坏 JSON5/顶层非对象/缺目录全符合；wc=199≤200、grep def clean_json5=0、py_compile OK；未取锁未 build（纯 Python 卡）· 改 tools/check_mobs.py（新建 199 行）、docs/TASKS.md（本卡状态/进度）、协作板 §3 · 下一步：S7 验收 T-0050；按 id 升序领新卡
+
+- 2026-11-18 23:5x · S7 · 验收 **T-0050 → VERIFIED**（3/3：`check_mobs.py` 基线 EXIT=0 末行逐字 `共 4 个文件 · 0 条问题` / S7 自编六类负向夹具 7 文件 6 问题 EXIT=1 全命中 + 边界四组 / `wc`=199、`grep def clean_json5`=0；裁定 S8 提问「`drops[].item` 带 `minecraft:` 只验写法不验存在」按 R41-b **采纳实现**）· **`per_tick_cap` 落盘（M6 最后一个硬编号挂账收口）**：`SpawnSettings` 加 `perTickCap`（1~4096，坏值回落 8 + 告警，**0 ≠ 关闭**）+ `SpawnReplacer.perTickCap()/setPerTickCap()` + `tick` 读字段 + `persist()` 两字段一起写 + `/redtale spawn replace cap <n>` + 默认件加 `per_tick_cap: 8` · **派 T-0051**（`tools/check_items.py` 物品/词条/词条池/套装四向起飞前对账，在制品 1/3）· 实测（测试服 2 次启停 `Done 1.948/2.099s`，已停）：`cap 3` → 磁盘 3 → `off` 后仍 3 → reload 3 → **重启仍 3** → `"yes"` 一条告警回落 8 → `cap 8` 复原；回归 `reload 37 份`/`tree list`/`exp probe 7/7`/`validate 0` · jar 635176 B、`selftest` **102 PASS** · 留下 `E:\RedtaleProject`（`PLAN.md` §13.58、`docs/ROUND-R55-CAP.md`、`docs/CONTRACTS.md` §4.32、`docs/SPAWN-RULES.md` §12）· 下一步：验 T-0051、`tree info` 补等级门槛行；`per_tick_cap` **行为**（同 tick 多命中截断）与其余真人路径同批挂账
 
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 

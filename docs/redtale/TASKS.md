@@ -2620,7 +2620,7 @@ fi
   - 2026-11-18 22:4x · **S7 验收通过** · 三条全绿：①基线 `python tools/check_trees.py` EXIT=0、末行逐字 `共 1 个文件 · 0 条问题` ②S7 自编五类负向夹具（`build/tmp_trees`，与 S8 不同件）→ 6 条问题 EXIT=1，`requires` 悬空 / `spell_power:fire` 不在 80 表 / `classes: ["nobody"]` / `max_points 1 < Σcost 4` / 两文件同 id 全命中；另加四类边界（`cost: true`、`unlock_skill` 未命中、`passive` 缺 id、`type: weird`）逐条命中 + `max_points` 缺失只提示不算问题；删 `jobs/`+`skills/` 只打两行提示不改退出码；夹具已清 ③`wc -l`=200≤200、`grep -c "def clean_json5"`=0（确为 `from check_progress import`）。 重复 id 报在**后出现**文件 + 文案含先出现路径，与卡面规则 9 一致。**判语**：离线对账与运行期 L2 校验同源（属性键走同一份 80 条表），无口径分叉。
 
 
-### T-0050 · [OPEN] `tools/check_mobs.py` —— 怪物 / 掉落 / 刷怪规则三向起飞前对账（M6 的运营安全网）
+### T-0050 · [VERIFIED] `tools/check_mobs.py` —— 怪物 / 掉落 / 刷怪规则三向起飞前对账（M6 的运营安全网）
 
 - 派单：S7 · 2026-11-18 22:4x
 - 背景：怪物这块的运行期观测面已有四个（`mob check` / `drop list` / `spawn check` / `validate`），但**起飞前零离线对账**——改一份 `mobs/*.json5` 要起服才知道引用断没断。已有 `check_defaults` / `check_progress` / `check_enchants` / `check_trees`，这是第五个。
@@ -2666,6 +2666,72 @@ fi
 
 - 进度：
   - （S8 自己填）
+  - 2026-11-18 22:43 · 完成 · 新建 tools/check_mobs.py（199 行；`from check_progress import clean_json5, read_attrs, normalize`，未抄第四份清洗器）· 未构建（纯 Python 卡，验收不含 build）· 基线 EXIT=0「共 4 个文件 · 0 条问题」；六类负向夹具（base 非法 / skill 悬空 / 属性 spell_power:fire / drops 悬空 / rule.mob 悬空 / 同文件类重复 id）全命中，5 文件 6 问题 EXIT=1，夹具已清；补测 xp/chance/rolls/min-max/per_chunk_cap/priority 越界、JSON5 损坏、顶层非对象、三类目录全缺均符合；wc=199≤200、grep def clean_json5=0、py_compile OK；git status 仅 docs/TASKS.md + 新文件；请 S7 裁：`drops[].item` 带非 redtale_project 命名空间（`minecraft:gold_nugget`）按 R41-b 视为真实物品 id、只验写法不验存在，否则默认配置基线必红
+  - 2026-11-18 23:5x · **S7 验收 → VERIFIED（3/3）** · ①基线 `python tools/check_mobs.py` **EXIT=0**、末行逐字 `共 4 个文件 · 0 条问题`；②S7 自编夹具（`cp -r defaults build/tmp_mobs` + 三份坏件）**六类各命中一条**：`base 非法：dragon` / `属性 spell_power:fire 不在 80 条表内` / `skill 未命中：redtale_project:no_such_skill` / `drops 未命中：no_such_table` / `id ember_guard 与 mobs/ember_guard.json5 重复` / `mob 未命中：no_such_mob` → 7 文件 6 问题 EXIT=1，夹具已删；边界四组：JSON5 截断、顶层数组（`顶层不是对象`）、缺 `spawn_rules/`（提示行 + 仍 EXIT=0）、三类全缺（3 条提示 + `共 0 个文件 · 0 条问题` EXIT=0）；③`wc -l`=**199** ≤200、`grep -c "def clean_json5"`=**0**。
+  - **S7 裁定 S8 的提问**：`drops[].item` 带非 `redtale_project` 命名空间（`minecraft:gold_nugget` / `blaze_powder`）→ **采纳实现（只验写法不验存在）**。依据 R41-b：掉落表的 `item` 有两种合法形态 —— 内容 id 裸名、真实物品 id 带命名空间；离线没有注册表，猜存在性会把 `minecraft:` 那批全判假红。默认件基线因此保持 `0 条问题`。
+
+### T-0051 · [OPEN] `tools/check_items.py` —— 物品 / 词条 / 词条池 / 套装四向起飞前对账（M2+M3 的运营安全网）
+
+- 派单：S7 · 2026-11-18 23:5x
+- 背景：内容面（D17）现在有 **7 份 `items/` + 3 份 `affixes/` + 1 份 `affix_pools/` + 1 份 `sets/`**，改一份要起服才知道引用断没断。离线对账已有五个（`check_defaults` / `check_progress` / `check_enchants` / `check_trees` / `check_mobs`），这是第六个，补齐**物品/宝石/套装**这一面。
+
+- 不要做：
+  - **不要复制第五份 JSON5 清洗器**：`from check_progress import clean_json5, read_attrs, normalize`（同目录，`sys.path` 已含 `tools/`）
+  - **不校验原版物品 id / 效果 id / 属性注册是否真存在**（离线没有注册表）→ 只验「像不像带命名空间的 id」，别猜
+  - **不校验 `sockets.types` 的词汇**：`SocketSpec.Layout` 明写「孔类型词汇开放，不做枚举校验」；只验 `count ∈ [0,6]`
+  - 不读 jar、不起服、不调 Java、不联网；只读文件系统
+  - 不改 `src/main/java/**`、不改任何 `*.json5`、不改其它 `tools/*.py`、不改 `docs/`
+  - 不做自动修复 / 不写回 / 不加 `--fix`；不复刻运行期告警文案（措辞不必与 L2 相同）
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_items.py`（**新建**，≤ 200 行）
+
+- 接口签名（**逐字**）：
+  ```python
+  def clean_json5(text) -> str                       # 从 check_progress 导入，别重写
+  def read_attrs() -> tuple[set|None, str]           # 同上
+  def normalize(token, ids) -> str|None              # 同上
+  def path_of(token: str) -> str                     # 取第一个 ':' 之后；无冒号原样；None → ""
+  def ids_of(root: str, sub: str) -> set[str]        # 读 <root>/<sub>/*.json5 的 `id`，按 path_of 归一
+  def collect(root: str, sub: str) -> list[tuple[str, dict|None, str|None]]   # [(rel, data, err)]
+  def check_item(rel: str, data: dict, sets: set, skills: set) -> list[str]
+  def check_affix(rel: str, data: dict) -> list[str]
+  def check_pool(rel: str, data: dict, bases: set, affix_ids: set) -> list[str]
+  def check_set(rel: str, data: dict, item_ids: set) -> list[str]
+  def main() -> int                                  # 退出码 0=干净 1=有问题
+  ```
+
+- 语义（**逐条写死**）：
+  1. `<dir>` 默认 `src/main/resources/redtale/defaults`，可 `--dir` 覆盖；四类各自**文件名升序**：`items/`、`affixes/`、`affix_pools/`、`sets/`
+  2. 顶层不是对象 / JSON5 解析失败 → 一条问题（`JSON5 解析失败：<原因>`），继续下一个文件
+  3. **基底表**（14 条，写死在脚本里）：`sword dagger axe hammer spear staff bow shield helmet chestplate leggings boots ring amulet`；**稀有度**（4 条）：`common uncommon rare epic`；**词条种类**（3 条）：`prefix suffix core`
+  4. `items`：
+     - `id` 缺失 / 非字符串 → 问题
+     - `base` 必须 ∈ 14 基底表（报原始写法）
+     - `rarity` 若给出必须 ∈ 4 稀有度
+     - `stats` 每个键必须 `normalize()` 到 80 条表（**报原始写法**）
+     - `gem` 若是对象：`gem.stats` 每个键同 4 条规则；`gem.tier` 若给出必须是整数且 `>= 1`
+     - `set_id` 若给出必须 `path_of` 命中 `sets/` 的 id 集合
+     - `abilities[]` 每项必须 `path_of` 命中 `skills/` 的 id 集合（技能 id 是全名，比较前归一）
+     - `sockets` 若是对象：`count` 必须整数且 `0 <= count <= 6`；`types` 是列表时只验每项是字符串（**词汇不校验**）
+     - `weapon_attributes` 若给出必须含 `:`（裸名 = 问题）
+     - `rev` 若给出必须是整数且 `>= 1`
+  5. `affixes`：`id` 缺失 / 非字符串 → 问题；`kind` 必须 ∈ 3 词条种类；`weight` 若给出必须是 `> 0` 的数；`item_level` 若是对象：`min` / `max` 是数且 `min <= max`；`stats` 每个键必须 `normalize()` 到 80 条表
+  6. `affix_pools`：`id` 缺失 / 非字符串 → 问题；`applies_to[]` 每项必须**命名空间是 `redtale_project`** 且 `path_of` ∈ 14 基底表；`slots` 若是对象：键必须 ∈ 3 词条种类、值必须整数且 `>= 0`；`prefix` / `suffix` / `core` 三段若存在必须是对象，其键（按 `path_of`）必须命中 `affixes/` 的 id 集合、值必须是 `> 0` 的数
+  7. `sets`：`id` 缺失 / 非字符串 → 问题；`pieces[]` 每项必须 `path_of` 命中 `items/` 的 id 集合；`bonuses[]` 每项 `count` 必须整数且 `>= 1`、且 `<= len(pieces)`；`bonuses[].stats` 每个键必须 `normalize()` 到 80 条表；`name` 若给出必须是字符串
+  8. 跨文件 `id` 重复 → 一条问题（写在**后出现**的那份文件上，文案含先出现的相对路径）；**四类各自独立**判重
+  9. 某类目录不存在 → 打一行 `提示 没有 <sub>/ 目录，跳过` 并跳过该类，不算问题
+  10. 输出：逐条 `[问题] <相对路径> · <一句话>`；末行 `共 N 个文件 · M 条问题`（N = 四类合计）
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_items.py` → 退出码 **0**，末行**逐字** `共 12 个文件 · 0 条问题`
+  2. 负向夹具（`cp -r src/main/resources/redtale/defaults build/tmp_items` 后改一份 + 加两份坏的）必须**六类各命中至少一条**：① `base: "dragon"` ② `stats` 写 `"spell_power:fire"` ③ `set_id` 指向不存在套装 ④ 词条池 `prefix` 指向不存在词条 ⑤ 套装 `pieces` 指向不存在物品 ⑥ 两个 `items/` 文件同 `id`。跑完 `rm -rf build/tmp_items`
+  3. `wc -l < tools/check_items.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_items.py` → **0**
+
+- 进度：
+  - （S8 自己填）
+
+
 
 ## 6. 派单池（S7 用，S8 不看）
 

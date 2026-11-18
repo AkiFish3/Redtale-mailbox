@@ -959,17 +959,20 @@ public String describe();                                          // "1 棵技�
 ```java
 package com.redtale.project.mobs;
 
-// com.redtale.project.mobs.SpawnSettings —— 纯解析，零 MC import
-public record SpawnSettings(boolean replaceEnabled) {
+// com.redtale.project.mobs.SpawnSettings —— 纯解析，零 MC import（R55：record 加 perTickCap 一字段）
+public record SpawnSettings(boolean replaceEnabled, int perTickCap) {
     public static final boolean DEFAULT_REPLACE_ENABLED = true;
+    public static final int DEFAULT_PER_TICK_CAP = 8;
     public static final SpawnSettings DEFAULT;
     public static SpawnSettings parse(com.google.gson.JsonObject root, java.util.List<String> warnings);
-    public String describe();                                   // "刷怪替换开关 开|关"
+    public String describe();                                   // "刷怪替换开关 开|关 · 每 tick 上限 8"
 }
 
-// com.redtale.project.mobs.SpawnReplacer —— 新增两个方法（R52），判定与事件钩子不变
-public void applySettings(SpawnSettings settings);              // reload 调；内部走 setEnabled（变了才留日志）
-public boolean persist();                                       // replace on|off 调；写 config/redtale_project/spawn.json5
+// com.redtale.project.mobs.SpawnReplacer —— 新增两个方法（R52）+ 上限读写（R55），判定与事件钩子不变
+public void applySettings(SpawnSettings settings);              // reload 调；开关与上限一起设（变了才留日志）
+public boolean persist();                                       // replace on|off|cap 调；两字段一起写
+public int perTickCap();                                        // 当前每 tick 补生成上限
+public int setPerTickCap(int value);                            // 夹到 [1,4096]，变了留一行日志
 ```
 
 | # | 口径 | 理由 |
@@ -977,8 +980,10 @@ public boolean persist();                                       // replace on|of
 | R52-a | 开关**落盘**且与配置同源：`spawn.json5` 是唯一真相，`reload` 读它重设内存，`on\|off` 写完立刻回写 | 只改内存时 `replace off` 一重启就回「开」，运营以为关了其实没关 —— 静默回滚比缺功能更难查 |
 | R52-b | 全局开关放配置根 `spawn.json5`，**不**混进 `spawn_rules/*.json5`（一文件一规则）、**不**塞进 `progression.json5`（经验面） | 目录结构即语义；混进去会让 `SpawnRuleSpec` 对每份规则文件都报「未知键」 |
 | R52-c | `persist()` 失败只 WARN 不抛，命令文案里如实写「落盘失败（内存已生效，重启会回缺省）」 | 开关已经在内存生效，落盘失败不该让运营命令报错；但也不能假装成功 |
+| R55-a | `per_tick_cap` **是防洪阀不是玩法旋钮**：合法区间 `1~4096`，`0` / 负数 / 小数 / 超界一律回落 `8` 并告警 —— **`0` 不表示「关闭/不限」** | D16 的 `0 = 关闭` 若套到这里会变成「每 tick 无限生成」，正好是这道阀要防的事故；语义反着写比缺配置更危险 |
+| R55-b | `persist()` **两字段一起写**（`replace_enabled` + `per_tick_cap`） | 只写一个会把另一个手改值静默抹掉 —— 与 R52-a 同一条纪律：配置文件是唯一真相 |
 
-未落盘项（挂账）：`per_tick_cap` 现硬编 `DRAIN_PER_TICK = 8`，开关文件只收 `replace_enabled`（见 `PLAN.md` §13.55 下一步第 4 条）。
+R55 已闭合挂账：`per_tick_cap` 不再硬编 `DRAIN_PER_TICK = 8`，改由 `spawn.json5` 提供 + `/redtale spawn replace cap <n>` 运行期改写并落盘。
 
 ### 4.33 技能树服务层 `TreeService` + `/redtale tree` 写面（D25 / M7 L5，R53 定稿）
 

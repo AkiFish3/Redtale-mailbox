@@ -1317,3 +1317,21 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 4. **`tree info` 补「等级门槛」一行**：现在只报 `上限 21 · 每级 1`，没有「当前等级能拿多少点」——观测面在 R54 后少一条信息。
 5. 挂账不变：`spawn replace per_tick_cap`（硬编 8）、`per_tick_cap` 落盘、`#minecraft:undead` 与 tag 层的真人验证。
 
+
+| R55 | 2026-11-18 | **验收 T-0050（`check_mobs.py`）+ `per_tick_cap` 落盘（M6 最后一个硬编号挂账）+ 派 T-0051** | ①卡板：T-0050 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `EXIT=0` 末行逐字 `共 4 个文件 · 0 条问题` / S7 自编六类负向夹具各命中一条（7 文件 6 问题 `EXIT=1`）+ 边界四组（JSON5 截断 / 顶层数组 / 缺 `spawn_rules/` / 三类全缺）/ `wc -l`=199、`grep -c "def clean_json5"`=0）。**派 T-0051**（`tools/check_items.py` 物品/词条/词条池/套装四向离线对账：`base` 14 基底、`stats`→80 表、`set_id`→`sets/`、`abilities`→`skills/`、`pool.applies_to`→14 基底、`pool` 三段→`affixes/`、`sets.pieces`→`items/`、`bonuses.count <= len(pieces)`、四类各自判重），在制品 **1/3**。②自研：`SpawnSettings` record 加 `perTickCap`（`DEFAULT_PER_TICK_CAP = 8`，`1~4096` 整数，坏值回落 8 + 一条告警）+ `describe()` 带上限；`SpawnReplacer` 删硬编 `DRAIN_PER_TICK` → `volatile perTickCap` + `perTickCap()`/`setPerTickCap()`（夹 `[1,4096]`，变了留日志）+ `tick` 读字段 + `persist()` **两字段一起写**；`SpawnCommand` 状态行加 `· 每 tick 上限 N` + 新子命令 `replace cap <n>`；默认件 `spawn.json5` 加 `per_tick_cap: 8`（清单 33 条不变）。③实测（测试服 **2 次启停** `Done (1.948s)` / `Done (2.099s)`，均已停、25567/25577 无 LISTEN）：`replace` 首行 `每 tick 上限 8` → `cap 3` 文案 `已写入 spawn.json5` 且磁盘 `per_tick_cap: 3` → `off` 后文件**仍是** `per_tick_cap: 3`（两字段一起写）→ `reload` 保持 3 → **重启后仍 3**（第三条才是真断言）→ 手改 `"yes"` 后 reload `1 条告警` + 回落 8（日志 `per_tick_cap 不是数字，已改用 8`）→ `cap 8` 复原。回归 `reload 37 份` / `spawn list` 1 条 / `tree list` 1 棵 10 节点 21 点 / `exp probe 7/7` / `validate 0 问题` / redtale 零 ERROR。④数字：`build --offline` exit 0（jar **635176 B**）、`selftest` **102 PASS**（94→102，新增 `spawn()` 8 条）、`check_mobs` 0 问题、`check_defaults` 0 问题、构建锁取删一次。 | **§13.58 R55-a~d**。M6 的最后一个硬编号挂账收口：`per_tick_cap` 的**行为**（同 tick 多命中截断）本轮**未验**（无玩家时自然刷怪不跑、`fire` 每条命令落不同 tick），如实挂账，不拿「命令行能设」冒充「上限生效」。 |
+
+### 13.58 R55 的四条口径（每 tick 上限落盘）+ 下一步（R56）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R55-a | `per_tick_cap` **是防洪阀不是玩法旋钮**：合法区间 `1~4096`；`0` / 负数 / 小数 / 超界一律回落 `8` 并告警。**`0` 不表示「关闭/不限」** | D16 的 `0 = 关闭`（`percentCap` 那一族）套到这里会变成「每 tick 无限生成」，正是这道阀要防的事故（R48 注释原话：不设上限会在同一 tick 里堆实体） |
+| R55-b | `persist()` **两字段一起写**（`replace_enabled` + `per_tick_cap`），任一条命令触发都写整份文件 | 只写一个会把另一个手改值静默抹掉；R52-a 已定「配置文件是唯一真相」，写一半就等于制造第二个真相 |
+| R55-c | 上限的**解析只在 L1 `SpawnSettings`**，运行期读写只经 `SpawnReplacer.perTickCap()` / `setPerTickCap()`，`reload` 走 `applySettings` 一次设两个 | 与 R52 同一条分层：解析层不碰运行期状态，运行期状态只有一个入口，探针与命令不会各自改一半 |
+| R55-d | 上限的**行为**未验，挂账写法要区分「能配」与「生效」 | 本轮只能证明「配置→内存→落盘→重启仍在」四段；「一批 >N 只时只补 N 只」需要同 tick 多命中，无玩家时自然刷怪不跑，`spawn replace fire` 每条命令落在不同 tick —— 不许用前者冒充后者 |
+
+下一步（R56）：
+
+1. **验收 T-0051**（`tools/check_items.py`：基线 `共 12 个文件 · 0 条问题` + 六类负向全命中 + `wc ≤ 200` / `grep -c "def clean_json5" = 0`）。
+2. **`tree info` 补「当前等级能拿多少点」**：R54 的下一步第 4 条。控制台分支（无玩家）逐字不变，只有玩家上下文追加；验收需真人或 FakePlayer 走 `TreeCommand` 玩家分支。
+3. **真人一次性验收窗口**（需 Aki 上线，全部挂账在同一处收）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/技能树 take·untake + 武器 tooltip（D20 显示口径）+ `#minecraft:undead` 条件乘区。
+4. `respec` 扣费仍挂 Q-021（默认免费），等 D28 经济桥接，不排期。
