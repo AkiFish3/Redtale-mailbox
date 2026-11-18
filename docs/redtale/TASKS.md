@@ -1938,7 +1938,7 @@ fi
 - 2026-11-18 08:12 · **S7 验收 → VERIFIED（3/3）** · build `--offline` EXIT=0（jar 502715 B）· jar 内 `core/command/DropListCommand`=1 · `wc -l`=69≤160 · `grep -c DropRoll`=0 · 测试服 RCON 文案逐字对：`[redtale] 掉落表 1 张 · 条目合计 3 条 · 被引用 1 张` + `  ember_guard · xp 12 · 条目 3 · 引用 1 只：炽焰守卫` · 回归 `validate` 问题 0 / `mob check` 引用完整 ✓ · 测试服已停（25567/25577 无 LISTEN）
 
 
-### T-0038 · [OPEN] `core/progression/ExpCurve` —— 等级曲线纯函数（M7 第一层）
+### T-0038 · [DONE] `core/progression/ExpCurve` —— 等级曲线纯函数（M7 第一层）
 
 - 派单：S7 · 2026-11-18 08:20
 - 契约：`docs/PROGRESSION.md` **§3**（曲线数学逐字照抄，不要自己发明公式）
@@ -1986,6 +1986,8 @@ fi
      + `expForLevel(0)` 抛 `IllegalArgumentException`
 
 - 进度：
+- 2026-11-18 08:36 · 完成 · 新建 src/main/java/com/redtale/project/core/progression/ExpCurve.java（90 行，单类无内部类）· build --offline EXIT=0（jar 504603 B）· 自测：wc=90≤180 / net.minecraft=0 / 工厂=2 / jar 内 ExpCurve=1 / 离线探针 268/268 全过（9 定点含 totalExpForLevel(4) + 累加 L=1..50 + 反查双向 L=1..100 + 三条夹取 + expForLevel(0) 抛 IAE + 硬顶 + polynomial sanity）
+  - 注（S8）：定点表 `totalExpForLevel(4)=352` 与语义 4（`Σ_[i=1..L-1] exp(i)`）冲突——按语义应为 100+112+125=337，且定点 `totalExpForLevel(3)=212` 印证 L-1 口径。已按语义实现（337），验收第 3 条「累计=单步之和」探针同口径。请 S7 确认定点表 352 是否笔误，勿照抄打回。
 
 ## 6. 派单池（S7 用，S8 不看）
 

@@ -8230,3 +8230,17 @@ dev 问的第 2 问「改名历史」，答案不是"没查到"，而是**结构
 - **2.82.5 `[推断]`** 双轨前提**不变但剪刀差扩大**：设计端 self-built 已推进到 M4 完成/M5 过半，部署端 third-party mod 冻结在第 90 轮状态。S4 规划应按第 90 轮 §15 的「过渡描述 + 替换点 + 时间戳依赖」写，不因设计端加速就提前按「开服即有自研」规划；三个过期数字（R14 / M3~M7 未完成 / jar 08:33）仅在 §15 内刷新，不改 §1.2/§1.3/§7 原文、不改任何 `[已定]`。
 - **2.82.6 `[事实]`** 待拍板面：`list --open` 现 **13 条**、S4 占 **0 条**（S2×5 / S5×2 / S7×6，全 `_待填_`）；协作板 §4 Q-001~Q-018 中 S7 的 Q-018 已按默认 A 落地（R26），**S4 仍占 0 条**；§5 仅 S7 等 S8 的 B-01 系列（已结）。⇒ 本轮无 S4 卡点、不登记新收件箱（避与 S7 开放 Q-013~018 重复）。
 - **2.82.7 `[待验证]`** 时间戳依赖（维持 2.81.6）：自研 jar 推进正式服 + 进服时 spell_engine/spell_power 是否移除，本轮实测仍未发生；属 S7/Aki 工程排期，S4 不改文件、不登记待拍板，该时点确定后触发 PLAN_NEXT §7 的 L3 表述替换轮。
+
+
+### 第 92 批 · S7 设计端 M6/M7 落地 + D26 钩子字节码推翻：双轨前提二次复核（2026-11-18 第 92 轮，证据轮）
+
+> 用途：第 91 轮留下「自研 jar 何时进正式服」时间戳依赖的 24h 后再复核。全部只读（读 `E:\RedtaleProject\PLAN.md` §13 R37~R42 / `docs\PROGRESSION.md`、协作板 §3、正式服目录），未写服务器任何文件、未启停服。接 B-37 / T56。S4 规划纪律「涉及怪物/等级先看 S7 PLAN.md」的本轮落地。
+
+- **2.83.1 `[事实]`** 决策面无新增：`PLAN.md` §1「已定决策」仍 **D1~D33**（D34~ 未出现，与第 91 轮 2.82.1 相同）。L3 四大能力自研替代判断（D11/D12/D17/D21~D23/D25~D28/D31/D32）不变。
+- **2.83.2 `[事实]`** 设计端进度 **R28（11-17 07:55）→ R42（11-18 08:06）**，24h +14 轮。新增完成：**M6 怪物系统四层**——R37 模板实体 8 种（`/summon` 8/8）、R38 `MobSpawner`（`/redtale mob spawn`）、R40 `MobSkillCaster` 技能释放、R41 `MobDrops` 掉落接线（`LivingDropsEvent`→`DropRoll`→地上物品 + `ExperienceOrb.award` 发 xp）+ `DropSpec`/`DropRoll`/`/redtale drop list`。⇒ 第 91 批 2.82.2「M6 未完成」应读作「M6 四层已落地、只剩 D26 刷怪替换未接线」。
+- **2.83.3 `[事实]`** **M7 等级系统契约定稿**（R42，新 `docs\PROGRESSION.md` 10 节，9198 B）：双累加器（主等级 + 每职业各存 `total_exp`）、曲线数学写死（`geometric: round(base×growth^(L-1))` / `polynomial: round(base×L^exponent)`，硬顶 1e9）、属性下发固定 id `level/<path>` / `job/<job>/<path>`（`ADD_VALUE`，先移除再加）、存档 `world/data/redtale_project_progress.dat` **只存 `total_exp`，等级是派生值不存**、经验只增不减、三条经验源 `kill`/`command`/`primitive`。L1 `ExpCurve` 派卡 T-0038，S8 11-18 06:19 DONE（90 行、探针 268/268；卡面定点 `totalExpForLevel(4)=352` 与语义 Σ=337 冲突，S8 按语义实现并在卡上请 S7 裁）。⇒ 2.82.2「M7 未完成」应读作「契约定稿、L1 已落地待验、L2~L5 未完」。
+- **2.83.4 `[事实·推翻假设]`** **D26 刷怪替换钩子被字节码推翻**（R42，`javap` 实读 21.1.257 三个 jar）：`FinalizeSpawnEvent` 存在且可取消，但**全 jar 仅 `BaseSpawner`/`TrialSpawner` 引用**；补丁后 `Mob.finalizeSpawn` 只写 `spawnType`、不调 `EventHooks.finalizeMobSpawn`；`NaturalSpawner` 的 `EventHooks` 调用只有 `checkSpawnPosition`×2 / `getMaxSpawnClusterSize` / `getPotentialSpawns`。照 D26 原文（把 `FinalizeSpawn` 当首要候选）开工 → 「自然刷怪完全没被替换」且**零报错**。S7 已改判 R42-c/d：接线收敛为 `PositionCheck` 否决+同坐标 `MobSpawner.spawn`（`getPotentialSpawns` 只用于「加」）。S4 规划目标不变（仍按群系/难度替换原版刷怪），真人验收挂账（无客户端时只验事件注册+开关日志）。
+- **2.83.5 `[事实]`** 部署面零变化（本轮只读核验）：正式新服 `E:\server-1.21.1\mods` 仍 **228 jar、0 个 `redtale_project`、仍装 spell_engine-1.10.9 + spell_power-1.6.0**；`logs/latest.log` 末次仍 **2026-11-02 12:24**；`world/datapacks` 仅 `redtale_bountiful_fix`。与第 91 批 2.82.3 逐字一致 ⇒ 自研从未进正式服，部署端连续第 3 轮冻结。
+- **2.83.6 `[推断]`** 双轨前提**不变、剪刀差继续扩大**：设计端已推进到 M6 四层落地 + M7 契约定稿，部署端仍冻结在第 90 轮状态。新增规划注记：M6 掉落表 `xp` **直接喂 M7**（不建第二份经验表）——自研经验体系内容侧自洽，但它是 RPG 进度轴，**不等于** S4 L4 RedtaleEconomy 收银台；N-D34 范围 / T15 上架解锁保持。D26 钩子变更属 S7 实现路径内部调整，不改规划目标；S4 不因此新开 T/N 主题。
+- **2.83.7 `[事实]`** 待拍板面：`list --open` 现 **18 条**、S4 占 **0 条**（S2×8 / S5×2 / S7×8，全 `_待填_`；较第 91 轮 13 条 +5 = S2×3 + S7 的 Q-019/Q-020）；协作板 §4 Q-001~Q-020、S4 占 0；§5 仅 S7/S8 的 B-01 系列（已结）→ 本轮无 S4 卡点、不登记新收件箱（避与 S7 开放 Q-013~020 重复）。
+- **2.83.8 `[待验证]`** 时间戳依赖（维持 2.82.7）：自研 jar 推进正式服 + 进服时 spell_engine/spell_power 是否移除，本轮仍未发生；属 S7/Aki 工程排期，S4 不改文件、不登记待拍板，该时点确定后触发 PLAN_NEXT §7 的 L3 表述替换轮。

@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-18 08:06 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-18 09:11 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -10,11 +10,9 @@
 
 ## 2. 进行中（在制品上限 3 张）
 
-| 卡 | 状态 | 标题 |
-|---|---|---|
-| T-0038 | OPEN | `core/progression/ExpCurve` —— 等级曲线纯函数（M7 第一层） |
+无（卡板空闲，等派单）
 
-已验完 **35** 张 / 共 **38** 张。
+已验完 **36** 张 / 共 **38** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
