@@ -2063,7 +2063,7 @@ fi
 - 进度：
   - 2026-11-18 09:52 · 完成 · src/main/java/com/redtale/project/core/progression/ProgressSpec.java（新建 141 行，单类 + record Definition）+ build/probe/ProgressSpecProbe.java（探针，build/ 不入库）· build --offline EXIT=0（jar redtale_project-0.1.0.jar）· jar 内 core/progression/ProgressSpec=2（主类+$Definition）、wc=141≤200、net.minecraft=0、Logger=0、git status 仅 TASKS.md+新文件 · 探针 45/45（覆盖语义 1~11+13、卡面要求 10 组全覆盖）。两处卡面未写死口径已按字面实现请 S7 裁：①attributes 非对象/空键/重复键、exp_sources 非数组/非字符串元素只写「+ WARN」未给文案，已按 path+ 描述各造一条；②name 空白与非字符串合并同一条 WARN。功能面（真接 levels/jobs 配置）待 S7 验。
 
-### T-0040 · [OPEN] `/redtale level list|info` —— 等级 / 职业定义只读清单（M7 的观测面）
+### T-0040 · [VERIFIED] `/redtale level list|info` —— 等级 / 职业定义只读清单（M7 的观测面）
 
 - 派单：S7 · 2026-11-18 10:47
 - 契约：`docs/PROGRESSION.md` §3 / §4（schema）+ 本卡写死的输出格式。**只读快照**：不解析配置、不读存档、不下发属性、不写盘。
@@ -2131,6 +2131,62 @@ fi
      ```
      且 `redtale level info redtale_project:miner` 首行 = `[redtale] redtale_project:miner [职业] 矿工 · 上限 50 · 来源 jobs/miner.json5`
   3. 负向：`redtale level info nope` → `[redtale] 没有等级定义 nope（现有 2 条：redtale_project:main, redtale_project:miner）`，返回 0
+
+- 进度：
+- 2026-11-18 10:58 · 完成 · 新建 core/command/LevelCommand.java（116 行）、RedtaleCommand.java +1 行挂载 · build --offline EXIT=0 · 静态：jar 内 LevelCommand=1 / wc=116≤160 / ProgressSpec=0 / git status 仅三文件；探针 build/probe/LevelProbe.java 46/46（节点 level.list/info、step/sources/fmt、allIds 升序、曲线 100/112/80/211、常量池文案）· 功能输出待 S7 测试服验
+
+
+- 2026-11-18 11:52 · S7 验收 → **VERIFIED**（3/3）
+  - 1 静态：`build --offline` EXIT=0；jar 内 `core/command/LevelCommand`=1；`wc -l`=116 ≤160；`grep -c ProgressSpec`=0；`git status --short` 仅 `LevelCommand.java` / `RedtaleCommand.java` / `TASKS.md`
+  - 2 测试服（`Done (2.001s)`）`level list` **三行逐字相符**（含 `按级属性 3 条`、`L2→L3 112` / `211`、`经验 kill`）；`level info "redtale_project:miner"` 首行逐字相符 + 曲线/满级累计 388959/属性 `mining_efficiency +0.02/级`/经验来源行齐；`info "redtale_project:main"` 属性按配置顺序 2 条
+  - 3 负向 `level info nope` → `没有等级定义 nope（现有 2 条：…）` 不抛异常。**卡面样例写成「2 条：a, b」（逗号后带空格），实现是 `String.join(",")` 无空格 —— 按卡面正文档位「逗号分隔」裁定实现正确，样例笔误，不打回**（同 R43 的 352 口径）
+  - 补测卡面未要求的边界：临时 `levels/t_edge2.json5`（`max_level: 2`）→ `L2→L3 -`，`level list` 同屏 `-`，`满级累计 50` 正确；夹具已删、已 reload 还原（2 条等级定义 / 32 份配置）
+  - 注：`level info` 带冒号 id 在 RCON 下必须写成 `level info "ns:path"`（裸写报 `Expected whitespace to end one argument` —— Brigadier 裸串不吃冒号，R29 老坑）
+
+
+### T-0041 · [OPEN] `tools/check_progress.py` —— 等级 / 职业配置的起飞前对账
+
+- 派单：S7 · 2026-11-18 11:56（12:05 改卡：原定 `LevelModifiers` 被 S7 在 L4 里内联，改派本卡）
+- 目标：不启服务端也能查出「等级/职业配置会静默丢东西」的那几类错 —— R44 就是默认 `jobs/miner.json5` 写了 80 条表里不存在的 `mining_speed`，运行时被校验层丢弃、只留一条 WARN（真键是 `mining_efficiency`）。
+- 契约：`docs/PROGRESSION.md` §3 / §4；属性真值表 = `src/main/java/com/redtale/project/core/attr/AttributeSpecs.java`（80 条，**正则读 id，不要手抄**，抄一次就多一份真相）。
+
+- **不要做**：
+  - 不连服务端、不读 `world/`、不 import 任何 Java 侧代码（纯 Python，照 `tools/check_defaults.py` 的形态）
+  - 不改任何配置、不生成任何文件（只打印；`--fix` 之类一律不做）
+  - 不改 `AttributeSpecs.java` / `docs/*` / `gradle` 脚本
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_progress.py`（**新建**，≤ 220 行，零第三方依赖，只用标准库）
+
+- 用法与输出（**逐字**）：
+  ```
+  python tools/check_progress.py [--dir <配置根>]
+  ```
+  - `--dir` 缺省 `src/main/resources/redtale/defaults`（仓库默认件）；运营可指向 `E:/server-test/config/redtale_project`
+  - 每条问题一行 `[问题] <文件相对路径>: <一句话>`，末尾一行汇总 `共 N 个文件 · M 条问题`（M=0 时打 `共 N 个文件 · 没有发现问题 ✓`）
+  - 退出码：**M > 0 → 1**，否则 0
+
+- 检查项（五条，逐条都是「配错了不报错、只静默丢」的类型）：
+  1. `levels/*.json5` 与 `jobs/*.json5` 的 `id`：缺失 / 非字符串 / **不含 `:`** → 问题
+  2. **同 id 出现在两个目录**（`levels` 与 `jobs` 各一份）→ 问题（R44-d：快照层会丢职业那份）
+  3. `attributes` 的键：归一后（`attack_damage` / `generic.attack_damage` / `minecraft:generic.attack_damage` 都归一到 `minecraft:generic.attack_damage`）**必须命中 80 条表**，否则 → 问题（这就是 `mining_speed` 那一类）
+  4. `curve` 必填项缺失按 mode 判：`geometric` 要 `base`+`growth`、`polynomial` 要 `base`+`exponent`；缺 → 问题
+  5. `max_level` 存在但不是 ≥2 的整数 → 问题（会被回落成 100，运营以为改了其实没改）
+
+- json5 解析口径（**照抄，别自己发明**）：
+  - 允许 `//` 行注释、尾随逗号、无引号键 —— 用**去注释 + 去尾逗号**后 `json.loads`；失败就报「JSON5 解析失败」并不再深入该文件
+  - 只读 `.json5`；`--dir` 下没有 `levels/` 与 `jobs/` 时打 `没有 levels/ 与 jobs/ 目录（跳过）` 并返回 0
+
+- 硬约束：
+  - `grep -c "^import " tools/check_progress.py` 只许 `argparse` / `json` / `os` / `re` / `sys` / `pathlib` 里的（≤6 行）
+  - 不写文件、不 `print` 颜色码（日志会被重定向进文件）
+  - 80 条表只从 `AttributeSpecs.java` 读；读不到 → 明确打 `[问题] 读不到 AttributeSpecs.java（路径<X>）` 并返回 1（**不许静默跳过检查 3**）
+
+- 验收（1、3 你自己跑，2 归 S7）：
+  1. `python tools/check_progress.py` → 退出码 **0**，末行 `共 2 个文件 · 没有发现问题 ✓`（仓库默认件 = `levels/main.json5` + `jobs/miner.json5`）
+  2. 三份坏夹具各跑一次（S7 在临时目录造，会用 `--dir` 指过去）：
+     ① `mining_speed`（不存在的属性）→ `1 条问题`；② `max_level: 1` → `1 条问题`；③ 同 id 一份 levels 一份 jobs → `1 条问题`；三条都不许崩、不许 0 退出
+  3. **真实回归**：`python tools/check_progress.py --dir E:/server-test/config/redtale_project` → 0，末行 `共 2 个文件 · 没有发现问题 ✓`（与测试服实际加载的 2 条定义一致）
 
 - 进度：
 

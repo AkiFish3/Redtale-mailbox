@@ -25,7 +25,7 @@
 | `com.redtale.project.enchants` | 附魔 schema → datapack（`EnchantmentGenerator`，R21 起接进 reload）+ 唯一自定义效果 `ScriptedEnchantmentEffect`（R21） | 有 |
 | `com.redtale.project.core.skill` | `SkillSpec` 纯解析（T-0021）+ `SkillRegistry` 不可变快照（R28）+ `SkillCooldowns` 冷却表（T-0022）+ 技能引擎 `SkillEngine`（R29，M5-A 主体） | 有：`RedtaleCore.skills()` / `skillEngine()`（引擎**跨 reload 存活**） |
 | `com.redtale.project.mobs` | `MobSpec` 纯解析（T-0030）+ `MobRegistry` 不可变快照（R36）+ `RedtaleMob`（实体类骨架，8 原型共用）+ `RedtaleEntities`（8 个 `EntityType` 注册，R37）+ **`MobSpawner`（配置 → 实体：属性 / 体积 / 六槽装备 / 名称标签，R38）** + **`MobEntityTags`（`undead:true` 的原型追加进 `#minecraft:undead`，R39）** + **`MobSkillCaster`（怪物技能释放，R40）**。**刷怪替换未做** | 有：`RedtaleCore.mobs()`（`mobs/*.json5`，`describe()` 进 reload 日志）；`RedtaleEntities.byBase(base)` / `baseIds()`（实体 id = `MobSpec.BASES` 的八个字符串，R37-b）；`MobSpawner.spawn(level,x,y,z,def)` → `Result`（§4.22） |
-| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，L1）+ `ProgressSpec` 定义解析（T-0039，L2）+ **`ProgressRegistry` 快照（R44，L2，属性键过 80 条表并归一）+ `ProgressRules`（`progression.json5`）** + `ProgressStore` 存档 `SavedData`（R43，L3） | 有：`RedtaleCore.progress()`（`ProgressRegistry`）/ `progressRules()`；`ProgressStore.get(server)` / `factory()` 直接可用；契约见 `docs/PROGRESSION.md` |
+| `com.redtale.project.core.progression` | 等级/经验/职业（M7）：`ExpCurve` 曲线纯函数（T-0038，L1）+ `ProgressSpec` 定义解析（T-0039，L2）+ **`ProgressRegistry` 快照（R44，L2，属性键过 80 条表并归一）+ `ProgressRules`（`progression.json5`）** + `ProgressStore` 存档 `SavedData`（R43，L3）+ **`ProgressService` 服务层（R45，L4：经验分配 / 等级派生 / 按级属性下发）** | 有：`RedtaleCore.progress()`（`ProgressRegistry`）/ `progressRules()`；`ProgressStore.get(server)` / `factory()`、`ProgressService.award/applyAttributes/mainLevel` 直接可用；契约见 `docs/PROGRESSION.md` |
 
 S8 只在卡指定的包内新建文件；新建包需卡上写明。
 
@@ -746,3 +746,46 @@ public final class ProgressStore extends net.minecraft.world.level.saveddata.Sav
 - 写操作自动 `setDirty()`；落盘时机由原版 `save-all` / 自动保存决定，本类不主动写文件。
 - 命令面：`/redtale progress [status|add <amount>|probe]`（`core/command/ProgressCommand`）。`probe` 用固定 UUID `00000000-0000-0000-0000-0000000000ff` 加 1000 并读回，**控制台可跑**（`add` 需要真玩家）。
 - L4（`ProgressService`，R44）只允许调本类的 `add*` / `setMainExp` 与读方法，**不许自己写 NBT**。
+
+### 4.27 进度服务 `ProgressService`（M7 第四层，R45 定稿）
+
+```java
+package com.redtale.project.core.progression;
+
+public final class ProgressService {
+    public static final String SRC_KILL = "kill";        // MobDrops 的 xp（唯一吃 mob_exp_multiplier）
+    public static final String SRC_COMMAND = "command";   // /redtale exp add
+    public static final String SRC_PRIMITIVE = "primitive";// 脚本原语 grant_exp（R46 落地）
+
+    public record Award(long requested, long granted,
+                        int mainLevelBefore, int mainLevelAfter,
+                        java.util.Map<String,Integer> jobLevelsBefore,
+                        java.util.Map<String,Integer> jobLevelsAfter,
+                        int modifiers) {
+        public boolean levelUp();
+        public java.util.List<String> levelUpJobs();
+        public String describe();
+    }
+
+    public static ProgressSpec.Definition mainDef();                       // 优先 id path = main，否则升序第一条
+    public static int levelOf(ProgressSpec.Definition def, long totalExp); // 派生等级（到顶夹住，<=0 → 1）
+    public static int mainLevel(MinecraftServer server, UUID id);
+
+    public static Award award(MinecraftServer server, ServerPlayer player, long amount, String source);
+    public static int applyAttributes(ServerPlayer player);   // 先按声明 id 全移除，再加本级 plan
+    public static void onLogin(ServerPlayer player);
+    public static int applyAll(MinecraftServer server);       // reload 后的在线全量重算
+
+    public record Planned(String id, String attribute, double amount) {}   // id 无命名空间
+    public static String idOf(ProgressSpec.Definition def, String attribute);
+    public static java.util.List<String> declaredIds(ProgressSpec.Definition def);
+    public static java.util.List<Planned> plan(ProgressSpec.Definition def, int level);
+}
+```
+
+- **id 拼法**（`PROGRESSION.md` §6）：主等级 `level/<属性 path>`、职业 `job/<职业 path>/<属性 path>`；写进 `AttributeMap` 时统一加本模组命名空间 → `redtale_project:level/generic.max_health`。
+- **属性键两种形态**（R45-a）：原版 `minecraft:generic.max_health`（带命名空间）、自建**裸 path** `mining_efficiency`。查属性一律 `AttributeSpecs.resolve` → `RedtaleAttributes.holder`，**禁止 `ResourceLocation.parse`**（裸 path 会被补成 `minecraft:x` → 静默不下发）。
+- **数值**：`amount = per_level × (level - 1)`，四舍五入 6 位；`ADD_VALUE`；`level < 2` 只移除不加；到顶保留顶级值。
+- **经验入口**：只有 `MobDrops`（`kill`，同一处记 `total_exp`）/ `/redtale exp add`（`command`）/ `grant_exp` 原语（`primitive`）。`kill` 是唯一吃 `mob_exp_multiplier` 的来源；经验球金额保持原版口径。
+- **命令面**：`/redtale exp [add <amount>|sync|probe]`（`core/command/ExpCommand`）。前三项需真人；`probe` 走 `FakePlayerFactory`**控制台可跑**，7 组断言（A 首次加 / E 双累加器 / F kill 倍率 / G Σplan 对账 / B 到顶 / C 到顶不加 / D 归零清场）。
+- **重算点三处**：登入（`GameHooks.onPlayerJoin`）、`/redtale reload`（`RedtaleCore.reload` 在线全量）、等级变化（`award` 内部）。死亡 / 换维度**不重算**（modifier 随实体存活）。
