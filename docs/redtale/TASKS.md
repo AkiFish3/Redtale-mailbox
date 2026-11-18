@@ -2840,7 +2840,7 @@ fi
   - 2026-11-19 02:08 · 完成 · tools/check_skills.py（新建，164 行，唯一文件） · 构建退出码：未构建（纯 Python 卡，验收不含 build） · 自测：基线 EXIT=0「共 4 个文件 · 0 条问题」；8 类负向夹具 EXIT=1「共 4 个文件 · 8 条问题」全覆盖（拼错原语/effects 非数组/cooldown_ticks 字符串/mana_cost true/args 数组/conditions.type 非法/跨文件重复 id/JSON5 截断）；边界：无 skills/ 目录→EXIT=1、空 effects 与未知键仅提示不计问题；wc=164≤200、def clean_json5=0、check_trees 回归 EXIT=0、py_compile OK
   - 2026-11-19 03:1x · **S7 验收 → VERIFIED**（3/3：基线 EXIT=0 末行逐字 `共 4 个文件 · 0 条问题` / S7 自编 **9 文件 8 问题 EXIT=1**，8 类全命中且跨文件重复 id 报在**后出现**的 `a8.json5` / `wc`=164 ≤200、`grep -c "def clean_json5"`=0、`check_trees` 回归 EXIT=0）+ S7 边界补测：`message`/`console_log` 两条 M0 调试原语**接受**（白名单并集生效）、`cooldown_ticks: true` 判错、`mana_cost: 2.5` 判对、`icon: "Red_Icon"` 判错、空 `effects` 与未知键仅提示、无 `skills/` 目录 → EXIT=1 且末行 `共 0 个文件 · 1 条问题`、`docs/SKILLS.md` §4 表抽出的 **25 条原语逐条接受**（25 文件 0 问题）。无返工。
 
-### T-0054 · [OPEN] `tools/check_scripts.py` —— 脚本层起飞前对账（M0/M5 脚本链的安全网）
+### T-0054 · [VERIFIED] `tools/check_scripts.py` —— 脚本层起飞前对账（M0/M5 脚本链的安全网）
 
 - 派单：S7 · 2026-11-19 03:1x
 - 背景：`scripts/*.json5` 是**唯一没有起飞前对账**的配置面 —— `check_enchants.py` 只做「附魔 → 脚本 id 是否存在」这一个方向，脚本自身（trigger / effect / condition / cooldown / 重复 id）全靠运行期 `ScriptEngine.parseOne` 记进 `errors` 列表，而那份列表只在 `/redtale reload` 的输出里数一个总数，运营看不到是哪条。本卡做只读对账脚本，套路与 `check_skills.py` 一致。
@@ -2901,7 +2901,54 @@ fi
   3. `wc -l < tools/check_scripts.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_scripts.py` → **0**；`python tools/check_enchants.py >/dev/null; echo $?` → **0**（既有工具零回归）
 
 - 进度：
-  - （S8 自己填）
+  - 2026-11-19 03:17 · 完成 · tools/check_scripts.py（新建，192 行，唯一文件） · 构建退出码：未构建（纯 Python 卡，验收不含 build） · 自测：基线 EXIT=0 末行逐字「共 2 个文件 · 0 条问题」；11 文件负向夹具 EXIT=1「共 11 个文件 · 10 条问题」8 类全命中（未知 trigger/effects 非数组/effects 空/cd 字符串/args 数组/conditions.type 非法/跨文件重复 id 报后出现 h_dup2/JSON5 截断）+ ignite 带（M5 未实现）/drain 不带后缀；wc=192≤200、def clean_json5=0、check_enchants 回归 EXIT=0、py_compile OK；边界：形态1 顶层 scripts 数组+未知键提示/形态3 缺 id·trigger/顶层非对象/effects[i] 非对象·缺 type·args 非对象/conditions 非数组/cd bool/id trim 后重复/缺 scripts 目录 EXIT=1「共 0 个文件 · 1 条问题」全符合
+
+  - 2026-11-19 04:3x · **S7 验收通过（3/3）** · ①基线 EXIT=0 末行逐字 `共 2 个文件 · 0 条问题`；②S7 自编 **10 文件 10 问题 EXIT=1**，8 类全命中（`on_kill` 未知 trigger / `effects` 是对象 / `effects: []` 无 effect / `cooldown_ticks:"20"` / `args:[1,2]` / `conditions[0].type 非法：moon_phase` / **跨文件重复 id 报在后出现的 `a8_second.json5`** / JSON5 截断）+ 文案差异命中（`ignite` 带 `（M5 未实现）`、`drain` 不带后缀）；③`wc`=192≤200、`grep -c "def clean_json5"`=0、`check_enchants` 回归 EXIT=0 · 另补边界 **13 文件 11 条问题**：单引号+注释的单条形态通过、顶层未知键仅提示、`cd:true` 与 `1000000001` 判错而 `1000000000` 通过、`" b_trim "` 与 `b_trim` trim 后判重、`effects[0] 不是对象` / `effects[1] 缺少 type` / `conditions[0].args 不是对象` / `顶层不是对象` / `既没有 scripts…` / `scripts 必须是数组`、无 `scripts/` 目录 EXIT=1「共 0 个文件 · 1 条问题」 · 无裁定项（`ATTR` 式争议本轮未出现）
+
+### T-0055 · [OPEN] `tools/check_lang.py` —— lang 键覆盖起飞前对账（显示层的安全网）
+
+- 派单：S7 · 2026-11-19 04:3x
+- 背景：现有四个 `gen_*_lang.py` 各自「只拥有自己的前缀」写入（R59 刚把 `gen_attr_lang.py` 从整体覆写改成合并，之前跑一次就把 93 键削成 67 键）。但**没有任何脚本检查四类前缀是不是真的齐**——缺键不报错、不崩、不刷日志，客户端直接显示裸键（R8 已栽一次：`/give` 显示 `item.redtale_project.sword`）。本卡做只读对账，套路与 `check_scripts.py` 一致。
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_lang.py`（**新建**，≤ 200 行）
+
+- 必须复用，不得抄第 N 份 JSON5 清洗器：
+  ```python
+  from check_progress import clean_json5
+  ```
+
+- 入参：`--lang` 默认 `src/main/resources/assets/redtale_project/lang`（两份文件 `en_us.json` / `zh_cn.json`）；`--dir` 默认 `src/main/resources/redtale/defaults`（**只**用来读 `enchantments/*.json5`）。
+
+- 期望键（四类，**全部现读源码/配置，不许手抄数字或 id 列表**）：
+  1. **属性 66**：读 `src/main/java/com/redtale/project/core/attr/AttributeSpecs.java`，正则 `^\s+(v|c|cb)\("([^"]+)",` 取 id，**跳过 `minecraft:` 开头**；键 = `"attribute.redtale_project." + id.split(":",1)[-1]`
+  2. **物品基底 14**：读 `src/main/java/com/redtale/project/items/ItemBase.java`，正则 `^\s{4}([A-Z][A-Z0-9_]*)\(\s*"([^"]+)"` 取第 2 组；键 = `"item.redtale_project." + id`
+  3. **实体原型 8**：读 `src/main/java/com/redtale/project/mobs/RedtaleEntities.java`，正则 `new Proto\("([a-z_]+)"` 取第 1 组；键 = `"entity.redtale_project." + id`
+  4. **附魔 N**：扫 `<dir>/enchantments/*.json5`（文件名升序），清洗后取顶层 `id`；键 = `"enchantment." + 命名空间 + "." + path.replace("/", ".")`；文件解析失败 → 记一条问题 `enchantments/<文件> 解析失败：<异常文本>` 并跳过该文件
+
+- 检查项（每条问题一行 `[问题] <文案>`；提示一行 `提示 <文案>`；`<lang>` 写 `zh_cn` / `en_us`）：
+  1. 任一份 lang 不是合法 JSON 或顶层不是对象 → `[问题] <lang>.json 无法解析：<异常文本>`，该文件跳过，另一份照查
+  2. 缺键（期望集 − 实际集）→ `[问题] <lang> 缺键：<key>`；排序**先按四类顺序**（attribute → item → entity → enchantment），类内按键名字典序
+  3. 两侧不对称（只在 zh_cn / 只在 en_us）→ `[问题] 只在 <lang> 存在：<key>`（两侧都缺的走第 2 条，不重复报）
+  4. 值不是**非空字符串**（含 `null` / 数字 / 空串 / 纯空白）→ `[问题] <lang> 空值或非字符串：<key>`
+  5. 同一键两侧占位符集合不同（正则 `%\d+\$s|%s`）→ `[问题] <key> 占位符两侧不一致（zh_cn: […] / en_us: […]）`
+  6. 孤儿键：四类前缀之一、但不在期望集 → `提示 <lang> 孤儿键：<key>（定义已不存在）`，**不计入问题数**
+  7. **其它前缀（如 `death.attack.*`）一律不管**，不提示、不计数
+  8. 收尾固定一行 `共 2 个文件 · M 条问题`（M 只数 `[问题]`）；M > 0 → 退出码 1，否则 0
+
+- 不要做：
+  - 不写任何文件（不修 lang、不调 `gen_*_lang.py`）
+  - 不改任何 `*.json5` / `src/` / `docs/` / 其它 `tools/*.py`
+  - 不校验文案是否通顺、是否与中文名一致（那是 `AttributeSpecs` 的事）
+  - 不校验 `death.*` / `item.modifiers.*` 等非四类前缀
+  - 不做 `--fix`、不连服务器、不读 `E:\server-test`
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_lang.py` → **退出码 0**，末行逐字 `共 2 个文件 · 0 条问题`
+  2. 自编负向夹具（临时目录放两份 lang + `--lang` 指向它，跑完删除）：退出码 1，必须命中 **5 类** —— ①缺 1 条属性键 ②只在 `zh_cn` 有 1 个 `item.*` 键 ③某键值为空串 ④某键为数字 ⑤同一键两侧占位符不同；另需命中 **1 条 `提示 … 孤儿键`**（`item.redtale_project.ghost`，且**不进**问题数）
+  3. `wc -l < tools/check_lang.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_lang.py` → **0**；`python tools/gen_attr_lang.py --check; echo $?` → **0**（R59 刚修的合并语义零回归）
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 

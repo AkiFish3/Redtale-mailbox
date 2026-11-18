@@ -1375,6 +1375,8 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 
 | R58 | 2026-11-19 | **验收 T-0053（`check_skills.py`）+ `tree skills <tree>` 观测面（M7 解锁链的观测面）+ 派 T-0054** | ①卡板：T-0053 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `EXIT=0` 末行逐字 `共 4 个文件 · 0 条问题` / S7 自编 **9 文件 8 问题 `EXIT=1`**，8 类全命中且跨文件重复 id 报在**后出现**的 `a8.json5` / `wc`=164 ≤200、`grep -c "def clean_json5"`=0、`check_trees` 回归 `EXIT=0`）+ S7 边界补测：`message`/`console_log` 两条 M0 调试原语**接受**、`cooldown_ticks: true` 判错、`mana_cost: 2.5` 判对、`icon: "Red_Icon"` 判错、空 `effects` 与未知键仅提示、无 `skills/` 目录 `EXIT=1`、`docs/SKILLS.md` §4 表抽出的 **25 条原语逐条接受**（25 文件 0 问题）。**派 T-0054**（`tools/check_scripts.py` 脚本层对账：两形态文件 `{scripts:[]}` / 单条、3 个**已注册**集合 `TRIGGERS`/`EFFECTS`(13)/`CONDITIONS`、14 检查项、8 类负向 + `ignite`（表内，带后缀）/`drain`（表外，不带）文案差异），在制品 **1/3**。②自研 M7 观测面：`TreeCommand` 新增 `skills <tree>` 子命令 + `skillsText(def, viewer)` **public 纯函数**（控制台：只报声明集 + `（控制台不读玩家存档）`；玩家：`声明 N 条 · 已解锁 M 条` + 每条 `· 已解锁`/`· 未解锁`）+ `declaredSkills(def)`；`probe` 新增 **R** 组。③实测（测试服 **1 次启停** `Done (2.615s)`，已停、25567/25577 **0 LISTEN**）：`tree skills warrior_vanguard` 控制台 **3 行**（`声明技能 2 条（控制台不读玩家存档）` + `  redtale_project:gale_slash` + `  redtale_project:quake_slam`，定义序）、`tree skills nope` → `没有技能树 nope（现有 1 棵：warrior_vanguard）`、`tree probe` **18/18**（新增 R：声明 2 条按定义序、点 gale 后玩家段命中 `gale_slash · 已解锁` / `quake_slam · 未解锁`、退点后 `未解锁`、控制台 3 行）、回归 `tree info` 11 行逐字、`tree list` 逐字、`validate 0`、`reload 37 份`、`exp probe 7/7`、redtale 零 ERROR（4 条 `RecipeManager` 噪声来自 simplyswords / brewinandchewin）。④数字：`build --offline` EXIT=0（jar **641392 B**，640121→641392）、`selftest` **102 PASS**、构建锁取删两次。 | **§13.61 R58-a~d**。`unlock_skill` 链现在**两侧都可见**：`skill cast` 判门槛（写面）、`tree skills` 报声明/解锁（读面），且两边共用 `TreeUnlocks` 一个来源 —— 不再有「配置声明了什么」与「玩家拿到什么」两套口径。 |
 
+| R59 | 2026-11-19 | **验收 T-0054（`check_scripts.py`）+ 修 `gen_attr_lang.py` 的破坏性覆写（lang 93→67 键的真坑）+ 新增对账总入口 `tools/check_all.py` + 派 T-0055（`check_lang.py`）** | ①卡板：T-0054 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `EXIT=0` 末行逐字 `共 2 个文件 · 0 条问题` / S7 自编 **10 文件 10 问题 `EXIT=1`**，8 类全命中且跨文件重复 id 报在**后出现**的 `a8_second.json5`，文案差异命中 `ignite` 带 `（M5 未实现）`、`drain` 不带 / `wc`=192≤200、`grep -c "def clean_json5"`=0、`check_enchants` 回归 `EXIT=0`）+ 边界 **13 文件 11 条问题**。**派 T-0055**（`tools/check_lang.py`：四类键现读源码/配置 + 六检查项 + 三条机器验收），在制品 **1/3**。②自研（**本轮无 Java 改动，未构建未启测试服**）：`gen_attr_lang.py` 加 `OWNED_PREFIX` + `preserved()` 合并语义 + 坏 JSON 拒绝覆盖（`SystemExit(2)`）+ `newline="\n"`；实测修前 `--check` 报 `过期（67 键）`（照做会削掉 26 键），修后 `OK（93 键，自有 67）`、写盘与 HEAD **零 diff**、人工删 1 条属性键 + 塞 1 条外壳键后跑一次「属性键补回 + 外壳键仍在」。③`tools/check_all.py`：九脚本固定顺序编排、只转述末行、单脚本异常不中断、`--only` 过滤、末行 `共 9 个脚本 · 跑成 8 · 跳过 1 · 红 0`（`check_lang.py` 未实现自动跳过）；红路径用桩脚本验过（`红 1` / `EXIT=1` / `-v` 带 stderr）。 | **§13.62 R59-a~d**。`--check` 报「过期」从此是**可安全执行**的信号——这是本轮唯一真正的缺陷修复：一个「照提示修一下」的动作原来能静默删掉 26 个 lang 键（R8 裸键事故的入口）。 |
+
 ### 13.61 R58 的四条口径（声明集与解锁集同源）+ 下一步（R59）
 
 | # | 口径 | 理由 |
@@ -1391,3 +1393,19 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **M5 原语缺口**（新挂账，`SKILLS.md` §4 的 25 条里已注册 **13** 条）：`execute` / `ignite` / `cleanse` / `shield` / `damage_over_time` / `slow` / `teleport` / `leap` / `beam` / `aura` / `summon` / `trap` / `fx` 未实现（`slow` 与 `debuff` 语义重叠，可裁掉）。加原语 = 换 jar（D17），要么一次补齐、要么明确「只做这 13 条 + 组合」。**需 Aki 拍板范围**，暂不排期。
 4. `respec` 扣费仍挂 Q-021（默认免费），等 D28 经济桥接，不排期。
 
+
+### 13.62 R59 的四条口径（生成器只拥有自己的前缀）+ 下一步（R60）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R59-a | lang 生成器**只能拥有自己的前缀**（`attribute.redtale_project.*` / `item.` / `entity.` / `enchantment.`），其余键原样保留；坏 JSON / 顶层非对象 → **拒绝覆盖**（`SystemExit(2)`），不许静默重建 | R59 实测：`gen_attr_lang.py` 原来是整体覆写，跑一次把 93 键削成 67 键。静默覆盖比报错危险得多——它看起来「修好了」 |
+| R59-b | `--check` 的「过期」必须是**可安全执行**的信号：报过期 ⇒ 跑一次就能修好且不删别人的键；做不到就别报过期 | 本次坑的触发路径就是「`--check` 说过期 → 顺手跑一次去修」。工具的输出会被当指令执行，所以输出必须诚实 |
+| R59-c | `tools/check_all.py` **只编排不判断**：末行原样转述、判红只看子进程退出码、不全量解析输出 | 一旦它开始解析各脚本的文案，就变成第二个真相（同 R50-c / R57-b 的「不设第二份真相」） |
+| R59-d | 写盘一律 `newline="\n"` | Windows 下 `write_text` 默认 CRLF，工作区与 HEAD 永远显示 M 但 `git diff` 为空；真改动被噪声淹没，`git status` 失去信号 |
+
+下一步（R60）：
+
+1. **验收 T-0055**（`check_lang.py`：基线 `共 2 个文件 · 0 条问题` + 5 类负向 + 1 条孤儿键提示 + `wc ≤ 200`）；过验收后 `check_all.py` 末行应从「跑成 8 · 跳过 1」变「跑成 9 · 跳过 0」，这条本身就是验收证据。
+2. **真人一次性验收窗口**（M6/M7 唯一出口阻塞，需 Aki 上线）：M6 自然刷怪替换 + `per_tick_cap` 行为 + M7 升级/`take`·`untake` + `tree info`/`tree skills` 玩家段 + 武器 tooltip（D20）+ `#minecraft:undead` 条件乘区。**不排期，等人**。
+3. **Q-022（M5 原语范围）** 未答复，默认「按需补」已在协作板写明；答复 B 则按 5 张卡拆给 S8。
+4. `respec` 扣费挂 Q-021（默认免费），等 D28 经济桥接。

@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 03:13 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-19 04:20 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0054 | OPEN | `tools/check_scripts.py` —— 脚本层起飞前对账（M0/M5 脚本链的安全网） |
+| T-0055 | OPEN | `tools/check_lang.py` —— lang 键覆盖起飞前对账（显示层的安全网） |
 
-已验完 **51** 张 / 共 **54** 张。
+已验完 **52** 张 / 共 **55** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R54 | 2026-11-18 | **验收 T-0049（`check_trees.py`）+ M7 出口「等级 → 技能点」（`TreePoints.c |
 | R55 | 2026-11-18 | **验收 T-0050（`check_mobs.py`）+ `per_tick_cap` 落盘（M6 最后一个硬编号挂账 |
 | R56 | 2026-11-19 | **验收 T-0051（`check_items.py`）+ `tree info` 补「当前等级能拿多少点」+ 派 T |
 | R57 | 2026-11-19 | **验收 T-0052（`TreeUnlocks`）+ `unlock_skill` 接服务层（M7 出口最后一块）+  |
 | R58 | 2026-11-19 | **验收 T-0053（`check_skills.py`）+ `tree skills <tree>` 观测面（M7  |
+| R59 | 2026-11-19 | **验收 T-0054（`check_scripts.py`）+ 修 `gen_attr_lang.py` 的破坏性覆写 |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
