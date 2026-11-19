@@ -3539,7 +3539,7 @@ fi
 - 2026-11-19 16:43 · 完成 · 新建 `core/command/DisplayCommand.java`（38 行，单类无构造器/无内部类，`node()`/`text()` 逐字签名）+ `RedtaleCommand.java` 第 141 行 +1 行 `.then(DisplayCommand.node())`（numstat `1 0`，零删改末行）· build EXIT=0（jar 内 `DisplayCommand.class`=1）· 自测：禁用 API grep=0 / wc=38≤200 / 探针 `build/probe/DisplayCommandProbe.java` 13/13 全绿（四组文案 + node 结构 + 反射签名）；git status 仅卡上 3 文件。待 S7 测试服验收命令三条逐字输出与返回码（离线无法造 `RedtaleCore` 快照）。
 - 验收：2026-11-19 17:1x · S7 · **3/3 通过 → VERIFIED**。①取锁 `gradle build --offline` RC=0、jar 内 `DisplayCommand.class`=1、`wc`=38≤200。②探针 `probe_run DisplayCommandProbe` 末行 `全绿`、`TOTAL 13/13`（四组文案 + node 结构 + 反射签名）；测试服 1 次启停 `Done (1.965s)`（已停、25567/25577 无 LISTEN，正式服 9376 未动），RCON 四组逐字：默认 `DPS 关 · 属性明细 关 · 假想目标 minecraft:zombie · 来源 display.json5` / 两开关改 true+目标 husk+reload → `DPS 开 · 属性明细 开 · 假想目标 minecraft:husk · 来源 display.json5` / 合法 JSON5 语义坏（`show_dps:1`+非法目标+未知键）reload → 回落默认且恰多一行 `  本次 reload 告警 3 条（/redtale reload 看详情）` / 还原回默认零告警；`reload` 40 份、`validate` 问题 0、redtale 零 ERROR。③禁用 API `Files.|Path.of|writeString`=0、`RedtaleCommand` numstat `1 0`、`git status` 除卡上 3 文件外无其他改动。**source=""→未载入（默认值）** 一组由离线探针覆盖（测试服删文件会重建默认件，走不到空串分支），按 R68-b 记「测试服未验 + 原因」。
 
-### T-0066 · [OPEN] `mobs/SpawnBudget` —— per_tick_cap 数值与补生成预算的唯一纯函数实现（M6，单类，零接线）
+### T-0066 · [VERIFIED] `mobs/SpawnBudget` —— per_tick_cap 数值与补生成预算的唯一纯函数实现（M6，单类，零接线）
 
 - 派单：S7 · 2026-11-19 17:1x（R70）
 - 背景：`per_tick_cap`（每 tick 最多补生成几只）的合法化规则现在写了**两份**——`SpawnSettings.perTickCap`（配置解析，整数且 1~4096，否则回落 8）与 `SpawnReplacer.setPerTickCap`（运行期 `replace cap`，`Math.max(1, Math.min(4096, v))`）。两份哪天改一份忘一份就会静默分叉。本卡把数值规则收成**一个纯类**；接线（把上述两处改成委托）是 **S7 下轮**的事，本卡**不接线**。
@@ -3599,6 +3599,45 @@ fi
   3. `grep -c "net.minecraft" <新类>` → **0**；`grep -cE "Files\.|Path\.of|writeString|currentTimeMillis" <新类>` → **0**；`git status --short` 里除卡上文件外无其他改动（S7 本轮会改 `docs/`，验收时以「新类之外无 `src/` 改动」为准）。
 
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-19 17:45 · 完成 · 新建 src/main/java/com/redtale/project/mobs/SpawnBudget.java（50 行，单类纯静态、无构造器/内部类/实例字段，逐字签名）+ build/probe/SpawnBudgetProbe.java（53 断言） · build EXIT=0（jar 内 SpawnBudget.class=1）· 自测：wc=50≤200 / net.minecraft=0 / 禁用 API=0 / 探针 53/53 全绿（clamp 8 形态 + fromConfig 11 + takePerTick 12 + ticksToDrain 10 + describe 逐字 4 + 重复调用 5）；git status 仅 TASKS.md + 新类。纯函数卡无测试服依赖，待 S7 验收。
+- 验收 S7 · R71 · **VERIFIED**（3/3）：①取锁 build RC=0、jar 内 `SpawnBudget.class`=1、`wc`=50≤200；②`probe_run SpawnBudgetProbe` 末行 `PASS 53 / FAIL 0`；③`net.minecraft`=0、禁用 API=0、`git status` 仅卡上文件（新类 + TASKS.md）。S8 探针覆盖逐条复核：clamp 8 形态（含 Integer.MIN/MAX 不溢出）、fromConfig 11 形态、`takePerTick` 12 组、`ticksToDrain` 10 组、`describe` 逐字 4 组、重复调用 5 —— 全部对上卡面语义。接线（两处委托）由 S7 本轮接过，见 PLAN §13 R71。
+
+### T-0067 · [OPEN] `tools/check_spawn.py` —— `spawn.json5` 主配置起飞前对账（M6 安全网补洞，单文件，零接线）
+
+- 派单：S7 · 2026-11-19 23:3x（R71）
+- 背景：`per_tick_cap` 数值规则已由 T-0066 收口进 `SpawnBudget`，运行期两处委托已接（R71）；但**配置面 `spawn.json5` 的合法化没有任何起飞前对账**——`check_mobs.py` 只扫 `spawn_rules/` 子目录，`check_numeric.py` 只管 `attack_speed`/`crit`/`damage`/`progression`。写歪一个值（0 / 2.5 / 9999 / `replace_enabled: 1`）目前只能起测试服 reload 才看得见。本卡补这个洞：只读对账 `spawn.json5` **单文件**，输出问题清单。
+- 独占文件（**唯一可写**）：
+  - `tools/check_spawn.py`（**新建**，≤ 200 行）
+  - `build/probe/` 下可选夹具文件（`build/` 不入库）
+- 依赖/复用（**不许另造**）：必须 `from check_progress import clean_json5`（去注释+裸键加引号+尾逗号），不许写第四份 JSON5 清洗器；数值口径与 `SpawnBudget.fromConfig` **同构**（见下），但本卡是 Python 独立实现，不许 import Java。
+
+- 接口（**逐字，文件内函数签名不许改**）：
+  ```python
+  def check_spawn(data: dict) -> list[str]:   # 返回问题消息列表（不含文件名与前缀）
+  def main() -> int:                           # argparse: --file(默认 src/main/resources/redtale/defaults/spawn.json5), -v
+  ```
+
+- 检查项（**逐条钉死，共 7 条**）：
+  1. `replace_enabled` 缺失 → **不报**（缺省开）；存在但非布尔（含 `1`/`"true"`/`null`）→ 报 1 条 `replace_enabled 必须是布尔值`。
+  2. `per_tick_cap` 缺失 → **不报**（缺省 8）；存在但非数字（含 `true`/`"8"`/`null`/数组/对象）→ 报 1 条 `per_tick_cap 必须是数字`。
+  3. `per_tick_cap` 是数字：`NaN`/`Infinity`/非整数（`v != int(v)`）/ `< 1` / `> 4096` → 报 1 条 `per_tick_cap 必须是 1~4096 的整数（写 0 不会关闭，会回落 8）`。**合法边界 1.0 / 4096.0 不报**。Python 侧用 `math.isfinite` + `float(v).is_integer()` 判，注意 `bool` 是 `int` 子类须先排除。
+  4. 顶层未知键 → 每个报 1 条 `未知键 <key>`；允许键集合恰为 `{"replace_enabled", "per_tick_cap"}`（注释不算键，由 `clean_json5` 去掉）。
+  5. 顶层不是对象（如 `[]` / `"x"`）→ 报 1 条 `根节点必须是对象`，**不再跑 1~4**（避免连锁误报）。
+  6. JSON5 解析失败 → 记 1 条 `解析失败`，`data` 当 None 处理，不抛栈。
+  7. `-v` 时对每个已检查文件打一行 `已检查 <file> · 7 项`；无论有无问题，**末行固定** `共 1 个文件 · N 条问题`；有问题每行格式 `[问题] <file> · <msg>`；退出码 `1 if problems else 0`。
+
+- 不要做：
+  - **不扫 `spawn_rules/`**（归 `check_mobs.py`）、不碰 `check_numeric.py` 的四份文件（各管一摊，避免第二份真相）
+  - 不改 `tools/check_all.py`（接线由 S7 在 VERIFIED 后做）
+  - 不 import 任何 Java / `net.minecraft`；不读时钟、不写盘、不打日志
+  - 不建 `check_spawn` 之外的工具函数文件；`clean_json5` 只从 `check_progress` 引
+
+- 验收（**三条，全部可机器执行**）：
+  1. 基线：`cd /e/RedtaleProject && python tools/check_spawn.py` → 末行 `共 1 个文件 · 0 条问题`，`EXIT=0`（默认件是合法 JSON5、`replace_enabled:true`/`per_tick_cap:8`）。
+  2. 负向夹具（自建临时文件，**用完删**）：`--file build/spawnfix/bad.json5` 写 `{replace_enabled:1, per_tick_cap:0, bogus_key:5}` → EXIT=1，恰好 3 条 `[问题]`（replace_enabled 非布尔 / per_tick_cap 整数范围 / 未知键 bogus_key），末行 `共 1 个文件 · 3 条问题`；再写 `per_tick_cap:2.5` 单错 → 恰好 1 条；写根节点 `[]` → 恰好 1 条 `根节点必须是对象` 且不连锁；写坏 JSON5 → 恰好 1 条 `解析失败` 不抛栈。合法边界 `per_tick_cap:1.0` 与 `4096.0` 各 → 0 条问题。
+  3. `wc -l < tools/check_spawn.py` → **≤ 200**；`grep -c "from check_progress import clean_json5" tools/check_spawn.py` → **≥ 1**；`grep -cE "Files\.|Path\.of|writeString|currentTimeMillis|net\.minecraft" tools/check_spawn.py` → **0**；`git status --short` 除卡上文件外无其他改动（S7 本轮改 `docs/`，以「新文件之外无 `src/` 改动」为准）。
+
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3611,7 +3650,7 @@ fi
 | C9 | ~~`tools/gen_rounds_index.py`~~ → **判为不适派（R66）**：「一句话」列是编辑产物、R2/R3 无轮次号需手工映射，机器生成只会造出第二份真相 | —— | —— |
 | C10 | ~~`tools/check_tasks.py`~~ → **T-0061（R65 派 / R66 验）** | —— | —— |
 | C11 | ~~`professions/` 的 L1 解析器~~ → **T-0060（R64 派 / R65 验）** | —— | —— |
-| C12 | `tools/check_spawn.py`（`spawn.json5` + `spawn_rules/` 的独立对账） | 现由 `check_mobs.py` 兼顾，拆分只是可选 | 无（低价值，除非 `check_mobs` 继续膨胀） |
+| C12 | ~~`tools/check_spawn.py`~~ → **T-0067（R71 派）**：范围收窄为 `spawn.json5` **单文件**主配置（per_tick_cap 数值口径），`spawn_rules/` 仍归 `check_mobs.py` | R71 接线后需要一个「改配置不用起测试服就能看分歧」的离线安全网 | 无 |
 | C13 | ~~`/redtale profession list\|info` 观测面~~ → **T-0063（R67 派 / R68 验）** | —— | —— |
 | C15 | ~~`core/config/DisplaySpec`（Q-023 显示开关 L1 解析）~~ → **T-0064（R68 派 / R69 验）** | —— | —— |
 | C16 | ~~`/redtale display` 观测面（Q-023 收口）~~ → **T-0065（R69 派）** | —— | —— |

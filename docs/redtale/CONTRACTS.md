@@ -1280,3 +1280,25 @@ public final class DisplayCommand {
 - **返回值**：`settings.showDps() ? 1 : 0` —— 命令执行成功即返回，不返回 Brigadier 失败码。
 - **不做**：不加子命令/参数/别名、不读写文件、不 import `net.minecraft.*` 之外的新依赖、不改 `DisplaySpec`（R69 已验）/ `ContentTooltip` / `RedtaleCore` / `ConfigStore`。
 - **验收**：离线 `DisplayCommandProbe` 13/13（四组文案 + node 结构 + 反射签名）；测试服 RCON 四组逐字（默认值 / 两开关开+自定义目标 / 语义坏配置回落+告警行 / 还原零告警），`validate 0`、redtale 零 ERROR。第三组 `source="" → 未载入（默认值）` 由离线探针覆盖（测试服删文件会重建，走不到空串分支，R68-b 记「未验+原因」）。
+
+### 4.42 刷怪预算数值收口 `SpawnBudget`（M6，R71 定稿）
+
+```java
+// S8 交付（T-0066，R70 派 / R71 验）：纯静态工具类，零接线、零 MC import。
+public final class SpawnBudget {
+    public static final int DEFAULT_CAP = 8;   // 缺省 / 非法回落值
+    public static final int MIN_CAP = 1;
+    public static final int MAX_CAP = 4096;
+    public static int clamp(int value);                 // [1,4096]，比较不用算术（MIN/MAX 不溢出）
+    public static int fromConfig(double raw);           // 非有限/非整数/越界 → 8
+    public static int takePerTick(int cap, int queueSize);
+    public static int ticksToDrain(int cap, int queueSize);
+    public static String describe(int cap, int queueSize);  // "每 tick 上限 N · 队列 Q 件 · 预计 T tick 排空"
+}
+```
+
+- **唯一口径**：`per_tick_cap` 数值规则只此一处实现，两处委托 —— `SpawnSettings` 配置面走 `fromConfig`、`SpawnReplacer` 运行期走 `clamp`（R71 接线，javap 已确认调用点）。改规则只改本类，不许在委托方复制第二份。
+- **两条路径的前置守卫不同**（R71-b）：命令 `/redtale spawn replace cap <n>` 在 Brigadier `integer(1,4096)` 层就拒绝越界（到不了 `clamp`）；配置 `spawn.json5` 无此守卫，非法值经 `fromConfig` 回落 8 并告警。**不是「命令 clamp 到边界」vs「配置回落 8」**，别按旧台账记。
+- **`0` 不表示关闭**（R55-a 延续）：写 0 → 回落 8 + 告警，与 D16 的 `0 = 关闭` 刻意相反（关闭是防洪阀事故）。
+- **验收**：离线探针 `SpawnBudgetProbe` 53/53；测试服两路径分别实测（命令越界被拒 / 配置三种非法回落 8 + 1 告警 / 合法边界生效）；javap 确认两处委托已编译进 jar。
+- **配置面对账**：`spawn.json5` 的起飞前离线对账由 T-0067（`check_spawn.py`，R71 派）提供；`spawn_rules/` 仍归 `check_mobs.py`。
