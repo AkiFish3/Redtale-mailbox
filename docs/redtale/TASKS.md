@@ -3491,7 +3491,7 @@ fi
 - 2026-11-19 15:3x · 完成 · src/main/java/com/redtale/project/core/config/DisplaySpec.java（新建 73 行） + build/probe/DisplaySpecProbe.java（探针，build/ 不入库） · build --offline EXIT=0 · 探针 PASS=54/FAIL=0 全绿；jar 内 DisplaySpec.class=1、wc=73≤200、net.minecraft=0、禁 IO=0；git status 仅 TASKS.md + DisplaySpec.java · 口径请 S7 裁：语义 5 写空串 assume_target「视为缺省不告警」，验收 2 却把空串列进「五种非法形态」，本实现按语义不告警（探针空串位特判）；ConfigFile.root 类型为 JsonObject，非 JsonObject 形态不可构造，仅 null 根可达。
 - 2026-11-19 16:0x · **S7 验收：3/3 通过 → VERIFIED**。①`gradle build --offline` EXIT=0、jar 内 `DisplaySpec.class`=1、`wc`=73≤200。②`probe_run DisplaySpecProbe` → `PASS=54 FAIL=0` + 末行 `全绿`。③`net.minecraft`=0、`Files.|Path.of|FileReader`=0、`git status --short` 仅 `docs/TASKS.md` + 本卡新类。**裁定（R69-a）**：卡面「语义 5」与「验收 2」对空串自相矛盾 → 以语义 5 的行为条款为准（空串/纯空白 = 缺省、静默回落），验收 2 的括注已就地改写；S8 提的「`ConfigFile.root` 恒 `JsonObject`、非对象分支不可达」按 R65-a 记死分支，不返工（`null` 根可达，仍有覆盖）。
 
-### T-0065 · [OPEN] `/redtale display` —— 显示口径只读观测面（D20 / Q-023 收口，单类 + 1 行接线）
+### T-0065 · [VERIFIED] `/redtale display` —— 显示口径只读观测面（D20 / Q-023 收口，单类 + 1 行接线）
 
 - 派单：S7 · 2026-11-19 16:0x（R69）
 - 背景：Q-023 的三个开关已能生效（`DisplaySpec` + `display.json5` + `ContentTooltip`，R69 落地），但**没有任何命令面能回答「现在全服是按什么口径在显示」**。运营不开客户端时只能去翻 `config/redtale_project/display.json5`，而那份文件可能刚被删掉重建、也可能写歪了回落默认 —— 文件≠生效值。本卡做一个只读命令，把 `RedtaleCore.get().display()` 的**生效快照**打出来。
@@ -3536,6 +3536,69 @@ fi
   3. `grep -cE "Files\.|Path\.of|writeString" <新类>` → **0**；`git diff --numstat src/main/java/com/redtale/project/core/command/RedtaleCommand.java` → `1 0`（一行加、零行删）；`git status --short` 里除卡上文件外无其他改动。
 
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-19 16:43 · 完成 · 新建 `core/command/DisplayCommand.java`（38 行，单类无构造器/无内部类，`node()`/`text()` 逐字签名）+ `RedtaleCommand.java` 第 141 行 +1 行 `.then(DisplayCommand.node())`（numstat `1 0`，零删改末行）· build EXIT=0（jar 内 `DisplayCommand.class`=1）· 自测：禁用 API grep=0 / wc=38≤200 / 探针 `build/probe/DisplayCommandProbe.java` 13/13 全绿（四组文案 + node 结构 + 反射签名）；git status 仅卡上 3 文件。待 S7 测试服验收命令三条逐字输出与返回码（离线无法造 `RedtaleCore` 快照）。
+- 验收：2026-11-19 17:1x · S7 · **3/3 通过 → VERIFIED**。①取锁 `gradle build --offline` RC=0、jar 内 `DisplayCommand.class`=1、`wc`=38≤200。②探针 `probe_run DisplayCommandProbe` 末行 `全绿`、`TOTAL 13/13`（四组文案 + node 结构 + 反射签名）；测试服 1 次启停 `Done (1.965s)`（已停、25567/25577 无 LISTEN，正式服 9376 未动），RCON 四组逐字：默认 `DPS 关 · 属性明细 关 · 假想目标 minecraft:zombie · 来源 display.json5` / 两开关改 true+目标 husk+reload → `DPS 开 · 属性明细 开 · 假想目标 minecraft:husk · 来源 display.json5` / 合法 JSON5 语义坏（`show_dps:1`+非法目标+未知键）reload → 回落默认且恰多一行 `  本次 reload 告警 3 条（/redtale reload 看详情）` / 还原回默认零告警；`reload` 40 份、`validate` 问题 0、redtale 零 ERROR。③禁用 API `Files.|Path.of|writeString`=0、`RedtaleCommand` numstat `1 0`、`git status` 除卡上 3 文件外无其他改动。**source=""→未载入（默认值）** 一组由离线探针覆盖（测试服删文件会重建默认件，走不到空串分支），按 R68-b 记「测试服未验 + 原因」。
+
+### T-0066 · [OPEN] `mobs/SpawnBudget` —— per_tick_cap 数值与补生成预算的唯一纯函数实现（M6，单类，零接线）
+
+- 派单：S7 · 2026-11-19 17:1x（R70）
+- 背景：`per_tick_cap`（每 tick 最多补生成几只）的合法化规则现在写了**两份**——`SpawnSettings.perTickCap`（配置解析，整数且 1~4096，否则回落 8）与 `SpawnReplacer.setPerTickCap`（运行期 `replace cap`，`Math.max(1, Math.min(4096, v))`）。两份哪天改一份忘一份就会静默分叉。本卡把数值规则收成**一个纯类**；接线（把上述两处改成委托）是 **S7 下轮**的事，本卡**不接线**。
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/mobs/SpawnBudget.java`（**新建**，≤ 200 行）
+  - `build/probe/SpawnBudgetProbe.java`（可选，`build/` 不入库）
+
+- 接口（**逐字，签名不许改**）：
+  ```java
+  package com.redtale.project.mobs;
+
+  public final class SpawnBudget {
+      public static final int DEFAULT_CAP = 8;   // 缺省
+      public static final int MIN_CAP = 1;       // 下界（含）
+      public static final int MAX_CAP = 4096;    // 上界（含）
+
+      /** 运行期钳制：clamp 到 [1,4096]。负→1，超→4096，区间内原样。 */
+      public static int clamp(int value);
+
+      /** 配置数值合法化（spawn.json5 的 per_tick_cap，已由调用方判过 isNumber）：
+       *  非有限 / 非整数 / <1 / >4096 → DEFAULT_CAP(8)；否则 (int) raw。
+       *  调用方自己决定「缺失不告警、非法告警」，本方法只认给到的数。 */
+      public static int fromConfig(double raw);
+
+      /** 一个 tick 内可处理的件数 = min(clamp(cap), max(0, queueSize))。 */
+      public static int takePerTick(int cap, int queueSize);
+
+      /** 排空队列所需 tick 数 = ceil(queueSize / takePerTick(cap,queueSize))；queueSize<=0 → 0。 */
+      public static int ticksToDrain(int cap, int queueSize);
+
+      /** 观察描述串（逐字）："每 tick 上限 N · 队列 Q 件 · 预计 T tick 排空"
+       *  N = clamp(cap)、Q = max(0,queueSize)、T = ticksToDrain(cap,queueSize)。 */
+      public static String describe(int cap, int queueSize);
+  }
+  ```
+  无构造器、无内部类、无实例字段（纯静态工具类）。
+
+- 语义（**逐条钉死**）：
+  1. `clamp`：先与 `MIN_CAP`/`MAX_CAP` 比较，`value < 1` → 1，`value > 4096` → 4096，否则原样。`Integer.MIN_VALUE` / `MAX_VALUE` 不得溢出（用比较不用算术）。
+  2. `fromConfig`：`Double.isNaN(raw) || Double.isInfinite(raw)` → 8；`raw != Math.rint(raw)`（非整数）→ 8；`raw < 1 || raw > 4096` → 8；否则 `(int) raw`。**`raw == 1.0` / `4096.0` 合法**（边界含），`0.999` / `4096.001` / `2.5` 回落 8。
+  3. `takePerTick`：`queueSize <= 0` → 0；否则 `min(clamp(cap), queueSize)`。cap 负数要先 clamp 成 1，不能传负进 min。
+  4. `ticksToDrain`：`queueSize <= 0` → 0；否则整数上取整 ` ceil(queueSize / takePerTick(...))`，用 `(q + take - 1) / take` 形式（注意 `q + take - 1` 在 q≤队列实际规模时不会溢出，队列规模远小于 int 上限）；cap 非法时先 clamp 再算，不得除零。
+  5. `describe`：三处各自按上面规则算，数字用 `String.valueOf`，**全角间隔号 ` · `、逐字**，不加前后缀、不加单位换算。
+  6. 全程纯函数：同一入参任意次调用结果相同、不读时钟、不读文件、不依赖任何注册表或 `RedtaleCore`。
+
+- 不要做：
+  - 不 import 任何 `net.minecraft.*`；不打日志；不出现 `Files.` / `Path.of` / `writeString` / `System.currentTimeMillis`
+  - **不改** `SpawnSettings` / `SpawnReplacer` / `SpawnCommand`（接线归 S7）
+  - 不碰 `RedtaleCore` / `GameHooks` / 任何注册表
+  - 不加 getter 别名、不加 `Builder`、不加 `parse(JsonElement)` 重载、不加实例方法
+  - 不碰 `docs/`、不改 `tools/check_all.py`、不改 `PLAN.md`
+
+- 验收（**三条，全部可机器执行**）：
+  1. 取锁后 `D:\redtale-work\tools\gradle-8.8\bin\gradle build --offline` → `EXIT=0`；`cd build/libs && unzip -l *.jar | grep -c "SpawnBudget.class"` → **1**；`wc -l < src/main/java/com/redtale/project/mobs/SpawnBudget.java` → **≤ 200**。
+  2. `python tools/probe_run.py SpawnBudgetProbe` → 末行 `全绿`，且 `PASS ≥ 30 / FAIL 0`。探针至少覆盖：`clamp` 负/0/1/8/4096/4097/`Integer.MIN_VALUE`/`MAX_VALUE`；`fromConfig` NaN/Infinity/0.999/1.0/2.5/8.0/4096.0/4096.001 共 8 形态；`takePerTick` cap=0/负/1/8/4097 × queue=0/1/7/8/9/0 组合；`ticksToDrain` 边界整除与不整除（如 cap=8,q=16→2 / q=17→3 / q=0→0）；`describe` 逐字三组；两次调用结果一致。
+  3. `grep -c "net.minecraft" <新类>` → **0**；`grep -cE "Files\.|Path\.of|writeString|currentTimeMillis" <新类>` → **0**；`git status --short` 里除卡上文件外无其他改动（S7 本轮会改 `docs/`，验收时以「新类之外无 `src/` 改动」为准）。
+
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3553,6 +3616,7 @@ fi
 | C15 | ~~`core/config/DisplaySpec`（Q-023 显示开关 L1 解析）~~ → **T-0064（R68 派 / R69 验）** | —— | —— |
 | C16 | ~~`/redtale display` 观测面（Q-023 收口）~~ → **T-0065（R69 派）** | —— | —— |
 | C14 | `mobs/` 或 `items/` 的第四向对账（若某个 `check_*.py` 超 200 行则拆） | 单文件、纯静态 | 无（观察项，不急） |
+| C17 | ~~`mobs/SpawnBudget`（per_tick_cap 纯函数收口）~~ → **T-0066（R70 派）** | —— | —— |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

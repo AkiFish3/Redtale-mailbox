@@ -577,7 +577,7 @@ public final class MobSpawner {
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
 | 技能树（D25 / M7，R50 起进 `DEFAULT_FILES`） | `config/redtale_project/skill_trees/<文件名>.json5`（一个文件一棵树，schema 见 `docs/SKILL-TREE.md` §3；`id` 缺省不补命名空间）。默认 `warrior_vanguard.json5` **删文件会被 reload 重建**；它依赖 `jobs/warrior.json5` 与 `skills/quake_slam.json5` 同时存在（否则 reload 会打两条交叉校验告警） |
 | 技能树里的 `classes` | 写**职业裸名**（`warrior`），与 `jobs/*.json5` 的全名 id（`redtale_project:warrior`）**按 path 比较**（R50-a）；空数组 = 所有职业可用 |
-| 显示口径（D20 / Q-023 默认 A，R68 定契约；R69 已落默认件） | `config/redtale_project/display.json5`：三键 `show_dps`（缺省 `false`）/ `show_attribute_breakdown`（缺省 `false`）/ `assume_target`（缺省 `minecraft:zombie`，合法 = 含 `:`、无空白、无大写；空串/纯空白/`null` **静默回落**不告警，R69-a）。**服务端全服生效**，`/redtale reload` 即可，不需要客户端 `client.json5`。`assume_target` v1 **只用于 DPS 行标注**，不做目标护甲推算 |
+| 显示口径（D20 / Q-023 默认 A，R68 定契约；R69 已落默认件，R70 收口） | `config/redtale_project/display.json5`：三键 `show_dps`（缺省 `false`）/ `show_attribute_breakdown`（缺省 `false`）/ `assume_target`（缺省 `minecraft:zombie`，合法 = 含 `:`、无空白、无大写；空串/纯空白/`null` **静默回落**不告警，R69-a）。**服务端全服生效**，`/redtale reload` 即可，不需要客户端 `client.json5`。`assume_target` v1 **只用于 DPS 行标注**，不做目标护甲推算 |
 | 等级存档（M7） | `world/data/redtale_project_progress.dat`（`SavedData`，**不落** `playerdata`，也不进 config） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 
@@ -1264,3 +1264,19 @@ public final class ProfessionHooks {
 - **存档**：`ProgressStore` **v3**，`professions: { "<profId>": <long> }`；**升版早于写入路径**（R64/R66）。v1/v2 档读起零告警、缺键即空桶。
 - **不做**：tag 是否存在、掉落、方块再生、技能树 `classes`、GUI/HUD。
 - **验收入口**：`/redtale exp profession`（控制台列定义 / 玩家列进度）、`/redtale exp profession <id> <amount>`、`<id> set <value>`、`/redtale exp profession probe`（6 组，控制台可跑）。
+
+### 4.41 显示口径生效快照观测面 `DisplayCommand` / `/redtale display`（D20 / Q-023 收口，R70 定稿）
+
+```java
+// S8 交付（T-0065，R69 派 / R70 验）：单类 + RedtaleCommand 一行挂载。
+public final class DisplayCommand {
+    public static com.mojang.brigadier.builder.LiteralArgumentBuilder<net.minecraft.commands.CommandSourceStack> node();
+    public static String text(com.redtale.project.core.config.DisplaySpec.Settings settings, int warningCount);
+}
+```
+
+- **唯一口径来源**：`text()` 只吃 `RedtaleCore.get().display()` 的**生效快照**，不读文件（R69-b：`config/.../display.json5` 删了会重建、写歪会回落，文件 ≠ 生效值）。`warningCount = RedtaleCore.get().configWarnings().size()`。
+- **文案逐字**（全角冒号/间隔号）：首行 `[redtale] 显示口径：DPS <开|关> · 属性明细 <开|关> · 假想目标 <id> · 来源 <source>`；`source` 空串写 `未载入（默认值）`。仅当 `warningCount > 0` 追加次行 `  本次 reload 告警 N 条（/redtale reload 看详情）`（**行首两个空格，空格后直接是「本次」，没有间隔号**，N 为数字 —— 实测见 T-0065 验收行）。
+- **返回值**：`settings.showDps() ? 1 : 0` —— 命令执行成功即返回，不返回 Brigadier 失败码。
+- **不做**：不加子命令/参数/别名、不读写文件、不 import `net.minecraft.*` 之外的新依赖、不改 `DisplaySpec`（R69 已验）/ `ContentTooltip` / `RedtaleCore` / `ConfigStore`。
+- **验收**：离线 `DisplayCommandProbe` 13/13（四组文案 + node 结构 + 反射签名）；测试服 RCON 四组逐字（默认值 / 两开关开+自定义目标 / 语义坏配置回落+告警行 / 还原零告警），`validate 0`、redtale 零 ERROR。第三组 `source="" → 未载入（默认值）` 由离线探针覆盖（测试服删文件会重建，走不到空串分支，R68-b 记「未验+原因」）。

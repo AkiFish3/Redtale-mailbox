@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 16:03 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-19 17:18 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,18 +12,18 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0065 | OPEN | `/redtale display` —— 显示口径只读观测面（D20 / Q-023 收口，单类 + 1 行接线） |
+| T-0066 | OPEN | `mobs/SpawnBudget` —— per_tick_cap 数值与补生成预算的唯一纯函数实现（M6，单类，零接线） |
 
-已验完 **62** 张 / 共 **65** 张。
+已验完 **63** 张 / 共 **66** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R65 | 2026-11-19 | **验收 T-0060（`ProfessionSpec`）+ 自研 D24 L2（`ProfessionRegistry |
 | R66 | 2026-11-19 | **验收 T-0061（`check_tasks.py`）+ 接进 `check_all`（14→15）+ 派 T-00 |
 | R67 | 2026-11-19 | **验收 T-0062（`check_professions.py`）+ 接进 `check_all`（15→16）+  |
 | R68 | 2026-11-19 | **验收 T-0063（`/redtale profession list\ |
+| R70 | 2026-11-19 | **验收 T-0065（`/redtale display`，Q-023 收口）+ 派 T-0066（`SpawnBud |
 | R69 | 2026-11-19 | **验收 T-0064（`DisplaySpec`，Q-023 L1）+ Q-023 落地 L2（`display.js |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
