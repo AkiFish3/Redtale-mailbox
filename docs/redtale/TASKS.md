@@ -3310,7 +3310,7 @@ fi
   - S7 边界 2 组：缺 `PLAN.md` → `[问题] PLAN.md：文件不存在` + `共 0 张卡` 汇总行、EXIT=1、无栈；`[FOO]` 非法状态 → `TASKS.md:115 T-0002 状态 FOO 不在状态机里` EXIT=1
   - **口径 §13.69 R66-a**：「`- 验收` 段」判定是 `- 验收` + (行尾 / `：` / `（`)，**不是**字面 startswith —— 否则夹具 b 的 `- 验收啦` 会被判通过。代价：写成 `- 验收命令：` 的卡会假红（当前 0 张，`grep -oE "^- 验收[^：:（(]*"` 只有 `- 验收`×65 与 S7 的 `- 验收结论`）。按**夹具基线**采纳实现（同 R43-a / R56 / R64-a）
 
-### T-0062 · [OPEN] `tools/check_professions.py` —— 专业配置起飞前对账（D24 L6 提前）
+### T-0062 · [VERIFIED] `tools/check_professions.py` —— 专业配置起飞前对账（D24 L6 提前）
 
 - 派单：S7 · 2026-11-19 12:4x（R66）
 - 背景：`professions/*.json5` 现有两份默认件（L2 已落地，R65）。这类文件的坏值**运行期只 WARN 然后回落默认**（R61-b），编译器不看、`/redtale validate` 不看、reload 只吐一条淹在 39 份配置里。本卡只做**静态对账**：读配置、报问题、不修文件。PROFESSION §8 原把 L6 排在 L3 之后，提前的理由是「L6 不依赖 L3，纯配置面」。
@@ -3366,6 +3366,71 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_professions.py; echo EXIT=$?` → `EXIT=0`，末行逐字 `共 2 个文件 · 0 条问题`
   2. 负向夹具（建在 `build/proffix/`，验完删、不许入库）：建 3 份 `.json5`，合计命中 **6 类**问题 —— `id` 写 `mining`（缺冒号）/ `max_level: 1001` / 源写 `kill` / grant 值 `-3` / 属性键写成 `mining_efficency`（拼错）/ 顶层多一个 `foo: 1` → `--dir build/proffix` 跑：`EXIT=1`，六类各**至少** 1 条 `[问题]`，且末行 `P` **等于**打印出的 `[问题]` 行数（自洽性；本条不钉死总数）
   3. `wc -l < tools/check_professions.py` → **≤ 200**；`grep -cE "^\s*def clean_json5" <同上>` → **0**；`grep -c "from check_progress import" <同上>` → **1**
+
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-19 13:16 · 完成 · tools/check_professions.py（新建 173 行，卡外零改动）· 未构建（纯 Python 卡，卡面不含 build）· 验收3/3：基线 EXIT=0「共 2 个文件 · 0 条问题」；6 类负向夹具 EXIT=1「共 3 个文件 · 6 条问题」P 自洽；wc=173≤200 / clean_json5=0 / from-check_progress=1、py_compile OK。边界：属性表读不到 → 报 1 条 + 跳过属性键检查其余照跑（4 条问题）。
+- 验收（S7 · R67 · 13:40）：**3/3 全过** —— ①基线 `共 2 个文件 · 0 条问题` EXIT=0；②六类负向夹具（`build/proffix/` 3 份）逐条命中且 `P`=`[问题]` 行数=6 自洽；③`wc`=173≤200 / `grep -cE "^\s*def clean_json5"`=0 / `grep -c "from check_progress import"`=1。**S7 独立边界五组**：`max_level: true`（bool 不算 int）报 → `max_level 必须是 2..1000 的整数：True`；`mode:"geometric"` + `growth:1.0` 报 `必须大于 1`；跨文件重复 id 报**后出现**的 `d2.json5`（先出现 `d1.json5`）；属性键三形态全放行（`minecraft:armor_toughness`→`generic.` 补位 / `redtale_project:physical_damage` / 裸 `physical_damage`）+ 拼错键照报；`read_attrs()` 返回 `None` 时**恰好**多 1 条 `属性表 · 属性表读不到`、跳过属性键检查其余照跑（11 条 → 11 条，退出码 1）。**口径记录 R67-a**：`mode` 非法（如 `linear`）+ `exponent:0` 会同时报 2 条 —— 卡面第 7 条只把 ③ 绑给 `polynomial`，实现走 `elif` 连带判，属**卡面未钉死的合理实现**，不打回（同 R43-a / R61-a）。
+
+### T-0063 · [OPEN] `/redtale profession list|info` —— 专业定义只读观测面（D24 L5）
+
+- 派单：S7 · 2026-11-19 13:4x（R67）
+- 背景：D24 已落 L1（`ProfessionSpec`）/ L2（`ProfessionRegistry`）/ L3+L4（存档 v3 + 三事件 + 属性下发）/ L6（`check_professions.py`）。**L5 是缺的观测面**：现在只有 `/redtale exp profession`（报进度，R66 的临时入口），运营问「一共有哪些专业、每个专业吃什么、给什么属性」没有地方答。本卡只做**只读定义面**，不写存档、不下发属性。
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/command/ProfessionCommand.java`（**新建**，≤ 200 行）
+  - `src/main/java/com/redtale/project/core/command/RedtaleCommand.java`（**只准加 1 行** `.then(ProfessionCommand.node())`，插在 `tree` 那行后面）
+
+- 接口（**逐字**）：
+  ```
+  /redtale profession list                 # 全部专业定义（控制台/玩家同一输出）
+  /redtale profession info <id>            # 单个专业详情（裸名 mining 或全名 redtale_project:mining 都认）
+  ```
+  `node()` 返回 `LiteralArgumentBuilder<CommandSourceStack>`，形制照 `TreeCommand.node()`。`info` 的 `id` 参数用 `StringArgumentType.string()`。
+
+- 文案（**逐字，两空格缩进**；`list` / `info` 的 N 行都用一次 `sendSuccess` 发一个多行 `Component.literal`，与 `TreeCommand.list` 同形）：
+
+  ```text
+  /redtale profession list
+  [redtale] 专业 2 个 · 属性 2 条
+    redtale_project:mining · 采矿 · 上限 100 · 属性 1 条 · grants 4/0/0
+    redtale_project:smelting · 冶炼 · 上限 80 · 属性 1 条 · grants 0/2/3
+  ```
+  ```text
+  /redtale profession info mining
+  [redtale] 专业 redtale_project:mining · 采矿 · 上限 100
+    属性 1 条：mining_efficiency +0.01/级
+    grants：mine 4 条 / craft 0 条 / smelt 0 条
+  ```
+  ```text
+  /redtale profession info smelting
+  [redtale] 专业 redtale_project:smelting · 冶炼 · 上限 80
+    属性 1 条：additional_experience +0.005/级
+    grants：mine 0 条 / craft 2 条 / smelt 3 条
+  ```
+
+  格式细则（**逐条钉死，别自己发明**）：
+  1. `grants a/b/c` 与 `grants：mine a 条 / craft b 条 / smelt c 条` 的**顺序固定 mine→craft→smelt**，不按配置键序；计数**不含 `default` 条目**（`Grant.token()` 等于 `default` 的不数）。
+  2. 属性值一律 `"+" + String.valueOf(double)`（`0.01` → `+0.01`，`0.005` → `+0.005`；**不裁尾零、不乘 100、不加 `%`**）。
+  3. 属性键**原样输出**，不做第二遍归一 —— L2 快照里的键已是 `AttributeSpec.id()` 规范形态（R65-c：自建属性是裸 path）。
+  4. 属性多条时用 ` · ` 连接（`属性 2 条：a +0.1/级 · b +0.2/级`），顺序按定义里的 `attributes()` 迭代序。
+  5. `属性 0 条` 时**不写冒号**（`  属性 0 条`），整行照出。
+  6. `专业 id` 一律用 `def.id()`（全名），`name` 用 `def.name()`。
+  7. `info` 的 id 解析走 `RedtaleCore.get().professions().find(raw)`；找不到 → 单行 `[redtale] 没有这个专业：<raw>（用 /redtale profession list 看清单）`，返回 0。
+  8. 玩家上下文（`src.getEntity() instanceof ServerPlayer`）时 `info` **追加一行**：`  玩家 ` + 名字 + `：` + `ExpCommand.professionLine(def, total)`（**复用现成纯函数，不写第二个格式化器**）。控制台不追加，也不加「（控制台…）」之类后缀。
+  9. `list` 在**专业 0 个**时：`[redtale] 专业 0 个` 换行 `  （没有专业定义：读 config/redtale_project/professions）`，返回 0。
+
+- 不要做：
+  - 不写存档、不发经验、不下发/移除属性 —— **不许出现** `ProfessionService.award` / `applyAttributes` / `removeAll` / `ProgressStore`
+  - 不改 `ExpCommand`（`professionLine` 是 R66 已验收的字面量）、不改 `ProfessionRegistry` / `ProfessionSpec` / `ExpCurve`
+  - 不给 `ExpCurve` 加 `mode()`/`exponent()`/`growth()` 访问器（那是 S7 的文件，且本卡不需要曲线数字）
+  - 不做 `probe` 子命令、不做写面（`set`/`reset`）、不加 tab 补全
+  - 不碰 `docs/`、不改 `tools/check_all.py`
+
+- 验收（**三条，全部可机器执行**）：
+  1. 取锁后 `D:\redtale-work\tools\gradle-8.8\bin\gradle build --offline` → `EXIT=0`；`cd build/libs && unzip -l *.jar | grep -c "ProfessionCommand.class"` → `1`；`wc -l < src/main/java/com/redtale/project/core/command/ProfessionCommand.java` → **≤ 200**。
+  2. 测试服（S7 起停，你只管把命令跑通）四条命令逐字比对上文三段文案 + 缺省文案：
+     `profession list` / `profession info mining` / `profession info smelting` / `profession info nope`（最后一条 = `[redtale] 没有这个专业：nope（用 /redtale profession list 看清单）`）。
+  3. `grep -cE "award\(|applyAttributes\(|removeAll\(|ProgressStore" <同上>` → **0**；`grep -c "TreeService\|TreePoints" <同上>` → **0**；`git diff --stat` 里 `RedtaleCommand.java` 的增删 ≤ 2 行。
 
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 

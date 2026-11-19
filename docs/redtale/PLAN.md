@@ -1517,6 +1517,8 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 
 | R66 | 2026-11-19 | **验收 T-0061（`check_tasks.py`）+ 接进 `check_all`（14→15）+ 派 T-0062（`check_professions.py`）+ 自研 D24 L3+L4（存档 v3 / 三个事件 / 属性下发 / `exp profession` 命令与 6 组探针）** | ①卡板：T-0061 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `共 61 张卡 · 在制品 0 · 问题 0 · 提示 0` EXIT=0 / 四组夹具逐条复跑（4 张改 OPEN → `在制品 4 张 > 3`；`- 验收啦` → `TASKS.md:79 T-0001 缺「- 验收」段`；末尾复制 `T-0001` → 报**后**那份 3332 行（先出现 79）；PLAN 删 `T-0060` → `提示 1` 且 **EXIT=0**）/ `wc`=87、import 仅 `re`/`sys`/`pathlib`）+ 模板不算卡证明（`T-XXXX` 4 处命中而卡数 61）+ S7 边界 2 组（缺 `PLAN.md` → 1 条问题无栈；`[FOO]` → 状态不在状态机）。**派 T-0062**（`check_professions.py`：`professions/*.json5` 起飞前对账，11 检查项 + 3 份负向夹具 6 类问题 + 末行 `共 N 个文件 · P 条问题`，必须 `from check_progress import clean_json5, read_attrs`），在制品 **1/3**。②自研 L3+L4：`ProgressStore` **v2→v3**（`professions` 桶 + 四个方法 + load/save）；新类 `ProfessionService`（`amountFor`/`plan` 纯函数、`award`、`levelOf`/`idOf`/`prefixOf`/`planGrants`/`applyAttributes`/`snapshot`）；新类 `ProfessionHooks`（`BlockEvent.BreakEvent` / `ItemCraftedEvent` / `ItemSmeltedEvent` 三个事件点，只做「MC 对象 → (id, tag 集)」翻译）+ `GameHooks` 注册；`ProgressService.onLogin/applyAll` 各 +1 行（同一次重算）；`ExpCommand` 加 `profession` 子树（控制台列定义 / 玩家列进度 / `<id> <amount>` / `<id> set <value>` / `probe` 6 组）。③实测（测试服 3 次启停 `Done 1.999/1.962/2.050s`，均已停、25567 无 LISTEN）：`exp profession probe` **6/6**（连跑两次逐字同）、`exp probe` 7/7、`tree probe` 18/18、`validate 0`、`reload 39 份`、redtale 零 WARN 零 ERROR；**P8** 手工 v2 夹具（1 名 / main 3000 / warrior 1200 / 树 2 节点）→ 读起 `玩家 1 名 · 格式 v3` 零告警 → 写脏 + `save-all` → 文件 `version: 3` 且出现 `professions: {}`、`main/jobs/trees` 逐字保留。④环境：jar **669817 B**、`selftest` **102 PASS**、`check_all` **15/15**、构建锁取删 2 次。 | **§13.69 R66-a~e**。本轮的真收获不是「专业能加经验」，而是三条夹具级教训：**手工存档必须有 `{data, DataVersion}` 双层包装**（只写内层 → 静默读成空档、零报错，长得像「代码没实现」）；**`save-all` 不写没变脏的 SavedData**（差点判「v3 没落盘」）；**E 组的期望错、代码对**（`minecraft:bread` 正好命中 smelting 的 `craft`，探针改 `stick` 才对）。 |
 
+| R67 | 2026-11-19 | **验收 T-0062（`check_professions.py`）+ 接进 `check_all`（15→16）+ 派 T-0063（`/redtale profession list\|info`，D24 L5）+ 真人窗口新增 F 组（专业 P1~P5）** | ①卡板：T-0062 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `共 2 个文件 · 0 条问题` EXIT=0 / 3 份夹具 6 类问题 EXIT=1 且 `P`=`[问题]` 行数=6 自洽 / `wc`=173≤200、`def clean_json5`=0、`from check_progress import`=1）+ S7 独立边界五组（`max_level: true` → `…：True`；`geometric` + `growth:1.0` → `必须大于 1`；跨文件重复 id 报**后出现**文件；属性键三形态全放行而拼错照报；`read_attrs()=None` → **恰好**多 1 条 `属性表读不到` 且其余照跑）。**派 T-0063**（`ProfessionCommand` 新建 ≤200 行 + `RedtaleCommand` 1 行；文案逐字三段、`grants` 计数不含 `default`、属性值 `"+"+String.valueOf(double)`、硬验收 `grep award\|applyAttributes\|removeAll\|ProgressStore`=0），在制品 **1/3**。②自研：`check_all` 末尾追加 → **`共 16 个脚本 · 跑成 16 · 跳过 0 · 红 0`**；`docs/REALPLAYER-WINDOW.md` 新增 **F 组 6 条**（期望值按两份默认件算准：石头 +3 精确胜 tag、原木 +2 取大、泥土 +1 兜底、原木→木板 **+0**（`craft.default: 0`）改 default=1 后 **+1 不是 +4**、5 铁矿 +15）+ 修两处过期数字（`reload 37 份`→**39 份**、PROFESSION §9 的「追加一组 F」→「F 组，R67 已追加」）。③本轮**无 Java 改动**（`src/` 零 diff）→ 未构建、未启测试服（正式服/测试服整轮未动）、无构建锁。 | **§13.70 R67-a~d**。本轮的两条真收获都不是代码：**①`craft.default: 0` 让「原木→4 木板」根本发不出经验** —— 想用多产出配方验「不乘件数」，必须先看 default 是多少，否则验的是「0 乘 4 还是 0」；**②F 组必须真人的理由要写清**：R66 的 `exp profession probe` 是绕过事件直接调 `award`，验的是写桶+下发，**钩子有没有接上完全没验**。派单侧的新纪律：`info` 的玩家行复用 `ExpCommand.professionLine`，不写第二个格式化器（R57-b 同源）。 |
+
 ### 13.69 R66 的五条口径（夹具形态 / 脏标记 / 类型不共用）+ 下一步（R67）
 
 | # | 口径 | 理由 |
@@ -1533,3 +1535,20 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **D24 L5**：`/redtale profession list|info`（观测面，L3 已落地 → 可现在派 S8；文案与判据由 S7 写死）。
 3. **真人窗口** `docs/REALPLAYER-WINDOW.md` 追加 **F 组**（P1~P5：真挖 / 真合 / 真熔），仍等 Aki 上线。
 4. Q-021（`respec` 扣费）/ Q-022（M5 原语范围）/ Q-023（D20 三个显示开关）仍未答复，默认各按「免费」「按需补」「服务端 `display.json5`」走。
+
+### 13.70 R67 的四条口径（default 值 / 真人理由 / 格式化器 / 派单禁写面）+ 下一步（R68）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R67-a | 「生成类/多产出配方」的验收**先看 `default` 值**再设计期望：`craft.default: 0` 时「原木→4 木板」发 **0** 经验，验不出「不乘件数」 | 我第一版 F4 期望直接写「+1」，实际是 0 —— 乘不乘 4 都是 0。正确做法是两段：先钉「+0」（证 default 生效），再把 `craft.default` 改 1 验「+1 不是 +4」。**期望值必须来自配置里的实际数字，不是语义直觉** |
+| R67-b | 真人项挂账必须写清**「为什么控制台验不了」**，不能只写「需真人」 | R66 的 `exp profession probe` 是**绕过事件直接调 `award`**：写桶与属性下发都验了，**三个钩子有没有接上一点没验**。写清这一句，下一次开服的人才知道该站着挖矿、而不是只跑探针 |
+| R67-c | `info` 的玩家行**复用** `ExpCommand.professionLine(def, total)`，不写第二个格式化器 | 同一份「等级/累计/本级进度」已经有 R66 验收过的字面量；再写一份，改口径时必有一处忘改。与 R57-b「派生值不落第二处」同源 |
+| R67-d | 派出去的卡的**独占文件**在 `VERIFIED` 之前一律不碰，包括「顺手加一行」 | T-0063 独占 `RedtaleCommand.java`（1 行接线）→ 本轮连 `/redtale tooltip` 旁边都不动，Q-023 的 `display.json5` 顺延。这是防冲突的**全部**机制，破一次就再也说不清哪行是谁的 |
+
+下一步（R68）：
+
+1. **验收 T-0063**（`ProfessionCommand`：build RC=0 + jar 内类 1 个 + `wc ≤ 200` + 测试服四条命令逐字 + 两条「不接写面」的 grep）；过后卡板在制品回 0。
+2. **D24 收口**：`PROFESSION.md` §8 的 L5 标「已落地」，专业面 v1 完成（P1~P5 仍等真人 F 组）。
+3. **Q-023 落地**（默认 A）：`display.json5` 三开关（`show_dps` / `show_attribute_breakdown` / `assume_target`）+ `ContentTooltip` 按开关出 DPS 行；`DEFAULT_FILES` 35→36、`reload` 39→40 份，需同步改 `REALPLAYER-WINDOW.md` 前置数字与 A1 期望。
+4. Q-021（`respec` 扣费）/ Q-022（M5 原语范围）/ Q-023 仍未答复，默认各按「免费」「按需补」「服务端 `display.json5`」走。
+5. 真人窗口 A~F 全组等 Aki 上线，不排期。
