@@ -3126,7 +3126,7 @@ fi
 - 2026-11-19 09:1x · **S7 验收通过 → VERIFIED**（3/3）· ①基线 `EXIT=0`、末行逐字 `共 38 条契约 · 28 个声明类 · 17 条提示 · 0 条问题`；②三组负向全 `EXIT=1`（①`4.33 TreeService→TreeServiceX` → 「第 988 行声明的类 TreeServiceX 不存在」，声明类 28→29 说明重复名没被去重吞掉 ②`4.35 TreeCommand.levelLine→levelLineX` → 「第 1071 行…在 com/redtale/project/core/command/TreeCommand.java 里找不到」**且未叠报类不存在** ③`--java nope/java` → 「源码目录不存在：nope/java」）另补 D 组 `--docs nope/x.md` → 「契约文档读不到」、E 组全文无 `### 4.` → 「没有找到任何 ### 4.x 契约段」，两组均 `EXIT=1` 且仍带汇总行；③`wc`=107≤200、`grep -c "def clean_json5"`=0、`check_all` 逐字 `共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0` · 已接线：`check_all` 末尾追加后 `共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0` · 合流后的改动：`docs/CONTRACTS.md` 新增 §4.38（内部实现类登记，提示 17→0，声明类仍 28 —— 表格行不是标题行，工具只扫标题，这条正是「扫标题」口径的自证）
 
 
-### T-0059 · [OPEN] `tools/check_docs.py` —— 文档面起飞前对账（路径引用 + 孤儿轮次文档）
+### T-0059 · [VERIFIED] `tools/check_docs.py` —— 文档面起飞前对账（路径引用 + 孤儿轮次文档）
 
 - 派单：S7 · 2026-11-19 09:1x（R63）
 - 背景：77 份 `docs/*.md` + `PLAN.md` 一共引用了 **321 条**仓库内路径（宽松口径 651：含卡板与 PLAN 正文里的未来文件）（`docs/X.md` / `tools/X.py` / `src/...java`）。R43 把 `/redtale probe` 改名 `selftest`、R59 把 `gen_attr_lang` 从整体覆写改成合并语义 —— 这类改名之后文档里的路径就是死的，而**没有任何机检**：`check_contracts` 只管类名、`check_defaults` 只管配置清单，谁也不管「文档里写的脚本/文档还在不在」。R63 另建了 `docs/ROUNDS.md` 索引（60 份轮次文档的唯一入口），但索引本身也会腐坏：新写一份 ROUND 文档忘了加行，那份文档就永久失联。本卡把这两件事做成一条对账。
@@ -3170,7 +3170,82 @@ fi
      - ③ 建只含 1 份 `ROUND-X.md`（无任何 md 提到它）的临时目录 → 命中 `[提示] 未被任何文档引用的孤儿：ROUND-X.md`，且 **`EXIT=0`**（钉死「提示不判红」）
   3. `wc -l < tools/check_docs.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_docs.py` → **0**；`python tools/check_all.py 2>&1 | tail -1` → 逐字 `共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0`（既有工具零回归，且本卡没碰 `check_all.py`）
 - 进度：
+- 2026-11-19 10:0x · 完成 · tools/check_docs.py（新建 89 行，唯一文件；卡外零改动，仅本卡状态/进度） · 构建退出码：未构建（纯 Python 卡，验收不含 build，未取锁） · 自测：验收1 EXIT=0 末行「共 78 份文档 · 322 条路径引用 · 0 条提示 · 0 条问题」（引用数 322 在 R63 基线 321±5 内；份数 78 / 两个 0 逐字对上）；验收2 三组夹具全过（①拷 docs 去 TASKS.md 加 `docs/NOPE.md` →「build/docfix/ROUNDS.md:78 引用的路径不存在：docs/NOPE.md」EXIT=1 ②`--docs nope/docs` →「文档目录不存在：nope/docs」EXIT=1 ③只含 ROUND-X.md 的目录 →「[提示] 未被任何文档引用的孤儿：ROUND-X.md」EXIT=0，钉死提示不判红）；验收3 wc=89≤200 / grep def clean_json5=0 / py_compile OK / check_all 逐字「共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0」零回归。卡面口径请 S7 裁：token② 卡面写「反引号外的 python tools/xxx.py」，但 R63 实测 321 对应整行匹配（连反引号内的命令也算）——照字面用 TICK.sub 去反引号得 304（超 ±5 漂移），按实测基线改用整行匹配得 322，故实现取后者；ROUND 孤儿判定宽集合含 TASKS.md + PLAN.md 全文，路径存在性窄集合跳 TASKS.md + PLAN 只 `| R` 行，均按卡面。
+- 2026-11-19 10:3x · **S7 验收 → VERIFIED（3/3）** · ①基线 `python tools/check_docs.py` **EXIT=0**、末行逐字 `共 78 份文档 · 322 条路径引用 · 0 条提示 · 0 条问题`；②三组负向全中：①`build/docfix`（拷 docs 去 TASKS.md + 追加 `` `docs/NOPE.md` ``）→ `[问题] build/docfix/ROUNDS.md:78 引用的路径不存在：docs/NOPE.md` + `1 条问题` **EXIT=1**；②`--docs nope/docs` → `[问题] 文档目录不存在：nope/docs` **EXIT=1**；③只含 `ROUND-X.md` 的目录 → `[提示] 未被任何文档引用的孤儿：ROUND-X.md` 且 **EXIT=0**（提示不判红钉死），夹具已删；③`wc -l`=**89** ≤200、`grep -c "def clean_json5"`=**0**、`py_compile` OK、`check_all` 逐字 `共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0`。**裁定 S8 的口径提问**：`token②` 按**整行匹配**（含反引号内的 `python tools/x.py`）—— 卡面第 1 条把基线钉在 321，而 R63 实测口径就是整行；字面「去反引号」得 304 反而对不上自己写的基线 ⇒ **卡面自相矛盾，采纳实现**（同 R43-a / R56）。副作用已知且无害：同一行既写 `` `tools/x.py` `` 又写 `python tools/x.py` 会各计一次，存在性判定不受影响。
 
+
+### T-0060 · [OPEN] `core/progression/ProfessionSpec` —— 专业 schema 解析器 v1（D24 第一层，纯解析 + 一个纯函数）
+
+- 派单：S7 · 2026-11-19 10:3x（R64）
+- 背景：D24 专业（采集/加工类长期积累）是 M7 之后第一批新内容，**契约先写死了**：`docs/PROFESSION.md`（本轮新建，§3 schema / §4 `grants` 语义 / §7 校验分层）。本卡只做 **L1 纯解析 + `resolve` 纯函数**：不碰注册表、不碰存档、不接线事件、不加命令。为什么先做这层：`attributes` 归属哪条属性、`professions` 与 `jobs` 的 id 会不会撞、存档升 v3 —— 全都要等解析稳了才敢动。
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/progression/ProfessionSpec.java`（**新建**，≤ 200 行）
+  - `build/probe/ProfessionSpecProbe.java`（**新建**，你自己的探针，`build/` 不入库）
+
+- 接口签名（**逐字**，不得增删方法、不得改参数顺序、不得改 record 组件名）：
+  ```java
+  package com.redtale.project.core.progression;
+
+  public final class ProfessionSpec {
+      public static final String DIR = "professions/";
+
+      public record Grant(String token, boolean tag, long amount) {}
+      public record Definition(String id, String name, int maxLevel, ExpCurve curve,
+                               java.util.Map<String, Double> attributes,
+                               java.util.Map<String, java.util.List<Grant>> grants,
+                               String source) {}
+
+      public static java.util.Map<String, Definition> parse(java.util.List<ConfigFile> configs,
+                                                           java.util.List<String> warnings);
+      public static java.util.List<Grant> grantsOf(Definition def, String source);
+      public static long resolve(java.util.List<Grant> grants, String id, java.util.Set<String> tags);
+  }
+  ```
+  私有构造（工具类）。`ConfigFile` = `com.redtale.project.core.config.ConfigFile`（已有 `path()` / `root()`）。**曲线构造复用 `ExpCurve.geometric(maxLevel, base, growth)` / `ExpCurve.polynomial(maxLevel, base, exponent)`**，不要自己写第二条曲线。
+
+- 解析口径（**逐条写死**，全部按 `docs/PROFESSION.md` §3/§4）：
+  1. 只处理 `path().startsWith("professions/") && path().endsWith(".json5")` 的 `ConfigFile`；其余**静默跳过**（不告警）。`configs == null` → 返回空不可变 Map；列表里的 `null` 跳过。
+  2. `root() == null` → 告警 `<path>：根节点不是对象，已跳过`，跳过这份。
+  3. `id` 缺失 / 非字符串 / 不含 `:` → 告警 `<path>：id 缺失或不是字符串（必填），已跳过这条`，跳过。
+  4. `id` 重复 → **保留先出现的**，告警 `<path>：id 重复（<id>，先出现在 <先出现的 source>），保留先出现的定义，本条已跳过`。
+  5. `name`：缺失 → 用 `id` 冒号后的 path；给了但不是字符串或是空白 → 用 path + 告警 `<path>：name 不是字符串，已改用 <path 部分>`。
+  6. `max_level`：默认 **100**；给了必须是整数且 `2..1000`，否则（含 `>1000` 夹到 1000、`<2` 取 100）告警 `<path>：max_level 不可用，已改用 <实际采用值>`。
+  7. `curve`：缺失或非对象 → 告警 `<path>：curve 缺失或不是对象，已用 geometric/100.0/1.12`，取 `geometric(100.0, 1.12)`。`mode` 只认 `geometric` / `polynomial`，其它 → 告警 `<path>：curve.mode 未知（<mode>），已改用 geometric`。`base` 默认 100.0 且 `≥ 0`、`growth` 默认 1.12 且 `≥ 1.0`、`exponent` 默认 1.5 且 `≥ 0`；越界/非数 → 用默认值 + 一条告警 `<path>：curve.<键> 不可用，已改用 <默认>`。
+  8. `attributes`：非对象 → 告警 `<path>：attributes 不是对象（已忽略）`，按空表。每个键：非字符串/空白 → 丢弃 + 告警 `attributes 的键 <原样> 不可用，已丢弃`；值必须有限数（`isFinite`）→ 否则丢弃 + 告警 `attributes.<键> 的值不可用，已丢弃`。**不在 80 条表内不算错、不告警**（那是 L2 的事，`AttributeSpecs` 本层不许 import）。
+  9. `grants`：非对象 → 告警 `<path>：grants 不是对象（已忽略）`，按空 Map。源只认 `mine` / `craft` / `smelt`，其它 → 告警 `<path>：grants 的源 <源> 未知（只认 mine/craft/smelt），已忽略`。源的值为非对象 → 该源按空列表 + 告警 `<path>：grants.<源> 不是对象（已忽略）`。
+  10. `grants` 条目（键 → 值）：
+      - 键 `default`（字面）→ `new Grant("default", false, 值)`，作为兜底项保留在同一个列表里；
+      - 键以 `#` 开头 → `new Grant(键原样（含 #）, true, 值)`；
+      - 其它键必须含 `:`，否则丢弃 + 告警 `<path>：grants.<源>.<键> 不是合法 id 也不带 #，已丢弃`；
+      - 值：非数/非有限 → 归 0 + 告警 `<path>：grants.<源>.<键> 的值不可用，已改用 0`；负数 → 0 + 告警 `<path>：grants.<源>.<键> 的值为负，已归零`；`> 1000` → 夹到 1000 + 告警 `<path>：grants.<源>.<键> 超过 1000，已夹到 1000`；非整数（`v != Math.rint(v)`）→ 四舍五入 + 告警 `<path>：grants.<源>.<键> 不是整数，已四舍五入`（**取整后再做上面的范围判断**，两步都要，顺序别倒）。
+      - 同一源内同一个键出现两次 → JSON5 对象本身会覆盖，**不用额外判重**。
+  11. 顶层未知键（不在 `id/name/max_level/curve/attributes/grants`）→ 告警 `<path>：未知键 <键>（已忽略）`。
+  12. 返回：`Map<String, Definition>`（`LinkedHashMap` 保文件顺序），整体不可变；每个 `Definition` 的 `attributes` / `grants` 及其内部的 `List` 全部不可变（`Collections.unmodifiableMap` + `List.copyOf`）。`source` = `File.path()`。
+
+- `resolve` 口径（**纯函数，顺序无关**，这是本卡唯一有算法的地方）：
+  - `grants == null` 或 `id == null` 或 `id.isBlank()` → **0**；`tags == null` → 按空集。
+  - ① **精确命中**：`!tag && token.equals(id)` → 立即返回该条 `amount`（同键重复已被 §10 消掉，不会出现两条）。
+  - ② **tag 命中**：遍历所有 `tag == true` 且 `tags` 含 `token.substring(1)` 的条目，取**最大的 `amount`**（两条 tag 同时命中取大，**不看列表里谁在前**）。
+  - ③ **兜底**：存在 `token.equals("default") && !tag` 的条目 → 返回它的 `amount`。
+  - ④ 都没有 → **0**（静默，不告警）。
+  - 不得依赖 `grants` 的迭代顺序（除 ① 的精确命中天然唯一）。
+
+- 不要做：
+  - 不写 `ProfessionRegistry`、不读默认件、不建 `professions/` 目录、不改任何 `*.json5`
+  - 不碰 `ProgressSpec` / `ProgressStore` / `ProgressService` / `ProgressRegistry` / `ExpCurve`（都已 VERIFIED；`ExpCurve` 只调用）
+  - 不接事件（`BlockEvent` / `ItemCraftedEvent` / `ItemSmeltedEvent`）、不查 tag、不读注册表
+  - 不加命令、不加配置键、不改 `docs/`
+  - 不校验「tag 是否存在」「属性是否在 80 条表」「id 是否与 `jobs/` 重叠」（全是 L2/运行期的事）
+  - **零 `net.minecraft` 依赖、零 IO、零日志**（只允许 `com.google.gson.*` + 项目内 `ConfigFile` / `ExpCurve`）
+
+- 验收（**三条，全部可机器执行**）：
+  1. 取构建锁后 `D:\redtale-work\tools\gradle-8.8\bin\gradle build --offline` → **退出码 0**；`cd build/libs && unzip -l *.jar | grep -c "core/progression/ProfessionSpec.class"` → **1**（跑完删锁）
+  2. `python tools/probe_run.py ProfessionSpecProbe` → 末行 `ProfessionSpecProbe N/N` 且 **N ≥ 30**、无 `FAIL`。探针必须覆盖：`configs == null` / 非 `professions/` 前缀的文件被忽略 / `id` 缺失 / `id` 无冒号 / 重复 id 保留先出现 / `max_level` 三种坏值 / `curve` 缺失与未知 mode / `attributes` 非对象 + 坏值丢弃 / `grants` 非对象 + 未知源 / 非合法 token 丢弃 / 值负·非整数·超 1000 三种夹取 / `resolve` 四档优先级（精确 > tag 取大 > default > 0）/ 两条 tag 命中取大且与列表顺序无关 / 返回 Map 与列表不可变（`put`/`add` 抛 `UnsupportedOperationException`）
+  3. `wc -l < src/main/java/com/redtale/project/core/progression/ProfessionSpec.java` → **≤ 200**；`grep -c "net.minecraft" <同上>` → **0**；`grep -c "AttributeSpecs" <同上>` → **0**
+
+- 进度：
+  - （S8 自己填）
 
 ## 6. 派单池（S7 用，S8 不看）
 

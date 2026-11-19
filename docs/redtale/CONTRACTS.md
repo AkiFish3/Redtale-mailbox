@@ -573,6 +573,7 @@ public final class MobSpawner {
 | 刷怪替换开关（D26 / M6 收口，R52 起进 `DEFAULT_FILES`） | `config/redtale_project/spawn.json5`：v1 只有 `replace_enabled`（缺省 `true`；非布尔的坏值 → 回落缺省 + 一条 WARN）。**运行期可写**：`/redtale spawn replace on|off` 会立刻回写这份文件（R52-a），`/redtale reload` 按文件重设内存；删文件会被 reload 重建为「开」 |
 | 等级曲线（M7，R42 定稿；R44 起进 `DEFAULT_FILES`） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3）；默认 `main.json5` 会**在文件缺失时被重建** |
 | 职业定义（M7，R44 起进 `DEFAULT_FILES`） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4）；默认 `miner.json5` |
+| 专业定义（D24，R64 定契约；默认件待 L2 落地） | `config/redtale_project/professions/<id>.json5`（一个文件一个专业，schema 见 `docs/PROFESSION.md` §3）；与 `jobs/` 同构 + 一张 `grants`（`mine`/`craft`/`smelt` 三源）。**v1 只发经验、不改掉落**（§1） |
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
 | 技能树（D25 / M7，R50 起进 `DEFAULT_FILES`） | `config/redtale_project/skill_trees/<文件名>.json5`（一个文件一棵树，schema 见 `docs/SKILL-TREE.md` §3；`id` 缺省不补命名空间）。默认 `warrior_vanguard.json5` **删文件会被 reload 重建**；它依赖 `jobs/warrior.json5` 与 `skills/quake_slam.json5` 同时存在（否则 reload 会打两条交叉校验告警） |
 | 技能树里的 `classes` | 写**职业裸名**（`warrior`），与 `jobs/*.json5` 的全名 id（`redtale_project:warrior`）**按 path 比较**（R50-a）；空数组 = 所有职业可用 |
