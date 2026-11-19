@@ -3641,7 +3641,7 @@ fi
 - 2026-11-19 23:5x · 完成 · 新建 tools/check_spawn.py（51 行，单文件纯 Python；from check_progress import clean_json5；接口 check_spawn(data)/main() 逐字） · 未取锁未 build（纯 Python 卡，验收不含构建）· 自测：基线末行「共 1 个文件 · 0 条问题」EXIT=0；11 组负向/边界夹具 + -v 共 12/12 全过（bad 3 条 / frac / 根非对象 / 解析失败 / bool / 字符串 / NaN / Inf / replace_enabled 非布尔各 1 条；1.0 与 4096.0 合法边界 0 条）；wc=51≤200 / from-check_progress=1 / 禁用 API=0 / git status 仅 TASKS.md + 新脚本，夹具已清。纯离线对账，待 S7 验收。
 - 验收 S7 · R72 · **VERIFIED**（3/3）：①基线 `python tools/check_spawn.py` → 末行 `共 1 个文件 · 0 条问题`、EXIT=0；②11 组夹具逐条复跑全中——`bad` 恰好 3 条（replace_enabled 非布尔 / CAP 范围 / 未知键 bogus_key）、`frac`/`bool`/`str`/`nan`/`inf`/`flag`/`root`/`broken` 各恰好 1 条且 `解析失败` 不抛栈、合法边界 `1.0`/`4096.0` 各 0 条、`-v` 首行逐字 `已检查 <file> · 7 项`；另加 400 位大整数 → 短路径 `1 <= v <= 4096` 先假、不触发 `math.isfinite` 溢出，恰好 1 条。③`wc`=51、`from check_progress import clean_json5`=1、禁用 API grep=0、`git status` 除卡上文件外无 `src/` 改动。夹具 `build/spawnfix/` 已清。接线 `check_all` 16→17 由 S7 本轮做（§13 R72）。
 
-### T-0068 · [OPEN] `core/config/ConfigDiff` —— 热重载变更摘要的纯函数（D14 观测面，单类零接线）
+### T-0068 · [VERIFIED] `core/config/ConfigDiff` —— 热重载变更摘要的纯函数（D14 观测面，单类零接线）
 
 - 派单：S7 · 2026-11-20 00:4x（R72）
 - 目标：给「这次 reload 到底动了哪些文件」一个可离线断言的纯函数，只做快照差分与文案。快照怎么取、摘要打在哪由 S7 下轮接（跨 3 文件，S8 不碰）。
@@ -3671,6 +3671,32 @@ fi
   3. `grep -cE "net\.minecraft|Files\.|Path\.of|currentTimeMillis" src/main/java/com/redtale/project/core/config/ConfigDiff.java` → **0**；`git status --short` 除卡上文件外无改动（S7 本轮改 `docs/`，以「新文件之外无 `src/` 改动」为准）。
 
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 00:5x · 完成 · 新建 core/config/ConfigDiff.java（35 行，单类 + record Report；between/describe 两 public 方法 + 私有 nz）· 卡外零改动（docs 两处为 S7 本轮改动）· build RC=0（jar 内 core/config/ConfigDiff=2，wc=35）· 自测：静态 grep 禁用 API=0；探针 build/probe/ConfigDiffProbe.java 输出 PASS 37 / FAIL 0（空/双null/只增只删只改/混合/排序/不可变UOE/null值当0L/入参不改/重复一致/describe逐字含零段与null分支）。纯函数零接线，待 S7 验收。
+  - 2026-11-20 01:5x · **S7 验收通过（3/3）** · ①build RC=0（S7 重跑，`BUILD SUCCESSFUL`，jar 内 `core/config/ConfigDiff`=2 条 = 类 + Report，wc=35）；②探针 `javac`+运行 `PASS 37 / FAIL 0`（独立复跑）；③grep 禁用 API=0、`src/` 除卡上新文件外零改动。S7 另跑 6 条独立边界（自比较 / 不可变 Map 入参 / 空串+中文+英文混合排序 / 负数 mtime 同与不同）全过；首跑 `sort.mixed` FAIL 是 S7 夹具期望写错（把两边都有的空串算进 added），修正期望后 6/6，非代码缺陷。
+
+### T-0069 · [OPEN] `tools/check_display.py` —— `display.json5` 起飞前对账（D20 显示口径的安全网，单文件零接线）
+
+- 派单：S7 · 2026-11-20 01:5x（R73）
+- 目标：`display.json5` 现在没有任何 `check_*.py` 覆盖——写歪了只在运行期被 `DisplaySpec.parse` 静默回落（R69-b「文件≠生效值」）。给一张离线安全网：只静态检查这一个文件，出行前把坏值拦下来。只检查 `config/redtale_project/display.json5` **或**默认件 `src/main/resources/redtale/defaults/display.json5`（由 `--file` 指定，默认指默认件），**不碰其它任何配置**。
+- 独占文件（**唯一可写**）：
+  - `tools/check_display.py`（新建，≤ 200 行）
+  - `build/dispfix/` 下可选夹具文件（不入库）
+- 禁止接线：**不改 `tools/check_all.py`**（S7 下轮接线）；不改任何 `src/`、任何 `docs/`、任何其它 `tools/*.py`。
+- 必须复用：`from check_progress import clean_json5`（禁止自造第四份 JSON5 清洗器，§13.64 R61-c）。
+- 接口（逐字）：`check_display(data: dict) -> list[str]`（返回问题消息列表，不含文件名与前缀，按检查项顺序追加）与 `main() -> int`（`0` 干净 / `1` 有问题）。CLI：`--file <path>`（默认默认件路径）、`-v`（多打一行「已检查 <file> · N 项」）；末行固定 `共 1 个文件 · %d 条问题`，每条问题行固定 `[问题] <file> · <msg>`；解析失败算 1 条「解析失败」（不连带崩溃）。
+- 检查项（**6 项，逐条钉死，顺序即消息顺序**）：
+  1. 根节点不是 `dict` → `根节点必须是对象`。
+  2. `show_dps` / `show_attribute_breakdown`：存在且不是 `bool`（含 `int`/`str`/`null`（`None` 也算））→ `show_dps 必须是布尔值` / `show_attribute_breakdown 必须是布尔值` 各一条。注意 Python `bool` 是 `int` 子类：必须先排 `isinstance(v, bool)` 才算合法。
+  3. `assume_target`：存在、非 `None`：必须是 `str`，含 `:`，去空白后**无空白、无大写字母**，且 `namespace` 与 `path` 两段都非空 → 否则 `assume_target 不是合法 id`（只报一条）。空串 / 纯空白当**缺省合法**（与 `DisplaySpec` 的 `s.isBlank()` 回落一致，语义段优先于枚举，§13.72 R69-a）。
+  4. 未知键：任一不在 `{show_dps, show_attribute_breakdown, assume_target}` → 每个一条 `未知键 <k>`（按 `data` 迭代顺序）。
+  5. 检查项计数必须恰好 **6**（`-v` 打印的「· 6 项」为固定文案，与实际分支无关）。
+  6. 退出码：0 问题 → `0`；任一问题 → `1`。**缺键（三个键都不写）不算问题**（全部回落默认）。
+- 不要做：不解析脚本 / 物品 / 其它配置；不改阈值、不加告警级别、不读 `net.minecraft`；不造第二份 JSON5 清洗器；不接 `check_all.py`。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_display.py` → 末行 `共 1 个文件 · 0 条问题`、`EXIT=0`；`python tools/check_display.py -v` → 含 `已检查 ... · 6 项`。
+  2. 三组负向夹具（写到 `build/dispfix/`）：A=`{show_dps:1, show_attribute_breakdown:'true', assume_target:'Minecraft Zombie', bogus_key:9}` → EXIT=1 且恰好 4 条 `[问题]`（`show_dps`/`show_attribute_breakdown`/`assume_target`/`未知键 bogus_key` 各一）；B=`{assume_target:'minecraft: zombie', show_dps:null}` → EXIT=1 且恰好 2 条（空白 id + `show_dps` 非 bool）；C=整份写成非法 JSON5（截断）→ 恰好 1 条 `解析失败`、EXIT=1、不抛栈。
+  3. `wc -l < tools/check_display.py` → **≤ 200**；`grep -c "from check_progress import clean_json5"` → **1**；`grep -cE "check_all|RedtaleCore|net\.minecraft" tools/check_display.py` → **0**；`git status --short` 除卡上新文件外无改动（S7 本轮改 `docs/`，以「新文件之外无 `src/`/`tools/` 改动」为准）。夹具用完即删（`build/dispfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3689,7 +3715,8 @@ fi
 | C16 | ~~`/redtale display` 观测面（Q-023 收口）~~ → **T-0065（R69 派）** | —— | —— |
 | C14 | `mobs/` 或 `items/` 的第四向对账（若某个 `check_*.py` 超 200 行则拆） | 单文件、纯静态 | 无（观察项，不急） |
 | C17 | ~~`mobs/SpawnBudget`（per_tick_cap 纯函数收口）~~ → **T-0066（R70 派）** | —— | —— |
-| C18 | ~~`core/config/ConfigDiff`（reload 变更摘要纯函数）~~ → **T-0068（R72 派）**：快照取值 `ConfigStore.mtimes()` + 摘要打点留 S7（跨文件） | R69-b「文件 ≠ 生效值」需要「这次 reload 动了哪些文件」的观测面 | 无 |
+| C18 | ~~`core/config/ConfigDiff`（reload 变更摘要纯函数）~~ → **T-0068（R72 派 / R73 验）**：快照取值 `ConfigStore.mtimes()` + 摘要打点留 S7（跨文件） | R69-b「文件 ≠ 生效值」需要「这次 reload 动了哪些文件」的观测面 | 无 |
+| C19 | ~~`tools/check_display.py`（display.json5 安全网）~~ → **T-0069（R73 派）** | R69-b：display 写歪只静默回落，缺离线对账 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

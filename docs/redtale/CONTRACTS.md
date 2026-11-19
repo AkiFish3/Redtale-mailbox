@@ -1302,3 +1302,22 @@ public final class SpawnBudget {
 - **`0` 不表示关闭**（R55-a 延续）：写 0 → 回落 8 + 告警，与 D16 的 `0 = 关闭` 刻意相反（关闭是防洪阀事故）。
 - **验收**：离线探针 `SpawnBudgetProbe` 53/53；测试服两路径分别实测（命令越界被拒 / 配置三种非法回落 8 + 1 告警 / 合法边界生效）；javap 确认两处委托已编译进 jar。
 - **配置面对账**：`spawn.json5` 的起飞前离线对账由 T-0067（`check_spawn.py`，R71 派 / **R72 VERIFIED**）提供，已接进 `tools/check_all.py`（`共 17 个脚本`）；`spawn_rules/` 仍归 `check_mobs.py`。工具侧数值口径与 `SpawnBudget.fromConfig` 同构但 Python 独立实现（卡面钉死 7 检查项，不 import Java）。
+
+### 4.43 reload 变更摘要 `ConfigDiff` / `ConfigStore.mtimes()`（D14 观测面，R73 定稿）
+
+```java
+// S8 交付（T-0068，R72 派 / R73 VERIFIED）：纯静态差分，零接线、零 IO、零 MC import。
+public final class ConfigDiff {
+    public record Report(List<String> added, List<String> removed, List<String> changed) {}
+    public static Report between(Map<String, Long> before, Map<String, Long> after);
+    public static String describe(Report report);   // "新增 A · 删除 B · 变更 C"（三段恒写，含 0）
+}
+// S7 接线（R73）：配置目录扫描，与 loadAll 同一文件集合（仅 *.json5、跳过 "_" 开头）
+public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms)
+```
+
+- **跨 reload 差分，不是单次 reload 内**：`RedtaleCore.lastConfigMtimes`（上次**成功** reload 时快照）↔ 本次 `config.mtimes()`。台账 R73 初稿写「ensureDefaults 后取一次、解析完成再取一次」是笔误——同一次 reload 内两次扫描恒等，永远 `新增 0 · 删除 0 · 变更 0`，验不出任何形态；实测按 R71-a 口径推翻，改为跨 reload 存字段。
+- **只在显式 reload 打印**：`reload(boolean allowResourceReload)` 中仅 `true`（管理员敲 `/redtale reload`）走 `LOG.info("配置变更：{}", ...)`；启动期 `reload(false)` 取快照推进字段但不打日志——否则启动首快照为空会得到全 added 噪声（配置文件数那么多）。文案 `配置变更：新增 A · 删除 B · 变更 C`，S7 定，非卡面钉死。
+- **快照推进只在 `outcome.clean()` 分支**：脚本层有错误时保留上一份干净快照，避免脏 reload 把基准冲掉。
+- **删默认件不算「删除」**：`reload` 开头 `ensureDefaults()` 会重建缺失的默认件 → mtime 变 → 计入「变更」。要验「删除」形态必须用**非默认件**（R73 实测：删 `crit.json5` 得 `新增 1 · 删除 0 · 变更 2`；删自建 `probe_add.json5` 才得 `新增 0 · 删除 1 · 变更 0`）。
+- **验收**：离线探针 `ConfigDiffProbe` 37/37 + S7 独立边界 6/6；测试服 1 启停（`Done 2.089s`）四形态逐字：基线全 0 / 增+改+删默认件 `新增 1 · 删除 0 · 变更 2` / 零改动再 reload 全 0 / 删非默认件 `新增 0 · 删除 1 · 变更 0`；下划线文件 `_probe.json5` 跳过（全 0）；`validate 0`、redtale ERROR 0。
