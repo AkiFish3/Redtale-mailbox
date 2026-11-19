@@ -1208,3 +1208,58 @@ public final class ProfessionRegistry {
 - **曲线正性不在本层判**：`ExpCurve` 构造函数已把 `base ≤ 0 / growth ≤ 1 / exponent ≤ 0` 回落默认，且 `expForLevel` 有 1e9 硬顶 —— 本层重复判就是永不可测的死分支（R65-a）。
 - **不做**：tag 是否存在（datapack 数据，离线无答案，PROFESSION §4.3）、掉落、事件、存档、命令、UI。
 - **探针**：`build/probe/ProfessionSpecProbe`（69/69，L1）/ `build/probe/ProfessionRegistryProbe`（38/38，L2）。`build/` 不入库。
+
+### 4.40 专业服务层与三个经验源 `ProfessionService` / `ProfessionHooks`（D24 L3+L4，R66 定稿）
+
+```java
+// L3+L4（S7 实现）：发经验 + 属性下发。纯函数零 MC 依赖，写路径只在服务端主线程。
+public final class ProfessionService {
+    public static final String SRC_MINE  = "mine";
+    public static final String SRC_CRAFT = "craft";
+    public static final String SRC_SMELT = "smelt";
+    public static final String ID_ROOT   = "profession/";
+
+    // 纯：一次动作给多少
+    public static long amountFor(ProfessionSpec.Definition def, String source, String id, Set<String> tags);
+    public static java.util.Map<String, Long> plan(java.util.Map<String, ProfessionSpec.Definition> all,
+                                                   String source, String id, Set<String> tags);
+
+    // 写：发放（返回「专业 id → 实发经验」，没命中的不在表里）
+    public static java.util.Map<String, Long> award(MinecraftServer server, UUID playerId, String source,
+                                                    String id, Set<String> tags);
+
+    // 读：等级 / 累计
+    public static int levelOf(ProfessionSpec.Definition def, long total);
+    public static long expOf(MinecraftServer server, UUID id, String profId);
+
+    // 下发
+    public record Planned(String id, String attribute, double amount) {}
+    public static String idOf(ProfessionSpec.Definition def, String attribute);   // profession/<专业>/<属性>
+    public static String prefixOf(String profId);                                 // redtale_project:profession/<专业>/
+    public static java.util.List<String> declaredIds(ProfessionSpec.Definition def);
+    public static java.util.List<Planned> planGrants(ProfessionSpec.Definition def, int level);
+    public static int applyAttributes(ServerPlayer player);
+    public static int removeAll(ServerPlayer player);
+    public static java.util.Map<String, Double> snapshot(ServerPlayer player);    // modifier id → 数值
+    public static int onLogin(ServerPlayer player);
+    public static int applyAll(MinecraftServer server);
+}
+
+// 事件层：只做「MC 对象 → (id, tag 集)」翻译，判定与写入全在上面的服务层。
+public final class ProfessionHooks {
+    @SubscribeEvent public void onBlockBreak(net.neoforged.neoforge.event.level.BlockEvent.BreakEvent event);
+    @SubscribeEvent public void onCraft(net.neoforged.neoforge.event.entity.player.PlayerEvent.ItemCraftedEvent event);
+    @SubscribeEvent public void onSmelt(net.neoforged.neoforge.event.entity.player.PlayerEvent.ItemSmeltedEvent event);
+}
+```
+
+- **`tags` 形态**：`ns:path`，**不带** `#`（与 `ProfessionSpec.resolve` 的入参一致）；`amountFor` / `plan` 内部会把传进来的 `#xxx` 去掉，两种写法都收。
+- **一次动作只发一条**（PROFESSION §4.2）：精确 id 命中即止 → 否则命中 tag 里取**最大** → 否则 `default` → 都没有 = 0（不发、不告警）。判定复用 `ProfessionSpec.resolve`，**仓库里只有这一份匹配器**。
+- **`craft` 不乘件数**（§4.4）：按结果物品 id 查一次，`stack.getCount()` 不参与。
+- **modifier id**：`redtale_project:profession/<专业 path>/<属性 path>`，`ADD_VALUE`；值 = `per_level × (level-1)`，`level < 2` 只清不加。
+- **清场按前缀**：`redtale_project:profession/<专业>/` 扫 `AttributeMap`（`getSyncableAttributes`），**不按当前声明清单**（R53-b 的幽灵 modifier）。`removeAll` 用 `redtale_project:profession/` 全清。
+- **重算点**：`ProgressService.onLogin` / `applyAll` 里与等级、职业、技能树**同一次**做完（PROFESSION §5），不做第二次遍历。
+- **只在真发出时重下发**：`ProfessionHooks` 只在 `award` 返回非空时调 `applyAttributes`（R66-e）。
+- **存档**：`ProgressStore` **v3**，`professions: { "<profId>": <long> }`；**升版早于写入路径**（R64/R66）。v1/v2 档读起零告警、缺键即空桶。
+- **不做**：tag 是否存在、掉落、方块再生、技能树 `classes`、GUI/HUD。
+- **验收入口**：`/redtale exp profession`（控制台列定义 / 玩家列进度）、`/redtale exp profession <id> <amount>`、`<id> set <value>`、`/redtale exp profession probe`（6 组，控制台可跑）。

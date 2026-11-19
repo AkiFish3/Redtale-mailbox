@@ -1514,3 +1514,22 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **D24 L4**：属性下发接进 `ProgressService` 的同一次重算（`profession/<专业 path>/<属性 path>`，先按前缀清再按 `per_level × (level-1)` 加）。
 4. 真人一次性验收窗口照 `docs/REALPLAYER-WINDOW.md` 走；专业 P1~P5 待 L3 接线后并成 F 组，需 Aki 上线，不排期。
 5. Q-021（`respec` 扣费）/ Q-022（M5 原语范围）/ Q-023（D20 三个显示开关）仍未答复，默认各按「免费」「按需补」「服务端 `display.json5`」走。
+
+| R66 | 2026-11-19 | **验收 T-0061（`check_tasks.py`）+ 接进 `check_all`（14→15）+ 派 T-0062（`check_professions.py`）+ 自研 D24 L3+L4（存档 v3 / 三个事件 / 属性下发 / `exp profession` 命令与 6 组探针）** | ①卡板：T-0061 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `共 61 张卡 · 在制品 0 · 问题 0 · 提示 0` EXIT=0 / 四组夹具逐条复跑（4 张改 OPEN → `在制品 4 张 > 3`；`- 验收啦` → `TASKS.md:79 T-0001 缺「- 验收」段`；末尾复制 `T-0001` → 报**后**那份 3332 行（先出现 79）；PLAN 删 `T-0060` → `提示 1` 且 **EXIT=0**）/ `wc`=87、import 仅 `re`/`sys`/`pathlib`）+ 模板不算卡证明（`T-XXXX` 4 处命中而卡数 61）+ S7 边界 2 组（缺 `PLAN.md` → 1 条问题无栈；`[FOO]` → 状态不在状态机）。**派 T-0062**（`check_professions.py`：`professions/*.json5` 起飞前对账，11 检查项 + 3 份负向夹具 6 类问题 + 末行 `共 N 个文件 · P 条问题`，必须 `from check_progress import clean_json5, read_attrs`），在制品 **1/3**。②自研 L3+L4：`ProgressStore` **v2→v3**（`professions` 桶 + 四个方法 + load/save）；新类 `ProfessionService`（`amountFor`/`plan` 纯函数、`award`、`levelOf`/`idOf`/`prefixOf`/`planGrants`/`applyAttributes`/`snapshot`）；新类 `ProfessionHooks`（`BlockEvent.BreakEvent` / `ItemCraftedEvent` / `ItemSmeltedEvent` 三个事件点，只做「MC 对象 → (id, tag 集)」翻译）+ `GameHooks` 注册；`ProgressService.onLogin/applyAll` 各 +1 行（同一次重算）；`ExpCommand` 加 `profession` 子树（控制台列定义 / 玩家列进度 / `<id> <amount>` / `<id> set <value>` / `probe` 6 组）。③实测（测试服 3 次启停 `Done 1.999/1.962/2.050s`，均已停、25567 无 LISTEN）：`exp profession probe` **6/6**（连跑两次逐字同）、`exp probe` 7/7、`tree probe` 18/18、`validate 0`、`reload 39 份`、redtale 零 WARN 零 ERROR；**P8** 手工 v2 夹具（1 名 / main 3000 / warrior 1200 / 树 2 节点）→ 读起 `玩家 1 名 · 格式 v3` 零告警 → 写脏 + `save-all` → 文件 `version: 3` 且出现 `professions: {}`、`main/jobs/trees` 逐字保留。④环境：jar **669817 B**、`selftest` **102 PASS**、`check_all` **15/15**、构建锁取删 2 次。 | **§13.69 R66-a~e**。本轮的真收获不是「专业能加经验」，而是三条夹具级教训：**手工存档必须有 `{data, DataVersion}` 双层包装**（只写内层 → 静默读成空档、零报错，长得像「代码没实现」）；**`save-all` 不写没变脏的 SavedData**（差点判「v3 没落盘」）；**E 组的期望错、代码对**（`minecraft:bread` 正好命中 smelting 的 `craft`，探针改 `stick` 才对）。 |
+
+### 13.69 R66 的五条口径（夹具形态 / 脏标记 / 类型不共用）+ 下一步（R67）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R66-a | 「`- 验收` 段」判定 = `- 验收` + (行尾 / `：` / `（`)，**不是**字面 startswith | 字面 startswith 会让 T-0061 夹具 b（`- 验收啦`）判**通过**，检查当场失效。代价：写成 `- 验收命令：` 的卡会假红（实测当前 0 张：`- 验收`×65 + S7 的 `- 验收结论`），按夹具基线采纳实现（同 R43-a / R56 / R64-a） |
+| R66-b | **手工存档夹具必须是 `{ data: {...}, DataVersion: <当前版本 3955> }` 双层包装** | 第一版只写 `{version, players}` → 启动 `玩家 0 名`、**零报错**：`SavedData` 外层是 `data` + `DataVersion`，缺 `DataVersion` 时 DataFixer 从 0 版起跑会把 tag 打坏，`load` 拿不到 `players` 就当空档。**这条最贵 —— 它长得像「代码没实现」** |
+| R66-c | `save-all` **不写没变脏的 SavedData**；验「结构升级是否落盘」必须先制造一次写入 | 第一次 `save-all` 后文件仍是 `version: 2`、无 `professions` 键 —— 只读到数据不算脏。固定顺序：写一次（探针即可）→ `save-all` → 再读文件 |
+| R66-d | 同名不同类的 `Definition`（`ProgressSpec` / `ProfessionSpec`）**不共用 `levelOf`**，各自现算 | 第一版 `ProfessionService.levelOf` 转调 `ProgressService.levelOf` → 编译期类型不兼容。两者数学相同但类型不同；共用签名要动已 VERIFIED 的 `ProgressSpec`，不如两行各写一遍 |
+| R66-e | 专业属性**只在真正发出经验后才重下发**（`award` 命中才 `applyAttributes`） | 每挖一块土都跑「清前缀 + 加 modifier」是无意义开销；`applyAttributes` 本身幂等，不必额外判「有没有升级」 |
+
+下一步（R67）：
+
+1. **验收 T-0062**（`check_professions.py`：基线 `共 2 个文件 · 0 条问题` + 3 份夹具 6 类问题 + `wc ≤ 200` + 复用断言）；过后 `check_all` 应变 **`跑成 16`**。
+2. **D24 L5**：`/redtale profession list|info`（观测面，L3 已落地 → 可现在派 S8；文案与判据由 S7 写死）。
+3. **真人窗口** `docs/REALPLAYER-WINDOW.md` 追加 **F 组**（P1~P5：真挖 / 真合 / 真熔），仍等 Aki 上线。
+4. Q-021（`respec` 扣费）/ Q-022（M5 原语范围）/ Q-023（D20 三个显示开关）仍未答复，默认各按「免费」「按需补」「服务端 `display.json5`」走。
