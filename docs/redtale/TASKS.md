@@ -3700,7 +3700,7 @@ fi
 - 进度：2026-11-20 02:00 · 完成 · tools/check_display.py（新建 113 行，唯一卡内文件）· 未构建（纯 Python 卡，按规则不取锁）· 验收 3/3：基线末行「共 1 个文件 · 0 条问题」EXIT=0、`-v` 含「已检查 ... · 6 项」；三组夹具 A/B/C = 4/2/1 条、EXIT=1、C 仅「解析失败」不抛栈；wc=113≤200 / clean_json5=1 / 禁用 API=0 / git status 仅本卡新文件 + TASKS.md；额外边界断言 10/10；build/dispfix 夹具已清。
   - 2026-11-20 02:5x · **S7 验收通过（3/3）** · ①基线 `共 1 个文件 · 0 条问题` EXIT=0、`-v` 含 `已检查 ... · 6 项`；②三组夹具独立复跑 A=4 条（show_dps/show_attribute_breakdown/assume_target/未知键 bogus_key 逐字对上）、B=2 条（空白 id + show_dps 非 bool）、C=1 条仅「解析失败」不抛栈，均 EXIT=1；③wc=113≤200、`from check_progress import clean_json5`=1、禁用 API=0。S7 另跑 12 条独立边界（空对象缺键 / 三键全对 / 空串与纯空白 assume_target 回落 / 带点合法 id / 根节点 list 与 None / 只有 ns 无 path / 只有冒号 / 带大写 / False 合法 / 0 非 bool）12/12。夹具 build/dispfix 已清。
 
-### T-0070 · [OPEN] `tools/check_checkall.py` —— check_all 清单 ↔ 磁盘对账（R64~R74 每轮手工接线，首次机器安全网，单文件零接线）
+### T-0070 · [VERIFIED] `tools/check_checkall.py` —— check_all 清单 ↔ 磁盘对账（R64~R74 每轮手工接线，首次机器安全网，单文件零接线）
 
 - 派单：S7 · 2026-11-20 02:5x（R74）
 - 目标：`tools/check_all.py` 的 `TOOLS` 元组是「哪些对账脚本会被跑到」的唯一清单，但 R64~R74 每轮都是 S7 手工往里追加一行，**从没有任何机器核对**：漏接一个脚本 → 它永远不被 `check_all` 跑到，且 `check_all` 仍全绿（永远绿的死检查，R65-a）。给一张离线安全网：双向对账 `TOOLS` 清单与 `tools/` 磁盘上的 `check_*.py`。
@@ -3723,6 +3723,34 @@ fi
   2. 三组负向夹具（写到 `build/chkfix/`，把 `check_all.py` 与 `tools/` 各复制一份进去改，用 `--all`/`--dir` 指过去）：A 从清单副本删 `check_display.py`、`check_spawn.py` → EXIT=1 且恰好 2 条 `未接进 check_all`；B 往清单副本塞 `check_ghost.py`、磁盘副本无此文件 → EXIT=1 且恰好 1 条 `磁盘上不存在`；C 清单副本把 `check_tasks.py` 写两遍 → EXIT=1 且恰好 1 条 `重复`。
   3. `wc -l < tools/check_checkall.py` → **≤ 200**；`grep -c "def check_listing"` → **1**；`grep -cE "clean_json5|check_progress|net\.minecraft|check_all.*append" tools/check_checkall.py` → **0**；`git status --short` 除卡上新文件外无改动（S7 本轮改 `docs/`，以「新文件之外无 `src/`/`tools/` 改动」为准）。夹具用完即删（`build/chkfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-20 03:05 · 完成 · tools/check_checkall.py（新建 105 行，唯一卡内文件）· 未构建（纯 Python 卡，按规则不取锁）· 验收 3/3：基线末行「共 1 份清单 · 0 条问题」EXIT=0、verbose「清单 18 项 · 磁盘 18 项」；夹具 A/B/C = 2/1/1 条、EXIT=1、类别逐字；wc=105≤200 / def check_listing=1 / 禁用模式=0 / git status 仅本卡新文件 + TASKS.md；边界 7/7（含读取失败、接线后模拟）；build/chkfix 已清。
+  - 请 S7 裁（卡面两处与磁盘实况漂移，已兼容并自检）：①接口写 TOOLS 块止于 `\n    )`，现网 check_all.py 实际顶格 `\n)` → read_listed 两种都认、取先出现者；②基线「磁盘 18 项」按建卡前计，本脚本自身落盘后为 19 项 → main 在自身未接线时排除 check_checkall.py，接线后照常纳入（模拟接线后仍 0 条）。
+- **验收（S7 · 2026-11-20 04:0x · R75）**：
+  1. 基线 `python tools/check_checkall.py` → `共 1 份清单 · 0 条问题` EXIT=0；`-v` → `已检查 tools/check_all.py · 清单 18 项 · 磁盘 18 项`（接线前基线，18/18）。
+  2. S7 独立三夹具（自建，写到 `build/chkfix/`）：A 删清单 `check_display.py`/`check_spawn.py` → 恰好 2 条 `未接进 check_all` EXIT=1；B 塞 `check_ghost.py` → 恰好 1 条 `磁盘上不存在` EXIT=1；C 清单 `check_tasks.py` 写两遍 → 恰好 1 条 `重复` EXIT=1；逐字对上。夹具已清。
+  3. `wc -l`=105≤200、`grep -c "def check_listing"`=1、禁用模式 grep=0。S7 另跑 9 条边界（缩进闭合/顶格闭合/无块/空块/自身纳入/排三类顺序/空集/读取失败 EXIT=1 且无栈）9/9。
+- **S7 裁定两处漂移**：①TOOLS 闭合缩进两种都认——按规范文本优先、**实测为准**（现网顶格），保留兼容不返工（§13.78 R75-a）；②自身排除逻辑**接线当轮生效**：接线前排除自身、接线后（本轮追加 `check_checkall.py` 进 TOOLS）自动纳入，下轮基线应为 `清单 19 项 · 磁盘 19 项`，仍 0 问题（§13.78 R75-b）。两处均采纳实现，不打回。
+
+### T-0071 · [OPEN] `tools/check_commands.py` —— 命令树挂载对账（命令类文件名 ↔ RedtaleCommand 引用，单文件零接线）
+- 派单：S7 · 2026-11-20 04:0x（R75）
+- 目标：给命令树装一张和 `check_checkall` 同构的安全网。`core/command/` 下每加一个 `*Command.java` 都要在 `RedtaleCommand` 里挂一行 `.then(XxxCommand.node())` 或 inline `.executes(Xxx::yyy)`；漏挂 = 命令永远不存在且 `build`/`check_all` 仍全绿（R74-a 元层同源）。本卡双向核对「磁盘命令类」与「根命令的引用集」。
+- 独占文件（**唯一可写**）：
+  - `tools/check_commands.py`（新建，≤ 200 行）
+  - `build/cmdfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、任何 `docs/`、任何其它 `tools/*.py`（含 `check_all.py`——接线归 S7）；不改 `TOOLS` 清单。
+- 复用/依赖：无。只读 `.java` 文本，不解析 JavaAST、不 import 其它 check、不读 JSON5。
+- 接口（逐字）：
+  - `read_classes(cmd_dir: str) -> list[str]`：`os.listdir(cmd_dir)` 里 `name.endswith("Command.java")` 且 `name != "RedtaleCommand.java"` 的，去掉 `.java` 后缀按字典序返回。
+  - `read_refs(root_text: str) -> set[str]`：正则 `\b([A-Z][A-Za-z0-9]*Command)\b` 取全文 token，**先剥注释**（`//...` 行尾 + `/*...*/` 块），返回集合（含 `RedtaleCommand` 自身，由调用方排除）。
+  - `check_mounts(classes: list[str], refs: set[str]) -> list[str]`：两类问题按序追加（返回列表，不含前缀）：① `classes` 里不在 `refs` 的 → `命令类 <name> 未挂进 RedtaleCommand`；② `refs - set(classes) - {"RedtaleCommand"}` 里的 → `挂载引用 <name> 无对应命令类`（dict 排序保证顺序确定）。
+  - `main() -> int`：CLI `--cmd <path>`（默认 `src/main/java/com/redtale/project/core/command`）、`--root <path>`（默认 `<cmd>/RedtaleCommand.java`）、`-v`（多打一行 `已检查 <root> · 命令类 N 个 · 挂载引用 M 个`，M = 排除 RedtaleCommand 后的引用数）；每条 `[问题] <msg>`；末行 `共 1 份命令树 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1。任一文件读失败算 1 条 `命令目录读取失败`/`根命令读取失败`、不抛栈。
+- 不要做：不改阈值、不加告警级别、不 `grep -c` 硬编码某个命令名、不解析 Brigadier 子树、不读 `net.minecraft`、不接 `check_all.py`。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_commands.py` → 末行 `共 1 份命令树 · 0 条问题` EXIT=0；`-v` → 含 `命令类 20 个 · 挂载引用 20 个`（当前基线：20 个 `*Command.java` 不含 `RedtaleCommand`，根命令引用 20 个外部命令类）。
+  2. 三组负向夹具（写到 `build/cmdfix/`，把命令目录与根命令各复制一份进去改，用 `--cmd`/`--root` 指过去）：A 从根命令副本删 `.then(DisplayCommand.node())` 与 `.then(ExpCommand.node())` → EXIT=1 且恰好 2 条 `未挂进 RedtaleCommand`；B 往根命令副本塞 `.then(GhostCommand.node())` → EXIT=1 且恰好 1 条 `无对应命令类`；C 目录副本新增 `WandererCommand.java` 但不挂 → EXIT=1 且恰好 1 条 `未挂进 RedtaleCommand`。
+  3. `wc -l < tools/check_commands.py` ≤ 200；`grep -c "def check_mounts"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|check_all.*append" tools/check_commands.py`=0；注释里的假命令（如 `// .then(FakeCommand.node())`）**不得**计入挂载引用（S7 复测）；夹具用完即删（`build/cmdfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3743,7 +3771,8 @@ fi
 | C17 | ~~`mobs/SpawnBudget`（per_tick_cap 纯函数收口）~~ → **T-0066（R70 派）** | —— | —— |
 | C18 | ~~`core/config/ConfigDiff`（reload 变更摘要纯函数）~~ → **T-0068（R72 派 / R73 验）**：快照取值 `ConfigStore.mtimes()` + 摘要打点留 S7（跨文件） | R69-b「文件 ≠ 生效值」需要「这次 reload 动了哪些文件」的观测面 | 无 |
 | C19 | ~~`tools/check_display.py`（display.json5 安全网）~~ → **T-0069（R73 派 / R74 验）** | R69-b：display 写歪只静默回落，缺离线对账 | 无 |
-| C20 | ~~`tools/check_checkall.py`（check_all 清单 ↔ 磁盘对账）~~ → **T-0070（R74 派）** | R64~R74 每轮手工接 check 脚本，从未机器核对，漏接则永远绿 | 无 |
+| C20 | ~~`tools/check_checkall.py`（check_all 清单 ↔ 磁盘对账）~~ → **T-0070（R74 派 / R75 验）** | R64~R74 每轮手工接 check 脚本，从未机器核对，漏接则永远绿 | 无 |
+| C21 | ~~`tools/check_commands.py`（命令树挂载对账）~~ → **T-0071（R75 派）** | R75-a/b 元层洞同源：R59~R74 每加一个 `*Command.java` 手工挂一行，漏挂则命令永远不存在且全绿 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
