@@ -3081,7 +3081,7 @@ fi
 - 验收：2026-11-19 07:4x · S7 · **通过（VERIFIED）** · 3/3 —— ①基线 EXIT=0、末行逐字 `共 4 个文件 · 0 条问题`；②夹具 A（五项同时改）EXIT=1 五类全命中（物理地板 0.0 / `critical_strike_pwer` / `phsical_damage` / `boss` 未知键 / `hardCeiling 2.0e9`）共 5 条、夹具 B（截断 crit + 地板 0）EXIT=1 得 `解析失败` 与 `attack_speed` 问题各 1 条 ⇒ 单文件坏掉不连带其余三份；③`wc`=178≤200、`grep -c "def clean_json5"`=0、`check_scripts` EXIT=0、`py_compile` OK。S7 另跑 14 组边界：缺文件 / `--java` 读不到（只报 1 条并跳过属性类检查，地板照查）/ `progression` 顶层数组 / haste `per_level` 非 0 / `damage_types ["*"]` / `condCount` 布尔与 1.5 / category `type` 重复 / `mob_exp_multiplier` 2e9·-0.5·`"fast"` / `max_chance -1` / `effect_attack_speed` 值非对象 —— 全部按卡面文案命中。裁定：`condCount=true` 打印 `True`（Python `str(True)`），文案仍逐字一致，不判退。接线进 `check_all.py` 后末行 `共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0`（R62 已做，见 §13 R62）。
 
 
-### T-0058 · [OPEN] `tools/check_contracts.py` —— 契约文档 ↔ 源码对账（`docs/CONTRACTS.md` 的单向漂移检测）
+### T-0058 · [VERIFIED] `tools/check_contracts.py` —— 契约文档 ↔ 源码对账（`docs/CONTRACTS.md` 的单向漂移检测）
 
 - 派单：S7 · 2026-11-19 07:4x（R62）
 - 背景：`docs/CONTRACTS.md` 有 **38 段** `### 4.x` 契约，声明了 24 个类 + 10 个 `类.成员` 签名。这份文档是 S8 唯一能看的「接口真相」，但**没有任何机器检查**——类一改名（或成员被挪走），文档继续写旧名字，下一个人按文档写码就编译不过，而且没人知道是文档旧了还是代码错了。`check_attrs` 管的是属性表、`check_deps` 管的是依赖面，没有一个管契约文档本身。本卡做**单向** docs→java 对账。
@@ -3122,21 +3122,68 @@ fi
      - ③ 把指向一个不存在的 java 目录（`--java nope/java`）→ 命中 `源码目录不存在`
   3. `wc -l < tools/check_contracts.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_contracts.py` → **0**；`python tools/check_all.py 2>&1 | tail -1` → 逐字 `共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0`（既有工具零回归，且本卡没碰 `check_all.py`）
 - 进度：
+- 2026-11-19 07:42 · 完成 · tools/check_contracts.py（新建 107 行，唯一文件；卡外零改动，仅本卡状态/进度） · 构建退出码：未构建（纯 Python 卡，验收不含 build，未取锁） · 自测：验收 1 基线 EXIT=0、末行逐字「共 38 条契约 · 28 个声明类 · 17 条提示 · 0 条问题」匹配正则；验收 2 三组负向夹具 EXIT=1 全命中（①4.33 TreeService→TreeServiceX →「第 988 行声明的类 TreeServiceX 不存在」②4.35 TreeCommand.levelLine→levelLineX →「第 1071 行声明的 TreeCommand.levelLineX 在 com/redtale/project/core/command/TreeCommand.java 里找不到」且未叠报类不存在 ③--java nope/java →「源码目录不存在」），另补测 --docs 读不到 →「契约文档读不到」EXIT=1；验收 3 wc=107≤200、grep -c def clean_json5=0、check_all 末行逐字「共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0」（零回归，未碰 check_all.py）；py_compile OK，夹具与 __pycache__ 已清，git status 仅 TASKS.md + 新脚本
+- 2026-11-19 09:1x · **S7 验收通过 → VERIFIED**（3/3）· ①基线 `EXIT=0`、末行逐字 `共 38 条契约 · 28 个声明类 · 17 条提示 · 0 条问题`；②三组负向全 `EXIT=1`（①`4.33 TreeService→TreeServiceX` → 「第 988 行声明的类 TreeServiceX 不存在」，声明类 28→29 说明重复名没被去重吞掉 ②`4.35 TreeCommand.levelLine→levelLineX` → 「第 1071 行…在 com/redtale/project/core/command/TreeCommand.java 里找不到」**且未叠报类不存在** ③`--java nope/java` → 「源码目录不存在：nope/java」）另补 D 组 `--docs nope/x.md` → 「契约文档读不到」、E 组全文无 `### 4.` → 「没有找到任何 ### 4.x 契约段」，两组均 `EXIT=1` 且仍带汇总行；③`wc`=107≤200、`grep -c "def clean_json5"`=0、`check_all` 逐字 `共 12 个脚本 · 跑成 12 · 跳过 0 · 红 0` · 已接线：`check_all` 末尾追加后 `共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0` · 合流后的改动：`docs/CONTRACTS.md` 新增 §4.38（内部实现类登记，提示 17→0，声明类仍 28 —— 表格行不是标题行，工具只扫标题，这条正是「扫标题」口径的自证）
+
+
+### T-0059 · [OPEN] `tools/check_docs.py` —— 文档面起飞前对账（路径引用 + 孤儿轮次文档）
+
+- 派单：S7 · 2026-11-19 09:1x（R63）
+- 背景：77 份 `docs/*.md` + `PLAN.md` 一共引用了 **321 条**仓库内路径（宽松口径 651：含卡板与 PLAN 正文里的未来文件）（`docs/X.md` / `tools/X.py` / `src/...java`）。R43 把 `/redtale probe` 改名 `selftest`、R59 把 `gen_attr_lang` 从整体覆写改成合并语义 —— 这类改名之后文档里的路径就是死的，而**没有任何机检**：`check_contracts` 只管类名、`check_defaults` 只管配置清单，谁也不管「文档里写的脚本/文档还在不在」。R63 另建了 `docs/ROUNDS.md` 索引（60 份轮次文档的唯一入口），但索引本身也会腐坏：新写一份 ROUND 文档忘了加行，那份文档就永久失联。本卡把这两件事做成一条对账。
+- 独占文件（**唯一可写**）：
+  - `tools/check_docs.py`（**新建**，≤ 200 行）
+- 入参（两个都给默认值，负向夹具靠它们指到临时副本）：
+  ```
+  --docs  默认 docs          扫描根（只扫该目录下 *.md，不递归子目录）
+  --root  默认 .             仓库根，路径存在性按它拼
+  ```
+- 解析口径（写死，别「聪明」到正文语义里去）：
+  - 被扫文件 = `--docs` 下所有 `*.md`（不递归，**跳过 `TASKS.md`**）+ `--root/PLAN.md`。**逐行**处理，行号从 1 起（问题要带行号）。
+    - **为什么跳过 `docs/TASKS.md`**：卡板天生写「还没建的文件」（本卡自己的「独占文件」一栏就是 `tools/check_docs.py`，写卡时它必然不存在）。扫它等于让工具在每次派单后都红一次。
+    - **`PLAN.md` 只扫 `| R` 开头的台账行**：那是「已发生的事」，只引用已有的文件；正文的「下一步」与 `## 13.6x` 段落同样写未来文件，扫了必假阳性。
+  - 两类 token，**只按字面取，不解引用、不展开通配**：
+    - ① 反引号内整段形如 `(docs|tools|src|build)/[A-Za-z0-9_./-]+\.(md|py|java|json5|json)`
+    - ② 反引号外的 `python tools/xxx.py` 调用：正则 `python3?\s+(tools/[A-Za-z0-9_./-]+\.py)`
+  - **含 `..` 的 token 一律跳过**（不算引用、不报问题）：文档里 `src/selftest/.../SelfTest.java` 是示意缩写，不是真路径。R63 实测这一类共 3 条。
+  - 同一行出现多次算多次引用（引用数是「出现次数」，不是去重后的路径数）。
+- 检查项（每条问题一行 `[问题] <文案>`；提示行 `[提示] <文案>`，提示**不计问题数**、**不影响退出码**）：
+  1. `--docs` 目录不存在 → `[问题] 文档目录不存在：<路径>`，退出码 1
+  2. `--docs` 下 `*.md` 为 0 份 → `[问题] 文档目录里没有 *.md：<路径>`，退出码 1
+  3. token 指向的文件在 `--root` 下不存在 → `[问题] <文档相对 --root 的路径>:<行号> 引用的路径不存在：<token>`
+     - 文档相对路径用 `/` 分隔（`docs/ROUNDS.md`，不是 `docs\ROUNDS.md`）
+  4. 孤儿提示（**不计问题数**）：`--docs` 下 `ROUND-*.md`，若其**文件名**（含扩展名）未被**任何其它被扫文档的正文**提到 → `[提示] 未被任何文档引用的孤儿：<文件名>`
+     - 「被扫文档」对孤儿判定**要包含 `docs/TASKS.md`**（卡板里提到的也算有人引用）；PLAN.md 同样**全文**参与判定（不限 `| R` 行）。只有**路径存在性**才用上面那套窄集合。
+  5. 收尾固定一行：`共 <份数> 份文档 · <引用数> 条路径引用 · <提示数> 条提示 · <问题数> 条问题`（份数 = 实际被扫的 md 份数，含 `PLAN.md`）；问题数 > 0 → 退出码 1，否则 0
+- 不要做：
+  - 不改任何 `*.md`（**含 `docs/ROUNDS.md`**：孤儿由 S7 补索引，工具只报不改）
+  - 不碰 `check_all.py`（**接线是 S7 在 VERIFIED 之后做的事**）
+  - **不校验 `/redtale` 子命令字面量**：R63 实测基线 3 条假阳性（`/redtale affix` / `codex` / `inspect` 是「计划中」的提法，不是「已存在」的断言，正则分不出这两者）
+  - 不扫 `docs/` 子目录、不扫 `build/` 与 `logs/` 下的 md、不连网、不读 `E:\server-test`
+  - 不校验链接锚点（`#13.66` 这类）、不校验 `docs/` 以外目录里的 md
+  - **基线若红**（文档里真有指向不存在文件的路径）：停手，在进度行写 `NEED-S7: 基线红 <token>`，**不许**改文档、也不许放宽规则让它变绿
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_docs.py` → **退出码 0**，输出末行匹配 `^共 \d+ 份文档 · \d+ 条路径引用 · 0 条提示 · 0 条问题$`
+     - R63 实测基线（按上面口径跑过一遍）：`共 78 份文档 · 321 条路径引用 · 0 条提示 · 0 条问题`（引用数允许 ±5 的漂移，份数与两个 0 不许变）
+  2. 负向夹具（临时目录，跑完删除），三组：
+     - ① 拷一份 docs 到 `build/docfix/`（**不带 `TASKS.md`**），在副本里加一行含 `` `docs/NOPE.md` `` → 命中 `引用的路径不存在：docs/NOPE.md`，`EXIT=1`
+     - ② `--docs nope/docs` → 命中 `文档目录不存在：nope/docs`，`EXIT=1`
+     - ③ 建只含 1 份 `ROUND-X.md`（无任何 md 提到它）的临时目录 → 命中 `[提示] 未被任何文档引用的孤儿：ROUND-X.md`，且 **`EXIT=0`**（钉死「提示不判红」）
+  3. `wc -l < tools/check_docs.py` → **≤ 200**；`grep -c "def clean_json5" tools/check_docs.py` → **0**；`python tools/check_all.py 2>&1 | tail -1` → 逐字 `共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0`（既有工具零回归，且本卡没碰 `check_all.py`）
+- 进度：
 
 
 ## 6. 派单池（S7 用，S8 不看）
 
 按「单文件 / 无跨模块接口 / 机器可验」筛过的候选。派单时补「独占文件 + 验收」两栏。
 
+**R63 盘点**：原 C2~C8 七条**全部已落地**（C2→T-0004、C3→T-0011、C4/T-0008、C5→T-0003、C6→T-0015、C7→T-0007、C8→T-0012），池子已清空重填。
+
 | # | 候选 | 为什么适合 S8 | 依赖 |
 |---|---|---|---|
-| C2 | 附魔 schema → datapack 生成器骨架（`docs/ENCHANT-API.md` §3） | 纯字符串拼 JSON，单类 | M1 已就绪；M4 才用 |
-| C3 | `tools/gen_item_lang.py`（对标 `gen_attr_lang.py`） | 独立脚本，输入输出都在文件系统 | 无 |
-| C4 | `ContentData` 加 `glow` 字段 + 旧数据兼容（`rarity` 已有，别再派） | 单文件 + 一处 codec，验收=旧 JSON 仍能加载 | 无 |
-| C5 | `AffixPool` 解析器（D22，`docs/ITEM-MODEL.md` §2） | 纯解析，不接结算 | 需先定 pool schema（S7 写在卡里） |
-| C6 | `/redtale validate` —— 跑一遍所有配置的 schema 校验并汇总 | 只读，不改任何状态 | 无 |
-| C7 | `/redtale item scan`（D33 只读统计：rev 分布 / 孤儿数 / 待升级数） | 单类命令，只读不改状态 | 要等 T-0006 的 `ItemUpgrader.plan` 落地 |
-| C8 | `/redtale content check`（rev 漏加检测：文件 hash 变了但 `rev` 没变 → WARN） | 纯文件比对 + 一张缓存表 | 无（可用 `tools/` 或单类命令） |
+| C9 | `tools/gen_rounds_index.py` —— 把 R63 的一次性脚本（`build/gen_rounds.py`，未入库）正式化：扫 `docs/ROUND-*.md` 首行标题 → 重写 `docs/ROUNDS.md` 的表体（表头与前言原样保留，只有 `\| R` 开头的行被替换） | 纯文件读写，输入输出全在文件系统，验收=重跑零 diff | 无（`docs/ROUNDS.md` 已存在） |
+| C10 | `tools/check_tasks.py` —— 卡板自检：在制品（`OPEN`+`DOING`+`BOUNCED`）> 3 → 红；`DONE`/`VERIFIED` 卡缺「验收（三条）」段 → 红；`VERIFIED` 卡在 `PLAN.md` §13 里搜不到 `T-XXXX` → 提示 | 纯文本解析，单文件 | 无（规则已写在本文件 §2） |
+| C11 | `professions/*.json5` 的 L1 解析器（D24 专业，`docs/GAP-AUDIT.md` A5） | 纯解析、不接结算，形态与 `SkillTreeSpec` 同构 | **需先出 spec**（`docs/PROFESSION.md` 由 S7 写）；M7 收口后才排 |
+| C12 | `tools/check_spawn.py`（`spawn.json5` + `spawn_rules/` 的独立对账） | 现由 `check_mobs.py` 兼顾，拆分只是可选 | 无（低价值，除非 `check_mobs` 继续膨胀） |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

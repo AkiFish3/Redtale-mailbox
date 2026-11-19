@@ -1134,3 +1134,34 @@ public static java.util.List<String> declaredSkills(SkillTreeSpec.Definition def
 - **命令**：`/redtale tree skills <tree>` —— 树不存在 → `[redtale] 没有技能树 <id>（现有 N 棵：<逗号分隔>）`（与 `state` 同一文案），返回 0；否则发送全文，返回声明集条数。
 - **谁消费**：运营 / 玩家自查「这棵树管着哪些技能、我拿到了哪些」；`skill cast` 的门槛拒绝文案指向 `tree state`，本条是它的补充观测面。
 - **探针**：`/redtale tree probe` **R 组**（`TreeCommand.probe`，18/18）。
+
+### 4.38 内部实现类登记（**非契约面**，只做存在性对账，R63 定稿）
+
+**性质**：本节不是接口约定，**不给 S8 当设计依据**。它存在的唯一理由是 `tools/check_contracts.py` 的
+「未登记的实现类」提示通道：那 17 条提示长期常驻会把真信号埋掉。登记之后提示归零，**新写一个
+`core/` 类而没登记就会立刻刺眼**。所以本节只保证「名字还在、文件还在」，不保证任何行为。
+
+改动本节不需要同步任何代码（反过来：**改了类名必须同步本节**，这正是 `check_contracts` 会红的地方）。
+
+| 类 | 路径（相对 `src/main/java/`） | 角色一句话 |
+|---|---|---|
+| `Json5` | `com/redtale/project/core/config/Json5.java` | 最小 JSON5 解析器，输出 Gson 树，零第三方依赖（D3） |
+| `Json5Exception` | `com/redtale/project/core/config/Json5Exception.java` | 解析失败，带行列号，便于定位配置手误 |
+| `ConfigStore` | `com/redtale/project/core/config/ConfigStore.java` | `config/redtale_project/` 全量载入与热重载（D14） |
+| `AttributeGroup` | `com/redtale/project/core/attr/AttributeGroup.java` | 属性分类，只影响展示顺序与分组标题 |
+| `AttributeNumbers` | `com/redtale/project/core/math/AttributeNumbers.java` | 数字格式化：最多 3 位小数、去尾零（纯 Java） |
+| `AttributeBreakdown` | `com/redtale/project/core/attr/AttributeBreakdown.java` | 单属性按 modifier id 分组拆来源（D18 的 `/redtale attr`） |
+| `AttackSpeedRules` | `com/redtale/project/core/attr/AttackSpeedRules.java` | `attack_speed.json5` 的解析结果（D18 声明式来源表） |
+| `AttackSpeedCurve` | `com/redtale/project/core/math/AttackSpeedCurve.java` | 攻速换算纯函数（D19），三处共用的唯一实现 |
+| `AttackSpeedApplier` | `com/redtale/project/core/attr/AttackSpeedApplier.java` | 把声明的东西真正写进 `ATTACK_SPEED`（固定 modifier id，先移除再加） |
+| `DamageRules` | `com/redtale/project/core/math/DamageRules.java` | `damage.json5` 的解析结果：闸门 + 异常保护（D16） |
+| `CritRules` | `com/redtale/project/core/damage/CritRules.java` | `crit.json5` 的解析结果：暴击开关与属性映射 |
+| `CritLayer` | `com/redtale/project/core/damage/CritLayer.java` | `CriticalHitEvent` 上把暴击率/倍率落到倍率（只乘不覆盖） |
+| `TargetClass` | `com/redtale/project/core/damage/TargetClass.java` | 目标分类，条件乘区的输入（pvp / pve / undead） |
+| `ScriptAction` | `com/redtale/project/core/script/ScriptAction.java` | 一条已解析并校验通过的脚本 |
+| `ConditionType` | `com/redtale/project/core/script/ConditionType.java` | condition 原语契约：脚本执行的守门员 |
+| `TriggerType` | `com/redtale/project/core/script/TriggerType.java` | trigger 原语契约：只描述时机，事件钩子在 `GameHooks` |
+| `ItemUpgradeHooks` | `com/redtale/project/core/hook/ItemUpgradeHooks.java` | D33 物品更新的被动刷新点（登录 / 换维 / 复活 / 开容器 / 区块） |
+
+**为什么不做成 `4.x` 契约**：这些类的成员签名会随实现反复调整（`AttributeBreakdown` 的构造取过三次形态），
+写进契约等于给自己上锁，而 S8 按契约写码会写死在实现细节上。契约段只留**跨模块接口**（24 个类，§2/§4.1~§4.37）。

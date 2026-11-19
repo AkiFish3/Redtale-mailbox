@@ -1,30 +1,30 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 07:39 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-19 09:00 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
 ## 1. 当前里程碑
 
-**M7**（依据：最近一条提到里程碑的台账标题「**验收 T-0053（`check_skills.py`）+ `tree skills <tree」）
+**未知**（依据：最近一条提到里程碑的台账标题「」）
 
 ## 2. 进行中（在制品上限 3 张）
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0058 | OPEN | `tools/check_contracts.py` —— 契约文档 ↔ 源码对账（`docs/CONTRACTS.md` 的单向漂移检测） |
+| T-0059 | OPEN | `tools/check_docs.py` —— 文档面起飞前对账（路径引用 + 孤儿轮次文档） |
 
-已验完 **55** 张 / 共 **58** 张。
+已验完 **56** 张 / 共 **59** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R58 | 2026-11-19 | **验收 T-0053（`check_skills.py`）+ `tree skills <tree>` 观测面（M7  |
 | R59 | 2026-11-19 | **验收 T-0054（`check_scripts.py`）+ 修 `gen_attr_lang.py` 的破坏性覆写 |
 | R60 | 2026-11-19 | **验收 T-0055（`check_lang.py`）+ 新增 `tools/check_deps.py`（依赖面 / |
 | R61 | 2026-11-19 | **验收 T-0056（`check_attrs.py`）+ 接进 `check_all`（10→11）+ 派 T-00 |
 | R62 | 2026-11-19 | **验收 T-0057（`check_numeric.py`）+ 接进 `check_all`（11→12）+ 派 T- |
+| R63 | 2026-11-19 | **验收 `check_contracts`（T-0058）+ 接线 `check_all`（12→13）+ 新建 `d |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
