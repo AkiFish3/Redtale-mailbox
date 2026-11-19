@@ -3781,7 +3781,7 @@ fi
 - 2026-11-20 05:2x · 完成 · 文件：tools/check_primitives.py（新建 113 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份原语注册表 · 0 条问题」EXIT=0；「-v」含「原语类 16 个（内联 2）· 注册引用 18 个」；夹具 A=2 漏注册 / B=1 幽灵 / C=1 漏注册，注释假注册 0 条、目录/注册表读失败各 1 条不抛栈；wc=113≤200 · def check_registration=1 · 禁用 grep=0 · py_compile OK · build/primfix 已清
 - 2026-11-20 06:2x · **S7 验收 VERIFIED**（3/3：①基线 `共 1 份原语注册表 · 0 条问题` EXIT=0、`-v` 含 `原语类 16 个（内联 2）· 注册引用 18 个`；②S7 独立夹具 A=2 漏注册·B=1 幽灵·C=1 目录多 EXIT=1 逐字对上；③wc=113≤200、`def check_registration`=1、禁用 grep=0、注释假注册 `//` 与块注释都不计、目录+注册表读失败各 1 条不抛栈）· 接线 `check_all` 20→21 全绿 · 夹具 build/primfix 已清
 
-### T-0073 · [OPEN] `tools/check_gen_prefix.py` —— lang 生成器前缀对账（文件名 ↔ 声明前缀，单文件零接线）
+### T-0073 · [VERIFIED] `tools/check_gen_prefix.py` —— lang 生成器前缀对账（文件名 ↔ 声明前缀，单文件零接线）
 - 派单：S7 · 2026-11-20 06:2x（R77）
 - 目标：把 R59-a「lang 生成器只拥有自己的前缀」做成机器安全网。四个 `tools/gen_*_lang.py` 各自声明 `OWNED_PREFIX` / `KEY_PREFIX`，该常量必须严格等于本生成器该拥有的前缀；写歪（如 `gen_attr_lang.py` 写成 `item.redtale_project.`）会像 R59 事故那样静默削掉别的键，而 `check_lang.py` 只验「lang 产物键覆盖」、抓不到「生成器声明越界」。本卡只读四个脚本文本、剥注释取常量、与 S7 写死的期望表比对。
 - 独占文件（**唯一可写**）：
@@ -3799,6 +3799,27 @@ fi
   1. `python tools/check_gen_prefix.py` → 末行 `共 1 份生成器清单 · 0 条问题` EXIT=0；`-v` → 含 `已检查 4 个生成器`（当前基线，S7 已核：4 个常量逐一等于期望表）。
   2. 三组负向夹具（写到 `build/genfix/`，复制 tools 下 4 个 gen 脚本过去改，用 `--tools` 指过去）：A 把 `gen_item_lang.py` 的 `KEY_PREFIX` 值改成 `attribute.redtale_project.` → EXIT=1 且恰好 1 条 `生成器 gen_item_lang.py 前缀 attribute.redtale_project.，期望 item.redtale_project.`；B 把 `gen_attr_lang.py` 的 `OWNED_PREFIX` 声明行整行删掉 → EXIT=1 且恰好 1 条 `生成器 gen_attr_lang.py 未声明前缀`；C 把 `gen_entity_lang.py` 的 `KEY_PREFIX` 声明行改成行注释 `// KEY_PREFIX = "entity.redtale_project."` → EXIT=1 且恰好 1 条 `未声明前缀`（剥注释后无声明）。
   3. `wc -l < tools/check_gen_prefix.py` ≤ 200；`grep -c "def check_prefixes"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|subprocess|runpy|exec\(|check_all.*append" tools/check_gen_prefix.py`=0；注释里的假常量（`// KEY_PREFIX = "bogus.redtale_project."`、块注释内同类）**不得**计入（S7 复测）；`--tools build/genfix/NO_SUCH` → 末行 1 条 `生成器目录读取失败` 不抛栈；夹具用完即删（`build/genfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 06:2x · 完成 · 文件：tools/check_gen_prefix.py（新建 129 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份生成器清单 · 0 条问题」EXIT=0；-v 含「已检查 4 个生成器」；夹具 A=1 前缀写歪 / B=1 未声明 / C=1 行注释未声明，注释假常量 0 条、目录不存在 1 条不抛栈；wc=129≤200 · def check_prefixes=1 · 禁用 grep=0 · py_compile OK · build/genfix 已清
+- 2026-11-20 07:2x · **S7 验收 VERIFIED**（3/3：①基线 `共 1 份生成器清单 · 0 条问题` EXIT=0、`-v` 含 `已检查 4 个生成器`；②S7 独立夹具 A=1 前缀写歪·B=1 未声明·C=1 行注释未声明 EXIT=1 逐字对上（三夹具各自重置，互不污染）；③wc=129≤200、`def check_prefixes`=1、禁用 grep=0、`--tools build/genfix/NO_SUCH` 恰 1 条 `生成器目录读取失败` 不抛栈；S7 另 9 边界 9/9：行/块注释假声明不计、单引号不算、第一个匹配胜出、空白容忍、变量名前缀不符不算、空文本 None、额外 found 键忽略、expected 序稳定、None 不追加第二类）· 夹具 build/genfix 已清 · 接线 `check_all` 21→22 全绿
+
+### T-0074 · [OPEN] `tools/check_rounds.py` —— 轮次索引 ↔ 轮次文档双向对账（单文件零接线）
+- 派单：S7 · 2026-11-20 07:2x（R78）
+- 目标：`docs/ROUNDS.md` 是 76 份 `ROUND-*.md` 的唯一入口，每轮靠 S7 手工追加一行（R63 建表时就有 31 份孤儿）。`check_docs.py` 只把「文档没被引用」记 `[提示]`，不改退出码；索引多写一行幽灵路径、少写一行新文档，全绿无人知。本卡把「索引表行 ↔ 磁盘轮次文档」做成机器对账（元层洞第五例，同 T-0070/0071/0072/0073 的形状，对象换成轮次索引）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_rounds.py`（新建，≤ 200 行）
+  - `build/roundfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、任何 `docs/`（含 `ROUNDS.md`）、任何其它 `tools/*.py`（含 `check_all.py` / `check_docs.py`）；不改 `TOOLS` 清单；不 import 其它 check；不解析 MarkdownAST；不读 JSON5；`grep` 不得硬编码轮次名或基线数字。
+- 接口（逐字）：
+  - `read_index(text: str) -> list[str]`：逐行扫 `^\|\s*R\d+\s*\|` 的**表格行**（仅此类行，正文/说明文字不算），每行取正则 `` `docs/(ROUND-[^`]+\.md)` `` 的唯一匹配，去 `.md` 后缀按行序返回；匹配不到的行跳过。当前基线 **76 行 / 76 个唯一名**（正文里的 `ROUND-R*.md` 说明文字**不得**计入，否则会多出幽灵 `ROUND-R`）。
+  - `read_files(docs_dir: str) -> list[str]`：`os.listdir(docs_dir)` 里 `name.startswith("ROUND-") and name.endswith(".md")` 的去掉后缀按字典序返回（当前基线 **76 份**）。目录读失败返回空列表，不抛栈。
+  - `check_index(index: list[str], files: list[str]) -> list[str]`：三类问题按序追加（返回列表，不含前缀）：① `sorted(set(files) - set(index))` → `轮次文档 <name> 未进 ROUNDS 索引`；② `sorted(set(index) - set(files))` → `索引条目 <name> 指向的文档不存在`；③ `sorted({n for n in index if index.count(n) > 1})` → `索引重复指向 <name>`。
+  - `main() -> int`：CLI `--docs <path>`（默认 `docs`）、`--index <path>`（默认 `<docs>/ROUNDS.md`）、`-v`（多打一行 `已对账 <len(index)> 条索引 · <len(files)> 份轮次文档`）；每条 `[问题] <msg>`；末行 `共 1 份轮次索引 · %d 条问题`；0 问题 EXIT=0 否则 EXIT=1。索引读失败算 1 条 `索引读取失败`、目录读失败算 1 条 `轮次目录读取失败`，两者可并存，不抛栈。
+- 不要做：不加告警级别、不做「一句话」列文本检查（那是编辑产物，C9 已判不适派）、不查轮次号连续、不改 `check_docs.py` 的提示/问题口径、不接 `check_all.py`。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_rounds.py` → 末行 `共 1 份轮次索引 · 0 条问题` EXIT=0；`-v` → 含 `已对账 76 条索引 · 76 份轮次文档`（当前基线，S7 已核）。
+  2. 三组负向夹具（复制到 `build/roundfix/`，用 `--docs build/roundfix --index build/roundfix/ROUNDS.md` 指过去）：A 删掉表里 `| R77 |` 那一行 → EXIT=1 且恰好 1 条 `轮次文档 ROUND-R77-PREFIX 未进 ROUNDS 索引`；B 追加一行 `| R999 | 夹具 | \`docs/ROUND-ZZZ-NOT-THERE.md\` |` → EXIT=1 且恰好 1 条 `索引条目 ROUND-ZZZ-NOT-THERE 指向的文档不存在`；C 复制表里任意一行接在它后面 → EXIT=1 且恰好 1 条 `索引重复指向 <该名>`。三组各自从干净副本重来，不许累积。
+  3. `wc -l < tools/check_rounds.py` ≤ 200；`grep -c "def check_index"`=1；`grep -cE "clean_json5|check_docs|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_rounds.py`=0；正文说明里的 `ROUND-R*.md` 不计幽灵（基线 1 已覆盖）；`--docs build/roundfix/NO_SUCH` → 末行 1 条 `轮次目录读取失败` 不抛栈；夹具用完即删（`build/roundfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 
@@ -3824,7 +3845,8 @@ fi
 | C20 | ~~`tools/check_checkall.py`（check_all 清单 ↔ 磁盘对账）~~ → **T-0070（R74 派 / R75 验）** | R64~R74 每轮手工接 check 脚本，从未机器核对，漏接则永远绿 | 无 |
 | C21 | ~~`tools/check_commands.py`（命令树挂载对账）~~ → **T-0071（R75 派 / R76 验）** | R75-a/b 元层洞同源：R59~R74 每加一个 `*Command.java` 手工挂一行，漏挂则命令永远不存在且全绿 | 无 |
 | C22 | ~~`tools/check_primitives.py`（原语注册对账）~~ → **T-0072（R76 派 / R77 验）** | R75-c 元层洞再同源一步：新增 `*Effect.java`/`*Condition.java`/内联 record 忘在 `Builtins` 注册 → `check_skills` 仍绿、运行期才崩 | 无 |
-| C23 | ~~`tools/check_gen_prefix.py`（lang 生成器前缀对账）~~ → **T-0073（R77 派）** | R76-c 元层洞第四例：R59-a「生成器只拥有自己的前缀」无机器对账，R59 事故（前缀写歪静默削键）正是此洞；`check_lang` 只验产物键覆盖、抓不到生成器声明越界 | 无 |
+| C23 | ~~`tools/check_gen_prefix.py`（lang 生成器前缀对账）~~ → **T-0073（R77 派 / R78 验）** | R76-c 元层洞第四例：R59-a「生成器只拥有自己的前缀」无机器对账，R59 事故（前缀写歪静默削键）正是此洞；`check_lang` 只验产物键覆盖、抓不到生成器声明越界 | 无 |
+| C24 | ~~`tools/check_rounds.py`（轮次索引对账）~~ → **T-0074（R78 派）** | R77-c 元层洞第五例：`ROUNDS.md` 是 76 份轮次文档唯一入口，`check_docs` 只给孤儿 `[提示]` 不改退出码；索引漏行/幽灵/重复全绿 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
