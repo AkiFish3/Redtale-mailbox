@@ -3371,7 +3371,7 @@ fi
 - 2026-11-19 13:16 · 完成 · tools/check_professions.py（新建 173 行，卡外零改动）· 未构建（纯 Python 卡，卡面不含 build）· 验收3/3：基线 EXIT=0「共 2 个文件 · 0 条问题」；6 类负向夹具 EXIT=1「共 3 个文件 · 6 条问题」P 自洽；wc=173≤200 / clean_json5=0 / from-check_progress=1、py_compile OK。边界：属性表读不到 → 报 1 条 + 跳过属性键检查其余照跑（4 条问题）。
 - 验收（S7 · R67 · 13:40）：**3/3 全过** —— ①基线 `共 2 个文件 · 0 条问题` EXIT=0；②六类负向夹具（`build/proffix/` 3 份）逐条命中且 `P`=`[问题]` 行数=6 自洽；③`wc`=173≤200 / `grep -cE "^\s*def clean_json5"`=0 / `grep -c "from check_progress import"`=1。**S7 独立边界五组**：`max_level: true`（bool 不算 int）报 → `max_level 必须是 2..1000 的整数：True`；`mode:"geometric"` + `growth:1.0` 报 `必须大于 1`；跨文件重复 id 报**后出现**的 `d2.json5`（先出现 `d1.json5`）；属性键三形态全放行（`minecraft:armor_toughness`→`generic.` 补位 / `redtale_project:physical_damage` / 裸 `physical_damage`）+ 拼错键照报；`read_attrs()` 返回 `None` 时**恰好**多 1 条 `属性表 · 属性表读不到`、跳过属性键检查其余照跑（11 条 → 11 条，退出码 1）。**口径记录 R67-a**：`mode` 非法（如 `linear`）+ `exponent:0` 会同时报 2 条 —— 卡面第 7 条只把 ③ 绑给 `polynomial`，实现走 `elif` 连带判，属**卡面未钉死的合理实现**，不打回（同 R43-a / R61-a）。
 
-### T-0063 · [OPEN] `/redtale profession list|info` —— 专业定义只读观测面（D24 L5）
+### T-0063 · [VERIFIED] `/redtale profession list|info` —— 专业定义只读观测面（D24 L5）
 
 - 派单：S7 · 2026-11-19 13:4x（R67）
 - 背景：D24 已落 L1（`ProfessionSpec`）/ L2（`ProfessionRegistry`）/ L3+L4（存档 v3 + 三事件 + 属性下发）/ L6（`check_professions.py`）。**L5 是缺的观测面**：现在只有 `/redtale exp profession`（报进度，R66 的临时入口），运营问「一共有哪些专业、每个专业吃什么、给什么属性」没有地方答。本卡只做**只读定义面**，不写存档、不下发属性。
@@ -3433,6 +3433,61 @@ fi
   3. `grep -cE "award\(|applyAttributes\(|removeAll\(|ProgressStore" <同上>` → **0**；`grep -c "TreeService\|TreePoints" <同上>` → **0**；`git diff --stat` 里 `RedtaleCommand.java` 的增删 ≤ 2 行。
 
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-19 14:4x · 完成 · src/main/java/com/redtale/project/core/command/ProfessionCommand.java（新建 113 行）+ RedtaleCommand.java（tree 后 +1 行挂载）· build --offline EXIT=0 · 探针 build/probe/ProfessionCommandProbe.java 13/13（list/info 三段样例逐字、0 专业空态、grants 顺序与 default 排除、+0.01/+0.005 尾零、属性0条无冒号、多属性 · 连接、玩家行前缀）；jar 内 ProfessionCommand.class=1 / wc=113<=200 / 禁用 API 两组=0 / RedtaleCommand diff=1+0。口径一句：规则8的 total 取 ProfessionService.expOf（卡面禁用 ProgressStore，别无入口）；上限取 curve.maxLevel()（与 ExpCommand.professionLine 同源）。
+- 2026-11-19 14:5x · **S7 验收 → `[VERIFIED]`（3/3）** · ①`gradle build --offline` RC=**0**、`unzip -l build/libs/*.jar | grep -c "ProfessionCommand.class"`=**1**、`wc -l`=**113** ≤200；②测试服（`Done (2.089s)`，起停各一次，已停、25567/25577 无 LISTEN）RCON 逐字对上：`list` 三行 = `专业 2 个 · 属性 2 条` / `mining … 上限 100 · 属性 1 条 · grants 4/0/0` / `smelting … 上限 80 · 属性 1 条 · grants 0/2/3`；`info mining` 三行（`mining_efficiency +0.01/级`、`grants：mine 4 条 / craft 0 条 / smelt 0 条`）、`info smelting`（`additional_experience +0.005/级`、`0/2/3`）、`info nope` = `没有这个专业：nope（用 /redtale profession list 看清单）`；`reload` 后 `list` 逐字不变、`validate 0`、日志 redtale 零 WARN/ERROR；③`grep -cE "award\(|applyAttributes\(|removeAll\(|ProgressStore"`=**0**、`grep -c "TreeService\|TreePoints"`=**0**、`git diff --stat` 里 `RedtaleCommand.java` **1+0**。**一条记录不改码**：全名 `redtale_project:mining` **裸写**报 `Expected whitespace to end one argument`——Brigadier 无引号字符集（`0-9A-Za-z_-+.`）本就不含 `:`，`StringArgumentType.string()` 亦然，与 R2 `/redtale attr` 同一事实；**加引号 `"redtale_project:mining"` 实测通过**，`find()` 裸名/全名都认，属预期行为不是缺陷。**未验**：规则 8 玩家行（无客户端，真人窗口 G 组挂账）。
+
+### T-0064 · [OPEN] `core/config/DisplaySpec` —— 显示开关 schema 解析器（D20 / Q-023 默认 A 的第一层，纯解析）
+
+- 派单：S7 · 2026-11-19 14:5x（R68）
+- 背景：Q-023 采纳**默认 A**——不做客户端 `client.json5`，改服务端 `config/redtale_project/display.json5`，`/redtale reload` 全服生效（D20 的 `show_dps` / `show_attribute_breakdown` / `assume_target`）。现状 `grep -rn "show_dps" src/` **0 命中**，三个开关一行未实现。本卡**只做 L1 纯解析**（零 MC、零 IO、零日志），把一份 JSON5 变成一个不可变 `Settings`；`ContentTooltip` 怎么用、`RedtaleCore` 怎么接、`DEFAULT_FILES` 怎么加，全部是 S7 下轮的事，**你别碰**。
+
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/config/DisplaySpec.java`（**新建**，≤ 200 行）
+  - `build/probe/DisplaySpecProbe.java`（自测探针，`build/` 不入库）
+
+- 接口（**逐字，签名不许改**，形制照 `core/progression/ProfessionSpec`）：
+  ```java
+  package com.redtale.project.core.config;
+
+  public final class DisplaySpec {
+      /** 定位用的相对路径，精确等于这个串才算本文件。 */
+      public static final String PATH = "display.json5";
+      /** 无文件 / 全默认时的值。 */
+      public static final Settings DEFAULT = new Settings(false, false, "minecraft:zombie", "");
+
+      public record Settings(boolean showDps,
+                             boolean showAttributeBreakdown,
+                             String assumeTarget,
+                             String source) {}
+
+      /** 从整批配置里挑出 PATH 那一个解析；configs 为 null / 无该文件 → DEFAULT 且零告警。 */
+      public static Settings parse(java.util.List<ConfigFile> configs,
+                                   java.util.List<String> warnings) {}
+  }
+  ```
+
+- 语义（**逐条钉死，别自己发明**）：
+  1. **定位**：`f.path()` 与 `PATH` **完全相等**才认（子目录 `foo/display.json5`、`display.json5.bak`、`display2.json5` 一律不认，**静默跳过**、不告警）。多个同路径文件（理论不会出现）取**先出现**的那个。
+  2. **无文件**：返回 `DEFAULT`（`source = ""`），`warnings` 一个字都不加 —— 这是最常见路径（新服第一次 reload 之前）。
+  3. **根不是对象**（`root == null` 或非 `JsonObject`）：告警 `display.json5：根节点不是对象，已用默认值`，返回 `DEFAULT`。`warnings == null` 时不许 NPE（照 `ProfessionSpec.warn` 的写法自己判空）。
+  4. `show_dps` / `show_attribute_breakdown`：缺省 `false`；`null` 视为缺省**不告警**；非布尔（数字 / 字符串 / 数组 / 对象）→ 告警 `display.json5：show_dps 不是布尔值（已用 false）`（键名按实际键换），**该键单独回落**，另一个键照常解析。
+  5. `assume_target`：缺省 `"minecraft:zombie"`；`null` / 空白串视为缺省；**合法形态 = 含至少一个 `:`、不含空白、不含大写**；不合法 → 告警 `display.json5：assume_target 不是合法 id（已用 minecraft:zombie）` 并回落。合法值**原样保留**（不补命名空间、不转小写）。
+  6. **未知键**：按配置里的键序逐条告警 `display.json5：未知键 <k>（已忽略）`。
+  7. `source`：解析到文件时写 `f.path()`（即 `"display.json5"`），无文件时 `""`。
+
+- 不要做：
+  - 不读文件、不碰磁盘 —— **不许出现** `Files.` / `Path.of` / `FileReader` / `getResource`；输入只有 `List<ConfigFile>`
+  - 不 import 任何 `net.minecraft.*`，不打日志（只用 `warnings` 列表）
+  - 不改 `RedtaleCore` / `DEFAULT_FILES` / `ContentTooltip` / `ItemFactory` / `ConfigLoader`（S7 下轮接）
+  - 不加 `parse(Path)` 之类重载、不加 `Builder`、不加 `toJson()`、不加 getter 别名（`showDps()` 是 record 自动生成的，够了）
+  - 不碰 `docs/`、不改 `tools/check_all.py`、不改 `PLAN.md`
+
+- 验收（**三条，全部可机器执行**）：
+  1. 取锁后 `D:\redtale-work\tools\gradle-8.8\bin\gradle build --offline` → `EXIT=0`；`cd build/libs && unzip -l *.jar | grep -c "DisplaySpec.class"` → **1**；`wc -l < src/main/java/com/redtale/project/core/config/DisplaySpec.java` → **≤ 200**。
+  2. `python tools/probe_run.py DisplaySpecProbe` → 末行 `全绿`，且 `PASS ≥ 25 / FAIL 0`。探针至少覆盖：无文件→DEFAULT 零告警 / 根非对象 / 三键全缺 / 三键齐全 / 非布尔两键各自独立回落 / `null` 不告警 / `assume_target` 五种非法形态（无冒号、带空格、带大写、空串、数字）/ 合法值原样保留 / 未知键按出现序 / 子目录与非 `.json5` 静默跳过 / `warnings=null` 不 NPE / `configs=null` → DEFAULT。
+  3. `grep -c "net.minecraft" <同上>` → **0**；`grep -cE "Files\.|Path\.of|FileReader" <同上>` → **0**；`git diff --stat` 里除卡上两个文件外**无其他改动**（`git status --short` 只允许这两个条目）。
+
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3446,7 +3501,8 @@ fi
 | C10 | ~~`tools/check_tasks.py`~~ → **T-0061（R65 派 / R66 验）** | —— | —— |
 | C11 | ~~`professions/` 的 L1 解析器~~ → **T-0060（R64 派 / R65 验）** | —— | —— |
 | C12 | `tools/check_spawn.py`（`spawn.json5` + `spawn_rules/` 的独立对账） | 现由 `check_mobs.py` 兼顾，拆分只是可选 | 无（低价值，除非 `check_mobs` 继续膨胀） |
-| C13 | `/redtale profession list\|info` 观测面（D24 L5，新类 `ProfessionCommand`） | 只读快照 + 存档，形态与 `TreeCommand` 同构；文案可逐字钉死 | **L3 已落地（R66）**，可随时派 |
+| C13 | ~~`/redtale profession list\|info` 观测面~~ → **T-0063（R67 派 / R68 验）** | —— | —— |
+| C15 | ~~`core/config/DisplaySpec`（Q-023 显示开关 L1 解析）~~ → **T-0064（R68 派）** | —— | —— |
 | C14 | `mobs/` 或 `items/` 的第四向对账（若某个 `check_*.py` 超 200 行则拆） | 单文件、纯静态 | 无（观察项，不急） |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
