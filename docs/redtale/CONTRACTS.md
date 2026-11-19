@@ -577,6 +577,7 @@ public final class MobSpawner {
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
 | 技能树（D25 / M7，R50 起进 `DEFAULT_FILES`） | `config/redtale_project/skill_trees/<文件名>.json5`（一个文件一棵树，schema 见 `docs/SKILL-TREE.md` §3；`id` 缺省不补命名空间）。默认 `warrior_vanguard.json5` **删文件会被 reload 重建**；它依赖 `jobs/warrior.json5` 与 `skills/quake_slam.json5` 同时存在（否则 reload 会打两条交叉校验告警） |
 | 技能树里的 `classes` | 写**职业裸名**（`warrior`），与 `jobs/*.json5` 的全名 id（`redtale_project:warrior`）**按 path 比较**（R50-a）；空数组 = 所有职业可用 |
+| 显示口径（D20 / Q-023 默认 A，R68 定契约；R69 已落默认件） | `config/redtale_project/display.json5`：三键 `show_dps`（缺省 `false`）/ `show_attribute_breakdown`（缺省 `false`）/ `assume_target`（缺省 `minecraft:zombie`，合法 = 含 `:`、无空白、无大写；空串/纯空白/`null` **静默回落**不告警，R69-a）。**服务端全服生效**，`/redtale reload` 即可，不需要客户端 `client.json5`。`assume_target` v1 **只用于 DPS 行标注**，不做目标护甲推算 |
 | 等级存档（M7） | `world/data/redtale_project_progress.dat`（`SavedData`，**不落** `playerdata`，也不进 config） |
 | 构建锁 | `.queue/build.lock`（见 `docs/TASKS.md` §3） |
 
