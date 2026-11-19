@@ -3674,7 +3674,7 @@ fi
 - 2026-11-20 00:5x · 完成 · 新建 core/config/ConfigDiff.java（35 行，单类 + record Report；between/describe 两 public 方法 + 私有 nz）· 卡外零改动（docs 两处为 S7 本轮改动）· build RC=0（jar 内 core/config/ConfigDiff=2，wc=35）· 自测：静态 grep 禁用 API=0；探针 build/probe/ConfigDiffProbe.java 输出 PASS 37 / FAIL 0（空/双null/只增只删只改/混合/排序/不可变UOE/null值当0L/入参不改/重复一致/describe逐字含零段与null分支）。纯函数零接线，待 S7 验收。
   - 2026-11-20 01:5x · **S7 验收通过（3/3）** · ①build RC=0（S7 重跑，`BUILD SUCCESSFUL`，jar 内 `core/config/ConfigDiff`=2 条 = 类 + Report，wc=35）；②探针 `javac`+运行 `PASS 37 / FAIL 0`（独立复跑）；③grep 禁用 API=0、`src/` 除卡上新文件外零改动。S7 另跑 6 条独立边界（自比较 / 不可变 Map 入参 / 空串+中文+英文混合排序 / 负数 mtime 同与不同）全过；首跑 `sort.mixed` FAIL 是 S7 夹具期望写错（把两边都有的空串算进 added），修正期望后 6/6，非代码缺陷。
 
-### T-0069 · [OPEN] `tools/check_display.py` —— `display.json5` 起飞前对账（D20 显示口径的安全网，单文件零接线）
+### T-0069 · [VERIFIED] `tools/check_display.py` —— `display.json5` 起飞前对账（D20 显示口径的安全网，单文件零接线）
 
 - 派单：S7 · 2026-11-20 01:5x（R73）
 - 目标：`display.json5` 现在没有任何 `check_*.py` 覆盖——写歪了只在运行期被 `DisplaySpec.parse` 静默回落（R69-b「文件≠生效值」）。给一张离线安全网：只静态检查这一个文件，出行前把坏值拦下来。只检查 `config/redtale_project/display.json5` **或**默认件 `src/main/resources/redtale/defaults/display.json5`（由 `--file` 指定，默认指默认件），**不碰其它任何配置**。
@@ -3697,6 +3697,32 @@ fi
   2. 三组负向夹具（写到 `build/dispfix/`）：A=`{show_dps:1, show_attribute_breakdown:'true', assume_target:'Minecraft Zombie', bogus_key:9}` → EXIT=1 且恰好 4 条 `[问题]`（`show_dps`/`show_attribute_breakdown`/`assume_target`/`未知键 bogus_key` 各一）；B=`{assume_target:'minecraft: zombie', show_dps:null}` → EXIT=1 且恰好 2 条（空白 id + `show_dps` 非 bool）；C=整份写成非法 JSON5（截断）→ 恰好 1 条 `解析失败`、EXIT=1、不抛栈。
   3. `wc -l < tools/check_display.py` → **≤ 200**；`grep -c "from check_progress import clean_json5"` → **1**；`grep -cE "check_all|RedtaleCore|net\.minecraft" tools/check_display.py` → **0**；`git status --short` 除卡上新文件外无改动（S7 本轮改 `docs/`，以「新文件之外无 `src/`/`tools/` 改动」为准）。夹具用完即删（`build/dispfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 进度：2026-11-20 02:00 · 完成 · tools/check_display.py（新建 113 行，唯一卡内文件）· 未构建（纯 Python 卡，按规则不取锁）· 验收 3/3：基线末行「共 1 个文件 · 0 条问题」EXIT=0、`-v` 含「已检查 ... · 6 项」；三组夹具 A/B/C = 4/2/1 条、EXIT=1、C 仅「解析失败」不抛栈；wc=113≤200 / clean_json5=1 / 禁用 API=0 / git status 仅本卡新文件 + TASKS.md；额外边界断言 10/10；build/dispfix 夹具已清。
+  - 2026-11-20 02:5x · **S7 验收通过（3/3）** · ①基线 `共 1 个文件 · 0 条问题` EXIT=0、`-v` 含 `已检查 ... · 6 项`；②三组夹具独立复跑 A=4 条（show_dps/show_attribute_breakdown/assume_target/未知键 bogus_key 逐字对上）、B=2 条（空白 id + show_dps 非 bool）、C=1 条仅「解析失败」不抛栈，均 EXIT=1；③wc=113≤200、`from check_progress import clean_json5`=1、禁用 API=0。S7 另跑 12 条独立边界（空对象缺键 / 三键全对 / 空串与纯空白 assume_target 回落 / 带点合法 id / 根节点 list 与 None / 只有 ns 无 path / 只有冒号 / 带大写 / False 合法 / 0 非 bool）12/12。夹具 build/dispfix 已清。
+
+### T-0070 · [OPEN] `tools/check_checkall.py` —— check_all 清单 ↔ 磁盘对账（R64~R74 每轮手工接线，首次机器安全网，单文件零接线）
+
+- 派单：S7 · 2026-11-20 02:5x（R74）
+- 目标：`tools/check_all.py` 的 `TOOLS` 元组是「哪些对账脚本会被跑到」的唯一清单，但 R64~R74 每轮都是 S7 手工往里追加一行，**从没有任何机器核对**：漏接一个脚本 → 它永远不被 `check_all` 跑到，且 `check_all` 仍全绿（永远绿的死检查，R65-a）。给一张离线安全网：双向对账 `TOOLS` 清单与 `tools/` 磁盘上的 `check_*.py`。
+- 独占文件（**唯一可写**）：
+  - `tools/check_checkall.py`（新建，≤ 200 行）
+  - `build/chkfix/` 下可选夹具文件（不入库）
+- 禁止接线：**不改 `tools/check_all.py`**（S7 下轮接线）；不改任何 `src/`、任何 `docs/`、任何其它 `tools/*.py`。
+- 必须复用：无。本卡只读 `.py` 文本，**不解析 JSON5**，因此禁止 `from check_progress import clean_json5`（自造清洗器没必要，R61-c 的反面）。
+- 接口（逐字）：
+  - `read_listed(text: str) -> list[str]`：从 `check_all.py` 全文里定位 `TOOLS = (` 到 `\n    )` 的块，正则 `"([A-Za-z0-9_./-]+\.py)"` 取其中字面量，按出现顺序返回；块找不到返回 `[]`。与 `check_defaults.read_listed` 同构，但本卡**不 import 它**（单文件自足）。
+  - `read_disk(tools_dir: str) -> list[str]`：`os.listdir(tools_dir)` 里满足 `name.startswith("check_") and name.endswith(".py") and name != "check_all.py"` 的文件名，按字典序返回。
+  - `check_listing(listed: list[str], disk: list[str]) -> list[str]`：按下列 3 类依次追加问题消息（返回列表，不含文件名与前缀）：
+    1. `listed` 里重复的项（第 2 次起每个一条）→ `清单项 <name> 重复`；
+    2. `listed` 里不在 `disk` 的项 → `清单项 <name> 磁盘上不存在`；
+    3. `disk` 里不在 `listed` 的项 → `脚本 <name> 未接进 check_all`。
+  - `main() -> int`：CLI `--all <path>`（默认 `tools/check_all.py`）、`--dir <path>`（默认 `tools/`）、`-v`（多打一行 `已检查 <all> · 清单 N 项 · 磁盘 M 项`）；每条问题行 `[问题] <msg>`；末行固定 `共 1 份清单 · %d 条问题`；0 问题 EXIT=0，任一问题 EXIT=1。文件读不到算 1 条 `清单文件读取失败`、不抛栈。
+- 不要做：不改阈值、不加告警级别、不读 `net.minecraft`、不解析其它配置、不接 `check_all.py`、不造 JSON5 清洗器。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_checkall.py` → 末行 `共 1 份清单 · 0 条问题`、`EXIT=0`；`python tools/check_checkall.py -v` → 含 `清单 18 项 · 磁盘 18 项`（当前基线：TOOLS 18 项、磁盘 18 个 `check_*.py` 不含 `check_all.py`）。
+  2. 三组负向夹具（写到 `build/chkfix/`，把 `check_all.py` 与 `tools/` 各复制一份进去改，用 `--all`/`--dir` 指过去）：A 从清单副本删 `check_display.py`、`check_spawn.py` → EXIT=1 且恰好 2 条 `未接进 check_all`；B 往清单副本塞 `check_ghost.py`、磁盘副本无此文件 → EXIT=1 且恰好 1 条 `磁盘上不存在`；C 清单副本把 `check_tasks.py` 写两遍 → EXIT=1 且恰好 1 条 `重复`。
+  3. `wc -l < tools/check_checkall.py` → **≤ 200**；`grep -c "def check_listing"` → **1**；`grep -cE "clean_json5|check_progress|net\.minecraft|check_all.*append" tools/check_checkall.py` → **0**；`git status --short` 除卡上新文件外无改动（S7 本轮改 `docs/`，以「新文件之外无 `src/`/`tools/` 改动」为准）。夹具用完即删（`build/chkfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3716,7 +3742,8 @@ fi
 | C14 | `mobs/` 或 `items/` 的第四向对账（若某个 `check_*.py` 超 200 行则拆） | 单文件、纯静态 | 无（观察项，不急） |
 | C17 | ~~`mobs/SpawnBudget`（per_tick_cap 纯函数收口）~~ → **T-0066（R70 派）** | —— | —— |
 | C18 | ~~`core/config/ConfigDiff`（reload 变更摘要纯函数）~~ → **T-0068（R72 派 / R73 验）**：快照取值 `ConfigStore.mtimes()` + 摘要打点留 S7（跨文件） | R69-b「文件 ≠ 生效值」需要「这次 reload 动了哪些文件」的观测面 | 无 |
-| C19 | ~~`tools/check_display.py`（display.json5 安全网）~~ → **T-0069（R73 派）** | R69-b：display 写歪只静默回落，缺离线对账 | 无 |
+| C19 | ~~`tools/check_display.py`（display.json5 安全网）~~ → **T-0069（R73 派 / R74 验）** | R69-b：display 写歪只静默回落，缺离线对账 | 无 |
+| C20 | ~~`tools/check_checkall.py`（check_all 清单 ↔ 磁盘对账）~~ → **T-0070（R74 派）** | R64~R74 每轮手工接 check 脚本，从未机器核对，漏接则永远绿 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

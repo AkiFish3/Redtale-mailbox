@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-20 01:53 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-20 03:02 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0069 | OPEN | `tools/check_display.py` —— `display.json5` 起飞前对账（D20 显示口径的安全网，单文件零接线） |
+| T-0070 | OPEN | `tools/check_checkall.py` —— check_all 清单 ↔ 磁盘对账（R64~R74 每轮手工接线，首次机器安全网，单文件零接线） |
 
-已验完 **66** 张 / 共 **69** 张。
+已验完 **67** 张 / 共 **70** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
