@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 23:36 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-20 00:44 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,18 +12,18 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0067 | OPEN | `tools/check_spawn.py` —— `spawn.json5` 主配置起飞前对账（M6 安全网补洞，单文件，零接线） |
+| T-0068 | OPEN | `core/config/ConfigDiff` —— 热重载变更摘要的纯函数（D14 观测面，单类零接线） |
 
-已验完 **64** 张 / 共 **67** 张。
+已验完 **65** 张 / 共 **68** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R67 | 2026-11-19 | **验收 T-0062（`check_professions.py`）+ 接进 `check_all`（15→16）+  |
 | R68 | 2026-11-19 | **验收 T-0063（`/redtale profession list\ |
 | R70 | 2026-11-19 | **验收 T-0065（`/redtale display`，Q-023 收口）+ 派 T-0066（`SpawnBud |
 | R71 | 2026-11-19 | **补完中断的 R71：验收 T-0066（`SpawnBudget`）+ 接过两处接线（配置面/运行期委托）+ 测试服 |
+| R72 | 2026-11-20 | **验收 T-0067（`check_spawn.py`）+ 接线 `check_all` 16→17 + 派 T-00 |
 | R69 | 2026-11-19 | **验收 T-0064（`DisplaySpec`，Q-023 L1）+ Q-023 落地 L2（`display.js |
 
 ## 4. 卡住的（真实缺口，不是产能问题）

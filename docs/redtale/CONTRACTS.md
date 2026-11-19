@@ -1301,4 +1301,4 @@ public final class SpawnBudget {
 - **两条路径的前置守卫不同**（R71-b）：命令 `/redtale spawn replace cap <n>` 在 Brigadier `integer(1,4096)` 层就拒绝越界（到不了 `clamp`）；配置 `spawn.json5` 无此守卫，非法值经 `fromConfig` 回落 8 并告警。**不是「命令 clamp 到边界」vs「配置回落 8」**，别按旧台账记。
 - **`0` 不表示关闭**（R55-a 延续）：写 0 → 回落 8 + 告警，与 D16 的 `0 = 关闭` 刻意相反（关闭是防洪阀事故）。
 - **验收**：离线探针 `SpawnBudgetProbe` 53/53；测试服两路径分别实测（命令越界被拒 / 配置三种非法回落 8 + 1 告警 / 合法边界生效）；javap 确认两处委托已编译进 jar。
-- **配置面对账**：`spawn.json5` 的起飞前离线对账由 T-0067（`check_spawn.py`，R71 派）提供；`spawn_rules/` 仍归 `check_mobs.py`。
+- **配置面对账**：`spawn.json5` 的起飞前离线对账由 T-0067（`check_spawn.py`，R71 派 / **R72 VERIFIED**）提供，已接进 `tools/check_all.py`（`共 17 个脚本`）；`spawn_rules/` 仍归 `check_mobs.py`。工具侧数值口径与 `SpawnBudget.fromConfig` 同构但 Python 独立实现（卡面钉死 7 检查项，不 import Java）。

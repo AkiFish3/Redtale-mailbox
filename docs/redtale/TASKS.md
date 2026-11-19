@@ -3602,7 +3602,7 @@ fi
 - 2026-11-19 17:45 · 完成 · 新建 src/main/java/com/redtale/project/mobs/SpawnBudget.java（50 行，单类纯静态、无构造器/内部类/实例字段，逐字签名）+ build/probe/SpawnBudgetProbe.java（53 断言） · build EXIT=0（jar 内 SpawnBudget.class=1）· 自测：wc=50≤200 / net.minecraft=0 / 禁用 API=0 / 探针 53/53 全绿（clamp 8 形态 + fromConfig 11 + takePerTick 12 + ticksToDrain 10 + describe 逐字 4 + 重复调用 5）；git status 仅 TASKS.md + 新类。纯函数卡无测试服依赖，待 S7 验收。
 - 验收 S7 · R71 · **VERIFIED**（3/3）：①取锁 build RC=0、jar 内 `SpawnBudget.class`=1、`wc`=50≤200；②`probe_run SpawnBudgetProbe` 末行 `PASS 53 / FAIL 0`；③`net.minecraft`=0、禁用 API=0、`git status` 仅卡上文件（新类 + TASKS.md）。S8 探针覆盖逐条复核：clamp 8 形态（含 Integer.MIN/MAX 不溢出）、fromConfig 11 形态、`takePerTick` 12 组、`ticksToDrain` 10 组、`describe` 逐字 4 组、重复调用 5 —— 全部对上卡面语义。接线（两处委托）由 S7 本轮接过，见 PLAN §13 R71。
 
-### T-0067 · [OPEN] `tools/check_spawn.py` —— `spawn.json5` 主配置起飞前对账（M6 安全网补洞，单文件，零接线）
+### T-0067 · [VERIFIED] `tools/check_spawn.py` —— `spawn.json5` 主配置起飞前对账（M6 安全网补洞，单文件，零接线）
 
 - 派单：S7 · 2026-11-19 23:3x（R71）
 - 背景：`per_tick_cap` 数值规则已由 T-0066 收口进 `SpawnBudget`，运行期两处委托已接（R71）；但**配置面 `spawn.json5` 的合法化没有任何起飞前对账**——`check_mobs.py` 只扫 `spawn_rules/` 子目录，`check_numeric.py` 只管 `attack_speed`/`crit`/`damage`/`progression`。写歪一个值（0 / 2.5 / 9999 / `replace_enabled: 1`）目前只能起测试服 reload 才看得见。本卡补这个洞：只读对账 `spawn.json5` **单文件**，输出问题清单。
@@ -3638,6 +3638,39 @@ fi
   3. `wc -l < tools/check_spawn.py` → **≤ 200**；`grep -c "from check_progress import clean_json5" tools/check_spawn.py` → **≥ 1**；`grep -cE "Files\.|Path\.of|writeString|currentTimeMillis|net\.minecraft" tools/check_spawn.py` → **0**；`git status --short` 除卡上文件外无其他改动（S7 本轮改 `docs/`，以「新文件之外无 `src/` 改动」为准）。
 
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-19 23:5x · 完成 · 新建 tools/check_spawn.py（51 行，单文件纯 Python；from check_progress import clean_json5；接口 check_spawn(data)/main() 逐字） · 未取锁未 build（纯 Python 卡，验收不含构建）· 自测：基线末行「共 1 个文件 · 0 条问题」EXIT=0；11 组负向/边界夹具 + -v 共 12/12 全过（bad 3 条 / frac / 根非对象 / 解析失败 / bool / 字符串 / NaN / Inf / replace_enabled 非布尔各 1 条；1.0 与 4096.0 合法边界 0 条）；wc=51≤200 / from-check_progress=1 / 禁用 API=0 / git status 仅 TASKS.md + 新脚本，夹具已清。纯离线对账，待 S7 验收。
+- 验收 S7 · R72 · **VERIFIED**（3/3）：①基线 `python tools/check_spawn.py` → 末行 `共 1 个文件 · 0 条问题`、EXIT=0；②11 组夹具逐条复跑全中——`bad` 恰好 3 条（replace_enabled 非布尔 / CAP 范围 / 未知键 bogus_key）、`frac`/`bool`/`str`/`nan`/`inf`/`flag`/`root`/`broken` 各恰好 1 条且 `解析失败` 不抛栈、合法边界 `1.0`/`4096.0` 各 0 条、`-v` 首行逐字 `已检查 <file> · 7 项`；另加 400 位大整数 → 短路径 `1 <= v <= 4096` 先假、不触发 `math.isfinite` 溢出，恰好 1 条。③`wc`=51、`from check_progress import clean_json5`=1、禁用 API grep=0、`git status` 除卡上文件外无 `src/` 改动。夹具 `build/spawnfix/` 已清。接线 `check_all` 16→17 由 S7 本轮做（§13 R72）。
+
+### T-0068 · [OPEN] `core/config/ConfigDiff` —— 热重载变更摘要的纯函数（D14 观测面，单类零接线）
+
+- 派单：S7 · 2026-11-20 00:4x（R72）
+- 目标：给「这次 reload 到底动了哪些文件」一个可离线断言的纯函数，只做快照差分与文案。快照怎么取、摘要打在哪由 S7 下轮接（跨 3 文件，S8 不碰）。
+- 独占文件（**唯一可写**）：
+  - `src/main/java/com/redtale/project/core/config/ConfigDiff.java`（**新建**，≤ 200 行）
+  - `build/probe/` 下可选探针文件（`build/` 不入库）
+- 接口（**逐字，类名 / 方法签名 / record 组件名不许改**）：
+  ```java
+  public final class ConfigDiff {
+      public record Report(List<String> added, List<String> removed, List<String> changed) {}
+      public static Report between(Map<String, Long> before, Map<String, Long> after);
+      public static String describe(Report report);
+  }
+  ```
+- 语义（**逐条钉死**）：
+  1. 两个入参是「相对 `config/redtale_project/` 的路径 → mtime(ms)」快照；任一为 `null` 当空 Map。
+  2. `added` = 只在 `after` 的键；`removed` = 只在 `before` 的键；`changed` = 两边都有但值不同的键。值为 `null` 当 `0L`。
+  3. 三份 List 都按 `String` 自然序升序，且用 `List.copyOf` 不可变；同输入重复调用结果逐字相同。
+  4. `describe` 恒返回 `新增 A · 删除 B · 变更 C`（三段都写，零也写 `0`）；`report == null` 返回 `新增 0 · 删除 0 · 变更 0`。
+  5. 入参 Map 不被修改；不读时钟、不碰文件系统、不依赖 `net.minecraft`。
+- 不要做：
+  - 不改 `ConfigStore` / `RedtaleCore` / 任何命令；不加第二个 record 或第二个 public 方法；不加实例字段或构造器参数。
+  - 不做内容 diff（不比文件内容、不解析 JSON5）、不做阈值 / 告警 / 日志。
+- 验收（**三条，全部可机器执行**）：
+  1. `gradle build --offline > build/t0068-build.log 2>&1; echo $?` → `0`（取真 RC，不看 `tail` 的）；`unzip -l build/libs/*.jar | grep -c "core/config/ConfigDiff"` → **≥ 2**（类 + Report）；`wc -l < src/main/java/com/redtale/project/core/config/ConfigDiff.java` → **≤ 200**。
+  2. 自建探针 `build/probe/ConfigDiffProbe.java`，**≥ 30 条断言**并跑出 `FAIL=0`：空 / 双 null / 只增 / 只删 / 只改 / 混合 / 排序 / 不可变（`add` 抛 `UnsupportedOperationException`）/ 值为 null / 重复调用一致 / `describe` 逐字含零段与 null 分支。探针输出末行固定 `PASS <n> / FAIL 0`。
+  3. `grep -cE "net\.minecraft|Files\.|Path\.of|currentTimeMillis" src/main/java/com/redtale/project/core/config/ConfigDiff.java` → **0**；`git status --short` 除卡上文件外无改动（S7 本轮改 `docs/`，以「新文件之外无 `src/` 改动」为准）。
+
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3656,6 +3689,7 @@ fi
 | C16 | ~~`/redtale display` 观测面（Q-023 收口）~~ → **T-0065（R69 派）** | —— | —— |
 | C14 | `mobs/` 或 `items/` 的第四向对账（若某个 `check_*.py` 超 200 行则拆） | 单文件、纯静态 | 无（观察项，不急） |
 | C17 | ~~`mobs/SpawnBudget`（per_tick_cap 纯函数收口）~~ → **T-0066（R70 派）** | —— | —— |
+| C18 | ~~`core/config/ConfigDiff`（reload 变更摘要纯函数）~~ → **T-0068（R72 派）**：快照取值 `ConfigStore.mtimes()` + 摘要打点留 S7（跨文件） | R69-b「文件 ≠ 生效值」需要「这次 reload 动了哪些文件」的观测面 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
