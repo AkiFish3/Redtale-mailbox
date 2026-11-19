@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-19 10:11 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-19 11:23 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0060 | OPEN | `core/progression/ProfessionSpec` —— 专业 schema 解析器 v1（D24 第一层，纯解析 + 一个纯函数） |
+| T-0061 | OPEN | `tools/check_tasks.py` —— 卡板自检（在制品上限 / 验收段缺失 / 台账漂移） |
 
-已验完 **57** 张 / 共 **60** 张。
+已验完 **58** 张 / 共 **61** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R60 | 2026-11-19 | **验收 T-0055（`check_lang.py`）+ 新增 `tools/check_deps.py`（依赖面 / |
 | R61 | 2026-11-19 | **验收 T-0056（`check_attrs.py`）+ 接进 `check_all`（10→11）+ 派 T-00 |
 | R62 | 2026-11-19 | **验收 T-0057（`check_numeric.py`）+ 接进 `check_all`（11→12）+ 派 T- |
 | R63 | 2026-11-19 | **验收 `check_contracts`（T-0058）+ 接线 `check_all`（12→13）+ 新建 `d |
 | R64 | 2026-11-19 | **验收 T-0059（`check_docs.py`）+ 接进 `check_all`（13→14）+ 新建 `doc |
+| R65 | 2026-11-19 | **验收 T-0060（`ProfessionSpec`）+ 自研 D24 L2（`ProfessionRegistry |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 

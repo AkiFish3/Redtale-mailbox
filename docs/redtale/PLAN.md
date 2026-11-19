@@ -1485,6 +1485,8 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 **R63-e（补记，写卡时踩出来的）**：`check_docs.py` 的扫描集合必须**窄**——`docs/TASKS.md` 整份跳过（卡板天生写「还没建的文件」），`PLAN.md` 只扫 `| R` 台账行（正文与 `## 13.6x` 段落同样写未来文件）。第一版口径「全部 `docs/*.md` + `PLAN.md` 全文」在 R63 自己写完全部文档后实测 **20 条红**，19 条是未来文件。配套写法纪律：**提到未建文件时不写 `tools/` / `docs/` 全路径**。一个基线就红的检查等于没有检查（同 R62-c / R63-d）。
 
 | R64 | 2026-11-19 | **验收 T-0059（`check_docs.py`）+ 接进 `check_all`（13→14）+ 新建 `docs/PROFESSION.md`（D24 契约）+ 派 T-0060（`ProfessionSpec` L1）** | ①卡板：T-0059 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `EXIT=0` 末行逐字 `共 78 份文档 · 322 条路径引用 · 0 条提示 · 0 条问题` / 三组负向（坏引用 → `build/docfix/ROUNDS.md:78 引用的路径不存在：docs/NOPE.md` EXIT=1 · `--docs nope/docs` → `文档目录不存在` EXIT=1 · 只含 `ROUND-X.md` 的目录 → 孤儿提示且 **EXIT=0**，钉死「提示不判红」）/ `wc`=89 ≤200、`grep -c "def clean_json5"`=0、`check_all` 零回归）+ 裁定 S8 口径提问：`token②` **按整行匹配**（卡面基线 321 与字面「去反引号」自相矛盾，按基线判 = 采纳实现，同 R43-a / R56）。**派 T-0060**（`core/progression/ProfessionSpec`：`professions/*.json5` 解析 + `resolve` 纯函数，D24 L1），在制品 **1/3**。②自研：`check_all.py` 末尾追加 `check_docs.py` → 末行 `共 13 个脚本 …` → **`共 14 个脚本 · 跑成 14 · 跳过 0 · 红 0`**（R63 下一步第 1 条当场兑现）。③新增 `docs/PROFESSION.md`（D24 契约）：三族累加器对照 / schema v1（与 `jobs/` 同构 + `grants`）/ `grants` 三源与**顺序无关**的四档优先级 / `ProgressStore` v2→v3 / L1~L6 交付顺序（每层标归属）/ 验收矩阵 P1~P8 / 明确不做六条。④本轮**无 Java 改动**（`src/` 零 diff）→ 未构建、未启测试服（正式服/测试服整轮未动），无构建锁。 | **§13.67 R64-a~d**。专业是本轮唯一新内容，但它要动**存档版本**与**第三族累加器**——schema 一旦让 S8 现发明，后面 L2~L4 全跟着返工（R51 的扁平 `nodes` 就是反面教材：做了一半发现节点 id 只在树内唯一）。所以本轮不动代码，只把「吃什么经验、怎么匹配、谁改存档、哪层归谁」全钉进文档，S8 只写纯解析。 |
+| R65 | 2026-11-19 | **验收 T-0060（`ProfessionSpec`）+ 自研 D24 L2（`ProfessionRegistry` + 2 份默认件 33→35）+ 派 T-0061（`check_tasks.py` 卡板自检）** | ①卡板：T-0060 `[DONE]` → **`[VERIFIED]`**（3/3：取锁后 `gradle build --offline` RC=0、jar 内 `core/progression/ProfessionSpec.class`=1（13095 B）/ 探针 **69/69** 零 FAIL / `wc`=173≤200、`net.minecraft`=0、`AttributeSpecs`=0；12 条解析口径逐条复核零偏差）。**派 T-0061**（`check_tasks.py`，T-0061 在建：只读卡板自检，5 条检查 —— 状态合法 / id 重复 / 在制品 >3 / `DONE·VERIFIED` 缺 `- 验收` 段 / `VERIFIED` 未进 PLAN 台账作**提示**），在制品 **1/3**。②自研 L2：新类 `core/progression/ProfessionRegistry`（`load`/`all`/`get`/`find`/`has`/`size`/`sortedIds`/`attributeTotal`/`warnings`/`describe`；属性键归一到 `AttributeSpec.id()` 规范形态、80 表外丢弃并告警、`professions`↔`jobs/` 按 path 比重叠告警不拦）+ `RedtaleCore` 接在 `progress` 之后（依赖顺序）+ 字段/getter + reload 日志与结果串各加一段 + 默认件 `professions/{mining,smelting}.json5`（`DEFAULT_FILES` 33→**35**）。③**修 `ProfessionSpec` 一个真缺陷**（R65-b）：显式写 `mode: "geometric"` 被误报「未知模式」——`smelting` 默认件正好这么写，每轮 reload 刷假告警；已改成只对 `geometric`/`polynomial` 之外告警。④实测（测试服 1 次启停 `Done (2.049s)`，已停、25567/25577 无 LISTEN）：启动即落两份默认件、`配置重载完成… 39 个文件 … 2 个专业（2 条属性）`、零 `配置告警`；`/redtale reload` → `+ 2 个专业（39 份配置文件）`；临时塞 `zz_overlap_probe.json5`（id 撞 `jobs/warrior` + 一条 `bogus_attr`）→ **恰好 2 条告警**（重叠 + 80 表外）且专业数 3；删文件再 reload → 回 2 个专业零告警；`/redtale validate` 问题 0。⑤环境：jar **655179 B**、`selftest` **102 PASS**、探针 `ProfessionRegistryProbe` **38/38**、构建锁取删 1 次。 | **§13.68 R65-a~d**。L2 的职责边界这次踩出一条新纪律：**永远绿的检查等于没有检查**（R65-a）——我第一版写了「曲线需求经验非正 → 告警」，实测 `ExpCurve` 构造函数已把 `base ≤ 0` 回落 100，这条路**永不可触发**，于是删掉而不是留一条死分支。同理 `AttributeSpec.id()` 的规范形态是**自建裸 path**（不是 `redtale_project:` 全名），探针第一版按全名断言全红，错的是我的期望（同 R43-a）。 |
+
 
 ### 13.67 R64 的四条口径（先定基线再判卡）+ 下一步（R65）
 
@@ -1495,9 +1497,20 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 | R64-c | `grants` 的匹配**必须顺序无关**（精确 id > 命中 tag 取大 > `default` > 0） | 把「谁写在前面」当语义，等于把 JSON5 键序变成接口的一部分：运营调一下行序数值就变，且零报错。取大是唯一与顺序无关且可解释的规则 |
 | R64-d | 专业 id 与职业 id **共用命名空间、分桶存**，重叠只告警不拦 | 拦了的话「已经做了 `mining` 职业、现在想做 `mining` 专业」变成不可能；放行 + L2 一条告警，成本最低、且能解释「为什么两个 42 级对不上」 |
 
-下一步（R65）：
+### 13.68 R65 的四条口径（死分支 / 规范形态 / 依赖顺序 / 默认件）
 
-1. **验收 T-0060**（`ProfessionSpec`：build RC=0 + jar 内类 =1 / 探针 ≥30 无 FAIL / `wc ≤ 200` / `net.minecraft`=0 / `AttributeSpecs`=0）。纯 Java 卡，不过 `check_all`（末行仍是 14 个脚本）。
-2. **D24 L2**：`ProfessionRegistry`（80 条表校验 + `professions`/`jobs` id 重叠告警 + `DEFAULT_FILES` 加默认件 33→35 份）+ 一份 `professions/mining.json5` 示例。
-3. **真人一次性验收窗口**：照 `docs/REALPLAYER-WINDOW.md` A~E 走（D1~D3 收 M4、B2~B3 收 M6、C1~C7 收 M7），专业 P1~P5 待 L3 接线后并成 F 组。需 Aki 上线，不排期。
-4. Q-021（`respec` 扣费）/ Q-022（M5 原语范围）/ Q-023（D20 三个显示开关）仍未答复，默认各按「免费」「按需补」「服务端 `display.json5`」走。
+| # | 口径 | 理由 |
+|---|---|---|
+| R65-a | **永远绿的检查等于没有检查**：一条告警分支如果**任何配置都触发不了**，就该删，不要为了「防御」留着 | 我第一版在 `ProfessionRegistry` 写了「曲线需求经验非正 → 告警」，实测 `ExpCurve` 构造函数把 `base ≤ 0` 回落 100、`expForLevel` 有 1e9 硬顶，这条路永不可触发。留着它的代价不是几行代码，而是下次有人读代码时以为「曲线可能坏」——死分支会教出错误的直觉 |
+| R65-b | `curve.mode` **显式写 `geometric` 不算异常**，只有 `geometric`/`polynomial` 之外才告警 | 原实现只判 `polynomial`，`else if (mode != null) warn(未知)` → `{mode:"geometric"}` 每份默认件每轮 reload 都刷一条假告警。默认值可以「不写」，但写了默认值不是错（同 R61-a：判据要按「合法集合」写，不按「省略即合法」写） |
+| R65-c | 属性键的**规范形态**是 `AttributeSpec.id()`：自建属性 = **裸 path**（`mining_efficiency`），原版 = 带命名空间（`minecraft:generic.luck`）；L2 归一到这一形态，不自己拼 `redtale_project:` | L4 下发前一律经 `AttributeSpecs.resolve` + `RedtaleAttributes.holder`，两种形态都能解析；但**存档/日志/对账要一种形态**，否则同一个属性在两处显示不同。探针第一版按「全名」断言全红，错的是期望不是实现（同 R43-a） |
+| R65-d | `ProfessionRegistry.load` 必须排在 `progress` **之后**，与 `SkillTreeRegistry` 同一条纪律 | jobs 重叠检查要拿 `ProgressRegistry.jobs()` 的现成事实；顺序反了就是「每份专业都判成不重叠」的静默失效（R47-a 的同一坑，只是这次不报错也不告警） |
+| R65-e | 写「还没建的文件」时**不写 `tools/` / `docs/` 全路径**（R63-e 的老纪律，本轮又踩一次） | `check_docs.py` 当场 2 条红（`ROUND-R65-PROFREG.md:8` 与 `PLAN.md:1488` 都写了带目录前缀的**在建**脚本名，而它是 T-0061 的产物）。去掉目录前缀、写成 `check_tasks.py`（T-0061 在建）即绿。**卡面里可以写全路径**（卡面是给 S8 的任务书），文档里不行 |
+
+下一步（R66）：
+
+1. **验收 T-0061**（`check_tasks.py`：基线 `共 61 张卡 · 在制品 0~1 · 问题 0 · 提示 0` + 四组负向夹具 + `wc ≤ 200` + import 白名单）；过后 `check_all` 仍是 14 个脚本（本卡不进 `check_all`，S7 决定）。
+2. **D24 L3**：`ProgressStore` v2→v3（`professions` 桶，升版必须早于写入路径）+ 三个事件接线（`BlockEvent.BreakEvent` / `ItemCraftedEvent` / `ItemSmeltedEvent`）+ `/redtale exp profession <id> <n>`。跨文件 + 存档版本，S7 独占。
+3. **D24 L4**：属性下发接进 `ProgressService` 的同一次重算（`profession/<专业 path>/<属性 path>`，先按前缀清再按 `per_level × (level-1)` 加）。
+4. 真人一次性验收窗口照 `docs/REALPLAYER-WINDOW.md` 走；专业 P1~P5 待 L3 接线后并成 F 组，需 Aki 上线，不排期。
+5. Q-021（`respec` 扣费）/ Q-022（M5 原语范围）/ Q-023（D20 三个显示开关）仍未答复，默认各按「免费」「按需补」「服务端 `display.json5`」走。

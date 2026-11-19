@@ -573,7 +573,7 @@ public final class MobSpawner {
 | 刷怪替换开关（D26 / M6 收口，R52 起进 `DEFAULT_FILES`） | `config/redtale_project/spawn.json5`：v1 只有 `replace_enabled`（缺省 `true`；非布尔的坏值 → 回落缺省 + 一条 WARN）。**运行期可写**：`/redtale spawn replace on|off` 会立刻回写这份文件（R52-a），`/redtale reload` 按文件重设内存；删文件会被 reload 重建为「开」 |
 | 等级曲线（M7，R42 定稿；R44 起进 `DEFAULT_FILES`） | `config/redtale_project/levels/<文件名>.json5`（一个文件一条曲线，schema 见 `docs/PROGRESSION.md` §3）；默认 `main.json5` 会**在文件缺失时被重建** |
 | 职业定义（M7，R44 起进 `DEFAULT_FILES`） | `config/redtale_project/jobs/<id>.json5`（一个文件一个职业，schema 见 `docs/PROGRESSION.md` §4）；默认 `miner.json5` |
-| 专业定义（D24，R64 定契约；默认件待 L2 落地） | `config/redtale_project/professions/<id>.json5`（一个文件一个专业，schema 见 `docs/PROFESSION.md` §3）；与 `jobs/` 同构 + 一张 `grants`（`mine`/`craft`/`smelt` 三源）。**v1 只发经验、不改掉落**（§1） |
+| 专业定义（D24，R64 定契约；R65 已落默认件 `mining` / `smelting`） | `config/redtale_project/professions/<id>.json5`（一个文件一个专业，schema 见 `docs/PROFESSION.md` §3）；与 `jobs/` 同构 + 一张 `grants`（`mine`/`craft`/`smelt` 三源）。**v1 只发经验、不改掉落**（§1） |
 | 经验面全局旋钮（M7，R44） | `config/redtale_project/progression.json5`：v1 只有 `mob_exp_multiplier`（缺省 1.0，负数 → 0 + WARN，>1e9 截断）；曲线不在这里 |
 | 技能树（D25 / M7，R50 起进 `DEFAULT_FILES`） | `config/redtale_project/skill_trees/<文件名>.json5`（一个文件一棵树，schema 见 `docs/SKILL-TREE.md` §3；`id` 缺省不补命名空间）。默认 `warrior_vanguard.json5` **删文件会被 reload 重建**；它依赖 `jobs/warrior.json5` 与 `skills/quake_slam.json5` 同时存在（否则 reload 会打两条交叉校验告警） |
 | 技能树里的 `classes` | 写**职业裸名**（`warrior`），与 `jobs/*.json5` 的全名 id（`redtale_project:warrior`）**按 path 比较**（R50-a）；空数组 = 所有职业可用 |
@@ -1137,7 +1137,6 @@ public static java.util.List<String> declaredSkills(SkillTreeSpec.Definition def
 - **探针**：`/redtale tree probe` **R 组**（`TreeCommand.probe`，18/18）。
 
 ### 4.38 内部实现类登记（**非契约面**，只做存在性对账，R63 定稿）
-
 **性质**：本节不是接口约定，**不给 S8 当设计依据**。它存在的唯一理由是 `tools/check_contracts.py` 的
 「未登记的实现类」提示通道：那 17 条提示长期常驻会把真信号埋掉。登记之后提示归零，**新写一个
 `core/` 类而没登记就会立刻刺眼**。所以本节只保证「名字还在、文件还在」，不保证任何行为。
@@ -1166,3 +1165,46 @@ public static java.util.List<String> declaredSkills(SkillTreeSpec.Definition def
 
 **为什么不做成 `4.x` 契约**：这些类的成员签名会随实现反复调整（`AttributeBreakdown` 的构造取过三次形态），
 写进契约等于给自己上锁，而 S8 按契约写码会写死在实现细节上。契约段只留**跨模块接口**（24 个类，§2/§4.1~§4.37）。
+
+### 4.39 专业解析与快照 `ProfessionSpec` / `ProfessionRegistry`（D24 L1+L2，R65 定稿）
+
+**性质**：纯数据面，零命令、零事件、零存档变更。`professions/*.json5` 的**唯一**解析入口与**唯一**快照来源；L3（存档/事件）、L4（属性下发）、L5（`/redtale profession` 观测面）都只读 `ProfessionRegistry`，**不得自己再解析一遍**（R36-a / R47-b 同一条）。
+
+```java
+// L1（S8 实现，R65 验收）：只解析，不校验属性表、不读注册表
+public final class ProfessionSpec {
+    public static final String DIR = "professions/";
+    public record Grant(String token, boolean tag, long amount) {}
+    public record Definition(String id, String name, int maxLevel, ExpCurve curve,
+                             java.util.Map<String, Double> attributes,
+                             java.util.Map<String, java.util.List<Grant>> grants,
+                             String source) {}
+    public static java.util.Map<String, Definition> parse(java.util.List<ConfigFile> configs,
+                                                          java.util.List<String> warnings);
+    public static java.util.List<Grant> grantsOf(Definition def, String source);
+    public static long resolve(java.util.List<Grant> grants, String id, java.util.Set<String> tags);
+}
+
+// L2（S7 实现）：交叉校验 + 属性键归一 + 快照
+public final class ProfessionRegistry {
+    public static final ProfessionRegistry EMPTY;
+    public static ProfessionRegistry load(java.util.List<ConfigFile> all, ProgressRegistry progress,
+                                          java.util.List<String> warnings);   // progress 可 null = 跳过重叠检查
+    public java.util.Map<String, ProfessionSpec.Definition> all();            // 不可变，保文件顺序
+    public ProfessionSpec.Definition get(String id);                          // 按 id 全名，精确
+    public ProfessionSpec.Definition find(String idOrPath);                   // id 或裸 path 同一条
+    public boolean has(String idOrPath);
+    public int size();
+    public java.util.List<String> sortedIds();
+    public int attributeTotal();
+    public java.util.List<String> warnings();
+    public String describe();                                                 // "N 个专业（M 条属性）"
+}
+```
+
+- **顺序契约**：`load` 必须排在 `ProgressRegistry.load` **之后**（重叠检查要 `jobs()` 的现成事实），与 `SkillTreeRegistry.load` 同一条纪律（R65-d）。
+- **属性键规范形态** = `AttributeSpec.id()`：自建属性裸 path（`mining_efficiency`）、原版带命名空间（`minecraft:generic.luck`）。`professions/` 里三种写法（裸名 / `redtale_project:` / `minecraft:` / 点号形态）都由 `AttributeSpecs.resolve` 归一；**表外属性丢弃并告警**，不静默（R65-c）。
+- **id 重叠**：`professions` 与 `jobs/` 按 path 比（`mining` ↔ `redtale_project:mining`）→ 告警但**保留定义**（PROFESSION §2，R64-d）；告警文案含 `与 jobs/ 里的职业 <path> 重叠`。
+- **曲线正性不在本层判**：`ExpCurve` 构造函数已把 `base ≤ 0 / growth ≤ 1 / exponent ≤ 0` 回落默认，且 `expForLevel` 有 1e9 硬顶 —— 本层重复判就是永不可测的死分支（R65-a）。
+- **不做**：tag 是否存在（datapack 数据，离线无答案，PROFESSION §4.3）、掉落、事件、存档、命令、UI。
+- **探针**：`build/probe/ProfessionSpecProbe`（69/69，L1）/ `build/probe/ProfessionRegistryProbe`（38/38，L2）。`build/` 不入库。

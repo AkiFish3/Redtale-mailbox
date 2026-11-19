@@ -3174,7 +3174,7 @@ fi
 - 2026-11-19 10:3x · **S7 验收 → VERIFIED（3/3）** · ①基线 `python tools/check_docs.py` **EXIT=0**、末行逐字 `共 78 份文档 · 322 条路径引用 · 0 条提示 · 0 条问题`；②三组负向全中：①`build/docfix`（拷 docs 去 TASKS.md + 追加 `` `docs/NOPE.md` ``）→ `[问题] build/docfix/ROUNDS.md:78 引用的路径不存在：docs/NOPE.md` + `1 条问题` **EXIT=1**；②`--docs nope/docs` → `[问题] 文档目录不存在：nope/docs` **EXIT=1**；③只含 `ROUND-X.md` 的目录 → `[提示] 未被任何文档引用的孤儿：ROUND-X.md` 且 **EXIT=0**（提示不判红钉死），夹具已删；③`wc -l`=**89** ≤200、`grep -c "def clean_json5"`=**0**、`py_compile` OK、`check_all` 逐字 `共 13 个脚本 · 跑成 13 · 跳过 0 · 红 0`。**裁定 S8 的口径提问**：`token②` 按**整行匹配**（含反引号内的 `python tools/x.py`）—— 卡面第 1 条把基线钉在 321，而 R63 实测口径就是整行；字面「去反引号」得 304 反而对不上自己写的基线 ⇒ **卡面自相矛盾，采纳实现**（同 R43-a / R56）。副作用已知且无害：同一行既写 `` `tools/x.py` `` 又写 `python tools/x.py` 会各计一次，存在性判定不受影响。
 
 
-### T-0060 · [OPEN] `core/progression/ProfessionSpec` —— 专业 schema 解析器 v1（D24 第一层，纯解析 + 一个纯函数）
+### T-0060 · [VERIFIED] `core/progression/ProfessionSpec` —— 专业 schema 解析器 v1（D24 第一层，纯解析 + 一个纯函数）
 
 - 派单：S7 · 2026-11-19 10:3x（R64）
 - 背景：D24 专业（采集/加工类长期积累）是 M7 之后第一批新内容，**契约先写死了**：`docs/PROFESSION.md`（本轮新建，§3 schema / §4 `grants` 语义 / §7 校验分层）。本卡只做 **L1 纯解析 + `resolve` 纯函数**：不碰注册表、不碰存档、不接线事件、不加命令。为什么先做这层：`attributes` 归属哪条属性、`professions` 与 `jobs` 的 id 会不会撞、存档升 v3 —— 全都要等解析稳了才敢动。
@@ -3245,7 +3245,63 @@ fi
   3. `wc -l < src/main/java/com/redtale/project/core/progression/ProfessionSpec.java` → **≤ 200**；`grep -c "net.minecraft" <同上>` → **0**；`grep -c "AttributeSpecs" <同上>` → **0**
 
 - 进度：
-  - （S8 自己填）
+  - 2026-11-19 11:0x · 完成 · src/main/java/com/redtale/project/core/progression/ProfessionSpec.java（新建 173 行，唯一卡内文件）+ build/probe/ProfessionSpecProbe.java（探针，build/ 不入库） · 构建退出码 0（jar 649623 B，jar 内 core/progression/ProfessionSpec.class=1） · 自测：验收2 探针 69/69（N≥30 无 FAIL，覆盖 configs=null/非 professions 前缀/id 缺失无冒号/重复保留先/name 三态/max_level 三坏值/curve 缺失+未知 mode+base-growth-exponent 越界/attributes 非对象+坏值丢弃/grants 非对象+未知源+非法 token/值负·非整数·超1000 夹取（含取整后二次范围判断双告警）/resolve 四档优先级+两 tag 取大与顺序无关/Map 与 List 不可变 UOE）；验收3 wc=173≤200 / net.minecraft=0 / AttributeSpecs=0；探针两轮自造假 FAIL 已修（G 组 attr 坏值 key 写反 c:d↔a:b、A 组合法夹具缺 curve 触发告警），实现无 bug。
+  - 2026-11-19 11:2x · **S7 验收通过（3/3）** · ①取锁后 `gradle build --offline` RC=0，`build/libs/redtale_project-0.1.0.jar` 649623 B，jar 内 `com/redtale/project/core/progression/ProfessionSpec.class` **1** 个（13095 B），锁已删；②`python tools/probe_run.py ProfessionSpecProbe` 末行 `ProfessionSpecProbe 69/69`，零 FAIL，N=69≥30；③`wc -l`=**173**≤200、`grep -c "net.minecraft"`=0、`grep -c "AttributeSpecs"`=0。代码复核 12 条口径逐条对照（`grants` 取整→负→1000 的顺序未倒、`resolve` 精确命中即时返回且 tag 取大与列表序无关、`List.copyOf`+`unmodifiableMap` 双不可变、未知顶层键告警）—— **零偏差，未打回**。
+
+### T-0061 · [OPEN] `tools/check_tasks.py` —— 卡板自检（在制品上限 / 验收段缺失 / 台账漂移）
+
+- 派单：S7 · 2026-11-19 11:2x（R65）
+- 背景：`docs/TASKS.md` §2 的四条硬规则（在制品 ≤3、验收必须机器可判、VERIFIED 要在 `PLAN.md` §13 记一行）现在**全靠我肉眼守**。R59 已经踩过「工具的输出会被当指令执行」，所以本卡只做**只读自检**：不修文件、不改卡、不猜语义。
+
+- 独占文件（**唯一可写**）：
+  - `tools/check_tasks.py`（**新建**，≤ 200 行）
+
+- 接口（**逐字**，不得增删参数）：
+  ```python
+  # 用法：python tools/check_tasks.py [--root <dir>] [-v]
+  #   --root  含 docs/TASKS.md 与 PLAN.md 的目录；缺省 = 本脚本所在目录的父目录
+  #   -v      逐条打印提示（hint）明细
+  # 退出码：问题数 > 0 → 1；否则 0（提示不影响退出码）
+  ```
+  末行汇总格式**逐字**（`N/M/P/H` 是整数，分隔符是两个空格 + `·` + 两个空格）：
+  ```
+  共 N 张卡 · 在制品 M · 问题 P · 提示 H
+  ```
+
+- 解析口径（**逐条写死**，不要自由发挥）：
+  1. **卡片标题**只认整行匹配 `^### (T-\d{4}) · \[([A-Z]+)\]` 的行（`re.match`，四位数字）。§4 模板里的 `### T-XXXX · [OPEN] <一句话标题>` **必须被这条正则排除**，不许当成卡（这是本卡最容易错的一点）。
+  2. 卡体 = 该标题行到**下一个** `^### ` 或 `^## ` 行（不含）之间的所有行；行号从 1 开始。
+  3. 只读两个文件：`<root>/docs/TASKS.md`、`<root>/PLAN.md`。文件缺失 → 打印 `<路径>：文件不存在`，**问题 1 条**，退出码 1，不要抛栈。
+
+- 检查项（**只做这 5 条，多一条都不要**）：
+  | # | 检查 | 判 |
+  |---|---|---|
+  | 1 | 状态合法 | 状态 ∉ `{OPEN,DOING,DONE,VERIFIED,BOUNCED,DROPPED}` → 问题 `<file>:<line> <id> 状态 <S> 不在状态机里` |
+  | 2 | id 重复 | 同一 `T-xxxx` 出现两次 → 问题打**后出现**那条：`<file>:<line> <id> 重复定义（先出现在第 <L> 行）` |
+  | 3 | 在制品上限 | `OPEN+DOING+BOUNCED` 的卡数 **> 3** → 问题 1 条（行号记 `-`）：`- 在制品 M 张 > 3（§2 规则 1）` |
+  | 4 | 验收段缺失 | 状态为 `DONE` / `VERIFIED` 的卡，卡体内**没有**任何 `.strip()` 后以 `- 验收` 开头的行 → 问题 `<file>:<line> <id> 缺「- 验收」段` |
+  | 5 | 台账漂移 | 状态为 `VERIFIED` 的卡，`PLAN.md` 全文搜不到该 `T-xxxx` → **提示**（不是问题）：`<id> 未在 PLAN.md 出现（VERIFIED 应在 §13 记一行）` |
+  4. 问题行前缀 `[问题]`，提示行前缀 `[提示]`，都按「先问题、后提示，各自按行号升序」输出。`-v` 才打印提示明细；不带 `-v` 只打印问题明细，提示只进汇总计数。
+  5. 输出里**不要**打印绝对路径（用 `--root` 相对路径或文件名 `TASKS.md`），否则日志跨机器不可读。
+
+- 不要做：
+  - 不写、不改、不格式化任何文件（**只读**）；不碰 `docs/TASKS.md` 的规则区与任何卡（你自己的进度行除外）
+  - 不 import 任何 JSON5 / YAML / 第三方库（纯 `re` + `pathlib` + `sys`）
+  - 不检查 §2 的其它规则（三振拆卡、独占文件、单卡 200 行、只加不删）—— 都要语义判断，留给 S7
+  - 不改 `tools/check_all.py`（接线由 S7 做，避免争用）
+  - 不加 `--fix`、不加联网、不读 `PLAN.md` 的章节结构（只做全文 `in` 判断）
+
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_tasks.py; echo EXIT=$?` → `EXIT=0`，且末行逐字匹配 `^共 61 张卡 · 在制品 [01] · 问题 0 · 提示 0$`（本卡自己也在板上了，所以是 61；`在制品` 是 1 还是 0 取决于你把本卡标成 `OPEN/DOING` 还是 `DONE`）
+  2. 四组负向夹具（**建在 `build/taskfix/` 下，验完删掉，不许入库**）：把 `docs/TASKS.md` + `PLAN.md` 复制进 `<夹具>/`，各改一处后用 `--root <夹具>` 跑：
+     - a) 把 4 张 `VERIFIED` 卡标题改成 `[OPEN]` → `EXIT=1`，问题里出现 `在制品 4 张 > 3`
+     - b) 把一张 `VERIFIED` 卡的 `- 验收` 行改成 `- 验收啦`（缩进保留）→ `EXIT=1`，问题里出现 `缺「- 验收」段`
+     - c) 复制一张卡标题到文件末尾（同 id）→ `EXIT=1`，问题行号指向**后**那份
+     - d) 从 `PLAN.md` 里删掉某张 `VERIFIED` 卡的 id → `EXIT=0`，汇总 `提示 1`
+     - 另跑一次 **模板不算卡** 的证明：`grep -n "T-XXXX" docs/TASKS.md` 有命中，但基线汇总的卡数是 61 而不是 62
+  3. `wc -l < tools/check_tasks.py` → **≤ 200**；`grep -cE "^(import|from) " <同上>` 的每个 import 都只来自 `{re, sys, pathlib}`（其它一律不行，`collections`/`argparse` 也不要）
+
+- 进度：
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3256,7 +3312,7 @@ fi
 | # | 候选 | 为什么适合 S8 | 依赖 |
 |---|---|---|---|
 | C9 | `tools/gen_rounds_index.py` —— 把 R63 的一次性脚本（`build/gen_rounds.py`，未入库）正式化：扫 `docs/ROUND-*.md` 首行标题 → 重写 `docs/ROUNDS.md` 的表体（表头与前言原样保留，只有 `\| R` 开头的行被替换） | 纯文件读写，输入输出全在文件系统，验收=重跑零 diff | 无（`docs/ROUNDS.md` 已存在） |
-| C10 | `tools/check_tasks.py` —— 卡板自检：在制品（`OPEN`+`DOING`+`BOUNCED`）> 3 → 红；`DONE`/`VERIFIED` 卡缺「验收（三条）」段 → 红；`VERIFIED` 卡在 `PLAN.md` §13 里搜不到 `T-XXXX` → 提示 | 纯文本解析，单文件 | 无（规则已写在本文件 §2） |
+| C10 | ~~`tools/check_tasks.py`~~ → **T-0061（R65 已派）** | —— | —— |
 | C11 | `professions/*.json5` 的 L1 解析器（D24 专业，`docs/GAP-AUDIT.md` A5） | 纯解析、不接结算，形态与 `SkillTreeSpec` 同构 | **需先出 spec**（`docs/PROFESSION.md` 由 S7 写）；M7 收口后才排 |
 | C12 | `tools/check_spawn.py`（`spawn.json5` + `spawn_rules/` 的独立对账） | 现由 `check_mobs.py` 兼顾，拆分只是可选 | 无（低价值，除非 `check_mobs` 继续膨胀） |
 
