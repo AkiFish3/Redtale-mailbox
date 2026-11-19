@@ -85,7 +85,7 @@
 | 9 | `dash` | 位移 | `power` 0.8 · `up` 0.2 · `direction` look\|back | ✅ R37 | **施法者自己**冲出去（不吃自己的击退抗性），一次性 `setDeltaMovement` + `hurtMarked`；`power<=0` 告警跳过、夹 `[0,5]`、`up` 夹 `[-1,2]`、`direction` 只认 `look`/`back`（`away` 等近义词不收）；水平分量为 0 时退化为 `+X`。**分帧版（原写的 `distance`/`duration_ticks`）未做**：怪物身上一次性速度由 AI 接着走，只有玩家会被客户端校正拉回（R37-a，挂账） |
 | 10 | `teleport` | 位移 | `distance` 8 · `require_line_of_sight` true | — | 视线 raycast 落点，落点必须在可站立方块上 |
 | 11 | `leap` | 位移 | `up` 0.5 · `forward` 0.3 | — | |
-| 12 | `projectile` | 投射 | `entity` 缺省 `minecraft:arrow` · `speed` 2.0 · `on_hit` 原语序列 | — | 命中回调要能把 `damage` 塞进去（M5-C） |
+| 12 | `projectile` | 投射 | `entity` 缺省 `minecraft:arrow` · `speed` 2.0 · `on_hit` 原语序列 | ✅ R39 | T-0033 已验收：真正放出投射物实体，`on_hit` 可带 `damage` 子原语（M5-C）。**原「—」标记是漏更新的漂移**，代码 2026-11-17 即落地 |
 | 13 | `beam` | 投射 | `range` 12 · `damage` · `damage_type` | — | 瞬间命中，无实体，纯 raycast |
 | 14 | `aura` | 投射 | `radius` 4 · `duration_ticks` 100 · `interval_ticks` 20 · `on_tick` 原语序列 | — | 跟随施法者的持续范围 |
 | 15 | `buff` | 增益 | `target` caster · `effect` 原版 id · `amplifier` 0 · `duration_ticks` 200 | ✅ R32 | T-0026 交付；**瞬时效果（`instant_damage` 等）走 `addEffect` 不结算伤害**（R32-d 实测），别拿它当直伤 |

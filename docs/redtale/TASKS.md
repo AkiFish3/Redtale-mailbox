@@ -3731,7 +3731,7 @@ fi
   3. `wc -l`=105≤200、`grep -c "def check_listing"`=1、禁用模式 grep=0。S7 另跑 9 条边界（缩进闭合/顶格闭合/无块/空块/自身纳入/排三类顺序/空集/读取失败 EXIT=1 且无栈）9/9。
 - **S7 裁定两处漂移**：①TOOLS 闭合缩进两种都认——按规范文本优先、**实测为准**（现网顶格），保留兼容不返工（§13.78 R75-a）；②自身排除逻辑**接线当轮生效**：接线前排除自身、接线后（本轮追加 `check_checkall.py` 进 TOOLS）自动纳入，下轮基线应为 `清单 19 项 · 磁盘 19 项`，仍 0 问题（§13.78 R75-b）。两处均采纳实现，不打回。
 
-### T-0071 · [OPEN] `tools/check_commands.py` —— 命令树挂载对账（命令类文件名 ↔ RedtaleCommand 引用，单文件零接线）
+### T-0071 · [VERIFIED] `tools/check_commands.py` —— 命令树挂载对账（命令类文件名 ↔ RedtaleCommand 引用，单文件零接线）
 - 派单：S7 · 2026-11-20 04:0x（R75）
 - 目标：给命令树装一张和 `check_checkall` 同构的安全网。`core/command/` 下每加一个 `*Command.java` 都要在 `RedtaleCommand` 里挂一行 `.then(XxxCommand.node())` 或 inline `.executes(Xxx::yyy)`；漏挂 = 命令永远不存在且 `build`/`check_all` 仍全绿（R74-a 元层同源）。本卡双向核对「磁盘命令类」与「根命令的引用集」。
 - 独占文件（**唯一可写**）：
@@ -3749,6 +3749,34 @@ fi
   1. `python tools/check_commands.py` → 末行 `共 1 份命令树 · 0 条问题` EXIT=0；`-v` → 含 `命令类 20 个 · 挂载引用 20 个`（当前基线：20 个 `*Command.java` 不含 `RedtaleCommand`，根命令引用 20 个外部命令类）。
   2. 三组负向夹具（写到 `build/cmdfix/`，把命令目录与根命令各复制一份进去改，用 `--cmd`/`--root` 指过去）：A 从根命令副本删 `.then(DisplayCommand.node())` 与 `.then(ExpCommand.node())` → EXIT=1 且恰好 2 条 `未挂进 RedtaleCommand`；B 往根命令副本塞 `.then(GhostCommand.node())` → EXIT=1 且恰好 1 条 `无对应命令类`；C 目录副本新增 `WandererCommand.java` 但不挂 → EXIT=1 且恰好 1 条 `未挂进 RedtaleCommand`。
   3. `wc -l < tools/check_commands.py` ≤ 200；`grep -c "def check_mounts"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|check_all.*append" tools/check_commands.py`=0；注释里的假命令（如 `// .then(FakeCommand.node())`）**不得**计入挂载引用（S7 复测）；夹具用完即删（`build/cmdfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-20 04:12 · 完成 · tools/check_commands.py（134 行，新建） · 未构建（纯 Python 卡，无需 gradle） · 基线 `共 1 份命令树 · 0 条问题` EXIT=0、`-v` 命中「命令类 20 个 · 挂载引用 20 个」；夹具 A=2 条未挂 / B=1 条幽灵引用 / C=1 条未挂 均 EXIT=1；注释假命令（行尾// + 块/**/）不计入 EXIT=0；读取失败 2 条不抛栈；wc=134≤200 / def check_mounts=1 / 禁用模式 grep=0 / py_compile OK / git 仅 TASKS.md+新脚本；夹具 build/cmdfix/ 已清。
+  - 备注：卡面只要求「先剥注释」，未让剥字符串字面量；实现保留字符串中 `XxxCommand` token（不解析 JavaAST），符合接口逐字。字符串里的假命令是否被 S7 视作挂载引用，本卡不裁定。
+- **验收（S7 · 2026-11-20 05:1x · R76）**：
+  1. 基线 `python tools/check_commands.py` → `共 1 份命令树 · 0 条问题` EXIT=0；`-v` → `已检查 … · 命令类 20 个 · 挂载引用 20 个`，逐字对上。
+  2. S7 独立三夹具（自建，写到 `build/cmdfix/`：命令目录与根命令各复制一份改，用 `--cmd`/`--root` 指过去）：A 从根命令副本删 `.then(DisplayCommand.node())` 与 `.then(ExpCommand.node())` → EXIT=1 且恰好 2 条 `未挂进 RedtaleCommand`；B 塞 `.then(GhostCommand.node())` → EXIT=1 且恰好 1 条 `无对应命令类`；C 目录副本新增 `WandererCommand.java` 不挂 → EXIT=1 且恰好 1 条 `未挂进 RedtaleCommand`。三组全中，夹具已清。
+  3. `wc -l`=134≤200、`grep -c "def check_mounts"`=1、`grep -cE "clean_json5|check_progress|net\.minecraft|check_all.*append"`=0。S7 另跑 5 组边界：行尾 `//` 与 `/*…*/` 块内假命令不计入（EXIT=0）、字符串字面量 `XxxCommand` token 保留（符合接口「只剥注释」逐字，EXIT=1 且报幽灵引用）、命令目录读失败 1 条 `命令目录读取失败` 不抛栈、根命令读失败 1 条 `根命令读取失败` 不抛栈、三类问题排序稳定（3 条未挂在前 + 1 条幽灵在后）。全绿。
+- **S7 裁定 S8 备注**：字符串字面量里的 `XxxCommand` token 计入挂载引用——接口逐字只要求「先剥注释」，剥字符串属超范围，采纳实现不打回（§13.79 R76-a）。首跑 E5 边界 FAIL 是 S7 夹具期望写错（`ta` 已删 2 条挂载 → 应 4 条问题非 3 条），复测排序正确，非代码缺陷（同 R65-a）。接线 `check_all` 19→20 已做，本卡 VERIFIED 后文件归 S7。
+
+### T-0072 · [OPEN] `tools/check_primitives.py` —— 原语注册对账（builtin 类文件 + 内联 record ↔ Builtins 注册，单文件零接线）
+- 派单：S7 · 2026-11-20 05:1x（R76）
+- 目标：把 R75-c 的「元层名单 ↔ 磁盘实体」同构从命令树推到脚本原语。`builtin/` 下每加一个 `*Effect.java`/`*Condition.java`，或 `Builtins.java` 里加一个内联 `record … implements TriggerType`，都要在 `Builtins.registerAll` 里 `register(new Xxx())`；漏注册 = 配置写 `type: xxx` 时 `check_skills` 仍全绿（它只验 id 在 `SKILLS.md` 表内），运行期才崩。本卡双向核对「磁盘原语类 + 内联 record」与「注册引用集」。
+- 独占文件（**唯一可写**）：
+  - `tools/check_primitives.py`（新建，≤ 200 行）
+  - `build/primfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、任何 `docs/`、任何其它 `tools/*.py`（含 `check_all.py`——接线归 S7）；不改 `TOOLS` 清单。
+- 复用/依赖：无。只读 `.java` 文本，剥注释（行尾 `//` + 块 `/*…*/`），不解析 JavaAST、不 import 其它 check、不读 JSON5、不读 `SKILLS.md`。
+- 接口（逐字）：
+  - `read_classes(builtin_dir: str) -> list[str]`：`os.listdir(builtin_dir)` 里 `name.endswith("Effect.java")` 或 `name.endswith("Condition.java")`，去掉 `.java` 后缀按字典序返回（`Builtins.java` 两个后缀都不匹配，自然排除；当前基线 **16 个** = 13 Effect + 3 Condition）。
+  - `read_records(builtins_text: str) -> set[str]`：正则 `\brecord\s+([A-Z][A-Za-z0-9]*)\s*\(\s*\)\s*implements\s+TriggerType\b`，在剥注释后的全文上取（当前基线 **2 个**：`ManualTrigger` / `PlayerJoinTrigger`，均为 `Builtins.java` 内联 record，不是独立文件）。
+  - `read_regs(builtins_text: str) -> set[str]`：正则 `\bnew\s+([A-Z][A-Za-z0-9]*)\s*\(\s*\)`，在剥注释后的全文上取（当前基线 **18 个** = 13 Effect + 3 Condition + 2 Trigger）。
+  - `check_registration(classes: list[str], records: set[str], regs: set[str]) -> list[str]`：两类问题按序追加（返回列表，不含前缀）：① `sorted((set(classes) | records) - regs)` → `原语 <name> 未注册进 Builtins`；② `sorted(regs - set(classes) - records)` → `注册引用 <name> 无对应原语类`。
+  - `main() -> int`：CLI `--builtin <path>`（默认 `src/main/java/com/redtale/project/core/script/builtin`）、`--regs <path>`（默认 `<builtin>/Builtins.java`）、`-v`（多打一行 `已检查 <regs> · 原语类 N 个（内联 M）· 注册引用 K 个`，N=`len(classes)`、M=`len(records)`、K=`len(regs)`）；每条 `[问题] <msg>`；末行 `共 1 份原语注册表 · %d 条问题`；0 问题 EXIT=0 否则 EXIT=1。任一文件读失败算 1 条 `原语目录读取失败`/`注册表读取失败`、不抛栈。
+- 不要做：不改阈值、不加告警级别、`grep -c` 硬编码类名、解析 Brigadier/JavaAST、读 `SKILLS.md`（id↔类映射不做）、接 `check_all.py`。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_primitives.py` → 末行 `共 1 份原语注册表 · 0 条问题` EXIT=0；`-v` → 含 `原语类 16 个（内联 2）· 注册引用 18 个`（当前基线，S7 已核）。
+  2. 三组负向夹具（写到 `build/primfix/`，builtin 目录与 `Builtins.java` 各复制一份改，用 `--builtin`/`--regs` 指过去）：A 从注册副本删 `.register(new HealEffect())` 与 `.register(new AlwaysCondition())` → EXIT=1 且恰好 2 条 `未注册进 Builtins`（`HealEffect`/`AlwaysCondition`）；B 往注册副本塞 `.register(new GhostEffect())` → EXIT=1 且恰好 1 条 `无对应原语类`；C 目录副本新增 `WandererEffect.java` 但不注册 → EXIT=1 且恰好 1 条 `未注册进 Builtins`。
+  3. `wc -l < tools/check_primitives.py` ≤ 200；`grep -c "def check_registration"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|check_all.*append|SKILLS\.md" tools/check_primitives.py`=0；注释里的假注册（如 `// registries.register(new FakeEffect())`、块注释内同类）**不得**计入注册引用（S7 复测）；夹具用完即删（`build/primfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 
@@ -3772,7 +3800,8 @@ fi
 | C18 | ~~`core/config/ConfigDiff`（reload 变更摘要纯函数）~~ → **T-0068（R72 派 / R73 验）**：快照取值 `ConfigStore.mtimes()` + 摘要打点留 S7（跨文件） | R69-b「文件 ≠ 生效值」需要「这次 reload 动了哪些文件」的观测面 | 无 |
 | C19 | ~~`tools/check_display.py`（display.json5 安全网）~~ → **T-0069（R73 派 / R74 验）** | R69-b：display 写歪只静默回落，缺离线对账 | 无 |
 | C20 | ~~`tools/check_checkall.py`（check_all 清单 ↔ 磁盘对账）~~ → **T-0070（R74 派 / R75 验）** | R64~R74 每轮手工接 check 脚本，从未机器核对，漏接则永远绿 | 无 |
-| C21 | ~~`tools/check_commands.py`（命令树挂载对账）~~ → **T-0071（R75 派）** | R75-a/b 元层洞同源：R59~R74 每加一个 `*Command.java` 手工挂一行，漏挂则命令永远不存在且全绿 | 无 |
+| C21 | ~~`tools/check_commands.py`（命令树挂载对账）~~ → **T-0071（R75 派 / R76 验）** | R75-a/b 元层洞同源：R59~R74 每加一个 `*Command.java` 手工挂一行，漏挂则命令永远不存在且全绿 | 无 |
+| C22 | ~~`tools/check_primitives.py`（原语注册对账）~~ → **T-0072（R76 派）** | R75-c 元层洞再同源一步：新增 `*Effect.java`/`*Condition.java`/内联 record 忘在 `Builtins` 注册 → `check_skills` 仍绿、运行期才崩 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-20 04:08 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-20 05:17 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,18 +12,18 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0071 | OPEN | `tools/check_commands.py` —— 命令树挂载对账（命令类文件名 ↔ RedtaleCommand 引用，单文件零接线） |
+| T-0072 | OPEN | `tools/check_primitives.py` —— 原语注册对账（builtin 类文件 + 内联 record ↔ Builtins 注册，单文件零接线） |
 
-已验完 **68** 张 / 共 **71** 张。
+已验完 **69** 张 / 共 **72** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R70 | 2026-11-19 | **验收 T-0065（`/redtale display`，Q-023 收口）+ 派 T-0066（`SpawnBud |
-| R71 | 2026-11-19 | **补完中断的 R71：验收 T-0066（`SpawnBudget`）+ 接过两处接线（配置面/运行期委托）+ 测试服 |
-| R72 | 2026-11-20 | **验收 T-0067（`check_spawn.py`）+ 接线 `check_all` 16→17 + 派 T-00 |
 | R73 | 2026-11-20 | **验收 T-0068（`ConfigDiff` 纯函数）+ 接过接线（`ConfigStore.mtimes()` + |
+| R74 | 2026-11-20 | **验收 T-0069（`check_display.py`）+ 接线 `check_all` 17→18 + 派 T- |
+| R75 | 2026-11-20 | **验收 T-0070（`check_checkall.py`）+ 接线 `check_all` 18→19 + 派 T |
+| R76 | 2026-11-20 | **验收 T-0071（`check_commands.py`）+ 接线 `check_all` 19→20 + 派 T |
 | R69 | 2026-11-19 | **验收 T-0064（`DisplaySpec`，Q-023 L1）+ Q-023 落地 L2（`display.js |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
