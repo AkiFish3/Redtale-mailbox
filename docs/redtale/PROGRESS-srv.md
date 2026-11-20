@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-20 15:36 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-20 16:43 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0077 | OPEN | `tools/check_ownership.py` —— 在制品卡「独占文件」重叠对账（单文件零接线） |
+| T-0078 | OPEN | `tools/check_event_registration.py` —— `@SubscribeEvent` 监听器注册对账（单文件零接线） |
 
-已验完 **74** 张 / 共 **77** 张。
+已验完 **75** 张 / 共 **78** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R78 | 2026-11-20 | **验收 T-0073（`check_gen_prefix.py`）+ 接线 `check_all` 21→22 + 派 |
 | R79 | 2026-11-20 | **验收 T-0074（`check_rounds.py`）+ 接线 `check_all` 22→23 + 派 T-0 |
 | R80 | 2026-11-20 | **验收 T-0075（`check_primitive_ids.py`）+ 接线 `check_all` 23→24  |
 | R69 | 2026-11-19 | **验收 T-0064（`DisplaySpec`，Q-023 L1）+ Q-023 落地 L2（`display.js |
 | R81 | 2026-11-20 | **验收 T-0076（`check_lang_dupes.py`）+ 接线 `check_all` 24→25 + 派 |
+| R82 | 2026-11-20 | **验收 T-0077（`check_ownership.py`）+ 接线 `check_all` 25→26 + 派  |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 

@@ -1658,6 +1658,7 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 ## R74 · 2026-11-20 02:5x · 验 T-0069 + check_all 17→18 + 派 T-0070（check_all 清单安全网）
 
 | R81 | 2026-11-20 | **验收 T-0076（`check_lang_dupes.py`）+ 接线 `check_all` 24→25 + 派 T-0077（在制品卡独占文件重叠对账）** | ①T-0076 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `共 2 个语言文件 · 0 条问题` EXIT=0、`-v` 0/0；三夹具各自从干净副本重来 A=1 zh_cn 重复·B=1 en_us 重复·C=3（zh_cn 两条按键升序 + en_us 一条）逐字 EXIT=1；wc=65、`def read_dupes`=1、禁用 grep=0、py_compile OK、`--lang NO_SUCH` 2 条读失败不抛栈）；S7 独立边界 9/9（三次出现 / 嵌套局部键 / 嵌套取最大值 / 升序 / report 保序 / 三种读失败），`build/langdupfix/` 已清。②裁定 S8 提问：夹具 C 裸键按可机器判据「恰好 3 条」优先，采纳完整属性键、不打回，卡面就地更正（§13.84 R81-a）。③接线 `check_all` → **`共 25 个脚本 · 跑成 25 · 跳过 0 · 红 0`**；接线后 `check_checkall -v` 25/25、`check_tasks` 77 卡在制品 1 问题 0。④派 **T-0077**（`check_ownership.py`（L6 新建）：`check_tasks` 查状态/重复 id/WIP 上限却不查两张 WIP 卡抢同一文件，而独占文件是防冲突唯一机制；接口 `read_cards`/`exclusive_files`/`check_overlaps`/`main` 由 S7 定死），在制品 1/3。⑤`src/` 零 diff、未构建、未启停任何服、无构建锁。 | **§13.84 R81-a~c**。 |
+| R82 | 2026-11-20 | **验收 T-0077（`check_ownership.py`）+ 接线 `check_all` 25→26 + 派 T-0078（事件监听器注册对账）** | ①T-0077 `[DONE]` → **`[VERIFIED]`**（3/3 + S7 独立边界 11/11）：验收 1 用 `git show HEAD:docs/TASKS.md` 取领卡时 OPEN 快照 → `已对账 1 张在制品卡 · 2 个独占文件声明` EXIT=0（当前 DONE 自指消失后为 0/0，按 S8 注记不打回）；三夹具 A=1·B=0·C=2 逐字 EXIT=1/0/1；wc=105、`def check_overlaps`=1、禁用 grep=0、`py_compile` OK、`--tasks NO_SUCH` 1 条读失败不抛栈。首轮 3 FAIL 全是 S7 夹具期望写错（行号 / membership / 自由文本无 `- `），按 R65-a 改期望后 11/11，`build/ownerfix/` 已清。②接线 `check_all` → **`共 26 个脚本 · 跑成 26 · 跳过 0 · 红 0`**；接线后 `check_checkall -v` 26/26、`check_tasks` 78 卡在制品 1 问题 0、`check_ownership -v` 新基线 1 卡/2 声明（T-0078）。③在制品归 0 → **派 T-0078**（`check_event_registration.py`（L6 新建）：`@SubscribeEvent` 监听器 ↔ `EVENT_BUS.register(...)` 对账，接口 `strip_comments`/`read_listeners`/`read_registrations`/`check_registration`/`main` 由 S7 定死，小写字段别名与自注册两种证据都认；基线 S7 先核 8 监听器/8 已注册），在制品 1/3。④本轮 `src/` 零 diff、未构建、未启停任何服、无构建锁；`check_docs` 97 份 396 引用 0 问题、`check_contracts` 44 条 0 问题。 | **§13.85 R82-a~c**。 |
 - **卡板**：T-0069 `check_display.py` `[DONE]` → **VERIFIED**（3/3：基线 `共 1 个文件 · 0 条问题` EXIT=0 / `-v` 含「已检查 … · 6 项」；三组夹具 A=4（show_dps / show_attribute_breakdown / assume_target / 未知键 bogus_key 逐字对上）、B=2（空白 id + show_dps 非 bool）、C=1（仅「解析失败」不抛栈）均 EXIT=1；wc=113≤200、`from check_progress import clean_json5`=1、禁用 API=0）。S7 另跑 12 条独立边界（空对象缺键 / 三键全对 / 空串与纯空白 assume_target 回落 / 带点合法 id / 根节点 list 与 None / 只有 ns 无 path / 只有冒号 / 带大写 / False 合法 / 0 非 bool）12/12。夹具 build/dispfix 已清。
 - **接线**：`tools/check_all.py` 的 `TOOLS` 末尾追加 `"check_display.py",`（R74 接上）→ **`共 18 个脚本 · 跑成 18 · 跳过 0 · 红 0`**（R73 预判兑现）。
 - **派 T-0070**（`tools/check_checkall.py`：check_all 清单 ↔ 磁盘双向对账，单文件只读 `.py` 文本、零接线、禁造 JSON5 清洗器），在制品 **1/3**。动机：R64~R74 每轮手工往 `TOOLS` 追加一行，从未机器核对；漏接一个脚本则它永远不被 `check_all` 跑到而整体仍全绿（R65-a 死检查同源）。接口 `read_listed`/`read_disk`/`check_listing`（重复→清单项磁盘不存在→脚本未接进，三类消息逐字定死）+ `main` 的 `--all`/`--dir`/`-v` 全部由 S7 给定。
@@ -1797,4 +1798,18 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 
 1. **验 T-0077**（`check_ownership.py`：基线 `已对账 1 张在制品卡 · 2 个独占文件声明` EXIT=0 / 三夹具 A=1·B=0·C=2 逐字 / wc≤200、禁用 grep=0、py_compile OK、`--tasks NO_SUCH` 恰好 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 26`。
 2. 对账网已到第八例，继续按 R80-b / R81-b 判据找「别人都绿而真实状态错」的对象；找不到就转内容面，不硬凑同构名单。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补）无答复，继续按默认走。
+
+### 13.85 R82 的三条口径（状态改变后基线从历史快照取 / 元层洞第九例 = 事件监听器注册 / 别名与自注册都要算证据）+ 下一步（R83）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R82-a | **状态改变导致自指消失时，验收基线从派单时的历史快照取**：T-0077 领卡时是唯一 OPEN 卡（1 卡/2 独占文件声明），S8 交货改 `[DONE]` 后不再进 WIP，当前工作树复跑只剩 0/0。用 `git show HEAD:<path>` 取派单时快照复现基线，**不因为当前数字变了就打回实现**。 | S8 已在交付注记里写清这个变化（R81-a 同源：机器判据优先、文本描述可更正）。检查器的正确地是「当前 WIP 重叠为 0」，基线数字只是验收当时的证据。 |
+| R82-b | **元层洞第九例 = `@SubscribeEvent` 监听器 ↔ 事件总线注册**：前八例核清单 / 命令 / 原语 / 生成器 / 索引 / id / lang 内部 / 卡板独占，T-0078 核的是「类写了事件处理器但没人注册」。断裂后编译绿、命令对账绿、运行期事件永不触发且不打错误日志，符合 R80-b「两边都绿、运行期才崩」判据。 | 「注册动作」散落在 mod 构造期、`GameHooks` 构造期与 `install()` 自注册三处，靠人记必然漏；一张只读对账网的成本仍是一个单文件脚本。 |
+| R82-c | **注册证据要覆盖小写字段别名与自注册，不能只认类名直接出现在 `register(...)` 里**：基线 8 个监听器中 `DamageLayer` 以字段 `damageLayer` 注册、`SpawnReplacer` 在自身 `install()` 里 `register(INSTANCE)`。只认类名的检查会基线红，逼出一轮无意义返工；派单前先把当前 8 个的注册形态逐个核过，再写接口。 | R81-c「夹具要真能造出目标状态」的正面版本：派卡前先拿基线数据试跑判定逻辑，防的是「检查器本身误报」。 |
+
+下一步（R83）：
+
+1. **验 T-0078**（`check_event_registration.py`：基线 `共 1 份事件总线 · 0 条问题` + `-v` 8/8 / 三夹具 A=0·B=1·C=1 逐字 / wc≤200、禁用 grep=0、py_compile OK、`--java NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 27`。
+2. 对账网已到第九例，继续按 R80-b / R81-b / R82-b 判据找「别人都绿而真实状态错」的对象；找不到就转内容面，不硬凑同构名单。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补）无答复，继续按默认走。

@@ -3869,7 +3869,7 @@ fi
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 - 2026-11-20 15:3x · S7 · **VERIFIED**（3/3 + S7 独立边界 9/9）：基线 `共 2 个语言文件 · 0 条问题` EXIT=0、`-v` 含 `已扫 2 个语言文件 · zh_cn 0 条重复 · en_us 0 条重复`；三夹具各自从干净副本重来 A=1 zh_cn 重复 / B=1 en_us 重复 / C=3（zh_cn 两条按 key 升序 + en_us 一条），EXIT=1 逐字对上；wc=65、`def read_dupes`=1、禁用 grep=0、`py_compile` OK、`--lang NO_SUCH`=2 条读失败不抛栈；S7 边界 9/9（三次出现、嵌套局部键不拼路径、嵌套取最大次数、按键升序、report 保序、坏 JSON / 空文件 / 缺文件读失败）。**裁定 S8 提问**：验收 2 夹具 C 的裸键按「恰好 3 条」可机器判据优先，采纳完整属性键实现、不打回，卡面已就地更正（§13.84 R81-a）。
 
-### T-0077 · [OPEN] `tools/check_ownership.py` —— 在制品卡「独占文件」重叠对账（单文件零接线）
+### T-0077 · [VERIFIED] `tools/check_ownership.py` —— 在制品卡「独占文件」重叠对账（单文件零接线）
 - 派单：S7 · 2026-11-20 15:4x（R81）
 - 目标：`docs/TASKS.md` §2 的「独占文件」是 S7/S8 防冲突的唯一机制；`check_tasks.py` 只查状态 / 重复 id / 在制品上限 / 验收段，不查两张在制品卡是否声明同一文件。重叠时两边都能各自 VERIFIED，后写者静默覆盖前者。本卡只读扫 WIP（OPEN/DOING/BOUNCED）卡的独占文件声明，补这个洞。
 - 独占文件（**唯一可写**）：
@@ -3886,6 +3886,28 @@ fi
   1. `python tools/check_ownership.py` → 末行 `共 1 份卡板 · 0 条问题` EXIT=0；`-v` → 含 `已对账 1 张在制品卡 · 2 个独占文件声明`（当前基线：只有 T-0077 自身 OPEN，S7 已核）。
   2. 三组负向夹具（复制到 `build/ownerfix/`，用 `--tasks` 指过去，各自从干净最小卡板重来，不许累积）：A 两张 WIP 卡同写 `tools/foo.py` → EXIT=1 且恰好 1 条 `独占文件 tools/foo.py 被 T-9001 / T-9002 同时声明`；B 一张 OPEN 与一张 VERIFIED 同写 `tools/foo.py` → EXIT=0 且 0 条；C 三张 WIP 卡：T-9001/T-9002 同写 `tools/foo.py`、T-9001/T-9003 同写 `build/fix/` → EXIT=1 且恰好 2 条，顺序为 `独占文件 build/fix 被 T-9001 / T-9003 同时声明` 先、`独占文件 tools/foo.py 被 T-9001 / T-9002 同时声明` 后（按 path 升序）。三组逐字对上。
   3. `wc -l < tools/check_ownership.py` ≤ 200；`grep -c "def check_overlaps"`=1；`grep -cE "check_tasks|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_ownership.py`=0；`py_compile` OK；`--tasks NO_SUCH` → EXIT=1 且恰好 1 条 `卡板读取失败`，不抛栈；夹具用完即删（`build/ownerfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 16:22 · 完成 · `tools/check_ownership.py`（新建 105 行：read_cards / exclusive_files / check_overlaps / main）· 构建：未执行（纯 Python 卡，卡明令禁止 gradle、未取锁）· 自测：验收 1 基线 `共 1 份卡板 · 0 条问题` EXIT=0、`-v` 含 `已对账 1 张在制品卡 · 2 个独占文件声明`；验收 2 夹具 A=1 / B=0 / C=2 条逐字（EXIT=1/0/1）；验收 3 `wc`=105≤200、`def check_overlaps`=1、禁用 grep=0、`py_compile` OK、`--tasks NO_SUCH`=1 条 `卡板读取失败` EXIT=1 不抛栈；额外边界 D（`./` 前缀 / 尾 `/` / 同卡重复 / 兄弟行 token）1/1；`build/ownerfix/` 已清。注：本卡 DONE 后自指消失，复跑 `-v` 为 `已对账 0 张在制品卡 · 0 个独占文件声明` EXIT=0（验收 1 的 1 卡/2 声明取自领卡时 OPEN 基线，夹具 A/B/C 已覆盖计数口径），请 S7 按此验收。
+- 2026-11-20 16:4x · S7 · **VERIFIED**（3/3 + S7 独立边界 11/11）：验收 1 用 `git show HEAD:docs/TASKS.md` 取领卡时 OPEN 快照 → `已对账 1 张在制品卡 · 2 个独占文件声明` + `共 1 份卡板 · 0 条问题` EXIT=0（当前 DONE 卡自指消失后为 0 卡/0 声明 EXIT=0，按 S8 注记不判回）；验收 2 三夹具各自干净副本 A=1 `tools/foo.py` 重叠 / B=0（VERIFIED 不进 WIP）/ C=2（按 path 升序 `build/fix` 先、`tools/foo.py` 后）逐字 EXIT=1/0/1；验收 3 `wc`=105、`def check_overlaps`=1、禁用 grep=0、`py_compile` OK、`--tasks NO_SUCH` 恰好 1 条 `卡板读取失败` EXIT=1 不抛栈。S7 边界 11/11（模板卡跳过 / body 截止 / 1-based 行号 / `./` 与尾 `/` 归一 / 同卡去重 / 兄弟行截断 / 三卡同路径 id 升序 / 空集 / 缺文件）。首轮 3 FAIL 全是 S7 夹具期望写错（行号按 1 文件 1 卡算漏 3 行、membership 写成子串、无 `- ` 的自由文本本不在接口扫描集），按 R65-a 修正期望后全过，非代码缺陷。`build/ownerfix/` 已清。
+
+### T-0078 · [OPEN] `tools/check_event_registration.py` —— `@SubscribeEvent` 监听器注册对账（单文件零接线）
+- 派单：S7 · 2026-11-20 16:4x（R82）
+- 目标：`check_commands.py` 对账「命令类 ↔ 挂载引用」，但新增一个带 `@SubscribeEvent` 的监听器类却忘了 `EVENT_BUS.register(...)` 时——编译绿、命令对账绿、运行期那个事件**永远不触发且不报错**。本卡只读扫 Java 源码，核「有 `@SubscribeEvent` 的类是否都注册到事件总线」。当前基线 8 个监听器 / 8 个已注册（S7 已核）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_event_registration.py`（新建，≤ 200 行）
+  - `build/eventfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_commands.py` / `check_tasks.py`）；不改 `TOOLS` 清单；不 import 其它 check；不读 JSON5；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `strip_comments(text: str) -> str`：去掉 `//` 行注释与 `/* … */` 块注释（字符串字面量里的 `//` 也按注释处理，保持单一简单规则），不删空行。
+  - `read_listeners(java_dir: str) -> dict[str, int]`：递归扫 `*.java`；文件去注释后含 `@SubscribeEvent` 才收，key = 文件名（去 `.java`），value = `@SubscribeEvent` 出现次数；按 key 排序返回（dict 保序）；目录不存在 / 读失败 / 无 java 文件 → 返回 `{}`，不抛栈。
+  - `read_registrations(java_dir: str, listeners: dict[str, int]) -> set[str]`：扫全部 java 文件去注释文本，用 `EVENT_BUS\s*\.\s*register\s*\(([^;]{0,300}?)\)\s*;`（DOTALL）截参数段，取其中全部 `[A-Za-z_][A-Za-z0-9_]*` token。监听器名 `L` 算已注册，满足任一即可：① `L` 直接出现在 token 集；② 同一文件里有 `\bL\s+([a-z][A-Za-z0-9_]*)\b`（如 `DamageLayer damageLayer`）且捕获的别名出现在 token 集；③ 文件名恰为 `L` 的文件自身含 register 调用（自注册，如 `SpawnReplacer.install()`）。返回已注册的监听器名集合。
+  - `check_registration(listeners: dict[str, int], registrations: set[str]) -> list[str]`：按监听器名升序遍历，未注册的输出 `事件监听器 <Name> 有 @SubscribeEvent 但未注册到事件总线`（不含 `[问题]` 前缀，main 负责加）。
+  - `main() -> int`：CLI `--java <dir>`（默认 `src/main/java`）、`-v`（多打一行 `已检查 <n> 个监听器 · <m> 个已注册`，n=监听器数、m=已注册数，且 m 只计监听器集合内）；`--java NO_SUCH` 或读不到 java 文件 → 恰好 1 条 `[问题] 事件总线读取失败`、末行 `共 1 份事件总线 · 1 条问题`、EXIT=1；其余每条 `[问题] <msg>`；末行 `共 1 份事件总线 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1。
+- 不要做：不查注册了却没有 `@SubscribeEvent` 的幽灵类；不改绿红语义把「多个 `@SubscribeEvent` 方法只注册一次」当问题；不解析 Java AST / 不编译 / 不读 jar；不把 mixin 纳入本卡。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_event_registration.py` → 末行 `共 1 份事件总线 · 0 条问题` EXIT=0；`-v` → 含 `已检查 8 个监听器 · 8 个已注册`。
+  2. 三组夹具复制到 `build/eventfix/java/`，用 `--java` 指过去，各自从干净目录重来不许累积（每个 `.java` 写最小可编译外观即可，本卡不编译）：A `A.java` 有 `@SubscribeEvent` + `Wiring.java` 含 `EVENT_BUS.register(new A());` → EXIT=0 且 0 条；B 在 A 基础上加 `B.java` 有 `@SubscribeEvent` 但不注册 → EXIT=1 且恰好 1 条 `事件监听器 B 有 @SubscribeEvent 但未注册到事件总线`；C 在 B 基础上于 `Wiring.java` 加注释行 `// EVENT_BUS.register(new B());` → 仍 EXIT=1 且恰好同一条。三组逐字对上。
+  3. `wc -l < tools/check_event_registration.py` ≤ 200；`grep -c "def check_registration"`=1；`grep -cE "check_commands|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_event_registration.py`=0；`py_compile` OK；`--java NO_SUCH` → EXIT=1 且恰好 1 条 `事件总线读取失败`，不抛栈；夹具用完即删（`build/eventfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -3914,7 +3936,8 @@ fi
 | C24 | ~~`tools/check_rounds.py`（轮次索引对账）~~ → **T-0074（R78 派 / R79 验）** | R77-c 元层洞第五例：`ROUNDS.md` 是 76 份轮次文档唯一入口，`check_docs` 只给孤儿 `[提示]` 不改退出码；索引漏行/幽灵/重复全绿 | 无 |
 | C25 | ~~`tools/check_primitive_ids.py`（原语 id ↔ SKILLS.md 表对账）~~ → **T-0075（R79 派 / R80 验）** | R79-a 元层洞第六例：`check_primitives` 核类↔注册、`check_skills` 核配置↔表，中间「类 `id()` ↔ 表 id」无人核；写歪运行期才崩 | 无 |
 | C26 | ~~`tools/check_lang_dupes.py`（lang 文件内重复键对账）~~ → **T-0076（R80 派 / R81 验）** | R80-b 对账对象第一次不是「两份名单」而是「一份 JSON 内部」：`check_lang` 只看覆盖、重复键被 `json.load` last-wins 吞掉，两个生成器写同一 key 时全绿但译文静默丢失 | 无 |
-| C27 | ~~`tools/check_ownership.py`（WIP 卡独占文件重叠对账）~~ → **T-0077（R81 派）** | `check_tasks` 查状态/重复 id/WIP 上限/验收段，却不查两张 WIP 卡是否抢同一文件；这是 S7/S8 防冲突的唯一机制，重叠时两边各自 VERIFIED、后写者静默覆盖 | 无 |
+| C27 | ~~`tools/check_ownership.py`（WIP 卡独占文件重叠对账）~~ → **T-0077（R81 派 / R82 验）** | `check_tasks` 查状态/重复 id/WIP 上限/验收段，却不查两张 WIP 卡是否抢同一文件；这是 S7/S8 防冲突的唯一机制，重叠时两边各自 VERIFIED、后写者静默覆盖 | 无 |
+| C28 | ~~`tools/check_event_registration.py`（`@SubscribeEvent` 监听器注册对账）~~ → **T-0078（R82 派）** | 增量类事件监听器忘注册时编译绿、`check_commands` 绿、运行期事件永不触发且无错误日志；两份已有检查（命令挂载、原语注册）之间这一缝无人核 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
