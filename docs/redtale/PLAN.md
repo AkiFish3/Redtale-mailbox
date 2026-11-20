@@ -1948,3 +1948,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0086**（`check_damage_whitelist.py`：基线 `共 1 份伤害白名单 · 0 条问题` + `-v` 1 条·4 注册 / 六夹具 A~F 逐字 / wc≤200、def check_whitelist=1、禁用 grep=0、py_compile OK、`--cfg NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 35`。
 2. 对账网已第十七例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a 判据核实后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R91 · 2026-11-21 07:4x~07:5x · 验 T-0086 + check_all 34→35 + 派 T-0087（技能树 requires 可达性对账）
+
+- 卡板：T-0086 `check_damage_whitelist.py` `[DONE]` → **VERIFIED**（3/3：基线 `共 1 份伤害白名单 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 条白名单 · 4 个注册类型`；六夹具独立干净目录 A 未注册 `skill_ghost`·B `redtale_project:*` 0 条·C `minecraft:player_attack` 0 条·D 未知命名空间通配 `redtale_projce:*`·E 非法通配形态 `skill_magical*`·F 混合 0 条，逐字 EXIT=1/0/0/1/1/0；wc=129≤200、`def check_whitelist`=1、禁用 grep=0、`py_compile` OK、`--cfg NO_SUCH` 1 条读失败不抛栈）。S8 无口径备注、零偏差，不打回。
+- **派 T-0087**（`check_tree_reach.py`：技能树 `nodes[*].requires` 可达性，单文件零接线、六夹具 A~F、基线 1 棵树/10 节点/0 不可达）。真洞 = `check_trees.check_tree` 只核 requires 是数组、元素存在且非自身；运行期 `TreePoints.missingPrereqs/canTakeWithCap` 要求前置全在 `selected`，A↔B 成环则两节点永远 `MISSING_PREREQ`，其上 `unlock_skill` 技能永久锁死，`SkillCommand` 只回「技能未解锁」、服务端零 WARN（对账网第十八例：图结构静默死锁）。在制品 1/3。
+- **本轮 S7 最小一步 = 派前全类排除留证（R88-c/R89-c/R90-c 延续）**：`spawn_rules.match[]`（形态洞，但离线只能判形态、不能判真注册，先留池）、`repair.targets[]`（裸内容 id 可与 items 交叉核，但默认件 `targets: []`，留池）、`use.effects` / buff 的 effect（原版 id 且运行期有 WARN，排除）、`professions.grants` 的 tag/方块 id（`check_professions` 已覆盖 + 离线无注册表）、`attack_speed.effect_attack_speed`（原版 id 无注册表）、`weapon_attributes`（`ValidateCommand` 已覆盖）、conditions 值域（已三例）、effects 数值（有 clamp）——逐条排除后才落 `requires` 成环真洞，并用 `clean_json5` 离线核基线 10 节点/0 不可达（R82-c 正面版）。
+- 接线 `check_all` 34→**35** 全绿（`共 35 个脚本 · 跑成 35 · 跳过 0 · 红 0`）；`check_checkall` 清单 35/磁盘 35、`check_tasks` 87 卡在制品 1、`check_contracts` 51 条、`check_docs`、`check_rounds` 全 0 问题。
+- 环境：本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。
+- 收尾：`docs/ROUND-R91-TREEREACH.md`、PLAN §13 R91 + §13.94、ROUNDS、TASKS（T-0086 VERIFIED + T-0087 + 池 C37）、CONTRACTS §4.51、`tools/check_all.py`、协作板 §3。
+
+### 13.94 R91 的三条口径（对账网第十八例 = 技能树 requires 图可达性 / 排除留证后仍留池 / 派单当轮文档裸名）+ 下一步（R92）
+
+| 编号 | 口径 |
+|---|---|
+| R91-a | **对账网第十八例 = 技能树 `requires` 图可达性**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args→脚本 args→效果 target→怪物装备→消耗品脚本→伤害白名单→树前置可达）。首次从「字符串/数值/引用形态」扩到**图结构**：环上的两个节点各自前置都存在、都非自身，`check_trees` 全绿，但 `TreePoints.canTakeWithCap` 要求前置全在 `selected`，谁都点不了；玩法退化（技能永久锁）且零 WARN。判据仍是 R83-b「两份已有检查都绿、运行期才崩」。 |
+| R91-b | **排除留证不等于关掉候选**：本次 `spawn_rules.match[]` 与 `repair.targets[]` 因「离线只能判形态/默认件为空」暂不派，明确留池并写理由；以后内容铺开（`targets` 真写裸内容 id）可重开卡。R88-c/R89-c/R90-c 的「全类排除留证」是派单前动作，不是永久否定。 |
+| R91-c | **派单当轮文档在建脚本一律裸名**（R63-e 后第十次防空引用）：ROUND 文档与 PLAN 台账只写 `check_tree_reach.py`，连「不写什么」的反面例也不写出 `tools/` 前缀全路径（写全了照样被 `check_docs` 当引用判红）；`docs/TASKS.md` 卡面因格式惯例保留全路径，由 `check_docs` 既有豁免放行（本轮实测 0 问题）。 |
+
+下一步（R92）：
+
+1. **验 T-0087**（`check_tree_reach.py`：基线 `共 1 份技能树可达性表 · 0 条问题` + `-v` 1 棵树/10 节点/0 不可达 / 六夹具 A~F 逐字 / wc≤200、def unreachable=1、禁用 grep=0、py_compile OK、`--trees NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 36`。
+2. 对账网已第十八例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a 判据核实后无真洞就转内容面，不硬凑。留池候选（`spawn_rules.match[]` / `repair.targets[]`）按 R91-b 条件成熟时再派。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

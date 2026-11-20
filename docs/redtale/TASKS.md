@@ -4065,7 +4065,7 @@ fi
   - 2026-11-21 05:51 · 完成 · 新建 tools/check_use_script.py（123 行纯 Python：_loads 单引号 shim / read_items / check_use_script / main）；只 import check_progress.clean_json5 与 check_scripts.planned,EFFECTS，零接线 · 未构建（卡明令禁止 gradle） · 验收 3/3：基线「共 1 份消耗品脚本原语表 · 0 条问题」EXIT=0、`-v` 含「已检查 7 份物品 · 2 条 use.script 调用 · 27 个合法原语」；六夹具 A mesage=1 未注册 · B type=heal=0 · C effect=3=1 缺键/非字符串 · D script 字符串=1 必须数组 · E 空 use=0 · F 两条取下标 1 的 taret=1，逐字 EXIT=1/0/1/1/0/1（每轮从干净目录重来）；wc=123≤200、`def check_use_script`=1、禁用 grep=0、`py_compile` OK、`--items NO_SUCH` 恰好 1 条 items目录读取失败 EXIT=1 不抛栈；边界 12/12（None / use=null / script=null / 外部命名空间 / effect 空串不回落 type / 解析失败记 None）；`build/usescriptfix/` 与自建 pyc 已清 · 待 S7 验收
   - 2026-11-21 06:4x · **S7 验收通过（3/3 + S7 独立边界 18/18）** · 验收1 基线 `共 1 份消耗品脚本原语表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 2 条 use.script 调用 · 27 个合法原语`；验收2 六夹具独立干净目录 A `mesage`=1 未注册 · B `type:heal`=0 · C `effect:3`=1 缺键/非字符串 · D script 字符串=1 必须数组 · E `use:{}`=0 · F 多条目下标 1 的 `taret`=1，逐字 EXIT=1/0/1/1/0/1；验收3 wc=123≤200、`def check_use_script`=1、禁用 grep=0、`py_compile` OK、`--items NO_SUCH` 恰好 1 条 `items目录读取失败` EXIT=1 不抛栈。S7 边界 18/18（data=None / use 缺失 / None / 空 dict / 非 dict / script None / 空数组 / 字符串 / entry 非 dict / effect 空串或 None 不回落 type / 外部命名空间 / 多冒号 / type 别名 / 下标定位 / bool 与空白 type / 混合多问题）+ `_loads` 单引号与注释 shim + `read_items` 非 dict/坏文件记 None、缺目录返空。**接线 check_all 33→34 全绿**。`build/usescriptfix/` 已清。
 
-### T-0086 · [OPEN] `tools/check_damage_whitelist.py` —— 伤害乘区白名单 damage_types 形态对账（单文件零接线）
+### T-0086 · [VERIFIED] `tools/check_damage_whitelist.py` —— 伤害乘区白名单 damage_types 形态对账（单文件零接线）
 
 - 派单：S7 · 2026-11-21 06:4x（R90）
 - 目标：`damage.json5` 的 `multiplier.damage_types[]` 是伤害乘区的总闸门（`MultiplierRules.appliesTo()` 逐条 `matches()`：精确 id / `ns:*` 通配 / `*`，**无 WARN、无夹、无日志**）。写歪 `redtale_projce:*` 或 `redtale_project:skill_ghost` 会让所有自定义伤害静默不吃属性乘区；而 `check_numeric.check_damage` 只核元素是「非空字符串且不是 `*`」、`check_damage_types.read_refs` 只扫 skills/scripts 的 damage 原语与 `category_attributes[].type`，两者都不进 `damage_types[]`（对账网第十七例，同 T-0079 引用型但对象不同：白名单模式 vs 具体引用；运行期入口也不同：`MultiplierRules.appliesTo` vs `DamageEffect.source`）。当前基线：1 条白名单 `redtale_project:*` / 4 个注册类型（`generic` + 3 datapack）/ 0 问题（S7 已离线核判定逻辑）。
@@ -4083,6 +4083,28 @@ fi
   1. `python tools/check_damage_whitelist.py` → 末行 `共 1 份伤害白名单 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 条白名单 · 4 个注册类型`。
   2. 六组夹具写到 `build/dmgwlf/`（每次从干净目录重来，各自只有一份 json5，内容形如 `{"multiplier":{"damage_types":[...]}}`），用 `--cfg <该夹具>` 逐组跑：A `["redtale_project:skill_ghost"]` → 1 条 `damage_types[0] 未注册伤害类型：redtale_project:skill_ghost`；B `["redtale_project:*"]` → 0 条 EXIT=0；C `["minecraft:player_attack"]` → 0 条 EXIT=0；D `["redtale_projce:*"]` → 1 条 `damage_types[0] 未知命名空间通配：redtale_projce:*`；E `["redtale_project:skill_magical*"]` → 1 条 `damage_types[0] 非法通配形态：redtale_project:skill_magical*`；F `["minecraft:player_attack","redtale_project:skill_physical"]` → 0 条 EXIT=0。六组逐字对上。
   3. `wc -l < tools/check_damage_whitelist.py` ≤ 200；`grep -c "def check_whitelist"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_damage_whitelist.py`=0；`py_compile` OK；`--cfg NO_SUCH` → EXIT=1 且恰好 1 条 `damage.json5 读取失败`，不抛栈；夹具用完即删（`build/dmgwlf/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-21 06:54 · 完成 · 新建 tools/check_damage_whitelist.py（129 行纯 Python：_loads 单引号 shim / read_entries / check_whitelist / main）；只 import check_progress.clean_json5 与 check_damage_types.read_registered，零接线 · 构建退出码 N/A（卡明令禁止 gradle，未取锁未构建） · 验收 3/3：基线「共 1 份伤害白名单 · 0 条问题」EXIT=0、`-v` 含「已检查 1 条白名单 · 4 个注册类型」；六夹具 A~F 逐字 EXIT=1/0/0/1/1/0（A 未注册 skill_ghost / B redtale_project:* 合法 / C minecraft 精确 id 跳过 / D 未知命名空间通配 / E 非法通配形态 / F 混合合法，每轮干净目录）；wc=129≤200、`def check_whitelist`=1、禁用 grep=0、`py_compile` OK、`--cfg NO_SUCH` 恰好 1 条 `damage.json5 读取失败` EXIT=1 不抛栈；边界 16/16；`build/dmgwlf/` 已清 · 待 S7 验收
+  - 2026-11-21 07:5x · **S7 验收通过（3/3）** · 验收1 基线 `共 1 份伤害白名单 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 条白名单 · 4 个注册类型`；验收2 六夹具独立干净目录 A `未注册伤害类型：redtale_project:skill_ghost` · B `redtale_project:*` 0 条 · C `minecraft:player_attack` 0 条 · D `未知命名空间通配：redtale_projce:*` · E `非法通配形态：redtale_project:skill_magical*` · F 混合 0 条，逐字 EXIT=1/0/0/1/1/0；验收3 wc=129≤200、`def check_whitelist`=1、禁用 grep=0、`py_compile` OK、`--cfg NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈。接线 `check_all` 34→35 全绿。S8 无口径备注、零偏差，不打回
+
+### T-0087 · [OPEN] `tools/check_tree_reach.py` —— 技能树 requires 可达性对账（M7 / D25，单文件零接线）
+
+- 派单：S7 · 2026-11-21 07:5x（R91）
+- 目标：给 `skill_trees/*.json5` 的 `nodes[*].requires` 补一把**可达性尺子**：`check_trees.check_tree` 只核 requires 是数组、元素存在且不等于自身，成环（A↔B）时两节点永远 `MISSING_PREREQ`、其上 `unlock_skill` 永久锁死，`TreeService`/`SkillCommand` 只有一句「技能未解锁」，全仓零 WARN、全 check 绿（对账网第十八例：图结构静默死锁）。基线：1 棵树 / 10 节点 / 0 不可达（S7 已离线跑判定逻辑核过）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_tree_reach.py`（新建，≤ 200 行）
+  - `build/treereach/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_trees.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_nodes(data: dict | None) -> dict[str, list[str]] | None`：`data` 必须是 dict 且 `nodes` 是非空 dict，否则返 `None` 不抛栈。返回 `{节点名: 合法前置 id 列表}`（保序 dict），合法前置 = `requires` 中是字符串、在 `nodes` 键集合内、且 != 自身；`requires` 缺失 / 非 list / 元素非法 → 该元素丢弃（**不报**，归 `check_trees`），节点仍入表、前置当空。
+  - `unreachable(nodes: dict[str, list[str]]) -> list[str]`：固定点迭代——初始可达集为所有前置为空的节点，反复加入「全部前置已在可达集」的节点直到不再变化；返回不在可达集里的节点 id，按 `sorted()` 升序。环上节点与依赖环的节点都不可达，一并返回。
+  - `read_trees(root: str) -> list[tuple[str, dict | None, str | None]] | None`：扫 `<root>/skill_trees/*.json5`（文件名升序），返回 `(rel, data|None, err)`，`rel` 形如 `skill_trees/xxx.json5`；用 `clean_json5` 解析（单引号 shim 沿用既有口径），解析失败 / 顶层非 dict → `(rel, None, 错误文本)`；目录不存在或不可读 → 返 `None`，不抛栈。
+  - `main() -> int`：CLI `--trees <dir>`（默认 `src/main/resources/redtale`）、`-v`（多打一行 `已检查 <n> 棵树 · <m> 个节点 · <k> 个不可达`，n=文件数、m=合法节点总数、k=不可达数）。`read_trees` 返 `None` → 打 `[问题] skill_trees 目录读取失败`、末行 `共 0 份技能树可达性表 · 1 条问题`、EXIT=1；否则 `err` 非 None → `[问题] <rel> 配置读取失败：<err>`；`read_nodes` 返 `None` → `[问题] <rel> nodes 缺失/不是对象/为空`；每个不可达节点一条 `[问题] <rel> 节点 <id> 永远不可达（requires 成环或依赖不可达节点）`。末行 `共 <n> 份技能树可达性表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不核 `id`/`name`/`cost`/`effects`/`classes`（归 `check_trees` / `check_checkall`）；不核自环与非数组/不存在的 requires（归 `check_trees`，本卡过滤不重复报）；不做技能引用可达性、不做点数预算、不改绿红语义；不读 Java AST / 不编译 / 不读 jar。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_tree_reach.py` → 末行 `共 1 份技能树可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 棵树 · 10 个节点 · 0 个不可达`。
+  2. 六组夹具写到 `build/treereach/`（每次从干净目录重来，各自只有一份 json5，顶层只需 `nodes`）：A `nodes:{a:{requires:["b"]}, b:{requires:["a"]}}` → 2 条 `节点 a/b 永远不可达（requires 成环或依赖不可达节点）` EXIT=1；B `a→b→c→a` 三元环 → 3 条 EXIT=1；C `root:{requires:[]}, a:{requires:["root"]}, b:{requires:["a"]}` → 0 条 EXIT=0；D `a↔b` 加 `c:{requires:["a"]}` → 3 条（a/b/c）EXIT=1；E 自环 `a:{requires:["a"]}` → 0 条 EXIT=0（归 `check_trees`，本卡过滤为根）；F `root:{requires:[]}, good:{requires:["root"]}, bad:{requires:"root"}, ghost:{requires:["nope"]}` → 0 条 EXIT=0（非数组与不存在节点归 `check_trees`，本卡过滤）。六组逐字对上。
+  3. `wc -l < tools/check_tree_reach.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|read_attrs" tools/check_tree_reach.py`=0；`py_compile` OK；`--trees NO_SUCH` → EXIT=1 且恰好 1 条 `skill_trees 目录读取失败`，不抛栈；夹具用完即删（`build/treereach/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4120,7 +4142,8 @@ fi
 | C33 | `tools/check_effect_target.py`（效果 `target` 枚举值域对账）→ **T-0083（R87 派 / R88 验）** | —— | —— |
 | C34 | `tools/check_mob_equipment.py`（怪物装备物品 id ↔ 14 基底注册对账）→ **T-0084（R88 派）** | `check_mobs.check_mob` 只核 equipment[slot] 带冒号、不核 id 真能解析；运行期 `MobSpawner.applyEquipment` 对未知 id 只 `skips.add`，而 `Result.skips()` 全仓无人读 → 怪物光着手出生、无红无 WARN、全 check 绿。对账网第十五例，引用型（同 T-0079 damage_type 口径） | 无 |
 | C35 | ~~`tools/check_use_script.py`~~ → **T-0085（R89 派 / R90 验）** | —— | —— |
-| C36 | `tools/check_damage_whitelist.py`（伤害乘区 damage_types 白名单形态对账）→ **T-0086（R90 派）** | `check_numeric.check_damage` 只核元素是「非空字符串且非 `*`」、`check_damage_types.read_refs` 只扫 skills/scripts damage 原语与 category_attributes——`damage.json5` 的 `multiplier.damage_types[]` 无人核；运行期 `MultiplierRules.matches()` 精确字符串匹配、无 WARN 无夹，写歪命名空间让整套乘区静默失效。对账网第十七例 | 无 |
+| C36 | `tools/check_damage_whitelist.py`（伤害乘区 damage_types 白名单形态对账）→ **T-0086（R90 派 / R91 验）** | —— | —— |
+| C37 | `tools/check_tree_reach.py`（技能树 requires 可达性对账）→ **T-0087（R91 派）** | `check_trees.check_tree` 只核 requires 是数组、元素存在且非自身；运行期 `TreePoints.missingPrereqs` 要前置全在 selected，成环节点永不解锁，`SkillCommand` 只回「技能未解锁」零 WARN。对账网第十八例，图结构静默死锁 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

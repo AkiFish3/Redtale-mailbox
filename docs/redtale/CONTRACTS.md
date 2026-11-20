@@ -1365,3 +1365,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 只读扫 `damage.json5` 的 `multiplier.damage_types[]`，核白名单模式：`*` 跳过（归 `check_numeric`）、`ns:*` 只许 `redtale_project` / `minecraft` 两个命名空间、`redtale_project:<path>` 必须 ∈ 已注册伤害类型（`check_damage_types.read_registered` 复用，含内建 `generic`）、外部精确 id 跳过（离线无注册表）。接口 `NS` / `read_entries` / `check_whitelist` / `main` 由 S7 定死；T-0086 派单时未实现、未接线，基线 1 条白名单 / 4 注册类型 / 0 问题。
 - 填补 `check_numeric.check_damage` 与 `check_damage_types.read_refs` 之间的缝：前者只核元素是「非空字符串且非 `*`」，后者只扫 skills/scripts 的 damage 原语与 `category_attributes[].type`，都不进 `damage_types[]`；运行期 `MultiplierRules.appliesTo()` 逐条走 `matches()` 精确字符串匹配，无 WARN 无夹，写歪命名空间 = 全服自定义伤害静默不吃属性乘区（R90-a）。
 - 与 §4.44（具体 damage_type 引用）同源不同对象：一个核「某条伤害写什么类型」，一个核「哪些类型进乘区」，配置键与运行期入口都不同（R86-a 判据）。
+- 已接进 `tools/check_all.py`（`共 35 个脚本`，R91 接线）。T-0086 `[VERIFIED]`（R91）：基线 0 问题 / 六夹具 A~F 逐字 EXIT=1/0/0/1/1/0 / wc=129。
+
+### 4.51 技能树前置可达性对账 `check_tree_reach.py`（T-0087，R91 派，对账网第十八例）
+
+- 只读扫 `skill_trees/*.json5` 的 `nodes[*].requires`，建「节点 → 合法前置」图（自环 / 不存在节点 / 非数组前置过滤，归 `check_trees` 不重复报），固定点迭代求可达集；不在可达集的节点（环上或依赖环）报「节点 <id> 永远不可达（requires 成环或依赖不可达节点）」。接口 `read_nodes` / `unreachable` / `read_trees` / `main` 由 S7 定死；T-0087 派单时未实现、未接线，基线 1 棵树 / 10 节点 / 0 不可达。
+- 填补 `check_trees.check_tree` 的盲区：它只核 requires 是数组、元素存在且 `!=name`，二元/三元环全绿；运行期 `TreePoints.missingPrereqs/canTakeWithCap` 要求前置全在 `selected`，环上节点永远 `MISSING_PREREQ`，其上 `unlock_skill` 技能永久锁死，`SkillCommand` 只回「技能未解锁」、零 WARN（R91-a 图结构静默死锁）。
+- 形态从「值域/引用」扩到**图结构**：离线可判、不依赖注册表/JAR；不核 id/name/cost/effects（归 `check_trees`）。当前未接 `check_all`，T-0087 VERIFIED 后 R92 接 → 应 `跑成 36`。
