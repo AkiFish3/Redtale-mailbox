@@ -1874,3 +1874,21 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0081**（`check_skill_args.py`：基线 `共 1 份技能条件值域表 · 0 条问题` + `-v` 4 份/2 键 / 六夹具 A~F 逐字 / wc≤200、def check_args=1、禁用 grep=0、py_compile OK、`--skills NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 30`。
 2. 对账网已第十二例，继续按 R80-b / R81-b / R82-b / R83-a / R84-b / R85-d 判据找「别人都绿而真实状态错」的对象；核实覆盖后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R86 · 2026-11-21 02:1x · 验 T-0081 + check_all 29→30 + 派 T-0082（脚本 conditions args 值域对账）
+- 卡板：T-0081 `check_skill_args.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立边界 20/20：基线 `共 1 份技能条件值域表 · 0 条问题` EXIT=0 + `-v` 4 份/2 键；六夹具 A ratio=1.5 / B chance=-0.2 / C ratio=true / D args=3 逐字各 1 条 EXIT=1、E always / F 未知 type 各 0 条 EXIT=0；wc=129、def check_args=1、禁用 grep=0、py_compile OK、`--skills NO_SUCH` 1 条读失败不抛栈）。**派 T-0082**（`check_script_args.py` 核 scripts conditions args 值域，单文件零接线、六夹具、基线 2 脚本/0 问题），在制品 1/3。
+- **本轮 S7 最小一步 = 派卡前覆盖面核实（R84-b 延续）**：逐个查 `check_scripts`/`check_mobs`/`check_items`/`check_trees`/`check_enchants` 的核对象，确认脚本层 `conditions[].args` 值域无人进——`check_scripts.check_script` 只核 condition 的 type 合法、`args` 只看是不是对象，从不核 `ratio`/`chance` 取值；运行期 `HealthBelowCondition`/`ChanceCondition` 直接 `getAsDouble()` 无夹（非数字还会抛异常）。与 T-0081 技能层同源不同对象：scripts/ 与 skills/ 是两套独立配置 + 两个独立 check，改一个不带动另一个。核过 mob skills 的 chance/cooldown 运行期有 clamp（`MobSpec.chance()`/`cooldown()`）、脚本 effects 的 amount/radius 有 clamp——按 R85-d 排除、不硬凑。
+- 接线 `check_all` 29→**30** 全绿（30 脚本 0 红）。
+- 收尾：`docs/ROUND-R86-SCRIPTARGS.md`、PLAN §13 R86 + §13.89、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0081 VERIFIED + T-0082 + 池 C31 结项/C32）、`tools/check_all.py`、协作板 §3。
+- 环境：`src/` 零 diff（验收/接线/派卡/文档均不碰 Java）→ 未构建、未启停任何服、无构建锁；正式服 25565/25575（PID 9376）常驻未动、测试服 25567/25577 无 LISTEN。
+
+### 13.89 R86 的三条口径（同源不同对象判定 / 派前先证运行期无夹 / 对账网第十二例）+ 下一步（R87）
+| R86-a | **同一把尺子补到「同源不同对象」算新卡，不算重复造轮子**：T-0081 核 skills 的 conditions args，T-0082 核 scripts 的——两套配置目录、两个独立 check（`check_skills` vs `check_scripts`）、两类独立运行期入口（`SkillEngine` vs `ScriptEngine`），改一个不带动另一个。 | 对账网的价值在覆盖「无人核的真实状态」，不在对象长得像不像前例；同一 bug 形态出现在两套独立系统里就是两个独立的洞。 |
+| R86-b | **派卡前先证运行期「无夹」再动手**：本轮核 `MobSpec.chance()`/`cooldown()` 有 `Math.max/min` clamp、`DamageAoeEffect.falloff` 有 `clamp01` → 按 R85-d 排除；只挑 `HealthBelowCondition`/`ChanceCondition` 直接 `getAsDouble()` 的键派卡。 | 对运行期已有夹的键派卡 = 永远绿的红线（R84-b 教训），给人已覆盖的错觉。 |
+| R86-c | **对账网第十二例 = 脚本 conditions 的 args 值域**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args→脚本 args），判据仍是「两份已有检查都绿、运行期才崩」。 | `check_scripts` 核 type、`check_skill_args` 核技能层值域，两者之间的脚本条件 args 无人核；同口径复用而非新造。 |
+
+下一步（R87）：
+
+1. **验 T-0082**（`check_script_args.py`：基线 `共 1 份脚本条件值域表 · 0 条问题` + `-v` 2 份/2 键 / 六夹具 A~F 逐字 / wc≤200、def check_args=1、禁用 grep=0、py_compile OK、`--scripts NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 31`。
+2. 对账网已第十三例，继续按 R80-b / R81-b / R82-b / R83-a / R84-b / R85-d / R86-b 判据找「别人都绿而真实状态错」的对象；核实覆盖后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

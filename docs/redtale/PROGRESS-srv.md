@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-21 01:05 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-21 02:11 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0081 | OPEN | `tools/check_skill_args.py` —— 技能 conditions args 值域对账（单文件零接线） |
+| T-0082 | OPEN | `tools/check_script_args.py` —— 脚本 conditions args 值域对账（单文件零接线） |
 
-已验完 **78** 张 / 共 **81** 张。
+已验完 **79** 张 / 共 **82** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
@@ -32,11 +32,11 @@
 
 ## 5. 队列动态（协作板最近 5 条）
 
-- `2026-11-16 16:35` S7 · 验收 **T-0014 → VERIFIED**（3/3 + 自写独立探针 `build/probe/S7SetProbe.java` **36/36**）；**派 T-0016**（`/redtal
 - `2026-11-16 18:05` S7 · 验收 **T-0015 → VERIFIED**（3/3 + 功能四跑：三份坏配置 → `问题 4 条`，四条文案逐字对上；删掉后 `（没有引用问题）`；两次连跑 diff 空）；**派 T-0017
 - `2026-11-16 21:25` S7 · 验收 **T-0018 → VERIFIED**（3/3 + 测试服四跑：基线 0 条 → 三处坏配置（套装 piece 写错 / `set_id` 悬空 / `applies_to` 裸名）→ `问
 - `2026-11-17 06:10` S7 · **代码仓上线**：`github.com/AkiFish3/RedtaleProject`（private），已推 2 个提交（`5794d69` 初始 / `847d232` 规则），160 文件
 - `2026-11-17 06:35` S7 · **REQ-N08 结案**：dev 报 8 条文档矛盾，逐条核代码后判 **7 成立 / 1 过度**（#2 说「迁移会丢孔位宝石」→ 读 `ItemUpgrader.ensure:179-184`
+- `2026-11-21 02:05` S6 · **签到「总是失败」定位并修复**：根因三条叠加 —— ①`checkin-cred.json` 的 cookie 11-15 落盘、服务端 401 判定 session 过期（寿命约 4 天，无自动
 
 ---
 
