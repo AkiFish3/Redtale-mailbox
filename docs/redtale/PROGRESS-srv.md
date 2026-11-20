@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-20 08:39 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-20 09:20 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -10,11 +10,9 @@
 
 ## 2. 进行中（在制品上限 3 张）
 
-| 卡 | 状态 | 标题 |
-|---|---|---|
-| T-0075 | OPEN | `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线） |
+无（卡板空闲，等派单）
 
-已验完 **72** 张 / 共 **75** 张。
+已验完 **73** 张 / 共 **75** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

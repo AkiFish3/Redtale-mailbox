@@ -3828,7 +3828,7 @@ fi
   3. `wc -l`=92≤200、`grep -c "def check_index"`=1、禁用 grep=0、`py_compile` OK；`--docs NO_SUCH` 与 `--index NO_SUCH` 各 1 条读失败不抛栈。S7 另跑边界：正文 `ROUND-R*.md` 与非 `R\d+` 表格行不计数（0 条索引）、无反引号路径被跳过、幽灵与重复并存时先幽灵后重复（2 条，顺序稳定）。
 - **S7 裁定 S8 提问**：`--index` 默认值按**字面 `docs/ROUNDS.md`** 解析，不随 `--docs` 联动——验收 3 的「`--docs NO_SUCH` 恰好 1 条」是可机器判定的底线，接口段那句「默认 `<docs>/ROUNDS.md`」按 §13.82 R79-a 就地更正为字面默认；两参数彼此独立也符合 CLI 惯例。采纳实现不打回。
 
-### T-0075 · [OPEN] `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线）
+### T-0075 · [DONE] `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线）
 - 派单：S7 · 2026-11-20 08:4x（R79）
 - 目标：补第六例元层洞。`check_primitives` 只核「Effect 类 ↔ Builtins 注册」，`check_skills` 只核「配置 id ↔ SKILLS.md 表」——中间那一段「Effect 类 `id()` 字符串 ↔ SKILLS.md §4 表 id」没人核。新增 Effect 类把 id 写歪 → 注册成功、配置在表里合法、运行期才 unknown primitive；反过来表里标 ✅ 的 id 对应的类被删，所有检查仍全绿。本卡双向核这两端。
 - 独占文件（**唯一可写**）：
@@ -3847,6 +3847,7 @@ fi
   2. 三组负向夹具（复制到 `build/primidfix/`，用 `--docs`/`--builtin` 指过去，各自从干净副本重来，不许累积）：A 把 `DamageEffect.java` 的 `id()` 返回值改成 `damage_typo` → EXIT=1 且恰好 1 条 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表`；B 从 builtin 副本删 `HealEffect.java` → EXIT=1 且恰好 1 条 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类`；C 往 builtin 副本新增一个无 `id()` 方法的 `GhostEffect.java` 文本 → EXIT=1 且恰好 1 条 `原语类 GhostEffect 未声明 id()`。三组逐字对上。
   3. `wc -l < tools/check_primitive_ids.py` ≤ 200；`grep -c "def check_ids"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_primitive_ids.py`=0；注释里的假 id（`// return "ghost";`、块注释同类）不得计入（S7 复测）；表路径 / builtin 目录指向不存在各 1 条读失败不抛栈；夹具用完即删（`build/primidfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 08:49 · 完成 · 文件：`tools/check_primitive_ids.py`（新建 197 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份原语 id 表 · 0 条问题」EXIT=0、`-v` 含「已对账 25 条表项 · 11 条标已实现 · 13 个 Effect 类」；夹具 A=1 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表` / B=1 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类` / C=1 `原语类 GhostEffect 未声明 id()`，均 EXIT=1 逐字对上；wc=197≤200 · def check_ids=1 · 禁用 grep=0 · py_compile OK · 缺 docs/builtin/双失败=1/1/2 条不抛栈 · 边界 6/6（转义竖线、§4 边界、DEBUG_IDS 放行、注释假 id、重复消息去重、三类按序）· `build/primidfix` 已清 · 请 S7 裁：接口第③类写「done 不在已声明 id 集合」，但验收 A 要求恰好 1 条（不得追加「damage 标已实现但无对应类」）；实现按验收口径把③改判「声明 id 或 snake_case→PascalCase+Effect 类名均不命中」，id 写歪只报②、类被删才报③。若 S7 要字面「已声明 id 集合」，验收 A 期望须改为 2 条。
 
 ## 6. 派单池（S7 用，S8 不看）
 
