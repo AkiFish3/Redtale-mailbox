@@ -1339,4 +1339,11 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 只读扫 `skills/*.json5` 的 `conditions[]`，只核三类已知条件的 args 值域：`health_below.args.ratio` / `chance.args.chance` 必须是 [0,1] 数字（bool 不算），`always` 的 args 任意。未知 type 跳过（合法性归 `check_skills`）。
 - 填补 `check_skills.check_skill` 的盲区：该函数只核 `conditions[i].type` 合法、`args` 只看是不是对象，从不核取值；而 `HealthBelowCondition`/`ChanceCondition` 里 `getAsDouble()` 直接用无值域夹，写 `ratio:1.5` 静默恒真、`chance:-0.2` 静默恒假——编译绿、全 check 绿、技能触发条件永久失效（R85-d）。
 - 同口径已在 `check_mobs.check_drop` 对 drop 的 chance 核 [0,1]；effects 的 amount/radius 有运行期 `clamp01`/`Math.min` 夹、非静默洞，明确不核。
-- 派单态：T-0081 `[OPEN]`，未接线、未验收；接线后预计 `check_all` 跑成 30。
+- 已接进 `tools/check_all.py`（`共 30 个脚本`，R86 接线）。T-0081 `[VERIFIED]`（R86）：基线 `共 1 份技能条件值域表 · 0 条问题`、六夹具 A~F 逐字 EXIT=1、wc=129。
+
+### 4.47 脚本条件值域对账 `check_script_args.py`（T-0082，R86 派，对账网第十三例）
+
+- 只读扫 `scripts/*.json5` 的 `conditions[]`，只核两类已知条件的 args 值域：`health_below.args.ratio` / `chance.args.chance` 必须是 [0,1] 数字（bool 不算），`always` 与未知 type 跳过（合法性归 `check_scripts`）。
+- 填补 `check_scripts.check_script` 的盲区：该函数只核 `conditions[i].type` 合法、`args` 只看是不是对象，从不核取值；而 `HealthBelowCondition`/`ChanceCondition` 里 `getAsDouble()` 直接用无值域夹，写 `ratio:1.5` 静默恒真、`chance:-0.2` 静默恒假、非数字抛异常——编译绿、全 check 绿、脚本触发条件永久失效。
+- 与 §4.46（技能层）同源不同对象：`scripts/` 与 `skills/` 两套独立配置 + 两个独立 check，改一个不带动另一个（R86-a）。
+- 已接进 `tools/check_all.py`（`共 31 个脚本`，R87 接线）。T-0082 `[VERIFIED]`（R87）：基线 `共 1 份脚本条件值域表 · 0 条问题`、六夹具 A~F 逐字 EXIT=1、wc=129。

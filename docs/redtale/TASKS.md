@@ -3978,7 +3978,7 @@ fi
 - 2026-11-21 01:40 · 完成 · tools/check_skill_args.py（新建，129 行） · 未构建（卡明令禁止 gradle） · 验收 3/3：基线「共 1 份技能条件值域表 · 0 条问题」EXIT=0、`-v`「已检查 4 份技能 · 2 个值域键」；六夹具 A ratio=1.5 / B chance=-0.2 / C ratio=true / D args=3 / E always 任意 args / F 未知 type 逐字命中 EXIT=1/1/1/1/0/0；wc=129≤200、`def check_args`=1、禁用 grep=0、`py_compile` OK、`--skills NO_SUCH` 恰好 1 条目录读取失败 EXIT=1；边界 14/14；`build/skillargfix/` 已清。
 - 2026-11-21 02:1x · S7 验收 **VERIFIED**（3/3 + S7 独立边界 20/20）：基线 `共 1 份技能条件值域表 · 0 条问题` EXIT=0、`-v` 含 `已检查 4 份技能 · 2 个值域键`；六夹具 A ratio=1.5 / B chance=-0.2 / C ratio=true / D args=3 逐字命中各 1 条 EXIT=1、E always 任意 args / F 未知 type 各 0 条 EXIT=0（独立干净目录、用完即删）；wc=129≤200、`def check_args`=1、禁用 grep=0、`py_compile` OK、`--skills NO_SUCH` 恰好 1 条 `技能目录读取失败` 不抛栈 EXIT=1。S7 边界 20/20（None / conds 非数组 / 空 / 非 dict 元素 / ratio 0/1 边界合法 / 负值 / 字符串 / None / 缺失合法 / args 非 dict / chance 1 边界 / 超 1 / bool / always 任意 / 未知 type 跳过 / 多条累积 / 非 str type）。接线 `check_all` 29→30 全绿。
 
-### T-0082 · [OPEN] `tools/check_script_args.py` —— 脚本 conditions args 值域对账（单文件零接线）
+### T-0082 · [VERIFIED] `tools/check_script_args.py` —— 脚本 conditions args 值域对账（单文件零接线）
 - 派单：S7 · 2026-11-21 02:1x（R86）
 - 目标：`check_scripts.check_script` 只核 `conditions[i].type` 合法性与 `args` 是否 dict，**从不进 args 内部值域**。`core/script/builtin/HealthBelowCondition.test()` 的 `args.ratio` 与 `ChanceCondition.test()` 的 `args.chance` 都直接 `getAsDouble()`、无值域夹：`ratio: 1.5` 恒真、`chance: -0.2` 恒假、`ratio: true`/`chance: "0.5"` 非数字会 `getAsDouble()` 抛异常。编译绿、`check_scripts` 绿、全 check 绿，脚本触发条件永久失效或运行期 ClassCast/JsonParse 崩。同口径已在 `check_skill_args`（技能层）与 `check_mobs.check_drop`（drop chance）核过；本卡把同一把尺子补到**脚本层**——scripts/ 与 skills/ 是两套独立配置、两个独立 check，改一个不带动另一个。当前基线：2 份脚本（greeting / enchants_soul_reap），conditions 仅 `always` ×1、值域键命中 0，0 问题（S7 已核）。
 - 独占文件（**唯一可写**）：
@@ -3994,6 +3994,26 @@ fi
   1. `python tools/check_script_args.py` → 末行 `共 1 份脚本条件值域表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 份脚本 · 2 个值域键`。
   2. 六组夹具复制到 `build/scriptargfix/`，各自从干净目录重来不许累积（每份只放一个脚本 json5，顶层 id/trigger 任意）：A `conditions:[{type:"health_below",args:{ratio:1.5}}]` → 1 条 `conditions[0].args.ratio 必须是 [0,1] 的数字`；B `chance` 的 `args.chance=-0.2` → 1 条 `conditions[0].args.chance 必须是 [0,1] 的数字`；C `health_below` 的 `ratio: true` → 1 条同上 ratio 文案；D `chance` 的 `args: 3` → 1 条 `conditions[0].args 必须是对象`；E `always` 带 `args:{anything:1}` → 0 条 EXIT=0；F 未知 `type:"foo"` 带 `args:{ratio:99}` → 0 条 EXIT=0。六组逐字对上。
   3. `wc -l < tools/check_script_args.py` ≤ 200；`grep -c "def check_args"`=1；`grep -cE "check_scripts|check_skill_args|check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_script_args.py`=0；`py_compile` OK；`--scripts NO_SUCH` → EXIT=1 且恰好 1 条 `脚本目录读取失败`，不抛栈；夹具用完即删（`build/scriptargfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-21 02:43 · 完成 · tools/check_script_args.py（新建，129 行） · 未构建（卡明令禁止 gradle） · 验收 3/3：基线「共 1 份脚本条件值域表 · 0 条问题」EXIT=0、`-v`「已检查 2 份脚本 · 2 个值域键」；六夹具 A ratio=1.5 / B chance=-0.2 / C ratio=true / D args=3 逐字命中各 1 条 EXIT=1、E always 任意 args / F 未知 type 各 0 条 EXIT=0；wc=129≤200、`def check_args`=1、禁用 grep=0、`py_compile` OK、`--scripts NO_SUCH` 恰好 1 条 `脚本目录读取失败` EXIT=1；`build/scriptargfix/` 已清。
+  - 2026-11-21 03:1x · **S7 验收 → `[VERIFIED]`（3/3）** · ①基线 `共 1 份脚本条件值域表 · 0 条问题` EXIT=0、`-v` 含 `已检查 2 份脚本 · 2 个值域键`；②六夹具 A ratio1.5 / B chance-0.2 / C ratio=true / D args=3 逐字各 1 条 EXIT=1、E always 任意 args / F 未知 type 各 0 条 EXIT=0（每份独立干净目录、用完即删）；③wc=129≤200、`def check_args`=1、禁用 grep=0、`py_compile` OK、`--scripts NO_SUCH` 恰好 1 条 `脚本目录读取失败` EXIT=1 不抛栈。S8 自测数字与 S7 复跑逐字一致，零偏差不打回。接线 `check_all` 30→31。
+
+### T-0083 · [OPEN] `tools/check_effect_target.py` —— 效果 `target` 枚举值域对账（单文件零接线）
+- 派单：S7 · 2026-11-21 03:1x（R87）
+- 目标：`check_scripts.check_script` 只核 `effects[i].type` 已注册 + `args` 是 dict，`check_skills.check_skill` 同；两者**从不进 `args.target` 值域**。`BuffEffect`/`GrantExpEffect`/`HealEffect` 的 `pick()` 写 `String which = args.has("target") ? ... : "caster"; if ("target".equals(which)) ...`，`DebuffEffect`/`StunEffect` 缺省 `"target"`、`if ("caster".equals(which))` 才改道——五个原语合法值都只有 `caster` / `target`，拼错（`taret`/`casetr`/`CAST`）**静默改作用对象**（`buff` 写歪＝打给自己而不是怪、`debuff` 写歪＝打给怪而不是自己），除「非字符串」外无 WARN、无 clamp。编译绿、`check_scripts` 绿、`check_script_args`/`check_skill_args` 绿（它们只进 conditions）、全 check 绿，效果作用目标悄悄反了没人被叫醒。本卡把「args 值域对账」同一把尺子从 conditions 补到 **effects 的字符串枚举键**——第四例对账网对象，与数值 args（T-0081/T-0082）形态不同（字符串枚举 vs [0,1] 数字）。当前基线：2 份脚本（`greeting` / `enchants_soul_reap`）+ 4 份技能，`target` 键命中 1（`enchants_soul_reap.json5` 的 `target:'caster'`），0 问题（S7 已核）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_effect_target.py`（新建，≤ 200 行）
+  - `build/effectfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_scripts.py` / `check_skills.py` / `check_script_args.py` / `check_skill_args.py`）；不改 TOOLS 清单；不 import 其它 check（允许 import `check_progress.clean_json5`）；不读 Java / 不读 jar；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_configs(dir_path: str) -> list[tuple[str, object | None]]`：扫 `<dir_path>` 下 `*.json5`（文件名升序），用 `clean_json5` 解析（单引号 shim 沿用 `check_scripts` / `check_script_args` 口径），返回 `(文件名, 解析出的 dict 或 None)`；解析失败 / 目录缺失 / 读失败 → 该文件记 `None`，不抛栈。
+  - `check_effects(data: dict | None) -> list[str]`：data 为 None → 返回 `["配置解析失败"]`；取 `data.get("effects", [])`，非 list → `["effects 必须是数组"]`；缺失 / 空数组 → 返回 `[]`。逐条（下标从 0）：非 dict → `effects[i] 必须是对象`；只对 type ∈ `{buff, debuff, grant_exp, heal, stun}` 的 effect 核 `args.target`（其它 type 与未知 type 一律跳过，type 合法性归 `check_scripts`/`check_skills`）；`args` 缺失合法、存在但非 dict → `effects[i].args 必须是对象`；`target` 存在时必须字符串且值 ∈ `{caster, target}` → 否则 `effects[i].args.target 必须是 caster 或 target`（bool/数字/None/拼写错一律报）。问题文案不含 `[问题]` 前缀，main 负责加。
+  - `main() -> int`：CLI `--scripts <dir>`（默认 `src/main/resources/redtale/defaults/scripts`）、`--skills <dir>`（默认 `src/main/resources/redtale/defaults/skills`）、`-v`（多打一行 `已检查 <s> 份脚本 · <k> 份技能 · 5 个 target 原语`，s/k 为各自目录文件数）；每条问题输出 `[问题] <类别>/<文件名>: <msg>`（类别字面 `scripts` 或 `skills`）；末行 `共 2 份效果 target 值域表 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1；目录缺失各记 1 条 `[问题] <类别>目录读取失败`、末行按实际问题数、EXIT=1，不抛栈。
+- 不要做：不核 `effects[].type` 合法性（归 check_scripts/check_skills）；不核 effects 的 amount/radius/duration/repeat 等数值键（运行期有 clamp，R85-d 排除）；不核 conditions（归 check_script_args/check_skill_args）；不核顶层字段；不读 Java AST / 不编译 / 不读 jar；不改绿红语义；不 import 其它 check 模块。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_effect_target.py` → 末行 `共 2 份效果 target 值域表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 份脚本 · 4 份技能 · 5 个 target 原语`。
+  2. 六组夹具复制到 `build/effectfix/`，各自从干净目录重来不许累积（每份只放一个配置 json5，顶层 id/trigger 任意，放到 `scripts/` 或 `skills/` 子目录均可）：A `effects:[{type:"buff",args:{target:"taret"}}]` → 1 条 `effects[0].args.target 必须是 caster 或 target`；B `type:"debuff"` 的 `args.target:"CAST"` → 1 条同上；C `type:"heal"` 的 `args.target: 3` → 1 条同上；D `type:"grant_exp"` 的 `args.target: true` → 1 条同上；E `type:"stun"` 的 `args.target:"target"` → 0 条 EXIT=0；F `type:"damage"`（或其它不含 target 的已注册原语）带 `args:{target:"whatever"}` → 0 条 EXIT=0。六组逐字对上。
+  3. `wc -l < tools/check_effect_target.py` ≤ 200；`grep -c "def check_effects"`=1；`grep -cE "check_scripts|check_skills|check_script_args|check_skill_args|check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_effect_target.py`=0；`py_compile` OK；`--scripts NO_SUCH --skills NO_SUCH` → EXIT=1 且恰好 2 条 `目录读取失败`，不抛栈；夹具用完即删（`build/effectfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4027,7 +4047,8 @@ fi
 | C29 | ~~`tools/check_damage_types.py`（伤害类型引用 ↔ datapack 注册对账）~~ → **T-0079（R83 派 / R84 验）** | —— | —— |
 | C30 | ~~`tools/check_spawn_conditions.py`~~ → **T-0080（R84 派 / R85 验）** | —— | —— |
 | C31 | ~~`tools/check_skill_args.py`~~ → **T-0081（R85 派 / R86 验）** | —— | —— |
-| C32 | `tools/check_script_args.py`（脚本 conditions args 值域对账）→ **T-0082（R86 派）** | `check_scripts.check_script` 只核 conditions[].type 与 args 是否 dict、不进值域；`health_below.ratio` / `chance.chance` 写歪运行期静默恒真/恒假或 `getAsDouble()` 抛异常，全 check 绿。scripts/ 与 skills/ 两套独立配置 + 两个独立 check，T-0081 的同源不同对象 | 无 |
+| C32 | ~~`tools/check_script_args.py`~~ → **T-0082（R86 派 / R87 验）** | —— | —— |
+| C33 | `tools/check_effect_target.py`（效果 `target` 枚举值域对账）→ **T-0083（R87 派）** | `check_scripts`/`check_skills` 只核 effects[].type + args 是 dict，`check_script_args`/`check_skill_args` 只进 conditions；五个 target 原语拼错非 `caster`/`target` 时静默改作用对象、除非字符串外无 WARN，全 check 绿。形态与数值 args 不同（字符串枚举），对账网第十四例 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
