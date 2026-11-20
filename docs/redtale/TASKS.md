@@ -3890,7 +3890,7 @@ fi
 - 2026-11-20 16:22 · 完成 · `tools/check_ownership.py`（新建 105 行：read_cards / exclusive_files / check_overlaps / main）· 构建：未执行（纯 Python 卡，卡明令禁止 gradle、未取锁）· 自测：验收 1 基线 `共 1 份卡板 · 0 条问题` EXIT=0、`-v` 含 `已对账 1 张在制品卡 · 2 个独占文件声明`；验收 2 夹具 A=1 / B=0 / C=2 条逐字（EXIT=1/0/1）；验收 3 `wc`=105≤200、`def check_overlaps`=1、禁用 grep=0、`py_compile` OK、`--tasks NO_SUCH`=1 条 `卡板读取失败` EXIT=1 不抛栈；额外边界 D（`./` 前缀 / 尾 `/` / 同卡重复 / 兄弟行 token）1/1；`build/ownerfix/` 已清。注：本卡 DONE 后自指消失，复跑 `-v` 为 `已对账 0 张在制品卡 · 0 个独占文件声明` EXIT=0（验收 1 的 1 卡/2 声明取自领卡时 OPEN 基线，夹具 A/B/C 已覆盖计数口径），请 S7 按此验收。
 - 2026-11-20 16:4x · S7 · **VERIFIED**（3/3 + S7 独立边界 11/11）：验收 1 用 `git show HEAD:docs/TASKS.md` 取领卡时 OPEN 快照 → `已对账 1 张在制品卡 · 2 个独占文件声明` + `共 1 份卡板 · 0 条问题` EXIT=0（当前 DONE 卡自指消失后为 0 卡/0 声明 EXIT=0，按 S8 注记不判回）；验收 2 三夹具各自干净副本 A=1 `tools/foo.py` 重叠 / B=0（VERIFIED 不进 WIP）/ C=2（按 path 升序 `build/fix` 先、`tools/foo.py` 后）逐字 EXIT=1/0/1；验收 3 `wc`=105、`def check_overlaps`=1、禁用 grep=0、`py_compile` OK、`--tasks NO_SUCH` 恰好 1 条 `卡板读取失败` EXIT=1 不抛栈。S7 边界 11/11（模板卡跳过 / body 截止 / 1-based 行号 / `./` 与尾 `/` 归一 / 同卡去重 / 兄弟行截断 / 三卡同路径 id 升序 / 空集 / 缺文件）。首轮 3 FAIL 全是 S7 夹具期望写错（行号按 1 文件 1 卡算漏 3 行、membership 写成子串、无 `- ` 的自由文本本不在接口扫描集），按 R65-a 修正期望后全过，非代码缺陷。`build/ownerfix/` 已清。
 
-### T-0078 · [OPEN] `tools/check_event_registration.py` —— `@SubscribeEvent` 监听器注册对账（单文件零接线）
+### T-0078 · [VERIFIED] `tools/check_event_registration.py` —— `@SubscribeEvent` 监听器注册对账（单文件零接线）
 - 派单：S7 · 2026-11-20 16:4x（R82）
 - 目标：`check_commands.py` 对账「命令类 ↔ 挂载引用」，但新增一个带 `@SubscribeEvent` 的监听器类却忘了 `EVENT_BUS.register(...)` 时——编译绿、命令对账绿、运行期那个事件**永远不触发且不报错**。本卡只读扫 Java 源码，核「有 `@SubscribeEvent` 的类是否都注册到事件总线」。当前基线 8 个监听器 / 8 个已注册（S7 已核）。
 - 独占文件（**唯一可写**）：
@@ -3908,6 +3908,27 @@ fi
   1. `python tools/check_event_registration.py` → 末行 `共 1 份事件总线 · 0 条问题` EXIT=0；`-v` → 含 `已检查 8 个监听器 · 8 个已注册`。
   2. 三组夹具复制到 `build/eventfix/java/`，用 `--java` 指过去，各自从干净目录重来不许累积（每个 `.java` 写最小可编译外观即可，本卡不编译）：A `A.java` 有 `@SubscribeEvent` + `Wiring.java` 含 `EVENT_BUS.register(new A());` → EXIT=0 且 0 条；B 在 A 基础上加 `B.java` 有 `@SubscribeEvent` 但不注册 → EXIT=1 且恰好 1 条 `事件监听器 B 有 @SubscribeEvent 但未注册到事件总线`；C 在 B 基础上于 `Wiring.java` 加注释行 `// EVENT_BUS.register(new B());` → 仍 EXIT=1 且恰好同一条。三组逐字对上。
   3. `wc -l < tools/check_event_registration.py` ≤ 200；`grep -c "def check_registration"`=1；`grep -cE "check_commands|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_event_registration.py`=0；`py_compile` OK；`--java NO_SUCH` → EXIT=1 且恰好 1 条 `事件总线读取失败`，不抛栈；夹具用完即删（`build/eventfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 17:26 · 完成 · `tools/check_event_registration.py`（新建 139 行：strip_comments / read_listeners / read_registrations / check_registration / main）；卡外仅本卡状态/进度 + 板 §3 · 构建：未执行（卡明令禁止 gradle，未取锁）· 自测：验收 1 基线「共 1 份事件总线 · 0 条问题」EXIT=0、`-v`「已检查 8 个监听器 · 8 个已注册」；验收 2 三夹具各自干净目录 A=0 / B=1 / C=1，B/C 逐字「事件监听器 B 有 @SubscribeEvent 但未注册到事件总线」EXIT=0/1/1；验收 3 wc=139≤200、`def check_registration`=1、禁用 grep=0、`py_compile` OK、`--java NO_SUCH` 恰好 1 条「事件总线读取失败」EXIT=1 不抛栈；`build/eventfix/` 已清。三条全过，无裁定项。
+- 2026-11-20 22:5x · S7 · **VERIFIED**（3/3 + S7 独立边界 9/9）：验收 1 基线 `共 1 份事件总线 · 0 条问题` EXIT=0、`-v` 含 `已检查 8 个监听器 · 8 个已注册`；验收 2 三夹具各自干净目录 A=0 / B=1 / C=1（B/C 逐字 `事件监听器 B 有 @SubscribeEvent 但未注册到事件总线`）EXIT=0/1/1；验收 3 `wc`=139、`def check_registration`=1、禁用 grep=0、`py_compile` OK、`--java NO_SUCH` 恰好 1 条 `事件总线读取失败` EXIT=1 不抛栈。S7 边界 9/9（行注释 / 块注释保留换行 / 字符串内 `//` 按注释 / 未注册按名升序 / 部分注册 / 空集 / register 参数 token 提取 / 小写字段别名 / 自注册形态）。首轮 2 FAIL 是 S7 夹具期望写错（块注释保留 `\n` 是接口「不删空行」的正确行为），按 R65-a 修正期望后全过，非代码缺陷。`build/eventfix/` 已清。接线 `check_all` 26→27 全绿。
+
+### T-0079 · [OPEN] `tools/check_damage_types.py` —— 伤害类型引用 ↔ datapack 注册对账（单文件零接线）
+- 派单：S7 · 2026-11-20 22:5x（R83）
+- 目标：`DamageEffect.source()` 对查不到的 `damage_type` 只 `warnOnce` 后回退缺省 / generic，不崩、不红；`DamageLayer` 白名单只认 `redtale_project:*`，类型写歪 = 整套属性乘区静默不生效。`check_scripts` 只验 `type` 是已注册原语、`check_numeric` 只验 `damage.json5` 属性 id，都不核「引用字符串是否真在 datapack 注册」。本卡只读扫配置 JSON5 与 `data/redtale_project/damage_type/*.json`，核三类引用是否命中注册表。当前基线：3 个注册项（skill_magical / skill_physical / verification_strike）、skills 里 2 处 damage 原语引用、damage.json5 category_attributes 2 项，共 4 处引用 / 0 问题（S7 已核）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_damage_types.py`（新建，≤ 200 行）
+  - `build/dmgtypefix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_scripts.py` / `check_numeric.py`）；不改 `TOOLS` 清单；不 import 其它 check（允许 import `check_progress.clean_json5`）；不读 Java / 不读 jar；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_registered(data_dir: str) -> set[str]`：扫 `<data_dir>/redtale_project/damage_type/` 下 `*.json`，取文件名去 `.json` 得裸 id（`skill_magical.json` → `skill_magical`）；另加一条内建 `generic`（原版兜底，视为永远注册）。目录不存在 / 读失败 / 无 json → 返回 `{"generic"}`，不抛栈；单文件 JSON 解析失败 → 跳过该文件并把它记为「坏文件」另走 `load_errors`（见下）。返回集合按 id。
+  - `read_refs(cfg_dir: str) -> list[tuple[str, str]]`：扫 `<cfg_dir>/skills/*.json5` 与 `<cfg_dir>/scripts/*.json5`（递归一层），解析 JSON5（用 `clean_json5`），找 `effects[*]` 里 `type == "damage"` 或 `type == "damage_aoe"` 的 `args.damage_type` 字符串值；同时扫 `<cfg_dir>/damage.json5` 的 `multiplier.category_attributes[*].type` 字符串值。统一口径：带 `:` 取冒号后裸名、不带 `:` 取原串；只收 `redtale_project:` 命名空间或裸名（其它命名空间如 `minecraft:generic` 一律跳过不计）。返回 `(来源相对路径, 裸 id)` 列表，按路径再按 id 排序；目录/文件缺失、解析失败 → 跳过不抛栈。
+  - `check_refs(refs: list[tuple[str, str]], registered: set[str]) -> list[str]`：逐条查裸 id 是否在 `registered`，未命中的输出 `<来源路径> 引用未注册的伤害类型 <裸 id>`（不含 `[问题]` 前缀，main 负责加），按来源路径再按 id 排序；重复引用同一 (路径, id) 只在首次出现报一条。
+  - `main() -> int`：CLI `--data <dir>`（默认 `src/main/resources/data`）、`--cfg <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 处引用 · <m> 个注册类型`，n=ref 条数、m=registered 集合大小）；`--data NO_SUCH` 或 `--cfg NO_SUCH` → 恰好 1 条 `[问题] 伤害类型注册表读取失败`、末行 `共 1 份伤害类型表 · 1 条问题`、EXIT=1；其余每条 `[问题] <msg>`；末行 `共 1 份伤害类型表 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1。
+- 不要做：不核原版 `minecraft:` 命名空间的类型（原版注册表不归本卡）；不改绿红语义把「注册了但没被引用」当问题；不解析 Java AST / 不编译 / 不读 jar；不把 `damage.json5` 的 `multiplier.damage_types` 通配串当引用（那是白名单模式串，不是具体类型）。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_damage_types.py` → 末行 `共 1 份伤害类型表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 4 处引用 · 4 个注册类型`（当前基线：skills 2 + damage.json5 category 2 = 4 处；注册 = generic + 3 datapack = 4，S7 已核）。
+  2. 三组夹具复制到 `build/dmgtypefix/`，用 `--data` / `--cfg` 指过去，各自从干净目录重来不许累积：A 在空 cfg 下放一个 `skills/x.json5`（damage 原语 `damage_type: "redtale_project:skill_ghost"`）+ data 只有 `skill_physical.json` → EXIT=1 且恰好 1 条 `skills/x.json5 引用未注册的伤害类型 skill_ghost`；B 在 A 基础上于 data 加 `skill_ghost.json` → EXIT=0 且 0 条；C 在 B 基础上把引用改成 `"minecraft:generic"`（原版命名空间）→ EXIT=0 且 0 条（原版一律跳过）。三组逐字对上。
+  3. `wc -l < tools/check_damage_types.py` ≤ 200；`grep -c "def check_refs"`=1；`grep -cE "check_scripts|check_numeric|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_damage_types.py`=0；`py_compile` OK；`--data NO_SUCH` → EXIT=1 且恰好 1 条 `伤害类型注册表读取失败`，不抛栈；夹具用完即删（`build/dmgtypefix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -3937,7 +3958,8 @@ fi
 | C25 | ~~`tools/check_primitive_ids.py`（原语 id ↔ SKILLS.md 表对账）~~ → **T-0075（R79 派 / R80 验）** | R79-a 元层洞第六例：`check_primitives` 核类↔注册、`check_skills` 核配置↔表，中间「类 `id()` ↔ 表 id」无人核；写歪运行期才崩 | 无 |
 | C26 | ~~`tools/check_lang_dupes.py`（lang 文件内重复键对账）~~ → **T-0076（R80 派 / R81 验）** | R80-b 对账对象第一次不是「两份名单」而是「一份 JSON 内部」：`check_lang` 只看覆盖、重复键被 `json.load` last-wins 吞掉，两个生成器写同一 key 时全绿但译文静默丢失 | 无 |
 | C27 | ~~`tools/check_ownership.py`（WIP 卡独占文件重叠对账）~~ → **T-0077（R81 派 / R82 验）** | `check_tasks` 查状态/重复 id/WIP 上限/验收段，却不查两张 WIP 卡是否抢同一文件；这是 S7/S8 防冲突的唯一机制，重叠时两边各自 VERIFIED、后写者静默覆盖 | 无 |
-| C28 | ~~`tools/check_event_registration.py`（`@SubscribeEvent` 监听器注册对账）~~ → **T-0078（R82 派）** | 增量类事件监听器忘注册时编译绿、`check_commands` 绿、运行期事件永不触发且无错误日志；两份已有检查（命令挂载、原语注册）之间这一缝无人核 | 无 |
+| C28 | ~~`tools/check_event_registration.py`（`@SubscribeEvent` 监听器注册对账）~~ → **T-0078（R82 派 / R83 验）** | 增量类事件监听器忘注册时编译绿、`check_commands` 绿、运行期事件永不触发且无错误日志；两份已有检查（命令挂载、原语注册）之间这一缝无人核 | 无 |
+| C29 | `tools/check_damage_types.py`（伤害类型引用 ↔ datapack 注册对账）→ **T-0079（R83 派）** | `DamageEffect.source()` 对未知 damage_type 只 warnOnce 后回退，`DamageLayer` 白名单只认 `redtale_project:*`，写歪 = 属性乘区静默失效；`check_scripts` 只验原语 type、`check_numeric` 只验属性 id，无人核引用字符串是否在 datapack 注册 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
