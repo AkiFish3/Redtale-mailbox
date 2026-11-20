@@ -1358,4 +1358,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `items/*.json5` 的 `use.script[]`，核每项 effect 原语 id（`effect` 键优先、`type` 键回落）是否 ∈ VALID（`check_scripts.planned()` ∪ `EFFECTS`，27 个）；外部命名空间（带冒号）跳过。缺失/空 use / script 合法。不核 `use.effects[]`（原版 MobEffect id，离线无注册表）与 args 值域。
 - 填补三处盲区：`check_items.check_item` 从不读 `use` 段、`check_scripts.collect` 只扫 `scripts/`、`check_skills.collect` 只扫 `skills/`、`check_effect_target` 只扫脚本/技能 effects——items 内嵌的 `use.script[].effect` 无人核；运行期 `ContentItem` 交 `ScriptEngine.runCalls`，未知原语只 `log.warn` + 跳过、`done` 不增且返回值被丢弃 → 喝汤脚本静默不跑、全 check 绿（同 R88-b「收集/告警没人读」，对账网第十六例）。
-- 形态是跨配置原语 id 引用（同 T-0079 damage_type / T-0084 装备 id），非数值/字符串枚举值域。当前基线 7 份物品 / 2 条引用（`message`/`console_log`）/ 0 问题。未接线（T-0085 VERIFIED 后接 `check_all` → 34）。
+- 形态是跨配置原语 id 引用（同 T-0079 damage_type / T-0084 装备 id），非数值/字符串枚举值域。当前基线 7 份物品 / 2 条引用（`message`/`console_log`）/ 0 问题。已接进 `tools/check_all.py`（`共 34 个脚本`，R90 接线）。T-0085 `[VERIFIED]`（R90）：基线 0 问题 / 六夹具 A~F 逐字 EXIT=1/0/1/1/0/1 / wc=123、边界 18/18。
+
+### 4.50 伤害乘区白名单对账 `check_damage_whitelist.py`（T-0086，R90 派，对账网第十七例）
+
+- 只读扫 `damage.json5` 的 `multiplier.damage_types[]`，核白名单模式：`*` 跳过（归 `check_numeric`）、`ns:*` 只许 `redtale_project` / `minecraft` 两个命名空间、`redtale_project:<path>` 必须 ∈ 已注册伤害类型（`check_damage_types.read_registered` 复用，含内建 `generic`）、外部精确 id 跳过（离线无注册表）。接口 `NS` / `read_entries` / `check_whitelist` / `main` 由 S7 定死；T-0086 派单时未实现、未接线，基线 1 条白名单 / 4 注册类型 / 0 问题。
+- 填补 `check_numeric.check_damage` 与 `check_damage_types.read_refs` 之间的缝：前者只核元素是「非空字符串且非 `*`」，后者只扫 skills/scripts 的 damage 原语与 `category_attributes[].type`，都不进 `damage_types[]`；运行期 `MultiplierRules.appliesTo()` 逐条走 `matches()` 精确字符串匹配，无 WARN 无夹，写歪命名空间 = 全服自定义伤害静默不吃属性乘区（R90-a）。
+- 与 §4.44（具体 damage_type 引用）同源不同对象：一个核「某条伤害写什么类型」，一个核「哪些类型进乘区」，配置键与运行期入口都不同（R86-a 判据）。

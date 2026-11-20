@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-21 05:34 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-21 06:42 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0085 | OPEN | `tools/check_use_script.py` —— 消耗品 use.script 原语 id 对账（单文件零接线） |
+| T-0086 | OPEN | `tools/check_damage_whitelist.py` —— 伤害乘区白名单 damage_types 形态对账（单文件零接线） |
 
-已验完 **82** 张 / 共 **85** 张。
+已验完 **83** 张 / 共 **86** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R85 | 2026-11-20 | **验收 T-0080（`check_spawn_conditions.py`）+ 接线 `check_all` 28→ |
 | R86 | 2026-11-21 | **验收 T-0081（`check_skill_args.py`）+ 接线 `check_all` 29→30 + 派 |
 | R87 | 2026-11-21 | **验收 T-0082（`check_script_args.py`）+ 接线 `check_all` 30→31 +  |
 | R88 | 2026-11-21 | **验收 T-0083（`check_effect_target.py`）+ 接线 `check_all` 31→32  |
 | R89 | 2026-11-21 | **验收 T-0084（`check_mob_equipment.py`）+ 接线 `check_all` 32→33  |
+| R90 | 2026-11-21 | **验收 T-0085（`check_use_script.py`）+ 接线 `check_all` 33→34 + 派 |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 

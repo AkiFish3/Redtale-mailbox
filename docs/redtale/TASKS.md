@@ -4042,7 +4042,7 @@ fi
   - 口径备注（请 S7 裁）：卡面「缺失 / 空 / `{}` 合法」中的「空」按 `null` 合法处理；未知槽仍核其 item，坏值会与 `未知槽名` 并存两条（与卡面「仍需核其 item」一致，夹具 F 因是合法 id 故只 1 条）。
   - 2026-11-21 05:3x · **S7 验收通过（3/3 + S7 独立边界 15/15）** · 验收1 基线 `共 1 份怪物装备 id 表 · 0 条问题` EXIT=0、`-v` 含 `已检查 2 份怪物 · 4 处装备引用 · 14 个基底`；验收2 六夹具独立干净目录 A ghost_sword=1 条未命中·B minecraft=0·C 3=1 条必须字符串·D staff=1 条必须带命名空间·E 空槽=0·F wings=1 条未知槽名，逐字 EXIT=1/0/1/1/0/1；验收3 wc=137≤200、`def check_equipment`=1、禁用 grep=0、`py_compile` OK、`--mobs NO_SUCH` 恰好 1 条 `mobs目录读取失败` EXIT=1 不抛栈。S7 边界 15/15（data=None/缺失/None/空 dict/非 dict/未知槽+坏 id 双报/14 基底合法/外部命名空间跳过/多冒号/排序稳定/value=0/value=False/单引号 shim+注释/解析失败记 None/None 报配置失败）。**裁定 S8 口径备注采纳不打回**（§13.92 R89-a：`null` 合法、未知槽仍核 item 双报与卡面「仍需核其 item」一致）。`build/equipfix/` 已清。**接线 check_all 32→33 全绿**。
 
-### T-0085 · [OPEN] `tools/check_use_script.py` —— 消耗品 use.script 原语 id 对账（单文件零接线）
+### T-0085 · [VERIFIED] `tools/check_use_script.py` —— 消耗品 use.script 原语 id 对账（单文件零接线）
 
 - 派单：S7 · 2026-11-21 05:3x（R89）
 - 目标：`use.script[]` 里的自研 effect 原语 id（`ConsumableSpec.script()` 先认 `effect` 键、再认 `type` 键）**没有任何 check 覆盖**——`check_items.check_item` 只核 base/rarity/stats/gem/set_id/abilities/sockets/weapon_attributes/rev，从不读 `use` 段；`check_scripts.collect` 只扫 `scripts/`、`check_skills.collect` 只扫 `skills/`；`effect.target` 层（`check_effect_target`）只扫脚本/技能 effects。运行期 `ContentItem` 把 `use.script` 交 `ScriptEngine.runCalls`，未知原语只 `log.warn("effect {} 未注册（已跳过）")` 且 `done` 不增、返回值被 `ContentItem` 丢弃——喝汤时脚本静默不跑、全 check 绿、只在日志里一次 WARN（对账网第十六例，与 T-0084「收集了没人读」同源不同对象）。合法集 = `docs/SKILLS.md` §4 表第 2 列反引号原语 id ∪ 调试原语集（13 个，同 `check_scripts.EFFECTS`）；外部命名空间（带冒号）跳过，离线无注册表。当前基线：7 份物品、`demo_stew` 1 份带 2 条引用（`message`/`console_log`）、0 问题（S7 已离线核）。
@@ -4061,6 +4061,28 @@ fi
   1. `python tools/check_use_script.py` → 末行 `共 1 份消耗品脚本原语表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 7 份物品 · 2 条 use.script 调用 · 27 个合法原语`。
   2. 六组夹具复制到 `build/usescriptfix/`，各自从干净目录重来不许累积（每份只放一个配置 json5，顶层 id/base 任意）：A `use:{script:[{effect:"mesage"}]}` → 1 条 `use.script[0].effect 未注册原语：mesage`；B `use:{script:[{type:"heal"}]}` → 0 条 EXIT=0（type 键别名 + 已注册原语）；C `use:{script:[{effect:3}]}` → 1 条 `use.script[0] 缺 effect/type 键或不是非空字符串`；D `use:{script:"message"}` → 1 条 `use.script 必须是数组`；E `use:{}` + 无 script → 0 条 EXIT=0；F `use:{script:[{effect:"console_log"},{effect:"taret"}]}` → 1 条 `use.script[1].effect 未注册原语：taret`（多条目下标）。六组逐字对上。
   3. `wc -l < tools/check_use_script.py` ≤ 200；`grep -c "def check_use_script"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|ItemBase\.java" tools/check_use_script.py`=0；`py_compile` OK；`--items NO_SUCH` → EXIT=1 且恰好 1 条 `items目录读取失败`，不抛栈；夹具用完即删（`build/usescriptfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-21 05:51 · 完成 · 新建 tools/check_use_script.py（123 行纯 Python：_loads 单引号 shim / read_items / check_use_script / main）；只 import check_progress.clean_json5 与 check_scripts.planned,EFFECTS，零接线 · 未构建（卡明令禁止 gradle） · 验收 3/3：基线「共 1 份消耗品脚本原语表 · 0 条问题」EXIT=0、`-v` 含「已检查 7 份物品 · 2 条 use.script 调用 · 27 个合法原语」；六夹具 A mesage=1 未注册 · B type=heal=0 · C effect=3=1 缺键/非字符串 · D script 字符串=1 必须数组 · E 空 use=0 · F 两条取下标 1 的 taret=1，逐字 EXIT=1/0/1/1/0/1（每轮从干净目录重来）；wc=123≤200、`def check_use_script`=1、禁用 grep=0、`py_compile` OK、`--items NO_SUCH` 恰好 1 条 items目录读取失败 EXIT=1 不抛栈；边界 12/12（None / use=null / script=null / 外部命名空间 / effect 空串不回落 type / 解析失败记 None）；`build/usescriptfix/` 与自建 pyc 已清 · 待 S7 验收
+  - 2026-11-21 06:4x · **S7 验收通过（3/3 + S7 独立边界 18/18）** · 验收1 基线 `共 1 份消耗品脚本原语表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 2 条 use.script 调用 · 27 个合法原语`；验收2 六夹具独立干净目录 A `mesage`=1 未注册 · B `type:heal`=0 · C `effect:3`=1 缺键/非字符串 · D script 字符串=1 必须数组 · E `use:{}`=0 · F 多条目下标 1 的 `taret`=1，逐字 EXIT=1/0/1/1/0/1；验收3 wc=123≤200、`def check_use_script`=1、禁用 grep=0、`py_compile` OK、`--items NO_SUCH` 恰好 1 条 `items目录读取失败` EXIT=1 不抛栈。S7 边界 18/18（data=None / use 缺失 / None / 空 dict / 非 dict / script None / 空数组 / 字符串 / entry 非 dict / effect 空串或 None 不回落 type / 外部命名空间 / 多冒号 / type 别名 / 下标定位 / bool 与空白 type / 混合多问题）+ `_loads` 单引号与注释 shim + `read_items` 非 dict/坏文件记 None、缺目录返空。**接线 check_all 33→34 全绿**。`build/usescriptfix/` 已清。
+
+### T-0086 · [OPEN] `tools/check_damage_whitelist.py` —— 伤害乘区白名单 damage_types 形态对账（单文件零接线）
+
+- 派单：S7 · 2026-11-21 06:4x（R90）
+- 目标：`damage.json5` 的 `multiplier.damage_types[]` 是伤害乘区的总闸门（`MultiplierRules.appliesTo()` 逐条 `matches()`：精确 id / `ns:*` 通配 / `*`，**无 WARN、无夹、无日志**）。写歪 `redtale_projce:*` 或 `redtale_project:skill_ghost` 会让所有自定义伤害静默不吃属性乘区；而 `check_numeric.check_damage` 只核元素是「非空字符串且不是 `*`」、`check_damage_types.read_refs` 只扫 skills/scripts 的 damage 原语与 `category_attributes[].type`，两者都不进 `damage_types[]`（对账网第十七例，同 T-0079 引用型但对象不同：白名单模式 vs 具体引用；运行期入口也不同：`MultiplierRules.appliesTo` vs `DamageEffect.source`）。当前基线：1 条白名单 `redtale_project:*` / 4 个注册类型（`generic` + 3 datapack）/ 0 问题（S7 已离线核判定逻辑）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_damage_whitelist.py`（新建，≤ 200 行）
+  - `build/dmgwlf/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_numeric.py` / `check_damage_types.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5` 与 `from check_damage_types import read_registered`）；不读 Java / 不读 jar；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `NS = "redtale_project:"`：模块级常量。
+  - `read_entries(cfg_path: str) -> list[tuple[int, object]] | None`：用 `clean_json5` 解析 `<cfg_path>`（单引号 shim 沿用既有口径），取 `multiplier.damage_types`；返回 `(下标, 元素)` 列表（保序）。文件缺失 / 解析失败 / 顶层非 dict / `multiplier` 非 dict / `damage_types` 非 list → 返回 `None`，不抛栈。
+  - `check_whitelist(entries: list[tuple[int, object]], registered: set[str]) -> list[str]`：逐条判：元素非字符串或 `strip()` 空 → `damage_types[i] 必须是非空字符串`；等于 `*` → 跳过（全通配归 `check_numeric` 判红，不重复报）；形如 `ns:*` 且 `ns` ∉ {`redtale_project`, `minecraft`} → `damage_types[i] 未知命名空间通配：<value>`；以 `NS` 开头且余下部分恰为 `*` → 合法；以 `NS` 开头且余下部分非空、不含 `:` 或 `*`、只含 `[a-z0-9_.-]` → 不在 `registered` 时 `damage_types[i] 未注册伤害类型：<value>`，在则合法；以 `NS` 开头但余下部分形态不符 → `damage_types[i] 非法通配形态：<value>`；其它命名空间精确 id（含 `minecraft:player_attack`、裸名）→ 跳过（离线无注册表）。问题文案无 `[问题]` 前缀，main 负责加。
+  - `main() -> int`：CLI `--cfg <file>`（默认 `src/main/resources/redtale/defaults/damage.json5`）、`--data <dir>`（默认 `src/main/resources/data`）、`-v`（多打一行 `已检查 <n> 条白名单 · <k> 个注册类型`，n=条目数、k=len(registered)）。`registered = read_registered(args.data)`（复用既有函数，已含内建 `generic`）；`read_entries` 返 None → 打 `[问题] damage.json5 读取失败`、末行按 1 条问题、EXIT=1，不抛栈；否则每条问题打 `[问题] <msg>`，末行 `共 1 份伤害白名单 · %d 条问题`，0 问题 EXIT=0，否则 EXIT=1。
+- 不要做：不核 `*` 全通配（`check_numeric` 已判红）；不核外部命名空间的精确 id（离线无注册表）；不核 `damage.json5` 其它键（归 `check_numeric` / `check_damage_types`）；不核 skills/scripts 的 `args.damage_type`（归 `check_damage_types`）；不读 Java AST / 不编译 / 不读 jar；不改绿红语义。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_damage_whitelist.py` → 末行 `共 1 份伤害白名单 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 条白名单 · 4 个注册类型`。
+  2. 六组夹具写到 `build/dmgwlf/`（每次从干净目录重来，各自只有一份 json5，内容形如 `{"multiplier":{"damage_types":[...]}}`），用 `--cfg <该夹具>` 逐组跑：A `["redtale_project:skill_ghost"]` → 1 条 `damage_types[0] 未注册伤害类型：redtale_project:skill_ghost`；B `["redtale_project:*"]` → 0 条 EXIT=0；C `["minecraft:player_attack"]` → 0 条 EXIT=0；D `["redtale_projce:*"]` → 1 条 `damage_types[0] 未知命名空间通配：redtale_projce:*`；E `["redtale_project:skill_magical*"]` → 1 条 `damage_types[0] 非法通配形态：redtale_project:skill_magical*`；F `["minecraft:player_attack","redtale_project:skill_physical"]` → 0 条 EXIT=0。六组逐字对上。
+  3. `wc -l < tools/check_damage_whitelist.py` ≤ 200；`grep -c "def check_whitelist"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_damage_whitelist.py`=0；`py_compile` OK；`--cfg NO_SUCH` → EXIT=1 且恰好 1 条 `damage.json5 读取失败`，不抛栈；夹具用完即删（`build/dmgwlf/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4097,7 +4119,8 @@ fi
 | C32 | ~~`tools/check_script_args.py`~~ → **T-0082（R86 派 / R87 验）** | —— | —— |
 | C33 | `tools/check_effect_target.py`（效果 `target` 枚举值域对账）→ **T-0083（R87 派 / R88 验）** | —— | —— |
 | C34 | `tools/check_mob_equipment.py`（怪物装备物品 id ↔ 14 基底注册对账）→ **T-0084（R88 派）** | `check_mobs.check_mob` 只核 equipment[slot] 带冒号、不核 id 真能解析；运行期 `MobSpawner.applyEquipment` 对未知 id 只 `skips.add`，而 `Result.skips()` 全仓无人读 → 怪物光着手出生、无红无 WARN、全 check 绿。对账网第十五例，引用型（同 T-0079 damage_type 口径） | 无 |
-| C35 | `tools/check_use_script.py`（消耗品 use.script 原语 id 对账）→ **T-0085（R89 派）** | `check_items.check_item` 从不读 `use` 段、`check_scripts` 只扫 scripts/、`check_skills` 只扫 skills/、`check_effect_target` 只扫脚本/技能 effects——items 里内嵌的 `use.script[].effect` 无人核；运行期 `runCalls` 对未知原语只 warnOnce 且返回值被 `ContentItem` 丢弃 → 喝汤脚本静默不跑。对账网第十六例（同 R88-b「收集没人读」） | 无 |
+| C35 | ~~`tools/check_use_script.py`~~ → **T-0085（R89 派 / R90 验）** | —— | —— |
+| C36 | `tools/check_damage_whitelist.py`（伤害乘区 damage_types 白名单形态对账）→ **T-0086（R90 派）** | `check_numeric.check_damage` 只核元素是「非空字符串且非 `*`」、`check_damage_types.read_refs` 只扫 skills/scripts damage 原语与 category_attributes——`damage.json5` 的 `multiplier.damage_types[]` 无人核；运行期 `MultiplierRules.matches()` 精确字符串匹配、无 WARN 无夹，写歪命名空间让整套乘区静默失效。对账网第十七例 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
