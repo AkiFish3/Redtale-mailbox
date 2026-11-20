@@ -1352,4 +1352,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `mobs/*.json5` 的 `equipment{}`，核红tale 命名空间下 slot → 物品 id 的 path 是否 ∈ 14 基底（`ItemBase` enum 写死 `BASE_IDS`）；外部命名空间跳过（离线无注册表）。缺失/空 equipment 合法。
 - 填补 `check_mobs.check_mob` 的盲区：该函数只核 `equipment[slot]` 是带冒号的 id，从不核 id 真能解析成物品；而 `MobSpawner.applyEquipment` 对未知 id 只 `skips.add`、`Result.skips()` 全仓无人读 → 怪物光着手出生、无红无 WARN（R88-b）。
-- 形态是跨配置引用（同 §4.44 damage_type），非数值/字符串枚举值域。当前基线 2 份怪 / 4 处引用 / 0 问题。未接线（T-0084 VERIFIED 后接 `check_all` → 33）。
+- 形态是跨配置引用（同 §4.44 damage_type），非数值/字符串枚举值域。当前基线 2 份怪 / 4 处引用 / 0 问题。已接进 `tools/check_all.py`（`共 33 个脚本`，R89 接线）。T-0084 `[VERIFIED]`（R89）：基线 0 问题 / 六夹具 A~F 逐字 EXIT=1 / wc=137、边界 15/15。
+
+### 4.49 消耗品脚本原语 id 对账 `check_use_script.py`（T-0085，R89 派，对账网第十六例）
+
+- 只读扫 `items/*.json5` 的 `use.script[]`，核每项 effect 原语 id（`effect` 键优先、`type` 键回落）是否 ∈ VALID（`check_scripts.planned()` ∪ `EFFECTS`，27 个）；外部命名空间（带冒号）跳过。缺失/空 use / script 合法。不核 `use.effects[]`（原版 MobEffect id，离线无注册表）与 args 值域。
+- 填补三处盲区：`check_items.check_item` 从不读 `use` 段、`check_scripts.collect` 只扫 `scripts/`、`check_skills.collect` 只扫 `skills/`、`check_effect_target` 只扫脚本/技能 effects——items 内嵌的 `use.script[].effect` 无人核；运行期 `ContentItem` 交 `ScriptEngine.runCalls`，未知原语只 `log.warn` + 跳过、`done` 不增且返回值被丢弃 → 喝汤脚本静默不跑、全 check 绿（同 R88-b「收集/告警没人读」，对账网第十六例）。
+- 形态是跨配置原语 id 引用（同 T-0079 damage_type / T-0084 装备 id），非数值/字符串枚举值域。当前基线 7 份物品 / 2 条引用（`message`/`console_log`）/ 0 问题。未接线（T-0085 VERIFIED 后接 `check_all` → 34）。
