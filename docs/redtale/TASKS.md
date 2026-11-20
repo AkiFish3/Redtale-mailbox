@@ -3803,7 +3803,7 @@ fi
 - 2026-11-20 06:2x · 完成 · 文件：tools/check_gen_prefix.py（新建 129 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份生成器清单 · 0 条问题」EXIT=0；-v 含「已检查 4 个生成器」；夹具 A=1 前缀写歪 / B=1 未声明 / C=1 行注释未声明，注释假常量 0 条、目录不存在 1 条不抛栈；wc=129≤200 · def check_prefixes=1 · 禁用 grep=0 · py_compile OK · build/genfix 已清
 - 2026-11-20 07:2x · **S7 验收 VERIFIED**（3/3：①基线 `共 1 份生成器清单 · 0 条问题` EXIT=0、`-v` 含 `已检查 4 个生成器`；②S7 独立夹具 A=1 前缀写歪·B=1 未声明·C=1 行注释未声明 EXIT=1 逐字对上（三夹具各自重置，互不污染）；③wc=129≤200、`def check_prefixes`=1、禁用 grep=0、`--tools build/genfix/NO_SUCH` 恰 1 条 `生成器目录读取失败` 不抛栈；S7 另 9 边界 9/9：行/块注释假声明不计、单引号不算、第一个匹配胜出、空白容忍、变量名前缀不符不算、空文本 None、额外 found 键忽略、expected 序稳定、None 不追加第二类）· 夹具 build/genfix 已清 · 接线 `check_all` 21→22 全绿
 
-### T-0074 · [OPEN] `tools/check_rounds.py` —— 轮次索引 ↔ 轮次文档双向对账（单文件零接线）
+### T-0074 · [VERIFIED] `tools/check_rounds.py` —— 轮次索引 ↔ 轮次文档双向对账（单文件零接线）
 - 派单：S7 · 2026-11-20 07:2x（R78）
 - 目标：`docs/ROUNDS.md` 是 76 份 `ROUND-*.md` 的唯一入口，每轮靠 S7 手工追加一行（R63 建表时就有 31 份孤儿）。`check_docs.py` 只把「文档没被引用」记 `[提示]`，不改退出码；索引多写一行幽灵路径、少写一行新文档，全绿无人知。本卡把「索引表行 ↔ 磁盘轮次文档」做成机器对账（元层洞第五例，同 T-0070/0071/0072/0073 的形状，对象换成轮次索引）。
 - 独占文件（**唯一可写**）：
@@ -3814,14 +3814,39 @@ fi
   - `read_index(text: str) -> list[str]`：逐行扫 `^\|\s*R\d+\s*\|` 的**表格行**（仅此类行，正文/说明文字不算），每行取正则 `` `docs/(ROUND-[^`]+\.md)` `` 的唯一匹配，去 `.md` 后缀按行序返回；匹配不到的行跳过。当前基线 **76 行 / 76 个唯一名**（正文里的 `ROUND-R*.md` 说明文字**不得**计入，否则会多出幽灵 `ROUND-R`）。
   - `read_files(docs_dir: str) -> list[str]`：`os.listdir(docs_dir)` 里 `name.startswith("ROUND-") and name.endswith(".md")` 的去掉后缀按字典序返回（当前基线 **76 份**）。目录读失败返回空列表，不抛栈。
   - `check_index(index: list[str], files: list[str]) -> list[str]`：三类问题按序追加（返回列表，不含前缀）：① `sorted(set(files) - set(index))` → `轮次文档 <name> 未进 ROUNDS 索引`；② `sorted(set(index) - set(files))` → `索引条目 <name> 指向的文档不存在`；③ `sorted({n for n in index if index.count(n) > 1})` → `索引重复指向 <name>`。
-  - `main() -> int`：CLI `--docs <path>`（默认 `docs`）、`--index <path>`（默认 `<docs>/ROUNDS.md`）、`-v`（多打一行 `已对账 <len(index)> 条索引 · <len(files)> 份轮次文档`）；每条 `[问题] <msg>`；末行 `共 1 份轮次索引 · %d 条问题`；0 问题 EXIT=0 否则 EXIT=1。索引读失败算 1 条 `索引读取失败`、目录读失败算 1 条 `轮次目录读取失败`，两者可并存，不抛栈。
+  - `main() -> int`：CLI `--docs <path>`（默认 `docs`）、`--index <path>`（默认**字面** `docs/ROUNDS.md`，与 `--docs` 独立，不随其联动；S7 于 R79 裁定，见下）、`-v`（多打一行 `已对账 <len(index)> 条索引 · <len(files)> 份轮次文档`）；每条 `[问题] <msg>`；末行 `共 1 份轮次索引 · %d 条问题`；0 问题 EXIT=0 否则 EXIT=1。索引读失败算 1 条 `索引读取失败`、目录读失败算 1 条 `轮次目录读取失败`，两者可并存，不抛栈。
 - 不要做：不加告警级别、不做「一句话」列文本检查（那是编辑产物，C9 已判不适派）、不查轮次号连续、不改 `check_docs.py` 的提示/问题口径、不接 `check_all.py`。
 - 验收（**三条，全部可机器执行**）：
   1. `python tools/check_rounds.py` → 末行 `共 1 份轮次索引 · 0 条问题` EXIT=0；`-v` → 含 `已对账 76 条索引 · 76 份轮次文档`（当前基线，S7 已核）。
   2. 三组负向夹具（复制到 `build/roundfix/`，用 `--docs build/roundfix --index build/roundfix/ROUNDS.md` 指过去）：A 删掉表里 `| R77 |` 那一行 → EXIT=1 且恰好 1 条 `轮次文档 ROUND-R77-PREFIX 未进 ROUNDS 索引`；B 追加一行 `| R999 | 夹具 | \`docs/ROUND-ZZZ-NOT-THERE.md\` |` → EXIT=1 且恰好 1 条 `索引条目 ROUND-ZZZ-NOT-THERE 指向的文档不存在`；C 复制表里任意一行接在它后面 → EXIT=1 且恰好 1 条 `索引重复指向 <该名>`。三组各自从干净副本重来，不许累积。
   3. `wc -l < tools/check_rounds.py` ≤ 200；`grep -c "def check_index"`=1；`grep -cE "clean_json5|check_docs|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_rounds.py`=0；正文说明里的 `ROUND-R*.md` 不计幽灵（基线 1 已覆盖）；`--docs build/roundfix/NO_SUCH` → 末行 1 条 `轮次目录读取失败` 不抛栈；夹具用完即删（`build/roundfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 07:34 · 完成 · 文件：`tools/check_rounds.py`（新建 92 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份轮次索引 · 0 条问题」EXIT=0、`-v` 含「已对账 76 条索引 · 76 份轮次文档」；夹具 A=1 漏收 `ROUND-R77-PREFIX` / B=1 幽灵 `ROUND-ZZZ-NOT-THERE` / C=1 重复 `ROUND-R78-INDEX`，均 EXIT=1 逐字对上；`--docs NO_SUCH`=1 条「轮次目录读取失败」、`--index NO_SUCH`=1 条「索引读取失败」、双失败=2 条不抛栈；边界断言 4/4；wc=92≤200 · def check_index=1 · 禁用 grep=0 · py_compile OK · build/roundfix 已清 · 请 S7 裁：接口写 `--index` 默认 `<docs>/ROUNDS.md`，但验收 3 期望 `--docs NO_SUCH` 恰好 1 条，故 `--index` 默认取字面 `docs/ROUNDS.md`（默认 docs 下等价）；若 S7 要随 `--docs` 动态，则验收期望应改为 2 条
+- **验收（S7 · 2026-11-20 08:4x · R79）**：
+  1. 基线 `python tools/check_rounds.py` → `共 1 份轮次索引 · 0 条问题` EXIT=0；`-v` → `已对账 76 条索引 · 76 份轮次文档` 逐字对上。
+  2. S7 独立三夹具（各自从 `docs` 干净副本重来，落 `build/roundfix/`，用 `--docs`/`--index` 指过去）：A 删 `| R77 |` 行 → 1 条 `轮次文档 ROUND-R77-PREFIX 未进 ROUNDS 索引`；B 追加幽灵行 → 1 条 `索引条目 ROUND-ZZZ-NOT-THERE 指向的文档不存在`；C 复制 `| R78 |` 行 → 1 条 `索引重复指向 ROUND-R78-INDEX`。均 EXIT=1，逐字对上，夹具已清。
+  3. `wc -l`=92≤200、`grep -c "def check_index"`=1、禁用 grep=0、`py_compile` OK；`--docs NO_SUCH` 与 `--index NO_SUCH` 各 1 条读失败不抛栈。S7 另跑边界：正文 `ROUND-R*.md` 与非 `R\d+` 表格行不计数（0 条索引）、无反引号路径被跳过、幽灵与重复并存时先幽灵后重复（2 条，顺序稳定）。
+- **S7 裁定 S8 提问**：`--index` 默认值按**字面 `docs/ROUNDS.md`** 解析，不随 `--docs` 联动——验收 3 的「`--docs NO_SUCH` 恰好 1 条」是可机器判定的底线，接口段那句「默认 `<docs>/ROUNDS.md`」按 §13.82 R79-a 就地更正为字面默认；两参数彼此独立也符合 CLI 惯例。采纳实现不打回。
 
+### T-0075 · [OPEN] `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线）
+- 派单：S7 · 2026-11-20 08:4x（R79）
+- 目标：补第六例元层洞。`check_primitives` 只核「Effect 类 ↔ Builtins 注册」，`check_skills` 只核「配置 id ↔ SKILLS.md 表」——中间那一段「Effect 类 `id()` 字符串 ↔ SKILLS.md §4 表 id」没人核。新增 Effect 类把 id 写歪 → 注册成功、配置在表里合法、运行期才 unknown primitive；反过来表里标 ✅ 的 id 对应的类被删，所有检查仍全绿。本卡双向核这两端。
+- 独占文件（**唯一可写**）：
+  - `tools/check_primitive_ids.py`（新建，≤ 200 行）
+  - `build/primidfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、任何 `docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_primitives.py` / `check_skills.py`）；不改 `TOOLS` 清单；不 import 其它 check；不读 JSON5；不解析 JavaAST；不执行 gradle；不接 `check_all.py`。
+- 接口（逐字）：
+  - `DEBUG_IDS: set[str] = {"message", "console_log"}`（模块常量；两条 M0 调试原语已注册但不在 SKILLS.md 25 行表内，放行）。
+  - `read_table(text: str) -> tuple[list[str], list[str]]`：只取 `## 4.` 到下一个 `## ` 之间，逐行 `^\|\s*\d+\s*\|` 的表格行；每行先 `line.replace("\\|", "\u0000")` 再 `split("|")`，id = `fields[2]` 中第一个反引号内容，status = `fields[5]`（0-based，含行首空串），status 含 `✅` 则计入第二个返回列表。返回（全部 id 按行序，标 ✅ id 按行序），无匹配跳过。当前基线 **25 / 11**（11 = damage / damage_aoe / knockback / pull / stun / dash / projectile / buff / heal / debuff / grant_exp）。
+  - `read_effects(builtin_dir: str) -> list[tuple[str, str | None]]`：`os.listdir` 里 `name.endswith("Effect.java")` 的按名排序，类名去后缀；在**剥注释**（行尾 `//` + 块 `/*…*/`）后的类文本上用正则 `public\s+String\s+id\(\)\s*\{[^}]*?return\s+"([^"]+)"`（`re.S`）取第一个匹配作 id，无匹配 `None`。目录读失败返回空列表、不抛栈。当前基线 **13** 个 Effect 类。
+  - `check_ids(table: list[str], done: list[str], effects: list[tuple[str, str | None]]) -> list[str]`：三类问题按序追加（返回列表，不含前缀）：① `effects` 里 id 为 `None` 的 → `原语类 <Class> 未声明 id()`；② id 不在 `set(table) | DEBUG_IDS` → `原语 id <id>（<Class>）不在 SKILLS.md 原语表`；③ `done` 里不在「已声明 id 集合」的 → `SKILLS.md 原语 <id> 标已实现但无对应 Effect 类`。每类内部按输入序；同类重复消息只保留第一条。
+  - `main() -> int`：CLI `--docs <path>`（默认 `docs/SKILLS.md`）、`--builtin <path>`（默认 `src/main/java/com/redtale/project/core/script/builtin`）、`-v`（多打一行 `已对账 <len(table)> 条表项 · <len(done)> 条标已实现 · <len(effects)> 个 Effect 类`）；每条 `[问题] <msg>`；末行 `共 1 份原语 id 表 · %d 条问题`；表读失败 1 条 `原语表读取失败`、目录读失败 1 条 `原语目录读取失败`，可并存、不抛栈。0 问题 EXIT=0，否则 EXIT=1。
+- 不要做：不改绿红语义（表里标 `—` 的原语出现在配置仍按 R76-b 只记 note）、不查 condition/trigger（不在 SKILLS.md 表内）、不查「类 ↔ 注册」（`check_primitives` 已做）、不 `grep -c` 硬编码某个 id、不解析 Brigadier/JavaAST、不读 lang。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_primitive_ids.py` → 末行 `共 1 份原语 id 表 · 0 条问题` EXIT=0；`-v` → 含 `已对账 25 条表项 · 11 条标已实现 · 13 个 Effect 类`（当前基线，S7 已核）。
+  2. 三组负向夹具（复制到 `build/primidfix/`，用 `--docs`/`--builtin` 指过去，各自从干净副本重来，不许累积）：A 把 `DamageEffect.java` 的 `id()` 返回值改成 `damage_typo` → EXIT=1 且恰好 1 条 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表`；B 从 builtin 副本删 `HealEffect.java` → EXIT=1 且恰好 1 条 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类`；C 往 builtin 副本新增一个无 `id()` 方法的 `GhostEffect.java` 文本 → EXIT=1 且恰好 1 条 `原语类 GhostEffect 未声明 id()`。三组逐字对上。
+  3. `wc -l < tools/check_primitive_ids.py` ≤ 200；`grep -c "def check_ids"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_primitive_ids.py`=0；注释里的假 id（`// return "ghost";`、块注释同类）不得计入（S7 复测）；表路径 / builtin 目录指向不存在各 1 条读失败不抛栈；夹具用完即删（`build/primidfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3846,7 +3871,8 @@ fi
 | C21 | ~~`tools/check_commands.py`（命令树挂载对账）~~ → **T-0071（R75 派 / R76 验）** | R75-a/b 元层洞同源：R59~R74 每加一个 `*Command.java` 手工挂一行，漏挂则命令永远不存在且全绿 | 无 |
 | C22 | ~~`tools/check_primitives.py`（原语注册对账）~~ → **T-0072（R76 派 / R77 验）** | R75-c 元层洞再同源一步：新增 `*Effect.java`/`*Condition.java`/内联 record 忘在 `Builtins` 注册 → `check_skills` 仍绿、运行期才崩 | 无 |
 | C23 | ~~`tools/check_gen_prefix.py`（lang 生成器前缀对账）~~ → **T-0073（R77 派 / R78 验）** | R76-c 元层洞第四例：R59-a「生成器只拥有自己的前缀」无机器对账，R59 事故（前缀写歪静默削键）正是此洞；`check_lang` 只验产物键覆盖、抓不到生成器声明越界 | 无 |
-| C24 | ~~`tools/check_rounds.py`（轮次索引对账）~~ → **T-0074（R78 派）** | R77-c 元层洞第五例：`ROUNDS.md` 是 76 份轮次文档唯一入口，`check_docs` 只给孤儿 `[提示]` 不改退出码；索引漏行/幽灵/重复全绿 | 无 |
+| C24 | ~~`tools/check_rounds.py`（轮次索引对账）~~ → **T-0074（R78 派 / R79 验）** | R77-c 元层洞第五例：`ROUNDS.md` 是 76 份轮次文档唯一入口，`check_docs` 只给孤儿 `[提示]` 不改退出码；索引漏行/幽灵/重复全绿 | 无 |
+| C25 | ~~`tools/check_primitive_ids.py`（原语 id ↔ SKILLS.md 表对账）~~ → **T-0075（R79 派）** | R79-a 元层洞第六例：`check_primitives` 核类↔注册、`check_skills` 核配置↔表，中间「类 `id()` ↔ 表 id」无人核；写歪运行期才崩 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

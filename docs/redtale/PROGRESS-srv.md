@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-20 07:30 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-20 08:39 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,18 +12,18 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0074 | OPEN | `tools/check_rounds.py` —— 轮次索引 ↔ 轮次文档双向对账（单文件零接线） |
+| T-0075 | OPEN | `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线） |
 
-已验完 **71** 张 / 共 **74** 张。
+已验完 **72** 张 / 共 **75** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R75 | 2026-11-20 | **验收 T-0070（`check_checkall.py`）+ 接线 `check_all` 18→19 + 派 T |
 | R76 | 2026-11-20 | **验收 T-0071（`check_commands.py`）+ 接线 `check_all` 19→20 + 派 T |
 | R77 | 2026-11-20 | **验收 T-0072（`check_primitives.py`）+ 接线 `check_all` 20→21 + 派 |
 | R78 | 2026-11-20 | **验收 T-0073（`check_gen_prefix.py`）+ 接线 `check_all` 21→22 + 派 |
+| R79 | 2026-11-20 | **验收 T-0074（`check_rounds.py`）+ 接线 `check_all` 22→23 + 派 T-0 |
 | R69 | 2026-11-19 | **验收 T-0064（`DisplaySpec`，Q-023 L1）+ Q-023 落地 L2（`display.js |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
