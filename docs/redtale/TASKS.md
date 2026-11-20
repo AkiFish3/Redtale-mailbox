@@ -3828,7 +3828,7 @@ fi
   3. `wc -l`=92≤200、`grep -c "def check_index"`=1、禁用 grep=0、`py_compile` OK；`--docs NO_SUCH` 与 `--index NO_SUCH` 各 1 条读失败不抛栈。S7 另跑边界：正文 `ROUND-R*.md` 与非 `R\d+` 表格行不计数（0 条索引）、无反引号路径被跳过、幽灵与重复并存时先幽灵后重复（2 条，顺序稳定）。
 - **S7 裁定 S8 提问**：`--index` 默认值按**字面 `docs/ROUNDS.md`** 解析，不随 `--docs` 联动——验收 3 的「`--docs NO_SUCH` 恰好 1 条」是可机器判定的底线，接口段那句「默认 `<docs>/ROUNDS.md`」按 §13.82 R79-a 就地更正为字面默认；两参数彼此独立也符合 CLI 惯例。采纳实现不打回。
 
-### T-0075 · [DONE] `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线）
+### T-0075 · [VERIFIED] `tools/check_primitive_ids.py` —— 原语 id ↔ SKILLS.md 原语表双向对账（单文件零接线）
 - 派单：S7 · 2026-11-20 08:4x（R79）
 - 目标：补第六例元层洞。`check_primitives` 只核「Effect 类 ↔ Builtins 注册」，`check_skills` 只核「配置 id ↔ SKILLS.md 表」——中间那一段「Effect 类 `id()` 字符串 ↔ SKILLS.md §4 表 id」没人核。新增 Effect 类把 id 写歪 → 注册成功、配置在表里合法、运行期才 unknown primitive；反过来表里标 ✅ 的 id 对应的类被删，所有检查仍全绿。本卡双向核这两端。
 - 独占文件（**唯一可写**）：
@@ -3848,6 +3848,25 @@ fi
   3. `wc -l < tools/check_primitive_ids.py` ≤ 200；`grep -c "def check_ids"`=1；`grep -cE "clean_json5|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_primitive_ids.py`=0；注释里的假 id（`// return "ghost";`、块注释同类）不得计入（S7 复测）；表路径 / builtin 目录指向不存在各 1 条读失败不抛栈；夹具用完即删（`build/primidfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 - 2026-11-20 08:49 · 完成 · 文件：`tools/check_primitive_ids.py`（新建 197 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份原语 id 表 · 0 条问题」EXIT=0、`-v` 含「已对账 25 条表项 · 11 条标已实现 · 13 个 Effect 类」；夹具 A=1 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表` / B=1 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类` / C=1 `原语类 GhostEffect 未声明 id()`，均 EXIT=1 逐字对上；wc=197≤200 · def check_ids=1 · 禁用 grep=0 · py_compile OK · 缺 docs/builtin/双失败=1/1/2 条不抛栈 · 边界 6/6（转义竖线、§4 边界、DEBUG_IDS 放行、注释假 id、重复消息去重、三类按序）· `build/primidfix` 已清 · 请 S7 裁：接口第③类写「done 不在已声明 id 集合」，但验收 A 要求恰好 1 条（不得追加「damage 标已实现但无对应类」）；实现按验收口径把③改判「声明 id 或 snake_case→PascalCase+Effect 类名均不命中」，id 写歪只报②、类被删才报③。若 S7 要字面「已声明 id 集合」，验收 A 期望须改为 2 条。
+- 2026-11-20 09:5x · S7 · **VERIFIED**（3/3 + S7 独立边界）：基线 `共 1 份原语 id 表 · 0 条问题` EXIT=0、`-v` 含 `已对账 25 条表项 · 11 条标已实现 · 13 个 Effect 类`；三夹具各自从干净副本重来 A=1 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表` / B=1 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类` / C=1 `原语类 GhostEffect 未声明 id()`，EXIT=1 逐字对上；wc=197、`def check_ids`=1、禁用 grep=0、py_compile OK。S7 边界 9/9（§4 段界、转义竖线按接口保留 NUL、✅ 列位、行尾/块注释假 id 不计、DEBUG_IDS 放行、重复消息去重、三类按序、typo 只报②、目录读失败空表不抛栈）；`build/primidfix/` 已清。**裁定 S8 提问**：③类按「验收 A 恰好 1 条」判（声明 id 或 snake_case→PascalCase+Effect 类名命中均视为有类），实现采纳不打回——同 R79-a，可机器判定的验收条款优先于接口措辞（§13.83 R80-a）。接线 `check_all` 23→24 已由 S7 完成。
+
+### T-0076 · [OPEN] `tools/check_lang_dupes.py` —— 单个 lang 文件内重复键对账（单文件零接线）
+- 派单：S7 · 2026-11-20 09:5x（R80）
+- 目标：第七例对账对象**不是第二份名单，而是一份 JSON 文件内部**。`check_lang.py` 用 `json.load` 读 lang，同名键按 last-wins 静默覆盖；两个 `gen_*_lang.py` 写同一个 key 时，`check_lang` 的缺键/占位符检查仍全绿，翻译却悄悄丢了。本卡只读扫 `zh_cn` / `en_us` 顶层重复键，补齐这个洞。
+- 独占文件（**唯一可写**）：
+  - `tools/check_lang_dupes.py`（新建，≤ 200 行）
+  - `build/langdupfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_lang.py`）；不改 `TOOLS` 清单；不 import 其它 check；不读 JSON5；不改 lang 文件；不查跨文件缺键/只在单侧存在/占位符（`check_lang.py` 已做）；不比较两语言的值；不写盘、不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_dupes(path: str) -> tuple[list[tuple[str, int]], str | None]`：用 `json.load(..., object_pairs_hook=...)` 收集任一对象内出现次数 >1 的键；返回按 key 升序的 `(key, 次数)` 列表；`OSError` 或 `json.JSONDecodeError` 返回 `([], "读取失败")`，不抛栈。lang 是扁平表；嵌套对象内的重复按局部 key 报，不拼点号路径。
+  - `report(name: str, dupes: list[tuple[str, int]]) -> list[str]`：每条 `f"{name} 重复键：{key}（出现 {n} 次）"`，按输入序（调用方已排序）。
+  - `main() -> int`：CLI `--lang <dir>`（默认 `src/main/resources/assets/redtale_project/lang`）、`-v`；固定顺序先 `zh_cn` 后 `en_us`（同 `check_lang.py`）；`-v` 多打一行 `已扫 2 个语言文件 · zh_cn <n> 条重复 · en_us <n> 条重复`；每条 `[问题] <msg>`；末行 `共 2 个语言文件 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1。读失败的问题文案为 `<name>.json 读取失败`（如 `zh_cn.json 读取失败`），与重复键问题可并存。
+- 不要做：不把「重复键」升级为「哪份译文对」的判断（S7 独占取舍）；不给重复键自动去重/改写；不把 `check_deps` 的命名规则搬进来；不扫 `assets/**` 其它 JSON。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_lang_dupes.py` → 末行 `共 2 个语言文件 · 0 条问题` EXIT=0；`-v` → 含 `已扫 2 个语言文件 · zh_cn 0 条重复 · en_us 0 条重复`。
+  2. 三组负向夹具（复制 lang 目录到 `build/langdupfix/lang/`，用 `--lang` 指过去，各自从干净副本重来，不许累积）：A 在 zh_cn 追加已有键 `attribute.redtale_project.additional_experience` 第二份 → EXIT=1 且恰好 1 条 `zh_cn 重复键：attribute.redtale_project.additional_experience（出现 2 次）`；B 在 en_us 追加已有键 `attribute.redtale_project.additional_experience` 第二份 → EXIT=1 且恰好 1 条 `en_us 重复键：attribute.redtale_project.additional_experience（出现 2 次）`；C zh_cn 追加 `additional_experience`+`air_damage` 各一份、en_us 追加 `arcane_damage` 一份 → EXIT=1 且恰好 3 条，顺序为 zh_cn 两条（按 key 升序）后 en_us 一条。三组逐字对上。
+  3. `wc -l < tools/check_lang_dupes.py` ≤ 200；`grep -c "def read_dupes"`=1；`grep -cE "check_progress|check_lang|net\.minecraft|subprocess|exec\(|os\.chdir|check_all.*append" tools/check_lang_dupes.py`=0；`py_compile` OK；`--lang NO_SUCH` → EXIT=1 且恰好 2 条 `zh_cn.json 读取失败` / `en_us.json 读取失败`（顺序固定），不抛栈；夹具用完即删（`build/langdupfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -3873,7 +3892,8 @@ fi
 | C22 | ~~`tools/check_primitives.py`（原语注册对账）~~ → **T-0072（R76 派 / R77 验）** | R75-c 元层洞再同源一步：新增 `*Effect.java`/`*Condition.java`/内联 record 忘在 `Builtins` 注册 → `check_skills` 仍绿、运行期才崩 | 无 |
 | C23 | ~~`tools/check_gen_prefix.py`（lang 生成器前缀对账）~~ → **T-0073（R77 派 / R78 验）** | R76-c 元层洞第四例：R59-a「生成器只拥有自己的前缀」无机器对账，R59 事故（前缀写歪静默削键）正是此洞；`check_lang` 只验产物键覆盖、抓不到生成器声明越界 | 无 |
 | C24 | ~~`tools/check_rounds.py`（轮次索引对账）~~ → **T-0074（R78 派 / R79 验）** | R77-c 元层洞第五例：`ROUNDS.md` 是 76 份轮次文档唯一入口，`check_docs` 只给孤儿 `[提示]` 不改退出码；索引漏行/幽灵/重复全绿 | 无 |
-| C25 | ~~`tools/check_primitive_ids.py`（原语 id ↔ SKILLS.md 表对账）~~ → **T-0075（R79 派）** | R79-a 元层洞第六例：`check_primitives` 核类↔注册、`check_skills` 核配置↔表，中间「类 `id()` ↔ 表 id」无人核；写歪运行期才崩 | 无 |
+| C25 | ~~`tools/check_primitive_ids.py`（原语 id ↔ SKILLS.md 表对账）~~ → **T-0075（R79 派 / R80 验）** | R79-a 元层洞第六例：`check_primitives` 核类↔注册、`check_skills` 核配置↔表，中间「类 `id()` ↔ 表 id」无人核；写歪运行期才崩 | 无 |
+| C26 | ~~`tools/check_lang_dupes.py`（lang 文件内重复键对账）~~ → **T-0076（R80 派）** | R80-b 对账对象第一次不是「两份名单」而是「一份 JSON 内部」：`check_lang` 只看覆盖、重复键被 `json.load` last-wins 吞掉，两个生成器写同一 key 时全绿但译文静默丢失 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
