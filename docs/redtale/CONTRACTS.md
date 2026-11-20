@@ -1321,3 +1321,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **快照推进只在 `outcome.clean()` 分支**：脚本层有错误时保留上一份干净快照，避免脏 reload 把基准冲掉。
 - **删默认件不算「删除」**：`reload` 开头 `ensureDefaults()` 会重建缺失的默认件 → mtime 变 → 计入「变更」。要验「删除」形态必须用**非默认件**（R73 实测：删 `crit.json5` 得 `新增 1 · 删除 0 · 变更 2`；删自建 `probe_add.json5` 才得 `新增 0 · 删除 1 · 变更 0`）。
 - **验收**：离线探针 `ConfigDiffProbe` 37/37 + S7 独立边界 6/6；测试服 1 启停（`Done 2.089s`）四形态逐字：基线全 0 / 增+改+删默认件 `新增 1 · 删除 0 · 变更 2` / 零改动再 reload 全 0 / 删非默认件 `新增 0 · 删除 1 · 变更 0`；下划线文件 `_probe.json5` 跳过（全 0）；`validate 0`、redtale ERROR 0。
+
+### 4.44 伤害类型引用对账 `check_damage_types.py`（T-0079，R83 派 / R84 VERIFIED，对账网第十例）
+
+- 只读扫 `skills/*.json5`、`scripts/*.json5` 的 `damage`/`damage_aoe` 原语 `args.damage_type` + `damage.json5` 的 `multiplier.category_attributes[].type`，核裸 id 是否真在 `data/redtale_project/damage_type/*.json` 注册（外加内建 `generic`）。带命名空间只认 `redtale_project:`，其它命名空间跳过。
+- 已接进 `tools/check_all.py`（`共 28 个脚本`，R84 接线）。绿 = `共 1 份伤害类型表 · 0 条问题`，当前基线 4 处引用 / 4 注册类型。
+- 覆盖的是 `check_scripts`（只验 type 是原语）与 `check_numeric`（只验属性 id）之间的缝：`DamageEffect.source()` 对未知类型只 `warnOnce` 后回退、`DamageLayer` 白名单只认 `redtale_project:*`，写歪 = 属性乘区静默失效（R83-a/b）。
+
+### 4.45 刷怪条件值域对账 `check_spawn_conditions.py`（T-0080，R84 派，对账网第十一例）
+
+- 只读扫 `spawn_rules/*.json5` 的 `conditions{}` 七维（world/biome/light/time/y/outside/difficulty）形态与值域，按 `docs/SPAWN-RULES.md` §5：time∈{day,night,any}、difficulty 四档、light 0~15、y/light 的 min<=max、outside 必须 bool、world/biome/difficulty 是非空字符串数组。
+- 填补 `check_mobs.check_rule` 的盲区：该函数只核 spawn_rules 顶层 id/action/mob/chance/per_chunk_cap/priority，从不进 `conditions`。写歪运行期按 §5「求值失败=该维度不通过且不告警刷屏」，编译绿、全 check 绿、刷怪替换静默失效（R84-c）。
+- 派单态：T-0080 `[OPEN]`，未接线、未验收；接线后预计 `check_all` 跑成 29。

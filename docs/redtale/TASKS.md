@@ -3912,7 +3912,7 @@ fi
 - 2026-11-20 17:26 · 完成 · `tools/check_event_registration.py`（新建 139 行：strip_comments / read_listeners / read_registrations / check_registration / main）；卡外仅本卡状态/进度 + 板 §3 · 构建：未执行（卡明令禁止 gradle，未取锁）· 自测：验收 1 基线「共 1 份事件总线 · 0 条问题」EXIT=0、`-v`「已检查 8 个监听器 · 8 个已注册」；验收 2 三夹具各自干净目录 A=0 / B=1 / C=1，B/C 逐字「事件监听器 B 有 @SubscribeEvent 但未注册到事件总线」EXIT=0/1/1；验收 3 wc=139≤200、`def check_registration`=1、禁用 grep=0、`py_compile` OK、`--java NO_SUCH` 恰好 1 条「事件总线读取失败」EXIT=1 不抛栈；`build/eventfix/` 已清。三条全过，无裁定项。
 - 2026-11-20 22:5x · S7 · **VERIFIED**（3/3 + S7 独立边界 9/9）：验收 1 基线 `共 1 份事件总线 · 0 条问题` EXIT=0、`-v` 含 `已检查 8 个监听器 · 8 个已注册`；验收 2 三夹具各自干净目录 A=0 / B=1 / C=1（B/C 逐字 `事件监听器 B 有 @SubscribeEvent 但未注册到事件总线`）EXIT=0/1/1；验收 3 `wc`=139、`def check_registration`=1、禁用 grep=0、`py_compile` OK、`--java NO_SUCH` 恰好 1 条 `事件总线读取失败` EXIT=1 不抛栈。S7 边界 9/9（行注释 / 块注释保留换行 / 字符串内 `//` 按注释 / 未注册按名升序 / 部分注册 / 空集 / register 参数 token 提取 / 小写字段别名 / 自注册形态）。首轮 2 FAIL 是 S7 夹具期望写错（块注释保留 `\n` 是接口「不删空行」的正确行为），按 R65-a 修正期望后全过，非代码缺陷。`build/eventfix/` 已清。接线 `check_all` 26→27 全绿。
 
-### T-0079 · [OPEN] `tools/check_damage_types.py` —— 伤害类型引用 ↔ datapack 注册对账（单文件零接线）
+### T-0079 · [VERIFIED] `tools/check_damage_types.py` —— 伤害类型引用 ↔ datapack 注册对账（单文件零接线）
 - 派单：S7 · 2026-11-20 22:5x（R83）
 - 目标：`DamageEffect.source()` 对查不到的 `damage_type` 只 `warnOnce` 后回退缺省 / generic，不崩、不红；`DamageLayer` 白名单只认 `redtale_project:*`，类型写歪 = 整套属性乘区静默不生效。`check_scripts` 只验 `type` 是已注册原语、`check_numeric` 只验 `damage.json5` 属性 id，都不核「引用字符串是否真在 datapack 注册」。本卡只读扫配置 JSON5 与 `data/redtale_project/damage_type/*.json`，核三类引用是否命中注册表。当前基线：3 个注册项（skill_magical / skill_physical / verification_strike）、skills 里 2 处 damage 原语引用、damage.json5 category_attributes 2 项，共 4 处引用 / 0 问题（S7 已核）。
 - 独占文件（**唯一可写**）：
@@ -3929,6 +3929,30 @@ fi
   1. `python tools/check_damage_types.py` → 末行 `共 1 份伤害类型表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 4 处引用 · 4 个注册类型`（当前基线：skills 2 + damage.json5 category 2 = 4 处；注册 = generic + 3 datapack = 4，S7 已核）。
   2. 三组夹具复制到 `build/dmgtypefix/`，用 `--data` / `--cfg` 指过去，各自从干净目录重来不许累积：A 在空 cfg 下放一个 `skills/x.json5`（damage 原语 `damage_type: "redtale_project:skill_ghost"`）+ data 只有 `skill_physical.json` → EXIT=1 且恰好 1 条 `skills/x.json5 引用未注册的伤害类型 skill_ghost`；B 在 A 基础上于 data 加 `skill_ghost.json` → EXIT=0 且 0 条；C 在 B 基础上把引用改成 `"minecraft:generic"`（原版命名空间）→ EXIT=0 且 0 条（原版一律跳过）。三组逐字对上。
   3. `wc -l < tools/check_damage_types.py` ≤ 200；`grep -c "def check_refs"`=1；`grep -cE "check_scripts|check_numeric|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_damage_types.py`=0；`py_compile` OK；`--data NO_SUCH` → EXIT=1 且恰好 1 条 `伤害类型注册表读取失败`，不抛栈；夹具用完即删（`build/dmgtypefix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 23:34 · 完成 · `tools/check_damage_types.py`（新建 177 行：load_errors / _loads 单引号 shim / read_registered / _bare / _parse / read_refs / check_refs / main）· 构建：未执行（纯 Python 卡，卡明令禁止 gradle、未取锁）· 自测：验收 1 基线「共 1 份伤害类型表 · 0 条问题」EXIT=0、`-v`「已检查 4 处引用 · 4 个注册类型」；验收 2 三夹具从干净目录 A=1「skills/x.json5 引用未注册的伤害类型 skill_ghost」/ B=0 / C=0（原版命名空间跳过）EXIT=1/0/1；验收 3 wc=177≤200、`def check_refs`=1、禁用 grep=0、`py_compile` OK、`--data NO_SUCH` 与 `--cfg NO_SUCH` 均恰好 1 条「伤害类型注册表读取失败」EXIT=1 不抛栈；边界 5/5（缺目录返 {generic} / 坏 JSON 跳过并进 load_errors / 重复引用只报首次 / damage_aoe 与单引号生效 / minecraft: 与非 damage 原语跳过）；`build/dmgtypefix/` 已清 · 裁定项：卡面「坏文件另走 load_errors（见下）」未给具体函数形态与文案，实现为 `load_errors() -> list[str]` 暴露坏文件相对路径 + CLI 打「伤害类型注册表读取失败 · <rel>」，请 S7 裁。
+
+### T-0080 · [OPEN] `tools/check_spawn_conditions.py` —— 刷怪规则 conditions 六维值域对账（单文件零接线）
+- 派单：S7 · 2026-11-20 23:5x（R84）
+- 目标：`spawn_rules/*.json5` 的 `conditions{}` 七维（world/biome/light/time/y/outside/difficulty，文档称"六维"实为七个键）**完全无人核**——`check_mobs.check_rule` 只核顶层 id/action/mob/chance/per_chunk_cap/priority，从不进 `conditions`。值写歪（`time: "nite"`、`difficulty: ["normal","-insane"]`、`light.max: 99`、`outside: 1`、`biome` 非数组）时 `SPAWN-RULES.md` §5 运行期求值失败 → 该维度静默「不通过」（宁可少替换、不告警刷屏），编译绿、全部 check 绿，刷怪替换永久失效且无日志。本卡只读扫 `spawn_rules/*.json5` 的 `conditions` 子结构，按 §5 值域核形态与取值。当前基线：1 份规则（overworld_night_elite.json5），conditions 五维合法（world/biome/light/time/outside），0 问题（S7 已核）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_spawn_conditions.py`（新建，≤ 200 行）
+  - `build/spawncondfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_mobs.py`）；不改 TOOLS 清单；不 import 其它 check（允许 import `check_progress.clean_json5`）；不读 Java / 不读 jar；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_rules(rules_dir: str) -> list[tuple[str, object | None]]`：扫 `<rules_dir>` 下 `*.json5`（文件名升序），用 `clean_json5` 解析（单引号 shim 沿用 check_display/check_damage_types 口径），返回 `(文件名, 解析出的 dict 或 None)`；解析失败 / 目录缺失 / 读失败 → 该文件记 `None`，不抛栈。
+  - `check_conditions(data: dict | None) -> list[str]`：data 为 None → 返回 `["规则解析失败"]`；取 `data.get("conditions", {})`，非 dict → `["conditions 必须是对象"]`；缺失 / 空对象 → 返回 `[]`（缺省合法）。逐维核（问题文案不含 `[问题]` 前缀，main 负责加）：
+    - `world` / `biome` / `difficulty`：存在时必须为 string 数组（非空字符串元素）；`difficulty` 元素还须 ∈ {peaceful, easy, normal, hard}；`biome` 允许 `#tag` 前缀。文案 `<维> 必须是非空字符串数组` / `difficulty 非法值：<值>`。
+    - `light` / `y`：存在时必须为 dict，仅含 `min` / `max` 键，值为数字（bool 不算）；`light` 还须 0<=值<=15；`min<=max`（缺省一端不比）。文案 `<维> 必须是对象`、`<维> 只含 min/max`、`<维> 值必须是数字`、`<维> 越界（0~15）`、`<维> min>max`。
+    - `time`：存在时必须 ∈ {day, night, any}。文案 `time 非法值：<值>`。
+    - `outside`：存在时必须是 bool（int 1/0 不算）。文案 `outside 必须是布尔值`。
+    - 未知维度键 → `未知 conditions 维度：<键>`（不告警刷屏维度之外，写歪要报）。
+  - `main() -> int`：CLI `--rules <dir>`（默认 `src/main/resources/redtale/defaults/spawn_rules`）、`-v`（多打一行 `已检查 <n> 份规则 · <m> 个条件维度`，n=规则文件数、m=七维常量 7）；每条问题输出 `[问题] <文件名>: <msg>`；末行 `共 1 份刷怪规则条件表 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1；`--rules NO_SUCH` → 恰好 1 条 `[问题] 刷怪规则目录读取失败`、末行 `共 1 份刷怪规则条件表 · 1 条问题`、EXIT=1，不抛栈。
+- 不要做：不核顶层字段（id/action/mob/chance/priority/per_chunk_cap 归 check_mobs）；不核 `match[]` 的原版实体 id 拼写（离线无原版注册表）；不解析 Java AST / 不编译 / 不读 jar；不改绿红语义把「条件维度写了但值合法」当问题；不 import 其它 check 模块。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_spawn_conditions.py` → 末行 `共 1 份刷怪规则条件表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份规则 · 7 个条件维度`。
+  2. 六组夹具复制到 `build/spawncondfix/`，各自从干净目录重来不许累积：A `time: "nite"` → 1 条 `time 非法值：nite`；B `difficulty: ["normal","insane"]` → 1 条 `difficulty 非法值：insane`；C `light: {min: 3, max: 20}` → 1 条 `light 越界（0~15）`；D `outside: 1` → 1 条 `outside 必须是布尔值`；E `biome: "minecraft:plains"`（非数组）→ 1 条 `biome 必须是非空字符串数组`；F 未知键 `fog: 3` → 1 条 `未知 conditions 维度：fog`。六组逐字对上，EXIT=1。
+  3. `wc -l < tools/check_spawn_conditions.py` ≤ 200；`grep -c "def check_conditions"`=1；`grep -cE "check_mobs|check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_spawn_conditions.py`=0；`py_compile` OK；`--rules NO_SUCH` → EXIT=1 且恰好 1 条 `刷怪规则目录读取失败`，不抛栈；夹具用完即删（`build/spawncondfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -3959,7 +3983,8 @@ fi
 | C26 | ~~`tools/check_lang_dupes.py`（lang 文件内重复键对账）~~ → **T-0076（R80 派 / R81 验）** | R80-b 对账对象第一次不是「两份名单」而是「一份 JSON 内部」：`check_lang` 只看覆盖、重复键被 `json.load` last-wins 吞掉，两个生成器写同一 key 时全绿但译文静默丢失 | 无 |
 | C27 | ~~`tools/check_ownership.py`（WIP 卡独占文件重叠对账）~~ → **T-0077（R81 派 / R82 验）** | `check_tasks` 查状态/重复 id/WIP 上限/验收段，却不查两张 WIP 卡是否抢同一文件；这是 S7/S8 防冲突的唯一机制，重叠时两边各自 VERIFIED、后写者静默覆盖 | 无 |
 | C28 | ~~`tools/check_event_registration.py`（`@SubscribeEvent` 监听器注册对账）~~ → **T-0078（R82 派 / R83 验）** | 增量类事件监听器忘注册时编译绿、`check_commands` 绿、运行期事件永不触发且无错误日志；两份已有检查（命令挂载、原语注册）之间这一缝无人核 | 无 |
-| C29 | `tools/check_damage_types.py`（伤害类型引用 ↔ datapack 注册对账）→ **T-0079（R83 派）** | `DamageEffect.source()` 对未知 damage_type 只 warnOnce 后回退，`DamageLayer` 白名单只认 `redtale_project:*`，写歪 = 属性乘区静默失效；`check_scripts` 只验原语 type、`check_numeric` 只验属性 id，无人核引用字符串是否在 datapack 注册 | 无 |
+| C29 | ~~`tools/check_damage_types.py`（伤害类型引用 ↔ datapack 注册对账）~~ → **T-0079（R83 派 / R84 验）** | —— | —— |
+| C30 | `tools/check_spawn_conditions.py`（刷怪规则 conditions 六维值域对账）→ **T-0080（R84 派）** | `check_mobs.check_rule` 只核 spawn_rules 顶层字段，从不进 `conditions`；值写歪运行期该维度静默「不通过」且不告警刷屏（SPAWN-RULES.md §5），编译绿、全 check 绿、刷怪替换永久失效 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

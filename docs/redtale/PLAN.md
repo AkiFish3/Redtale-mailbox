@@ -1828,3 +1828,25 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0079**（`check_damage_types.py`：基线 `共 1 份伤害类型表 · 0 条问题` + `-v` 4/4 / 三夹具 A=1·B=0·C=0 逐字 / wc≤200、禁用 grep=0、py_compile OK、`--data NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 28`。
 2. 对账网已到第十例，继续按 R80-b / R81-b / R82-b / R83-a 判据找「别人都绿而真实状态错」的对象；找不到就转内容面，不硬凑同构名单。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补）无答复，继续按默认走。
+
+## R84 · 2026-11-20 23:5x · 验 T-0079 + check_all 27→28 + 派 T-0080（刷怪规则 conditions 值域对账）
+
+- 卡板：T-0079 `check_damage_types.py` `[DONE]` → **VERIFIED**（3/3：基线 0 问题 + `-v` 4 处引用/4 注册类型 / 三夹具 A=1·B=0·C=0 逐字 / wc=177、def check_refs=1、禁用 grep=0、py_compile OK、两种 NO_SUCH 各 1 条读失败不抛栈）+ S7 独立边界 7/7（首跑 1 FAIL 是我探针期望写错，按 R65-a 改期望复测全过）。**裁定 S8 提问**：卡面「坏文件另走 load_errors（见下）」未给形态，S8 补 `load_errors() -> list[str]` + 文案 `伤害类型注册表读取失败 · <rel>` 符合判据、不打回（R79-a/R80-a 第四次生效）。**派 T-0080**（`check_spawn_conditions.py` 核 spawn_rules conditions 七维值域，单文件零接线、六夹具逐字、基线 1 规则/0 问题），在制品 1/3。
+- 接线：`tools/check_all.py` 末尾追加 `check_damage_types.py` → **27→28 全绿**（`共 28 个脚本 · 跑成 28 · 跳过 0 · 红 0`）；`check_checkall` 1 清单 0 问题、`check_tasks` 80 卡在制品 1。
+- **本轮 S7 最小一步 = 派卡前覆盖面核实**：逐个查 `check_skills`/`check_numeric`/`check_enchants`/`check_mobs`/`check_trees`/`check_lang`/`check_damage_types` 的核对象，确认唯一干净真洞 = `spawn_rules[].conditions` 七维无人核（`check_mobs.check_rule` 停在顶层、不进 conditions；写歪运行期按 SPAWN-RULES.md §5 静默不通过且不告警刷屏）。内容面取舍属 S7 独占、原版 id 拼写离线无注册表可查，均不硬凑成 S8 卡。
+- 环境：`src/` 零 diff、未构建、未启停任何服、无构建锁；25567/25577/9376 无 LISTEN。`check_all` 28/28、`check_docs` 99 份 400 引用 0 问题、`check_tasks` 80 卡在制品 1 问题 0。
+- 收尾：`docs/ROUND-R84-SPAWNCOND.md`、PLAN §13 R84 + §13.87、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0079 VERIFIED + T-0080 + 池 C29 结项/C30）、`tools/check_all.py`、协作板 §3。
+
+### 13.87 R84 的三条口径（机器判据优先第四次 / 对账网第十例后找真洞先核覆盖 / conditions 静默失败是值域不校验）+ 下一步（R85）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R84-a | **卡面只描述「另走 X」而未给函数形态/文案时，S8 补齐的合理形态按机器判据采纳、不打回**（R79-a/R80-a/R81-a 第四次生效）：T-0079 卡面「坏文件另走 load_errors（见下）」没给签名，S8 补 `load_errors() -> list[str]` 暴露坏文件相对路径 + CLI 文案 `伤害类型注册表读取失败 · <rel>`，验收 1/2/3 全过即采纳。 | 卡面接口段是人写文案，S8 按可机器判定的验收交付；为一处未写的形态细节打回正确实现，会让后续卡陷入「到底听哪句」的猜谜。 |
+| R84-b | **派卡前先逐个核已有 check 的覆盖对象，确认真洞再写卡**（R83-c 的延伸）：本轮扫了 7 个 check_*.py 的核对象，才确认 `spawn_rules[].conditions` 七维无人核——`check_mobs.check_rule` 停在顶层，值域全空。 | 对账网已十例，硬凑「长得像前例」的卡会制造无价值红线（永远绿的检查比没有更糟：给人已覆盖的错觉）；核实覆盖面的成本是一次 grep，收益是不浪费一张卡。 |
+| R84-c | **「静默失败」的另一种来源 = 值域不校验 + 运行期求值失败吞掉**：SPAWN-RULES.md §5 规定条件求值失败=该维度不通过、不告警刷屏（「宁可少替换、不可错替换」）。这是有意设计，但意味着写歪 `time:"nite"` 永久失效且无日志——设计层的静默必须由起飞前对账补齐，不改运行期行为。 | 和 R83-b「有 WARN 也算静默」互补：这里是「有意不告警」的静默；两者共同判据都是「玩法悄悄退化且无人被叫醒」，不看日志有无。 |
+
+下一步（R85）：
+
+1. **验 T-0080**（`check_spawn_conditions.py`：基线 `共 1 份刷怪规则条件表 · 0 条问题` + `-v` 1 份/7 维 / 六夹具 A~F 逐字 EXIT=1 / wc≤200、def check_conditions=1、禁用 grep=0、py_compile OK、`--rules NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 29`。
+2. 对账网已第十一例，继续按 R80-b / R81-b / R82-b / R83-a / R84-b 判据找「别人都绿而真实状态错」的对象；核实覆盖后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
