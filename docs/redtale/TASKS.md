@@ -3932,7 +3932,7 @@ fi
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 - 2026-11-20 23:34 · 完成 · `tools/check_damage_types.py`（新建 177 行：load_errors / _loads 单引号 shim / read_registered / _bare / _parse / read_refs / check_refs / main）· 构建：未执行（纯 Python 卡，卡明令禁止 gradle、未取锁）· 自测：验收 1 基线「共 1 份伤害类型表 · 0 条问题」EXIT=0、`-v`「已检查 4 处引用 · 4 个注册类型」；验收 2 三夹具从干净目录 A=1「skills/x.json5 引用未注册的伤害类型 skill_ghost」/ B=0 / C=0（原版命名空间跳过）EXIT=1/0/1；验收 3 wc=177≤200、`def check_refs`=1、禁用 grep=0、`py_compile` OK、`--data NO_SUCH` 与 `--cfg NO_SUCH` 均恰好 1 条「伤害类型注册表读取失败」EXIT=1 不抛栈；边界 5/5（缺目录返 {generic} / 坏 JSON 跳过并进 load_errors / 重复引用只报首次 / damage_aoe 与单引号生效 / minecraft: 与非 damage 原语跳过）；`build/dmgtypefix/` 已清 · 裁定项：卡面「坏文件另走 load_errors（见下）」未给具体函数形态与文案，实现为 `load_errors() -> list[str]` 暴露坏文件相对路径 + CLI 打「伤害类型注册表读取失败 · <rel>」，请 S7 裁。
 
-### T-0080 · [OPEN] `tools/check_spawn_conditions.py` —— 刷怪规则 conditions 六维值域对账（单文件零接线）
+### T-0080 · [VERIFIED] `tools/check_spawn_conditions.py` —— 刷怪规则 conditions 六维值域对账（单文件零接线）
 - 派单：S7 · 2026-11-20 23:5x（R84）
 - 目标：`spawn_rules/*.json5` 的 `conditions{}` 七维（world/biome/light/time/y/outside/difficulty，文档称"六维"实为七个键）**完全无人核**——`check_mobs.check_rule` 只核顶层 id/action/mob/chance/per_chunk_cap/priority，从不进 `conditions`。值写歪（`time: "nite"`、`difficulty: ["normal","-insane"]`、`light.max: 99`、`outside: 1`、`biome` 非数组）时 `SPAWN-RULES.md` §5 运行期求值失败 → 该维度静默「不通过」（宁可少替换、不告警刷屏），编译绿、全部 check 绿，刷怪替换永久失效且无日志。本卡只读扫 `spawn_rules/*.json5` 的 `conditions` 子结构，按 §5 值域核形态与取值。当前基线：1 份规则（overworld_night_elite.json5），conditions 五维合法（world/biome/light/time/outside），0 问题（S7 已核）。
 - 独占文件（**唯一可写**）：
@@ -3953,6 +3953,27 @@ fi
   1. `python tools/check_spawn_conditions.py` → 末行 `共 1 份刷怪规则条件表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份规则 · 7 个条件维度`。
   2. 六组夹具复制到 `build/spawncondfix/`，各自从干净目录重来不许累积：A `time: "nite"` → 1 条 `time 非法值：nite`；B `difficulty: ["normal","insane"]` → 1 条 `difficulty 非法值：insane`；C `light: {min: 3, max: 20}` → 1 条 `light 越界（0~15）`；D `outside: 1` → 1 条 `outside 必须是布尔值`；E `biome: "minecraft:plains"`（非数组）→ 1 条 `biome 必须是非空字符串数组`；F 未知键 `fog: 3` → 1 条 `未知 conditions 维度：fog`。六组逐字对上，EXIT=1。
   3. `wc -l < tools/check_spawn_conditions.py` ≤ 200；`grep -c "def check_conditions"`=1；`grep -cE "check_mobs|check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_spawn_conditions.py`=0；`py_compile` OK；`--rules NO_SUCH` → EXIT=1 且恰好 1 条 `刷怪规则目录读取失败`，不抛栈；夹具用完即删（`build/spawncondfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-21 00:36 · 完成 · tools/check_spawn_conditions.py（新建，145 行） · 未构建（卡禁 gradle） · 验收 3/3：基线「共 1 份刷怪规则条件表 · 0 条问题」EXIT=0、-v「已检查 1 份规则 · 7 个条件维度」；六夹具 A~F 各 1 条逐字 EXIT=1、wc=145≤200、def check_conditions=1、禁用 grep=0、py_compile OK、NO_SUCH 恰好 1 条目录读取失败 EXIT=1；边界 13/13
+- 注（S8）：请 S7 裁：①difficulty 非法元素逐条报、形状错只报形状一条；②light/y 同时越界与 min>max 时只报越界一条；③数组维度空数组合法（§5 空=不限），空字符串元素算非法；④read_rules 目录缺失返空表，main 用 isdir 预检打 1 条目录读取失败；⑤单引号 shim 沿用 check_display._loads
+- 2026-11-21 01:1x · S7 验收 **VERIFIED**（3/3）：基线 `共 1 份刷怪规则条件表 · 0 条问题` EXIT=0、`-v`「已检查 1 份规则 · 7 个条件维度」；六组夹具 A=time nite / B=difficulty insane / C=light max20 / D=outside 1 / E=biome 字符串 / F=未知 fog 各 1 条逐字命中 EXIT=1（独立干净目录、用完即删）；wc=145≤200、`def check_conditions`=1、禁用 grep=0、`py_compile` OK、`--rules NO_SUCH` 恰好 1 条目录读取失败不抛栈。接线 `check_all` 28→29 全绿、`check_checkall -v` 29/29。S8 五处口径全采纳实现不打回（§13.88 R85-a~e）。
+
+### T-0081 · [OPEN] `tools/check_skill_args.py` —— 技能 conditions args 值域对账（单文件零接线）
+- 派单：S7 · 2026-11-21 01:1x（R85）
+- 目标：`check_skills.check_skill` 只核 `conditions[i].type` 是否合法、**从不进 `args`**。`health_below` 的 `args.ratio` 与 `chance` 的 `args.chance` 写歪（>1 / <0 / bool / 非数字）时运行期**静默恒真或恒假**（`HealthBelowCondition` / `ChanceCondition` 里 `getAsDouble()` 直接用，无值域夹）：`ratio: 1.5` 永远满足条件、`chance: -0.2` 永远不通过——编译绿、`check_skills` 绿、全 check 绿，技能触发条件永久失效且无日志。同口径已在 `check_mobs.check_drop` 对 drop 的 `chance` 核过 [0,1]，本卡把同一把尺子补到技能条件。当前基线：4 份技能（arc_bolt / ember_burst / gale_slash / quake_slam），条件里 `always` ×2 + `health_below{ratio:0.9}` ×1，0 问题（S7 已核）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_skill_args.py`（新建，≤ 200 行）
+  - `build/skillargfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_skills.py`）；不改 TOOLS 清单；不 import 其它 check（允许 import `check_progress.clean_json5`）；不读 Java / 不读 jar；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_skills(skills_dir: str) -> list[tuple[str, object | None]]`：扫 `<skills_dir>` 下 `*.json5`（文件名升序），用 `clean_json5` 解析（单引号 shim 沿用 check_skills / check_display 口径），返回 `(文件名, 解析出的 dict 或 None)`；解析失败 / 目录缺失 / 读失败 → 该文件记 `None`，不抛栈。
+  - `check_args(data: dict | None) -> list[str]`：data 为 None → 返回 `["技能解析失败"]`；取 `data.get("conditions", [])`，非 list → `["conditions 必须是数组"]`；缺失 / 空数组 → 返回 `[]`。只核三类已知 condition 的 args（`always` / `health_below` / `chance`），未知 type 一律跳过（type 合法性归 `check_skills`，不重复报）。逐条（下标从 0）：非 dict → `conditions[i] 必须是对象`；`health_below`：args 缺失合法（用缺省 0.5），存在但非 dict → `conditions[i].args 必须是对象`，`ratio` 存在时必须是 [0,1] 数字（bool 不算）→ 否则 `conditions[i].args.ratio 必须是 [0,1] 的数字`；`chance`：args 缺失合法（缺省 1.0），存在但非 dict → `conditions[i].args 必须是对象`，`chance` 存在时必须是 [0,1] 数字（bool 不算）→ 否则 `conditions[i].args.chance 必须是 [0,1] 的数字`；`always`：args 任意都不报。问题文案不含 `[问题]` 前缀，main 负责加。
+  - `main() -> int`：CLI `--skills <dir>`（默认 `src/main/resources/redtale/defaults/skills`）、`-v`（多打一行 `已检查 <n> 份技能 · 2 个值域键`，n=技能文件数）；每条问题输出 `[问题] <文件名>: <msg>`；末行 `共 1 份技能条件值域表 · %d 条问题`；0 问题 EXIT=0，否则 EXIT=1；`--skills NO_SUCH` → 恰好 1 条 `[问题] 技能目录读取失败`、末行 `共 1 份技能条件值域表 · 1 条问题`、EXIT=1，不抛栈。
+- 不要做：不核 `conditions[].type` 合法性（归 check_skills）；不核 effects 的 args（运行期有 `clamp01` / `Math.min` 夹，写歪不静默失效，非真洞）；不核顶层字段（id/cooldown/mana/icon 归 check_skills）；不读 Java AST / 不编译 / 不读 jar；不改绿红语义把「条件合法写了」当问题；不 import 其它 check 模块。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_skill_args.py` → 末行 `共 1 份技能条件值域表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 4 份技能 · 2 个值域键`。
+  2. 六组夹具复制到 `build/skillargfix/`，各自从干净目录重来不许累积（每份只放一个技能 json5，顶层 id 任意）：A `conditions:[{type:"health_below",args:{ratio:1.5}}]` → 1 条 `conditions[0].args.ratio 必须是 [0,1] 的数字`；B `chance` 的 `args.chance=-0.2` → 1 条 `conditions[0].args.chance 必须是 [0,1] 的数字`；C `health_below` 的 `ratio: true` → 1 条同上 ratio 文案；D `chance` 的 `args: 3` → 1 条 `conditions[0].args 必须是对象`；E `always` 带 `args:{anything:1}` → 0 条 EXIT=0；F 未知 `type:"foo"` 带 `args:{ratio:99}` → 0 条 EXIT=0。六组逐字对上。
+  3. `wc -l < tools/check_skill_args.py` ≤ 200；`grep -c "def check_args"`=1；`grep -cE "check_skills|check_all.*append|net\.minecraft|subprocess|exec\(" tools/check_skill_args.py`=0；`py_compile` OK；`--skills NO_SUCH` → EXIT=1 且恰好 1 条 `技能目录读取失败`，不抛栈；夹具用完即删（`build/skillargfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -3984,7 +4005,8 @@ fi
 | C27 | ~~`tools/check_ownership.py`（WIP 卡独占文件重叠对账）~~ → **T-0077（R81 派 / R82 验）** | `check_tasks` 查状态/重复 id/WIP 上限/验收段，却不查两张 WIP 卡是否抢同一文件；这是 S7/S8 防冲突的唯一机制，重叠时两边各自 VERIFIED、后写者静默覆盖 | 无 |
 | C28 | ~~`tools/check_event_registration.py`（`@SubscribeEvent` 监听器注册对账）~~ → **T-0078（R82 派 / R83 验）** | 增量类事件监听器忘注册时编译绿、`check_commands` 绿、运行期事件永不触发且无错误日志；两份已有检查（命令挂载、原语注册）之间这一缝无人核 | 无 |
 | C29 | ~~`tools/check_damage_types.py`（伤害类型引用 ↔ datapack 注册对账）~~ → **T-0079（R83 派 / R84 验）** | —— | —— |
-| C30 | `tools/check_spawn_conditions.py`（刷怪规则 conditions 六维值域对账）→ **T-0080（R84 派）** | `check_mobs.check_rule` 只核 spawn_rules 顶层字段，从不进 `conditions`；值写歪运行期该维度静默「不通过」且不告警刷屏（SPAWN-RULES.md §5），编译绿、全 check 绿、刷怪替换永久失效 | 无 |
+| C30 | ~~`tools/check_spawn_conditions.py`~~ → **T-0080（R84 派 / R85 验）** | —— | —— |
+| C31 | `tools/check_skill_args.py`（技能 conditions args 值域对账）→ **T-0081（R85 派）** | `check_skills.check_skill` 只核 conditions[].type、从不进 args；`health_below.ratio` / `chance.chance` 写 >1 运行期静默恒真/恒假（`getAsDouble()` 无夹），全 check 绿、技能触发条件永久失效。同口径已在 `check_mobs.check_drop` 对 drop chance 核 [0,1] | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

@@ -1850,3 +1850,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0080**（`check_spawn_conditions.py`：基线 `共 1 份刷怪规则条件表 · 0 条问题` + `-v` 1 份/7 维 / 六夹具 A~F 逐字 EXIT=1 / wc≤200、def check_conditions=1、禁用 grep=0、py_compile OK、`--rules NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 29`。
 2. 对账网已第十一例，继续按 R80-b / R81-b / R82-b / R83-a / R84-b 判据找「别人都绿而真实状态错」的对象；核实覆盖后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R85 · 2026-11-21 01:1x · 验 T-0080 + check_all 28→29 + 派 T-0081（技能 conditions args 值域对账）
+
+- 卡板：T-0080 `check_spawn_conditions.py` `[DONE]` → **VERIFIED**（3/3：基线 `共 1 份刷怪规则条件表 · 0 条问题` EXIT=0 + `-v` 1 份规则/7 维；六夹具 A=time nite·B=difficulty insane·C=light max20·D=outside 1·E=biome 字符串·F=未知 fog 各 1 条逐字 EXIT=1、独立干净目录；wc=145、def check_conditions=1、禁用 grep=0、py_compile OK、`--rules NO_SUCH` 1 条读失败不抛栈）+ S7 独立判定一致。**裁定 S8 五处口径全采纳实现不打回**（R85-a~e）。**派 T-0081**（`check_skill_args.py` 核 skills conditions args 值域，单文件零接线、六夹具逐字、基线 4 技能/0 问题），在制品 1/3。
+- 接线：`tools/check_all.py` 末尾追加 `check_spawn_conditions.py` → **28→29 全绿**（`共 29 个脚本 · 跑成 29 · 跳过 0 · 红 0`）；`check_checkall -v` 29/29、`check_tasks` 81 卡在制品 1、`check_ownership`/`check_docs`/`check_contracts` 全 0 问题。
+- **本轮 S7 最小一步 = 派卡前覆盖面核实（R84-b 延续）**：逐个查 `check_items`/`check_progress`/`check_mobs`/`check_numeric`/`check_skills` 的属性与值域核对象，确认 `conditions[].args` 值域无人进——`check_skills.check_skill` 只核 condition 的 type 合法、`args` 只看是不是对象，从不核 `ratio`/`chance` 取值；而 `HealthBelowCondition`/`ChanceCondition` 里 `getAsDouble()` 直接用无夹，写 `ratio:1.5` 静默恒真、`chance:-0.2` 静默恒假。同口径已在 `check_mobs.check_drop` 对 drop chance 核 [0,1]，把同一把尺子补过来。effects 的 amount/radius 有运行期 `clamp01`/`Math.min` 夹、非真静默洞，卡面明确排除不硬凑。
+- 环境：`src/` 零 diff、未构建、未启停任何服、无构建锁；25567/25577/9376 无 LISTEN。纯 Python 轮次，测试服无需启停。
+- 收尾：`docs/ROUND-R85-SKILLARGS.md`、PLAN §13 R85 + §13.88、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0080 VERIFIED + T-0081 + 池 C30 结项/C31）、`tools/check_all.py`、协作板 §3。
+
+### 13.88 R85 的五条口径（S8 补齐合理形态第五次 / 对账网第十一例后按真静默洞派卡 / 运行期有夹的不算静默洞）+ 下一步（R86）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R85-a | **S8 对卡面未给形态的细节补齐合理实现，验收条款机器判据全过即采纳、不打回**（R79-a/R80-a/R81-a/R84-a 第五次生效）：T-0080 卡面未给 `read_rules` 目录缺失的具体形态，S8 用 `isdir` 预检 + `read_rules` 返空表、main 打 1 条目录读取失败，符合验收 3 逐字。 | 卡面接口是人写文案；反复为未写细节打回正确实现会让 S8 无所适从。 |
+| R85-b | **difficulty 非法元素逐条报、数组形状错只报一条、空数组合法**：形状都不对时报多条非法值只会刷屏掩盖根因；§5 空=不限，空数组是合法写法。 | 一条根因一条问题，避免噪声淹没真问题。 |
+| R85-c | **light/y 同时越界与 min>max 时只报越界一条**：先判值域再判区间顺序，越界是更根本的错。 | 同 R85-b，优先级排序防刷屏。 |
+| R85-d | **原语 args 值域对账只挑「运行期无夹」的键**：conditions 的 ratio/chance 直接 `getAsDouble()` 用、写歪静默恒真/恒假 = 真洞；effects 的 amount/radius/falloff 有 `clamp01`/`Math.min` 运行期夹、写歪被收敛不算静默失效，不派。 | 对账网资源有限，只对准「玩法悄悄退化且无人被叫醒」的对象（R83-b/R84-c 判据），不硬凑长得像前例的键。 |
+| R85-e | **对账网第十一例 = 技能 conditions 的 args 值域**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args），判据仍是「两份已有检查都绿、运行期才崩」。 | `check_skills` 核 type、`check_mobs` 核 drop chance 值域，两者之间的技能条件 args 无人核；同口径复用而非新造。 |
+
+下一步（R86）：
+
+1. **验 T-0081**（`check_skill_args.py`：基线 `共 1 份技能条件值域表 · 0 条问题` + `-v` 4 份/2 键 / 六夹具 A~F 逐字 / wc≤200、def check_args=1、禁用 grep=0、py_compile OK、`--skills NO_SUCH` 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 30`。
+2. 对账网已第十二例，继续按 R80-b / R81-b / R82-b / R83-a / R84-b / R85-d 判据找「别人都绿而真实状态错」的对象；核实覆盖后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

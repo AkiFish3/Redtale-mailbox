@@ -1332,4 +1332,11 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `spawn_rules/*.json5` 的 `conditions{}` 七维（world/biome/light/time/y/outside/difficulty）形态与值域，按 `docs/SPAWN-RULES.md` §5：time∈{day,night,any}、difficulty 四档、light 0~15、y/light 的 min<=max、outside 必须 bool、world/biome/difficulty 是非空字符串数组。
 - 填补 `check_mobs.check_rule` 的盲区：该函数只核 spawn_rules 顶层 id/action/mob/chance/per_chunk_cap/priority，从不进 `conditions`。写歪运行期按 §5「求值失败=该维度不通过且不告警刷屏」，编译绿、全 check 绿、刷怪替换静默失效（R84-c）。
-- 派单态：T-0080 `[OPEN]`，未接线、未验收；接线后预计 `check_all` 跑成 29。
+- 已接进 `tools/check_all.py`（`共 29 个脚本`，R85 接线）。T-0080 `[VERIFIED]`（R85）：基线 `共 1 份刷怪规则条件表 · 0 条问题`、六夹具 A~F 逐字 EXIT=1、wc=145。
+
+### 4.46 技能条件值域对账 `check_skill_args.py`（T-0081，R85 派，对账网第十二例）
+
+- 只读扫 `skills/*.json5` 的 `conditions[]`，只核三类已知条件的 args 值域：`health_below.args.ratio` / `chance.args.chance` 必须是 [0,1] 数字（bool 不算），`always` 的 args 任意。未知 type 跳过（合法性归 `check_skills`）。
+- 填补 `check_skills.check_skill` 的盲区：该函数只核 `conditions[i].type` 合法、`args` 只看是不是对象，从不核取值；而 `HealthBelowCondition`/`ChanceCondition` 里 `getAsDouble()` 直接用无值域夹，写 `ratio:1.5` 静默恒真、`chance:-0.2` 静默恒假——编译绿、全 check 绿、技能触发条件永久失效（R85-d）。
+- 同口径已在 `check_mobs.check_drop` 对 drop 的 chance 核 [0,1]；effects 的 amount/radius 有运行期 `clamp01`/`Math.min` 夹、非静默洞，明确不核。
+- 派单态：T-0081 `[OPEN]`，未接线、未验收；接线后预计 `check_all` 跑成 30。

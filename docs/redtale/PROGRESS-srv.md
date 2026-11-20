@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-21 00:00 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-21 01:05 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0080 | OPEN | `tools/check_spawn_conditions.py` —— 刷怪规则 conditions 六维值域对账（单文件零接线） |
+| T-0081 | OPEN | `tools/check_skill_args.py` —— 技能 conditions args 值域对账（单文件零接线） |
 
-已验完 **77** 张 / 共 **80** 张。
+已验完 **78** 张 / 共 **81** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
