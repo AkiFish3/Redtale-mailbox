@@ -1664,6 +1664,7 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 | R85 | 2026-11-20 | **验收 T-0080（`check_spawn_conditions.py`）+ 接线 `check_all` 28→29 + 派 T-0081（技能 conditions args 值域）** | ①T-0080 `[DONE]` → **`[VERIFIED]`**（3/3：基线 0 问题 / 六夹具 A~F 逐字 / wc=145）；②接线 28→29；③派 T-0081（`check_skills.check_skill` 只核 type 不进 args，ratio:1.5 恒真）。本轮纯 Python、`src/` 零 diff。 | **§13.88 R85-a~e**。 |
 | R86 | 2026-11-21 | **验收 T-0081（`check_skill_args.py`）+ 接线 `check_all` 29→30 + 派 T-0082（脚本 conditions args 值域）** | ①T-0081 `[DONE]` → **`[VERIFIED]`**（3/3 + S7 边界 20/20）；②接线 29→30；③派 T-0082（scripts/ 与 skills/ 两套独立配置，同源不同对象 R86-a）。本轮纯 Python、`src/` 零 diff、正式服 9376 常驻未动、测试服无 LISTEN。 | **§13.89 R86-a~c**。 |
 | R87 | 2026-11-21 | **验收 T-0082（`check_script_args.py`）+ 接线 `check_all` 30→31 + 派 T-0083（效果 `target` 枚举值域对账）** | ①T-0082 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `共 1 份脚本条件值域表 · 0 条问题` EXIT=0 / `-v` 2 份/2 键 / 六夹具 A ratio1.5·B chance-0.2·C ratio=true·D args=3 逐字 EXIT=1、E/F 各 0 条 / wc=129、def check_args=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败；S8 自测与 S7 复跑逐字一致）；②接线 30→31 全绿；③派 T-0083（`check_effect_target.py`：五个 target 原语拼错非 caster/target 时静默改作用对象，check_scripts/check_skills 与 check_script_args/check_skill_args 都不进 effects 的 args.target，对账网第十四例、字符串枚举形态）。派前 S7 逐字读五个 `pick()` 确认合法值集合 = `{caster,target}`、除「非字符串 warnOnce」外无 clamp。本轮纯 Python、`src/` 零 diff、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。 | **§13.90 R87-a~c**。 |
+| R88 | 2026-11-21 | **验收 T-0083（`check_effect_target.py`）+ 接线 `check_all` 31→32 + 派 T-0084（怪物装备物品 id ↔ 14 基底对账）** | ①T-0083 `[DONE]` → **`[VERIFIED]`**（3/3 + S7 边界 11/11：基线 `共 2 份效果 target 值域表 · 0 条问题` EXIT=0 / `-v` 2 脚本·4 技能·5 原语 / 六夹具 A~D 逐字各 1 条 EXIT=1、E/F 各 0 条 / wc=129、def check_effects=1、禁用 grep=0、py_compile OK、双 NO_SUCH 2 条读失败；S8 自测零偏差）；②接线 31→32 全绿（32 脚本跑成 32 红 0）；③派 T-0084（`check_mob_equipment.py`：`check_mobs.check_mob` 只核 equipment[slot] 带冒号、不核 id 真能解析；运行期 `MobSpawner.applyEquipment` 对未知 id 只 `skips.add`，而 `Result.skips()` 全仓无人读 → 怪物光着手出生、无红无 WARN、全 check 绿；对账网第十五例、引用型）。派前 S7 按 R84-b/R86-b 扫全类候选：dash.direction 配置未用（永远绿）、damage_aoe 数值有 clamp、curve.mode 有 WARN+已覆盖、cooldown/affix/set/drops 全有 check——逐一排除后才落 equipment 真洞；离线核基线 4 引用/0 问题。本轮纯 Python、`src/` 零 diff、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服无 LISTEN。 | **§13.91 R88-a~c**。 |
 - **卡板**：T-0069 `check_display.py` `[DONE]` → **VERIFIED**（3/3：基线 `共 1 个文件 · 0 条问题` EXIT=0 / `-v` 含「已检查 … · 6 项」；三组夹具 A=4（show_dps / show_attribute_breakdown / assume_target / 未知键 bogus_key 逐字对上）、B=2（空白 id + show_dps 非 bool）、C=1（仅「解析失败」不抛栈）均 EXIT=1；wc=113≤200、`from check_progress import clean_json5`=1、禁用 API=0）。S7 另跑 12 条独立边界（空对象缺键 / 三键全对 / 空串与纯空白 assume_target 回落 / 带点合法 id / 根节点 list 与 None / 只有 ns 无 path / 只有冒号 / 带大写 / False 合法 / 0 非 bool）12/12。夹具 build/dispfix 已清。
 - **接线**：`tools/check_all.py` 的 `TOOLS` 末尾追加 `"check_display.py",`（R74 接上）→ **`共 18 个脚本 · 跑成 18 · 跳过 0 · 红 0`**（R73 预判兑现）。
 - **派 T-0070**（`tools/check_checkall.py`：check_all 清单 ↔ 磁盘双向对账，单文件只读 `.py` 文本、零接线、禁造 JSON5 清洗器），在制品 **1/3**。动机：R64~R74 每轮手工往 `TOOLS` 追加一行，从未机器核对；漏接一个脚本则它永远不被 `check_all` 跑到而整体仍全绿（R65-a 死检查同源）。接口 `read_listed`/`read_disk`/`check_listing`（重复→清单项磁盘不存在→脚本未接进，三类消息逐字定死）+ `main` 的 `--all`/`--dir`/`-v` 全部由 S7 给定。
@@ -1902,8 +1903,16 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 | R87-b | **缺省方向相反的两个原语，同一张尺子核**：`buff`/`grant_exp`/`heal` 缺省 caster、写 `target` 才改道；`debuff`/`stun` 缺省 target、写 `caster` 才改道——五个 `pick()` 合法值集合都只有 `{caster,target}`，对账只核「写了必须合法」、不核「该写哪个」（后者属取舍、归 S7）。 | 核值域不核语义选择，避免检查器替内容作者做玩法决定；也避免为每个原语写一套不同的判定。 |
 | R87-c | **对账网第十四例 = 效果 `target` 的字符串枚举**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args→脚本 args→效果 target），判据仍是「两份已有检查都绿、运行期才崩」。 | `check_scripts`/`check_skills` 核 type + args 是 dict、`check_script_args`/`check_skill_args` 核 conditions 值域，四者都不进 effects 的 `args.target`；同一洞的第四种落点（conditions 技能/脚本 + effects 字符串）。 |
 
-下一步（R88）：
+### 13.91 R88 的三条口径（对账网第十五例 = 怪物装备引用 / 「无人读的失败收集」也是静默 / 派前全类排除留证）+ 下一步（R89）
 
-1. **验 T-0083**（`check_effect_target.py`：基线 `共 2 份效果 target 值域表 · 0 条问题` + `-v` 2 份脚本/4 份技能/5 个 target 原语 / 六夹具 A~F 逐字 / wc≤200、def check_effects=1、禁用 grep=0、py_compile OK、双 NO_SUCH 2 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 32`。
-2. 对账网已第十四例；按 R80-b/R84-b/R85-d/R86-b/R87-a 判据核实后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
+| 编号 | 口径 |
+|---|---|
+| R88-a | **对账网第十五例 = 怪物装备物品 id ↔ 14 基底注册**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args→脚本 args→效果 target→怪物装备）。判据同 R83-b「两份已有检查都绿、运行期才崩」：`check_mobs.check_mob` 只核 `equipment[slot]` 带冒号、`check_items` 只核 items/ 里的内容 id——两者都不核「这个物品注册 id 真能解析」。形态从「字符串枚举值域」扩回「跨配置引用」（同 T-0079 damage_type），外部命名空间一律跳过、离线无注册表。 |
+| R88-b | **「收集了失败但没人读」也是静默失败**：`MobSpawner.Result.skips()` 记下「装备 id 未知」，但 `MobSpawnCommand` 只看 `message()`、`SpawnReplacer` 只在 `!ok` 时 warnOnce、`skips` 全仓零读取——失败进了列表却从未外抛，等价于没发生。判据不看「代码里有没有记」，看「玩法是否悄悄退化且无人被叫醒」（R83-b 延续）。这也说明 R86-b「先证运行期无夹」的另一面：有夹但夹的结果没出口，同样算洞。 |
+| R88-c | **派前全类排除要留证**：按 R84-b/R86-b 扫完同批候选（dash.direction 配置未用=永远绿、damage_aoe 数值有 clamp、curve.mode 有 WARN 且 check_progress 已覆盖、cooldown/affix/set/drops/技能树属性全有 check）逐条写明为何不派，再落 equipment 真洞并离线核基线（4 引用/0 问题）。避免「对账网无限递归」——先看已有 check 覆盖对象确认真缝（R84-b），找不出才转内容面。 |
+
+下一步（R89）：
+
+1. **验 T-0084**（`check_mob_equipment.py`：基线 `共 1 份怪物装备 id 表 · 0 条问题` + `-v` 2 份怪物/4 处引用/14 基底 / 六夹具 A~F 逐字 / wc≤200、def check_equipment=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 33`。
+2. 对账网已第十五例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a 判据核实后无真洞就转内容面，不硬凑。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

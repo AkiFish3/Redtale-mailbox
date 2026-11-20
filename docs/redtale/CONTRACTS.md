@@ -1347,3 +1347,9 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 填补 `check_scripts.check_script` 的盲区：该函数只核 `conditions[i].type` 合法、`args` 只看是不是对象，从不核取值；而 `HealthBelowCondition`/`ChanceCondition` 里 `getAsDouble()` 直接用无值域夹，写 `ratio:1.5` 静默恒真、`chance:-0.2` 静默恒假、非数字抛异常——编译绿、全 check 绿、脚本触发条件永久失效。
 - 与 §4.46（技能层）同源不同对象：`scripts/` 与 `skills/` 两套独立配置 + 两个独立 check，改一个不带动另一个（R86-a）。
 - 已接进 `tools/check_all.py`（`共 31 个脚本`，R87 接线）。T-0082 `[VERIFIED]`（R87）：基线 `共 1 份脚本条件值域表 · 0 条问题`、六夹具 A~F 逐字 EXIT=1、wc=129。
+
+### 4.48 怪物装备物品 id 对账 `check_mob_equipment.py`（T-0084，R88 派，对账网第十五例）
+
+- 只读扫 `mobs/*.json5` 的 `equipment{}`，核红tale 命名空间下 slot → 物品 id 的 path 是否 ∈ 14 基底（`ItemBase` enum 写死 `BASE_IDS`）；外部命名空间跳过（离线无注册表）。缺失/空 equipment 合法。
+- 填补 `check_mobs.check_mob` 的盲区：该函数只核 `equipment[slot]` 是带冒号的 id，从不核 id 真能解析成物品；而 `MobSpawner.applyEquipment` 对未知 id 只 `skips.add`、`Result.skips()` 全仓无人读 → 怪物光着手出生、无红无 WARN（R88-b）。
+- 形态是跨配置引用（同 §4.44 damage_type），非数值/字符串枚举值域。当前基线 2 份怪 / 4 处引用 / 0 问题。未接线（T-0084 VERIFIED 后接 `check_all` → 33）。

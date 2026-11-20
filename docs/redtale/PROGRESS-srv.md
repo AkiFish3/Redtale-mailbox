@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-21 03:18 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-21 04:27 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,19 +12,19 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0083 | OPEN | `tools/check_effect_target.py` —— 效果 `target` 枚举值域对账（单文件零接线） |
+| T-0084 | OPEN | `tools/check_mob_equipment.py` —— 怪物装备物品 id ↔ 14 基底注册对账（单文件零接线） |
 
-已验完 **80** 张 / 共 **83** 张。
+已验完 **81** 张 / 共 **84** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
 | 轮 | 日期 | 一句话 |
 |---|---|---|
-| R83 | 2026-11-20 | **验收 T-0078（`check_event_registration.py`）+ 接线 `check_all` 2 |
 | R84 | 2026-11-20 | **验收 T-0079（`check_damage_types.py`）+ 接线 `check_all` 27→28 + |
 | R85 | 2026-11-20 | **验收 T-0080（`check_spawn_conditions.py`）+ 接线 `check_all` 28→ |
 | R86 | 2026-11-21 | **验收 T-0081（`check_skill_args.py`）+ 接线 `check_all` 29→30 + 派 |
 | R87 | 2026-11-21 | **验收 T-0082（`check_script_args.py`）+ 接线 `check_all` 30→31 +  |
+| R88 | 2026-11-21 | **验收 T-0083（`check_effect_target.py`）+ 接线 `check_all` 31→32  |
 
 ## 4. 卡住的（真实缺口，不是产能问题）
 
