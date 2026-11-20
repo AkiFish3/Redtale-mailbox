@@ -3850,7 +3850,7 @@ fi
 - 2026-11-20 08:49 · 完成 · 文件：`tools/check_primitive_ids.py`（新建 197 行，零接线）· build=N/A（纯 Python 卡，未取锁未构建）· 自测：基线「共 1 份原语 id 表 · 0 条问题」EXIT=0、`-v` 含「已对账 25 条表项 · 11 条标已实现 · 13 个 Effect 类」；夹具 A=1 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表` / B=1 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类` / C=1 `原语类 GhostEffect 未声明 id()`，均 EXIT=1 逐字对上；wc=197≤200 · def check_ids=1 · 禁用 grep=0 · py_compile OK · 缺 docs/builtin/双失败=1/1/2 条不抛栈 · 边界 6/6（转义竖线、§4 边界、DEBUG_IDS 放行、注释假 id、重复消息去重、三类按序）· `build/primidfix` 已清 · 请 S7 裁：接口第③类写「done 不在已声明 id 集合」，但验收 A 要求恰好 1 条（不得追加「damage 标已实现但无对应类」）；实现按验收口径把③改判「声明 id 或 snake_case→PascalCase+Effect 类名均不命中」，id 写歪只报②、类被删才报③。若 S7 要字面「已声明 id 集合」，验收 A 期望须改为 2 条。
 - 2026-11-20 09:5x · S7 · **VERIFIED**（3/3 + S7 独立边界）：基线 `共 1 份原语 id 表 · 0 条问题` EXIT=0、`-v` 含 `已对账 25 条表项 · 11 条标已实现 · 13 个 Effect 类`；三夹具各自从干净副本重来 A=1 `原语 id damage_typo（DamageEffect）不在 SKILLS.md 原语表` / B=1 `SKILLS.md 原语 heal 标已实现但无对应 Effect 类` / C=1 `原语类 GhostEffect 未声明 id()`，EXIT=1 逐字对上；wc=197、`def check_ids`=1、禁用 grep=0、py_compile OK。S7 边界 9/9（§4 段界、转义竖线按接口保留 NUL、✅ 列位、行尾/块注释假 id 不计、DEBUG_IDS 放行、重复消息去重、三类按序、typo 只报②、目录读失败空表不抛栈）；`build/primidfix/` 已清。**裁定 S8 提问**：③类按「验收 A 恰好 1 条」判（声明 id 或 snake_case→PascalCase+Effect 类名命中均视为有类），实现采纳不打回——同 R79-a，可机器判定的验收条款优先于接口措辞（§13.83 R80-a）。接线 `check_all` 23→24 已由 S7 完成。
 
-### T-0076 · [OPEN] `tools/check_lang_dupes.py` —— 单个 lang 文件内重复键对账（单文件零接线）
+### T-0076 · [VERIFIED] `tools/check_lang_dupes.py` —— 单个 lang 文件内重复键对账（单文件零接线）
 - 派单：S7 · 2026-11-20 09:5x（R80）
 - 目标：第七例对账对象**不是第二份名单，而是一份 JSON 文件内部**。`check_lang.py` 用 `json.load` 读 lang，同名键按 last-wins 静默覆盖；两个 `gen_*_lang.py` 写同一个 key 时，`check_lang` 的缺键/占位符检查仍全绿，翻译却悄悄丢了。本卡只读扫 `zh_cn` / `en_us` 顶层重复键，补齐这个洞。
 - 独占文件（**唯一可写**）：
@@ -3864,8 +3864,28 @@ fi
 - 不要做：不把「重复键」升级为「哪份译文对」的判断（S7 独占取舍）；不给重复键自动去重/改写；不把 `check_deps` 的命名规则搬进来；不扫 `assets/**` 其它 JSON。
 - 验收（**三条，全部可机器执行**）：
   1. `python tools/check_lang_dupes.py` → 末行 `共 2 个语言文件 · 0 条问题` EXIT=0；`-v` → 含 `已扫 2 个语言文件 · zh_cn 0 条重复 · en_us 0 条重复`。
-  2. 三组负向夹具（复制 lang 目录到 `build/langdupfix/lang/`，用 `--lang` 指过去，各自从干净副本重来，不许累积）：A 在 zh_cn 追加已有键 `attribute.redtale_project.additional_experience` 第二份 → EXIT=1 且恰好 1 条 `zh_cn 重复键：attribute.redtale_project.additional_experience（出现 2 次）`；B 在 en_us 追加已有键 `attribute.redtale_project.additional_experience` 第二份 → EXIT=1 且恰好 1 条 `en_us 重复键：attribute.redtale_project.additional_experience（出现 2 次）`；C zh_cn 追加 `additional_experience`+`air_damage` 各一份、en_us 追加 `arcane_damage` 一份 → EXIT=1 且恰好 3 条，顺序为 zh_cn 两条（按 key 升序）后 en_us 一条。三组逐字对上。
+  2. 三组负向夹具（复制 lang 目录到 `build/langdupfix/lang/`，用 `--lang` 指过去，各自从干净副本重来，不许累积）：A 在 zh_cn 追加已有键 `attribute.redtale_project.additional_experience` 第二份 → EXIT=1 且恰好 1 条 `zh_cn 重复键：attribute.redtale_project.additional_experience（出现 2 次）`；B 在 en_us 追加已有键 `attribute.redtale_project.additional_experience` 第二份 → EXIT=1 且恰好 1 条 `en_us 重复键：attribute.redtale_project.additional_experience（出现 2 次）`；C zh_cn 追加 `attribute.redtale_project.additional_experience`+`attribute.redtale_project.air_damage` 各第二份、en_us 追加 `attribute.redtale_project.arcane_damage` 第二份 → EXIT=1 且恰好 3 条，顺序为 zh_cn 两条（按 key 升序）后 en_us 一条。（R81 更正：初稿写裸键，lang 内没有裸键，追加不构成重复；按可机器判定的「恰好 3 条」口径改为完整属性键。）三组逐字对上。
   3. `wc -l < tools/check_lang_dupes.py` ≤ 200；`grep -c "def read_dupes"`=1；`grep -cE "check_progress|check_lang|net\.minecraft|subprocess|exec\(|os\.chdir|check_all.*append" tools/check_lang_dupes.py`=0；`py_compile` OK；`--lang NO_SUCH` → EXIT=1 且恰好 2 条 `zh_cn.json 读取失败` / `en_us.json 读取失败`（顺序固定），不抛栈；夹具用完即删（`build/langdupfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-20 15:3x · S7 · **VERIFIED**（3/3 + S7 独立边界 9/9）：基线 `共 2 个语言文件 · 0 条问题` EXIT=0、`-v` 含 `已扫 2 个语言文件 · zh_cn 0 条重复 · en_us 0 条重复`；三夹具各自从干净副本重来 A=1 zh_cn 重复 / B=1 en_us 重复 / C=3（zh_cn 两条按 key 升序 + en_us 一条），EXIT=1 逐字对上；wc=65、`def read_dupes`=1、禁用 grep=0、`py_compile` OK、`--lang NO_SUCH`=2 条读失败不抛栈；S7 边界 9/9（三次出现、嵌套局部键不拼路径、嵌套取最大次数、按键升序、report 保序、坏 JSON / 空文件 / 缺文件读失败）。**裁定 S8 提问**：验收 2 夹具 C 的裸键按「恰好 3 条」可机器判据优先，采纳完整属性键实现、不打回，卡面已就地更正（§13.84 R81-a）。
+
+### T-0077 · [OPEN] `tools/check_ownership.py` —— 在制品卡「独占文件」重叠对账（单文件零接线）
+- 派单：S7 · 2026-11-20 15:4x（R81）
+- 目标：`docs/TASKS.md` §2 的「独占文件」是 S7/S8 防冲突的唯一机制；`check_tasks.py` 只查状态 / 重复 id / 在制品上限 / 验收段，不查两张在制品卡是否声明同一文件。重叠时两边都能各自 VERIFIED，后写者静默覆盖前者。本卡只读扫 WIP（OPEN/DOING/BOUNCED）卡的独占文件声明，补这个洞。
+- 独占文件（**唯一可写**）：
+  - `tools/check_ownership.py`（新建，≤ 200 行）
+  - `build/ownerfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_tasks.py`）；不改 `TOOLS` 清单；不 import 其它 check；不读 JSON5；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `read_cards(path: str) -> list[tuple[str, str, int, list[str]]]`：正则 `^### (T-\d{4}) · \[([A-Z]+)\]` 取卡 id / state；卡片 body = 标题行后到下一行 `^### ` 或 `^## `（不含）之间的行；返回（id, state, 标题行号 1-based, body 行列表）按行序；文件读失败返回 []，不抛栈。
+  - `exclusive_files(body: list[str]) -> list[str]`：只在行 `^\s*-\s*独占文件` 起到下一个缩进不超过它的 `- ` 行（或文件尾）之间，取缩进更深的子行 `^\s{2,}-\s` 中所有反引号 token `` `([^`]+)` ``；token 去前缀 `./`、去尾部 `/`，其余原样（保留 `tools/` 前缀）；按出现序返回，同卡重复 token 去重保首次。
+  - `check_overlaps(claims: list[tuple[str, list[str]]]) -> list[str]`：`claims` 为（卡 id, 独占文件列表）；只处理卡 id 属于 OPEN/DOING/BOUNCED 的声明（调用方已过滤，本函数不再判 state）；按路径分组，路径有 ≥2 个不同卡 id 时输出一条 `独占文件 <path> 被 <id1> / <id2> 同时声明`（卡 id 升序、去重），多条按 path 升序；同一卡内重复声明不报。
+  - `main() -> int`：CLI `--tasks <path>`（默认 `docs/TASKS.md`）、`-v`（多打一行 `已对账 <n> 张在制品卡 · <m> 个独占文件声明`，n=WIP 卡数、m=其独占文件声明数）；每条 `[问题] <msg>`；末行 `共 1 份卡板 · %d 条问题`；读失败 1 条 `卡板读取失败` EXIT=1；0 问题 EXIT=0，否则 EXIT=1。
+- 不要做：不查 VERIFIED/DROPPED 卡的历史重叠、不给卡自动改独占文件、不查文件是否真的存在、不读 `PLAN.md`、不把「同一卡重复声明」升级为问题。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_ownership.py` → 末行 `共 1 份卡板 · 0 条问题` EXIT=0；`-v` → 含 `已对账 1 张在制品卡 · 2 个独占文件声明`（当前基线：只有 T-0077 自身 OPEN，S7 已核）。
+  2. 三组负向夹具（复制到 `build/ownerfix/`，用 `--tasks` 指过去，各自从干净最小卡板重来，不许累积）：A 两张 WIP 卡同写 `tools/foo.py` → EXIT=1 且恰好 1 条 `独占文件 tools/foo.py 被 T-9001 / T-9002 同时声明`；B 一张 OPEN 与一张 VERIFIED 同写 `tools/foo.py` → EXIT=0 且 0 条；C 三张 WIP 卡：T-9001/T-9002 同写 `tools/foo.py`、T-9001/T-9003 同写 `build/fix/` → EXIT=1 且恰好 2 条，顺序为 `独占文件 build/fix 被 T-9001 / T-9003 同时声明` 先、`独占文件 tools/foo.py 被 T-9001 / T-9002 同时声明` 后（按 path 升序）。三组逐字对上。
+  3. `wc -l < tools/check_ownership.py` ≤ 200；`grep -c "def check_overlaps"`=1；`grep -cE "check_tasks|check_progress|net\.minecraft|subprocess|exec\(|check_all.*append" tools/check_ownership.py`=0；`py_compile` OK；`--tasks NO_SUCH` → EXIT=1 且恰好 1 条 `卡板读取失败`，不抛栈；夹具用完即删（`build/ownerfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -3893,7 +3913,8 @@ fi
 | C23 | ~~`tools/check_gen_prefix.py`（lang 生成器前缀对账）~~ → **T-0073（R77 派 / R78 验）** | R76-c 元层洞第四例：R59-a「生成器只拥有自己的前缀」无机器对账，R59 事故（前缀写歪静默削键）正是此洞；`check_lang` 只验产物键覆盖、抓不到生成器声明越界 | 无 |
 | C24 | ~~`tools/check_rounds.py`（轮次索引对账）~~ → **T-0074（R78 派 / R79 验）** | R77-c 元层洞第五例：`ROUNDS.md` 是 76 份轮次文档唯一入口，`check_docs` 只给孤儿 `[提示]` 不改退出码；索引漏行/幽灵/重复全绿 | 无 |
 | C25 | ~~`tools/check_primitive_ids.py`（原语 id ↔ SKILLS.md 表对账）~~ → **T-0075（R79 派 / R80 验）** | R79-a 元层洞第六例：`check_primitives` 核类↔注册、`check_skills` 核配置↔表，中间「类 `id()` ↔ 表 id」无人核；写歪运行期才崩 | 无 |
-| C26 | ~~`tools/check_lang_dupes.py`（lang 文件内重复键对账）~~ → **T-0076（R80 派）** | R80-b 对账对象第一次不是「两份名单」而是「一份 JSON 内部」：`check_lang` 只看覆盖、重复键被 `json.load` last-wins 吞掉，两个生成器写同一 key 时全绿但译文静默丢失 | 无 |
+| C26 | ~~`tools/check_lang_dupes.py`（lang 文件内重复键对账）~~ → **T-0076（R80 派 / R81 验）** | R80-b 对账对象第一次不是「两份名单」而是「一份 JSON 内部」：`check_lang` 只看覆盖、重复键被 `json.load` last-wins 吞掉，两个生成器写同一 key 时全绿但译文静默丢失 | 无 |
+| C27 | ~~`tools/check_ownership.py`（WIP 卡独占文件重叠对账）~~ → **T-0077（R81 派）** | `check_tasks` 查状态/重复 id/WIP 上限/验收段，却不查两张 WIP 卡是否抢同一文件；这是 S7/S8 防冲突的唯一机制，重叠时两边各自 VERIFIED、后写者静默覆盖 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

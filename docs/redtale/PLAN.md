@@ -1657,6 +1657,7 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 
 ## R74 · 2026-11-20 02:5x · 验 T-0069 + check_all 17→18 + 派 T-0070（check_all 清单安全网）
 
+| R81 | 2026-11-20 | **验收 T-0076（`check_lang_dupes.py`）+ 接线 `check_all` 24→25 + 派 T-0077（在制品卡独占文件重叠对账）** | ①T-0076 `[DONE]` → **`[VERIFIED]`**（3/3：基线 `共 2 个语言文件 · 0 条问题` EXIT=0、`-v` 0/0；三夹具各自从干净副本重来 A=1 zh_cn 重复·B=1 en_us 重复·C=3（zh_cn 两条按键升序 + en_us 一条）逐字 EXIT=1；wc=65、`def read_dupes`=1、禁用 grep=0、py_compile OK、`--lang NO_SUCH` 2 条读失败不抛栈）；S7 独立边界 9/9（三次出现 / 嵌套局部键 / 嵌套取最大值 / 升序 / report 保序 / 三种读失败），`build/langdupfix/` 已清。②裁定 S8 提问：夹具 C 裸键按可机器判据「恰好 3 条」优先，采纳完整属性键、不打回，卡面就地更正（§13.84 R81-a）。③接线 `check_all` → **`共 25 个脚本 · 跑成 25 · 跳过 0 · 红 0`**；接线后 `check_checkall -v` 25/25、`check_tasks` 77 卡在制品 1 问题 0。④派 **T-0077**（`check_ownership.py`（L6 新建）：`check_tasks` 查状态/重复 id/WIP 上限却不查两张 WIP 卡抢同一文件，而独占文件是防冲突唯一机制；接口 `read_cards`/`exclusive_files`/`check_overlaps`/`main` 由 S7 定死），在制品 1/3。⑤`src/` 零 diff、未构建、未启停任何服、无构建锁。 | **§13.84 R81-a~c**。 |
 - **卡板**：T-0069 `check_display.py` `[DONE]` → **VERIFIED**（3/3：基线 `共 1 个文件 · 0 条问题` EXIT=0 / `-v` 含「已检查 … · 6 项」；三组夹具 A=4（show_dps / show_attribute_breakdown / assume_target / 未知键 bogus_key 逐字对上）、B=2（空白 id + show_dps 非 bool）、C=1（仅「解析失败」不抛栈）均 EXIT=1；wc=113≤200、`from check_progress import clean_json5`=1、禁用 API=0）。S7 另跑 12 条独立边界（空对象缺键 / 三键全对 / 空串与纯空白 assume_target 回落 / 带点合法 id / 根节点 list 与 None / 只有 ns 无 path / 只有冒号 / 带大写 / False 合法 / 0 非 bool）12/12。夹具 build/dispfix 已清。
 - **接线**：`tools/check_all.py` 的 `TOOLS` 末尾追加 `"check_display.py",`（R74 接上）→ **`共 18 个脚本 · 跑成 18 · 跳过 0 · 红 0`**（R73 预判兑现）。
 - **派 T-0070**（`tools/check_checkall.py`：check_all 清单 ↔ 磁盘双向对账，单文件只读 `.py` 文本、零接线、禁造 JSON5 清洗器），在制品 **1/3**。动机：R64~R74 每轮手工往 `TOOLS` 追加一行，从未机器核对；漏接一个脚本则它永远不被 `check_all` 跑到而整体仍全绿（R65-a 死检查同源）。接口 `read_listed`/`read_disk`/`check_listing`（重复→清单项磁盘不存在→脚本未接进，三类消息逐字定死）+ `main` 的 `--all`/`--dir`/`-v` 全部由 S7 给定。
@@ -1775,8 +1776,25 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 | R80-c | **写探针夹具前先按接口把期望推到底**：本轮 S7 两条 FAIL 都是夹具期望错——`read_table` 按接口把 `\|` 替成 NUL 而非还原 `|`；`done` 里放了没有对应类的 `heal` 自然会报③。代码逐字符合卡面。 | 延续 R65-a / R78-b：首跑红先判「夹具错还是代码错」，判错再动代码；拿错夹具打回 S8 会制造无谓返工。 |
 | R80-d | **派单当轮新脚本在文档里写裸名**（R63-e 后第八次提醒）：`docs/ROUND-*`、`PLAN.md` 台账都在 `check_docs` 扫描集，在建文件写 `tools/<name>.py` 会红；卡面 `docs/TASKS.md` 不在扫描集可写全路径。 | 每轮收尾前先跑一遍 `check_all` 再提交，别把红留给下一轮。 |
 
-下一步（R81）：
+## R81 · 2026-11-20 15:3x~15:5x · 验 T-0076 + check_all 24→25 + 派 T-0077（独占文件重叠）
 
-1. **验 T-0076**（`check_lang_dupes.py`：基线 0 问题 EXIT=0 / 三夹具 A=1·B=1·C=3 逐字 / wc≤200、禁用 grep=0、py_compile OK、`--lang NO_SUCH` 恰好 2 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 25`。
-2. 下一张卡继续按 R80-b 判据找「两份已有检查之间的缝隙」或内容面的静默失败；找不到就派纯派生层，不硬凑跨 3 文件改动。真人窗口 A~G 仍等 Aki，不排期。
+- **卡板**：T-0076 `check_lang_dupes.py` `[DONE]` → **VERIFIED**（3/3：基线 0 问题 EXIT=0、`-v` 0/0；三夹具 A=1 / B=1 / C=3 EXIT=1 逐字；wc=65、`def read_dupes`=1、禁用 grep=0、py_compile OK、`--lang NO_SUCH` 2 条读失败不抛栈）+ S7 独立边界 9/9；`build/langdupfix/` 已清。
+- **裁定 S8 提问**：验收 2 夹具 C 写裸键，lang 内只有 `attribute.redtale_project.` 前缀的完整键；按「恰好 3 条」可机器判据优先，采纳完整属性键实现、不打回，卡面验收段已就地更正（R81-a）。
+- **接线**：`tools/check_all.py` `TOOLS` 末尾追加 `check_lang_dupes.py` → **`共 25 个脚本 · 跑成 25 · 跳过 0 · 红 0`**；接线后 `check_checkall -v` 25/25、`check_tasks` 77 卡在制品 1 问题 0。
+- **派 T-0077**（`check_ownership.py`（L6 新建），对账对象 = 卡板自身的「独占文件」声明：`check_tasks` 管状态 / 重复 id / WIP 上限 / 验收段，但两张 WIP 卡抢同一文件时各自可 VERIFIED、后写者静默覆盖；接口由 S7 定死，零接线），在制品 1/3。
+- **本轮 `src/` 零 diff**：未构建、未启停任何服、无构建锁；25567/25577/9376 无 LISTEN。环境：`check_all` 25/25、`check_checkall` 25/25、`check_tasks` 77 卡在制品 1 问题 0。
+- 收尾：`docs/ROUND-R81-OWNERSHIP.md`、`PLAN.md` §13 R81 + §13.84、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0076 VERIFIED + T-0077 + 池 C27）、`tools/check_all.py`、协作板 §3。
+
+### 13.84 R81 的三条口径（验收判据再优先 / 防冲突机制本身要被对账 / 用例文本要能真的造出问题）+ 下一步（R82）
+
+| # | 口径 | 理由 |
+|---|---|---|
+| R81-a | **卡面夹具文本不足以造出验收要求的问题时，按可机器判据修正文本、不打回实现**（R79-a / R80-a 第三次生效）：T-0076 验收 2 夹具 C 写裸键 `additional_experience` / `air_damage` / `arcane_damage`，但 lang 内只有 `attribute.redtale_project.` 前缀键，追加裸键后检查正确报 0 条；S8 用完整键得到要求的 3 条。裁定采纳实现并就地改卡面。 | S7 写卡是人写文案，S8 按机器判据交付；为一句描述错误打回正确实现，会让后续每张卡都陷入「到底听哪句」的猜谜。 |
+| R81-b | **「防冲突机制本身」也要进对账网**：前七例对账的是代码 / 配置 / 文档名单，T-0077 对账的是 `docs/TASKS.md` 里两张 WIP 卡的「独占文件」声明——这是 §2 明确的唯一防冲突机制，却没有任何机器核对；重叠时两张卡都能独立 VERIFIED，覆盖是静默的。 | 判断新卡价值的第二把尺子：不只看「两边检查都绿运行期才崩」，也看「协作机制的防线是否只写在纸上」。这类洞的修复成本是一个只读单文件脚本。 |
+| R81-c | **负向夹具必须真的能造出目标状态**：本轮验收 T-0076 的 C 夹具、R78-b 的累积夹具、R80-c 的期望写错，都属「夹具错非代码错」。写卡时先拿当前基线数据核一遍夹具键 / 状态是否真实存在。 | 夹具造不出问题会得到 0 条的绿灯，看起来像实现过度宽松，实际是测试没打中；每轮因此多花一次返工。 |
+
+下一步（R82）：
+
+1. **验 T-0077**（`check_ownership.py`：基线 `已对账 1 张在制品卡 · 2 个独占文件声明` EXIT=0 / 三夹具 A=1·B=0·C=2 逐字 / wc≤200、禁用 grep=0、py_compile OK、`--tasks NO_SUCH` 恰好 1 条读失败不抛栈）；过后 `check_all` 末尾追加 → 应 `跑成 26`。
+2. 对账网已到第八例，继续按 R80-b / R81-b 判据找「别人都绿而真实状态错」的对象；找不到就转内容面，不硬凑同构名单。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补）无答复，继续按默认走。
