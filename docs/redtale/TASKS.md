@@ -4207,7 +4207,7 @@ fi
 - 2026-11-22 00:01 · 完成 · `tools/check_affix_reach.py`（158 行新建，零接线）· 构建 N/A（卡明令禁 gradle：未取锁未 build，无退出码）· 验收 3/3：基线 `共 1 份词条等级可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（A/C/D 各 1 条 `词条池 p 的 prefix 槽无等级可达的同类型词条（物品等级 1）`；E slots.core=0 不进范围=0；F 两条 prefix 一不可达一可达=0、`-v` 2 定义/1 池/1 有效段）；wc=158≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条 `目录读取失败` EXIT=1 不抛栈；函数边界 14/14；`build/affixreachfix/` 与自建 pyc 已清。实现口径：`read_defs` 对 `ident(id)` 为空串（如 `ns:`）仍按键入表（卡未定，基线/夹具不覆盖）；`-v` 有效槽位段按 `slots[kind]` 为 >0 整数计，不要求同名引用段存在。S7 验收后接 check_all（39→40）。
 - 2026-11-22 00:1x · S7 验收 **PASS 3/3** · 基线 `共 1 份词条等级可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（A/C/D 各 1 条 `词条池 p 的 prefix 槽无等级可达的同类型词条（物品等级 1）`，E core=0 不进范围=0，F 两条 prefix 一条可达=0、`-v` 2/1/1/1）；wc=158≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1。S7 函数边界 21/21（ident 四种 / covers bool·NaN·Inf·字符串 / unreachable 槽 0·bool·float / 排序 / 双目录读失败）。`build/affixreachfix/` 已清。接线 `check_all` 39→40（R96），PLAN §13 R96 已记。**VERIFIED**。
 
-### T-0092 · [OPEN] `tools/check_set_reach.py` —— 套装档位装备槽可达性对账（M3 / D17，单文件零接线）
+### T-0092 · [VERIFIED] `tools/check_set_reach.py` —— 套装档位装备槽可达性对账（M3 / D17，单文件零接线）
 
 - 派单：S7 · 2026-11-22 00:2x（R96）
 - 目标：给 `sets/*.json5` 补一把「档位 count 真能穿出来」的离线尺子。真洞：`check_items.check_set` 只核 `count <= len(pieces)` 与 pieces id 存在，`check_items.check_item` 只核 `base ∈ 14 基底`；运行期 `SetBonus.counts()` 只统计 6 个装备槽里带 `setId` 的不同内容 id（`SetBonus.java` SLOTS = HEAD/CHEST/LEGS/FEET/MAINHAND/OFFHAND），同内容戴两件只算一件，同槽只能放一件 → 可达件数上界 = pieces 覆盖的**不同槽位数**；`SetSpec.activeBonuses()` 对 `count > wornPieces` 的档直接不返回，零 WARN / ERROR。基线 1 套 / 2 件 / 2 档 / 2 可达槽 / 0 问题（S7 已离线核判定逻辑）。
@@ -4228,6 +4228,28 @@ fi
   1. `python tools/check_set_reach.py` → 末行 `共 1 份套装档位可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份套装 · 2 件引用 · 2 个档位 · 2 个可达装备槽`。
   2. 六组夹具写到 `build/setreachfix/`（每次从干净目录重来，各自只有 `items/`、`sets/` 两个子目录；物品带 `id`/`base`，套装带 `id`/`pieces`/`bonuses[{count}]`）：A 两件 sword、count=2 → 1 条 `套装 p 的 2 件档永远不可达（可达装备槽 1）` EXIT=1；B sword+chestplate、count=2 → 0 条 EXIT=0；C sword+chestplate+ring（ring 归 MAINHAND）、count=3 → 1 条 `套装 p 的 3 件档永远不可达（可达装备槽 2）` EXIT=1；D 同 A 但 count=1 → 0 条 EXIT=0；E sword/chestplate/leggings/boots 四件、count=4 → 0 条 EXIT=0；F 两套：套 a 两 sword + count=2、套 b sword+chestplate + count=1 与 2 → 1 条（a 的 2 件档）、`-v` 含 `已检查 2 份套装 · 4 件引用 · 3 个档位 · 3 个可达装备槽` EXIT=1。六组逐字对上。
   3. `wc -l < tools/check_set_reach.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items" tools/check_set_reach.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/setreachfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-22 01:05 · 完成 · 新建 `tools/check_set_reach.py`（173 行，零接线；只 import `check_progress.clean_json5`）· 构建 N/A（卡明令禁 gradle：未取锁未 build，无退出码）· 验收 3/3：基线 `共 1 份套装档位可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份套装 · 2 件引用 · 2 个档位 · 2 个可达装备槽`；六夹具 A~F 逐字 EXIT=1/0/1/0/0/1（A/C/D/E/F 问题数 1/0/1/0/0/1，F `-v` 逐字 `已检查 2 份套装 · 4 件引用 · 3 个档位 · 3 个可达装备槽`，每轮从干净目录重来）；wc=173≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条 `items/sets 目录读取失败` EXIT=1 不抛栈；函数边界 15/15；`build/setreachfix/` 与自建 pyc 已清。实现口径：`unreachable` 按契约返回文案 list，main 逐套重跑恢复 rel 后再按文案升序输出；`count` 非 int/bool/<1 跳过，`bonuses` 非 list 跳过；`-v` 的件数对非 list pieces 记 0。S7 验收后接 check_all（40→41）。
+- 2026-11-22 01:2x · S7 验收 **VERIFIED**（3/3 + 边界 7/7）：基线 / `-v` / 六夹具 A~F 逐字 EXIT=1/0/1/0/0/1 + F `-v` 全对；wc=173、def unreachable=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败不抛栈；六夹具独立干净目录、探针 `build/setreachfix/` 已清。S8 零偏差不打回。已接 check_all（40→41）。
+
+### T-0093 · [OPEN] `tools/check_ability_refs.py` —— 物品绑定技能完整 id 引用对账（M5 / D6，单文件零接线）
+
+- 派单：S7 · 2026-11-22 01:2x（R97）
+- 目标：给 `items/*.json5` 补一把「`abilities[]` 的技能 id 按**完整字符串**命中技能表」的离线尺子。真洞：`check_items.check_item:71-74` 是唯一核 abilities 的地方，但用 `path_of()`（冒号后段）比对，`ids_of()` 也用 `path_of()` 收 id → 写歪命名空间（`redtale_projectX:gale_slash` / `minecraft:gale_slash`）归一后照样命中、全绿；运行期 `ItemContent.parseAbilities` 只查「含冒号」不校验存在，`SkillRegistry.get()` 按完整字符串 key 取，`SkillEngine` 返回 `NO_SKILL`，`ContentItem.useAbility:99-101` 打一次性 WARN 后 `pass`（物品还能丢能存）→ 右键物品永远放不出技能、零红零崩（R83-b，对账网第二十四例）。基线 7 物品 / 4 技能 id / 1 条 abilities 引用 / 0 问题（S7 已离线核判定逻辑）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_ability_refs.py`（新建，≤ 200 行）
+  - `build/abilityrefsfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_items.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读 datapack；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字，S7 定死）：
+  - `read_ids(root: str, sub: str) -> set[str] | None`：扫 `<root>/<sub>/*.json5`（文件名升序），`clean_json5` 解析；解析失败 / 顶层非 dict / 顶层 `id` 非字符串 → 跳过；**收完整字符串 id，绝不归一**（`sub="skills"` 时是技能全名、`sub="items"` 时是物品 id）。目录不存在或不可读 → 返 `None`，不抛栈。
+  - `read_items(root: str) -> list[tuple[str, dict]] | None`：扫 `<root>/items/*.json5`（文件名升序），同样解析；解析失败 / 顶层非 dict / 无字符串 `id` → 跳过；返回 `(rel, data)`，`rel` 形如 `items/xxx.json5`，保序。目录不可读 → 返 `None`，不抛栈。
+  - `unmatched(items: list[tuple[str, dict]], skill_ids: set[str]) -> list[str]`：对每个物品取 `abilities`（必须是 list，否则跳过），其中**字符串**元素按**完整字符串**（含冒号全名）比对，不在 `skill_ids` 则产出一条 `物品 <iid> 绑定的技能 <skill> 未命中技能表完整 id`（`<iid>` 取该物品 `data["id"]` 原样）。非字符串元素跳过（合法性归 `check_items`）；结果按文案升序、保稳定。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 份物品 · <m> 条技能 id · <k> 条 abilities 引用`，n=物品数、m=技能 id 数、k=各物品 abilities 字符串元素数之和）。任一目录读失败 → 打 `[问题] items/skills 目录读取失败`、末行 `共 1 份物品技能引用表 · 1 条问题`、EXIT=1；否则每条 problem 打 `[问题] <rel> <msg>`，末行 `共 1 份物品技能引用表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不归一命名空间（这是本卡的全部意义——**禁止**出现 `path_of` / `split(":")` 取后段比对）；不核 `id`/`base`/`rarity`/`stats`/`sockets`/`set_id`/`gem`（归 `check_items`）；不核技能定义自身合法性（归 `check_skills`）；不改运行期、不读源码、不读存档；不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_ability_refs.py` → 末行 `共 1 份物品技能引用表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 7 份物品 · 4 条技能 id · 1 条 abilities 引用`。
+  2. 六组夹具写到 `build/abilityrefsfix/`（每次从干净目录重来，各自只有 `items/`、`skills/` 两个子目录；技能带 `id`，物品带 `id`/`abilities`）：A 技能 `redtale_project:gale_slash`、物品绑 `redtale_projectX:gale_slash`（写歪 ns）→ 1 条 `物品 p 绑定的技能 redtale_projectX:gale_slash 未命中技能表完整 id` EXIT=1（关键：`check_items` 归一后绿、本尺红）；B 同技能、物品绑 `redtale_project:gale_slash` → 0 条 EXIT=0；C 绑 `minecraft:gale_slash` → 1 条 EXIT=1；D 两技能 `redtale_project:gale_slash` + `redtale_project:ember_burst`、物品绑这两条 → 0 条 EXIT=0、`-v` 含 `已检查 1 份物品 · 2 条技能 id · 2 条 abilities 引用`；E 物品无 `abilities` 字段 → 0 条 EXIT=0；F 两物品：p 绑 `redtale_project:gale_slash`（合法）、q 绑 `redtale_projectX:quake_slam`（写歪），技能 `redtale_project:gale_slash` + `redtale_project:quake_slam` → 1 条（q 的）、`-v` 含 `已检查 2 份物品 · 2 条技能 id · 2 条 abilities 引用` EXIT=1。六组逐字对上。
+  3. `wc -l < tools/check_ability_refs.py` ≤ 200；`grep -c "def unmatched"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items|split\(\":\"\)|path_of" tools/check_ability_refs.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/abilityrefsfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4271,7 +4293,8 @@ fi
 | C39 | ~~`tools/check_gem_types.py`~~ → **T-0089（R93 派 / R94 验）** | —— | —— |
 | C40 | `tools/check_enchant_args_sync.py`（附魔 scripted.args ↔ 脚本数值同步对账）→ **T-0090（R94 派 / R95 验）** | —— | —— |
 | C41 | ~~`tools/check_affix_reach.py`（词条等级/类型可达性对账）→ **T-0091（R95 派 / R96 验）**~~ | —— | —— |
-| C42 | `tools/check_set_reach.py`（套装档位装备槽可达性对账）→ **T-0092（R96 派）** | `check_items.check_set` 只核 count≤len(pieces)、`check_items.check_item` 只核 base∈14；运行期 `SetBonus.counts()` 按 6 装备槽去重内容 id，`SetSpec.activeBonuses()` 对不可达档静默不返回。对账网第二十三例，首次 JOIN 三份配置（sets→items→冻结槽位表）。`SLOT_OF` 由 S7 冻结，S8 不读源码 | 无 |
+| C42 | ~~`tools/check_set_reach.py`（套装档位装备槽可达性对账）→ **T-0092（R96 派 / R97 验）**~~ | —— | —— |
+| C43 | `tools/check_ability_refs.py`（物品绑定技能完整 id 引用对账）→ **T-0093（R97 派）** | `check_items.check_item` 唯一核 abilities 但用 `path_of` 去命名空间比对、写歪 ns 全绿；运行期 `SkillRegistry.get()` 按完整字符串 key 取 → `NO_SKILL` + 一次性 WARN + pass，右键放不出技能且零红。对账网第二十四例，首次核「命名空间段本身」。基线 7 物品/4 技能 id/1 引用/0 问题 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

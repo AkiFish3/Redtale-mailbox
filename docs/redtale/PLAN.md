@@ -2088,3 +2088,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0092**（基线 `共 1 份套装档位可达性表 · 0 条问题` + `-v` 1/2/2/2 / 六夹具 A~F 逐字 / wc≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 41`。
 2. 对账网已第二十三例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a/R94-a/R95-a/R96-a 判据核实后无真洞就转内容面，不硬凑。留池：`spawn_rules.match[]`、`repair.targets[]`（待真写值）、互斥组↔槽位联合可填满性（待 S7 定「空槽是否故意」）。真人窗口 A~G 仍等 Aki，不排期。
 3. 继续重试源码 push / 镜像 sync（R95 挂账）；Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R97 · 2026-11-22 01:2x · 验 T-0092 + check_all 40→41 + 派 T-0093（物品绑定技能完整 id 引用）
+
+- 卡板：T-0092 `check_set_reach.py` `[DONE]` → **VERIFIED**（3/3 + 边界 7/7）：基线 `共 1 份套装档位可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份套装 · 2 件引用 · 2 个档位 · 2 个可达装备槽`；六夹具 A~F 逐字 EXIT=1/0/1/0/0/1（A 2 件档·可达 1；C 3 件档·可达 2；F 2 套/4 件/3 档/3 槽，a 的 2 件档 1 条）；wc=173≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条读失败 EXIT=1 不抛栈。六夹具独立干净目录、探针 `build/setreachfix/` 已清，S8 零偏差不打回。**派 T-0093**（`tools/check_ability_refs.py`：items `abilities[]` ↔ skills 完整字符串 id，单文件零接线、六夹具、基线 7 物品/4 技能 id/1 引用/0 问题；接口 `read_ids`/`read_items`/`unmatched`/`main` S7 定死，**禁止** `path_of`/`split(":")` 取后段——洞本身），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 离线核基线**（R88-c/R95-b/R96 延续）：Explore 只读扫 tools check + defaults json5 + Java，逐条排除 mobs `skills[].skill`（同源但运行期无自动 WARN、怪不放技能更隐晦，留下一张卡）、items `set_id` 命名空间（接近已验 T-0092、重叠风险高，留池）、`operation`/属性 id/`skill_trees.classes`/`unlock_skill`（已有 check 覆盖、Java 侧本就按 path 比对与 check 一致）、`spawn_rules.match`/`repair.targets`（留池），落物品 abilities 命名空间洞。离线跑判定逻辑核基线 7/4/1/0 逐字一致（R82-c 正面版）。
+- 接线 `check_all` 40→**41** 全绿（41/41）；全套 0 问题：`check_checkall` 1 清单、`check_tasks` 93 卡在制品 1、`check_contracts` 57 条、`check_docs` 112 份/471 引用、`check_rounds`/`check_ownership`。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。踩坑预防：本轮在建脚本文档一律裸名 `check_ability_refs.py`（R63-e 后第十五次）。
+- 收尾：`docs/ROUND-R97-ABILITYREFS.md`、PLAN §13 R97 + §13.100、ROUNDS、TASKS（T-0092 VERIFIED + T-0093 + 池 C43）、CONTRACTS §4.57、`tools/check_all.py`、协作板 §3。
+
+### 13.100 R97 的四条口径（对账网第二十四例 = 物品绑定技能完整 id / 命名空间段是洞本身 / 同源不同消费者按 WARN 形态排序 / 裸名）+ 下一步（R98）
+
+| 编号 | 口径 |
+|---|---|
+| R97-a | **对账网第二十四例 = 物品绑定技能完整 id 引用**（…→词条可达→套装档位→物品技能引用）。首次核「命名空间段本身」：`check_items` 用 `path_of` 去命名空间比对写歪 ns 全绿，运行期 `SkillRegistry.get()` 按完整字符串 key → `NO_SKILL` + 一次性 WARN + pass，右键永远放不出技能、物品还能丢能存（R83-b）。判据仍是「两份已有检查都绿、运行期才退化」。 |
+| R97-b | **归一比对即洞、禁止在尺子里再归一**：本卡的全部意义是「完整字符串命中」，卡面明确禁 `path_of`/`split(":")` 后段（禁用 grep 把它写成硬门禁）。同类历史卡用归一是因为运行期也归一（如 `check_trees.classes`/`unlock_skill`）；这里运行期按完整串取，故归一反而制造假绿。是否归一一律以运行期 key 形态为准。 |
+| R97-c | **同源不同消费者按「静默形态强弱」排序派卡**：Explore 同时给出 items abilities / mobs skills / items set_id 三个同源洞；items abilities 有明写 `LOG.warn`+pass（判据字面实现、证据最硬）优先派，mobs skills 无自动 WARN（只在 Result 里体现代价更隐晦）留下一张，set_id 接近已验 T-0092 重叠风险高留池。不一次派三张重复尺。 |
+| R97-d | **裸名纪律第十五次**：派单当轮文档与台账里在建脚本一律裸名 `check_ability_refs.py`，不写 `tools/` 全路径（连反例路径也会被 `check_docs` 扫到）。 |
+
+下一步（R98）：
+
+1. **验 T-0093**（基线 `共 1 份物品技能引用表 · 0 条问题` + `-v` 7/4/1 / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(":")`=0）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 42`。
+2. 对账网已第二十四例；按 R97-a/b/c 判据核实后：mobs `skills[].skill`（同源、运行期无自动 WARN）是下一张候选，先离线核基线非空再派；`spawn_rules.match[]`、`repair.targets[]` 仍留池。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
