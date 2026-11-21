@@ -2018,3 +2018,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0089**（`check_gem_types.py`：基线 `共 1 份宝石孔位可达性表 · 0 条问题` + `-v` 2 宝石类型/2 孔类型/7 物品 / 六夹具 A~F 逐字 / wc≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 38`。
 2. 对账网已第二十例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a 判据核实后无真洞就转内容面，不硬凑。留池候选：`spawn_rules.match[]`、`repair.targets[]`（待真写值）、`enchantments.scripted.args` ↔ 脚本数值映射（待 S7 定默认）；附魔 `weight`/`anvil_cost` 已被 R86-b 排除。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R94 · 2026-11-21 11:2x~11:4x · 验 T-0089 + check_all 37→38 + 派 T-0090（附魔脚本参数同步）
+
+- 卡板：T-0089 `check_gem_types.py` `[DONE]` → **VERIFIED**（3/3 + S7 边界 9/9）：验收1 基线 `共 1 份宝石孔位可达性表 · 0 条问题` EXIT=0、`-v` `已检查 2 种宝石类型 · 2 种孔类型 · 7 份物品配置`；验收2 六夹具 A=1（`offensiv`）·B=0·C=0（`any`）·D=1（`defensive`）·E=0（大小写）·F=1（`arcane`，`-v` 2/1/2）逐字 EXIT=1/0/0/1/0/1；验收3 wc=174、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败不抛栈、`build/gemfix/` 已清。S7 探针首两轮 FAIL 均为探针期望写错（int 混入字符串比较、`count>0` 补位误判），按 R65-a 改探针后全过、不打回。S8 零偏差。
+- **派 T-0090**（`check_enchant_args_sync.py`：附魔 `effects[*][*].effect.args` ↔ 被引脚本 `effects[].args` 数值同步，单文件零接线、六夹具、基线 1 调用/2 参数/1 脚本/0 问题），在制品 1/3。真洞 = `ScriptedEnchantmentEffect.java:90` 把 args 灌进 `ctx.vars()`，`ScriptContext.expand()` 只在字符串模板展开 `%var.*%`，`HealEffect.run()` 的 `ratio`/`per_level` 读字面数值（非数字才 WARN）→ 改附魔 `heal_ratio` 只改日志不改回血，无红无 ERROR、全 check 绿（对账网第二十一例，跨文件同源数值脱钩）。默认契约由 S7 定死：新参数两处同名、历史 `heal_ratio→ratio` 冻结别名、脚本自有常量不报；尺子不引入 `%var%` 解析、不改 Java。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 把 R93-d 留池契约定掉**（R88-c/R89-c/R90-c 延续）：Explore 全量扫 40 份 json5 + Java 消费端 + 38 个 check，逐条排除 damage 属性逻辑 id（check_numeric 已核）、jobs exp_sources（有 WARN）、附魔 slots（原版 id）、技能/刷怪数值（有 clamp）、`use.script[].args.target`（基线 0 引用且属已覆盖对象）、三个老留池项后才落本真洞；R93-d 悬置的「键名映射由谁持有」本轮定为别名表写死 + 新参数同名，故可派。
+- 接线 `check_all` 37→**38** 全绿（`共 38 个脚本 · 跑成 38 · 跳过 0 · 红 0`）；全套 0 问题：`check_checkall`、`check_docs`（109 份 461 引用）、`check_tasks`（89 卡在制品 0）、`check_contracts`（54 条）、`check_rounds`、`check_ownership`。
+- 环境：本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。
+- 收尾：`docs/ROUND-R94-ENCHARGSYNC.md`、PLAN §13 R94 + §13.97、ROUNDS、TASKS（T-0089 VERIFIED + T-0090 OPEN + 池 C40）、CONTRACTS §4.54、`tools/check_all.py`、协作板 §3。
+
+### 13.97 R94 的四条口径（对账网第二十一例 = 跨文件同源数值脱钩 / 留池契约先定死 / 探针错误先改探针 / 裸名）+ 下一步（R95）
+
+| 编号 | 口径 |
+|---|---|
+| R94-a | **对账网第二十一例 = 附魔 scripted.args ↔ 脚本数值脱钩**（…→附魔互斥引用→宝石孔位可达→附魔脚本参数同步）。首次核「**两份配置里同一数值各写一份**」：不是引用 id、不是值域、不是图，而是「两处数字必须相等」。判据仍是 R83-b「两份已有检查都绿、运行期才退化」。 |
+| R94-b | **留池契约由 S7 定死后才能派**：R93-d 悬置的 `scripted.args` ↔ 脚本数值映射，本轮定为「新参数两处同名 + 历史 `heal_ratio→ratio` 冻结别名写死 + 脚本自有常量不报」。尺子不推断键名、不改运行期、不引入 `%var%` 解析；契约未定就让 S8 实现 = R3 铁律违规。 |
+| R94-c | **S7 探针错误按 R65-a 自改，不打回**：本轮两轮探针失败分别是 int 与字符串混比、`count>0` 且无 `types` 的补位语义理解错，均非实现缺陷。先按接口推期望再写探针（R80-c）。 |
+| R94-d | **裸名纪律第十二次**：派单当轮文档与台账里在建脚本一律裸名 `check_enchant_args_sync.py`，不写 `tools/` 全路径（连「反例」路径也会被 `check_docs` 扫到），避免断链红。 |
+
+下一步（R95）：
+
+1. **验 T-0090**（基线 `共 1 份附魔脚本参数对账表 · 0 条问题` + `-v` 1/2/1 / 六夹具 A~F 逐字 / wc≤200、`def diffs`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 39`。
+2. 对账网已第二十一例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a/R94-a 判据核实后无真洞就转内容面，不硬凑。留池只剩 `spawn_rules.match[]`、`repair.targets[]`（待真写值）；附魔 `weight`/`anvil_cost` 已被 R86-b 排除。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

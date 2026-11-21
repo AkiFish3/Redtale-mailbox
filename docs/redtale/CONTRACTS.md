@@ -1383,4 +1383,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `items/*.json5` 的 `gem.type` 与 `sockets.types[]`，按运行期口径 `trim + toLowerCase()` 归一：宝石类型必须至少被某个孔类型接受（`any` 通配或同值）；`sockets.count > 0` 但无 `types` 时按运行期补位语义视作 `any`；非字符串 / 空串跳过（归 `check_items`）。接口 `ANY` / `read_items` / `gem_types` / `socket_types` / `unreachable` / `main` 由 S7 定死；T-0089 派单时未实现、未接线，基线 7 份物品 / 2 种宝石类型 / 2 种孔类型 / 0 不可达。
 - 填补 `check_items.check_item` 的盲区：该函数只核 `sockets.types` 元素是字符串、gem 段只核 stats/tier，从不看类型值；`SocketSpec.Layout` 明写「孔类型词汇开放（不做枚举校验）」，`types()`/`type()` 只做小写归一，拼错无 WARN；`Socketer.accepts()` 严格字符串相等 → 永远 `TYPE_MISMATCH`、宝石镶不上，reload 零告警（R93-a/b/c）。
-- 只核开放词汇的**跨字段可达性**，不引入固定枚举白名单（否则尺子违反 `SocketSpec` 设计）；不核 `count`/`tier`/`stats`/`id`/`base`（归 `check_items`）、不要求每个孔都有宝石能填、不读存档里的已镶宝石。当前未接 `check_all`，T-0089 VERIFIED 后 R94 接 → 应 `跑成 38`。
+- 只核开放词汇的**跨字段可达性**，不引入固定枚举白名单（否则尺子违反 `SocketSpec` 设计）；不核 `count`/`tier`/`stats`/`id`/`base`（归 `check_items`）、不要求每个孔都有宝石能填、不读存档里的已镶宝石。已接进 `tools/check_all.py`（`共 38 个脚本`，R94 接线）。T-0089 `[VERIFIED]`（R94）：基线 0 问题 / 六夹具 A~F 逐字 EXIT=1/0/0/1/0/1 / wc=174、S7 边界 9/9。
+
+### 4.54 附魔脚本参数同步对账 `check_enchant_args_sync.py`（T-0090，R94 派，对账网第二十一例）
+
+- 只读扫 `enchantments/*.json5` 中 `type == redtale_project:scripted` 的 `effect.args` 数值参数，与被引用 `scripts/*.json5` 的 `effects[].args` 数值逐键比对：新参数必须两处同名；历史别名冻结在 `ALIASES = {"heal_ratio": "ratio"}`，不推断、不模糊匹配；脚本自有常量不报。bool/非数字跳过，差值容差 `1e-9`。接口 `SCRIPTED` / `ALIASES` / `read_enchants` / `read_scripts` / `calls` / `numbers` / `diffs` / `main` 由 S7 定死；T-0090 派单时未实现、未接线，基线 1 调用 / 2 参数 / 1 脚本 / 0 问题。
+- 填补两份已有检查之间的缝：`check_enchants._script_refs` 只核 script id 存在、`check_script_args.check_args` 只核 conditions args 值域，都不读 `scripted.args` 的数值。运行期 `ScriptedEnchantmentEffect.java:90` 把附魔 args 灌进 `ctx.vars()`，`ScriptContext.expand()` 只在字符串模板里展开 `%var.*%`；`HealEffect.run()` 的 `ratio`/`per_level` 由 `num(args,key)` 读脚本字面值（只有非数字才 WARN）→ 改附魔 `heal_ratio` 后日志显示新值、实际回血仍按脚本旧值，零红零 ERROR（R94-a/b）。
+- 只核「两处写着同一份数值是否相等」，不核参数值域（归 `check_script_args`）、不核 id/weight/anvil_cost/exclusive_set（归 `check_enchants` / `check_enchant_exclusive`）、不核原版附魔组件数值、不引入 `%var%` 运行时解析、不改 Java。当前未接 `check_all`，T-0090 VERIFIED 后 R95 接 → 应 `跑成 39`。

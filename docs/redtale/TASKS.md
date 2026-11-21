@@ -4131,7 +4131,7 @@ fi
 - 2026-11-21 09:21 · 完成 · `tools/check_enchant_exclusive.py`（143 行）· 构建 N/A（卡明令禁 gradle，未取锁未 build）· 验收 3/3：基线 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0、`-v` `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`；六夹具 A~F 逐字 EXIT=1/0/0/1/1/0 + 文案全中（每轮从干净目录重来，F=`0 条引用/1 份配置`）；wc=143≤200 · `def check_ref`=1 · 禁用 grep=0 · py_compile OK · `--dir NO_SUCH` 恰好 1 条目录读取失败 EXIT=1 不抛栈；check_ref 边界 13/13；build/enchfix 与 pyc 已清。git 仅 TASKS.md + 新脚本。S7 验收后 R93 接 check_all（→37）。
 - 2026-11-21 10:1x · **S7 验收通过（3/3 + S7 独立边界 18/18 + 读失败/排序 3 形态）** · 验收1 基线 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0、`-v` `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`；验收2 六夹具独立干净目录 A=`命名空间未知：redtale_projce`·B=0·C=0·D=`路径非法：#redtale_project:`·E=`必须是字符串`·F=0（`0 条引用/1 份配置`）逐字 EXIT=1/0/0/1/1/0；验收3 wc=143、`def check_ref`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `enchantments 目录读取失败` EXIT=1 不抛栈、`build/enchfix/` 已清。S7 边界 18/18：None/非字符串/tag 四形态/单条 id 八形态/单引号与冒号回落；read_configs 缺目录返 None、坏文件 2 条不抛栈、文件名升序。接线 `check_all` 36→37。S8 零偏差不打回。
 
-### T-0089 · [OPEN] `tools/check_gem_types.py` —— 宝石类型孔位可达性对账（M3 / D17，单文件零接线）
+### T-0089 · [VERIFIED] `tools/check_gem_types.py` —— 宝石类型孔位可达性对账（M3 / D17，单文件零接线）
 
 - 派单：S7 · 2026-11-21 10:1x（R93）
 - 目标：给 `items/*.json5` 的 `gem.type` ↔ `sockets.types[]` 补一把**类型可达性尺子**。`SocketSpec.Layout` 注释明写「孔类型词汇开放（不做枚举校验）」；`SocketSpec.types()` 只把字符串 `toLowerCase()`、`type()` 只 `trim + toLowerCase()`，拼错一个字母不告警；运行期 `Socketer.accepts()` 规则是「任一侧 any 否则字符串严格相等」，`check_items.check_item` 只验 `types` 元素是字符串、从不看值。结果：宝石 type 写歪 → 永远 `TYPE_MISMATCH` 镶不上，reload 零告警、全 check 绿、玩家只看到一次操作失败（对账网第二十例，跨字段开放词汇可达性）。基线：7 份物品 / 2 种宝石类型（`offensive`/`defensive`）/ 2 种孔类型（`offensive`/`any`）/ 0 不可达（S7 已离线核判定逻辑）。
@@ -4151,6 +4151,32 @@ fi
   1. `python tools/check_gem_types.py` → 末行 `共 1 份宝石孔位可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 种宝石类型 · 2 种孔类型 · 7 份物品配置`。
   2. 六组夹具写到 `build/gemfix/`（每次从干净目录重来，各自只有一份 `items/one.json5`；格式用双引号 JSON5）：A `gem.type: "offensiv"` + `sockets.types: ["offensive"]` → 1 条 `宝石类型 offensiv 没有任何孔位可接受` EXIT=1；B `offensive` + `["offensive"]` → 0 条 EXIT=0；C `defensive` + `["any"]` → 0 条 EXIT=0；D `defensive` 且无 `sockets` 段 → 1 条 `defensive` EXIT=1；E `gem.type: "OFFENSIVE"` + `sockets.types: ["offensive"]` → 0 条 EXIT=0（大小写归一）；F 两份物品，一份 `gem.type: "arcane"`、一份 `sockets.types: ["offensive"]`，另有 `gem.type: "offensive"` → 恰好 1 条 `arcane` EXIT=1、`-v` 为 `2 种宝石类型 · 1 种孔类型 · 2 份物品配置`。六组逐字对上。
   3. `wc -l < tools/check_gem_types.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|check_items" tools/check_gem_types.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `items 目录读取失败`，不抛栈；夹具用完即删（`build/gemfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-21 10:3x · 完成 · `tools/check_gem_types.py`（174 行）· 构建 N/A（卡明令禁 gradle，未取锁未 build）· 验收 3/3：基线 `共 1 份宝石孔位可达性表 · 0 条问题` EXIT=0、`-v` `已检查 2 种宝石类型 · 2 种孔类型 · 7 份物品配置`；六夹具 A~F 逐字 EXIT=1/0/0/1/0/1（F `-v` `2 种宝石类型 · 1 种孔类型 · 2 份物品配置`，每轮从干净目录重来）；wc=174≤200 · `def unreachable`=1 · 禁用 grep=0 · py_compile OK · `--dir NO_SUCH` 恰好 1 条 `items 目录读取失败` EXIT=1 不抛栈；函数边界 16/16；build/gemfix 与 pyc 已清。git 仅 TASKS.md + 新脚本。S7 验收后 R94 接 check_all（→38）。
+- 2026-11-21 11:3x · **S7 验收通过（3/3 + S7 独立边界 9/9）** · 验收1 基线 `共 1 份宝石孔位可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 种宝石类型 · 2 种孔类型 · 7 份物品配置`；验收2 六夹具独立干净目录 A `宝石类型 offensiv 没有任何孔位可接受` · B=0 · C=0（`any` 通配） · D `defensive` · E=0（大小写归一） · F 恰好 1 条 `arcane`、`-v` `2 种宝石类型 · 1 种孔类型 · 2 份物品配置` 逐字 EXIT=1/0/0/1/0/1；验收3 wc=174≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈、`build/gemfix/` 已清。S7 边界 9/9：归一化/空值/非字符串/count 补位/any 通配/排序/读失败。接线 `check_all` 37→38 全绿（38/38）。S8 零偏差不打回。
+
+### T-0090 · [OPEN] `tools/check_enchant_args_sync.py` —— 附魔 scripted.args ↔ 脚本数值同步对账（M4 / D32，单文件零接线）
+
+- 派单：S7 · 2026-11-21 11:3x（R94）
+- 目标：给 `enchantments/*.json5` 的 `effects[*][*].effect.args`（`type == redtale_project:scripted`）与被引脚本 `scripts/*.json5` 的 `effects[].args` 补一把**跨文件数值同步尺子**。真洞：`ScriptedEnchantmentEffect.java:90` 把附魔 args 灌进 `ctx.vars()`，`ScriptContext.expand()` 只在**字符串模板**里展开 `%var.*%`；`HealEffect.run()` 的 `ratio`/`per_level` 走 `num(args,key)` 字面值（非数字才 WARN），所以改附魔 `heal_ratio` 只改日志、不改回血量，全 check 绿、玩法静默退化（对账网第二十一例，跨文件同源数值脱钩）。基线：1 条 scripted 调用 / 2 个数值参数（`per_level` 同名、`heal_ratio → ratio` 历史别名）/ 1 份脚本 / 0 问题（S7 已离线核判定逻辑）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_enchant_args_sync.py`（新建，≤ 200 行）
+  - `build/enchargsfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_enchants.py` / `check_script_args.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读 datapack；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字，S7 定死）：
+  - `SCRIPTED = "redtale_project:scripted"`。
+  - `ALIASES = {"heal_ratio": "ratio"}`：**冻结的历史别名表**，新参数必须两处同名；不推断、不模糊匹配。
+  - `read_enchants(root: str) -> list[tuple[str, object | None]] | None`：扫 `<root>/enchantments/*.json5`（文件名升序），返回 `(rel, data|None)`，`rel` 形如 `enchantments/xxx.json5`；用 `clean_json5` 解析（单引号 shim 沿用既有口径），解析失败 / 顶层非 dict → `(rel, None)`；目录不存在或不可读 → 返 `None`，不抛栈。
+  - `read_scripts(root: str) -> dict[str, object] | None`：扫 `<root>/scripts/*.json5`（文件名升序），按顶层 `id` 字符串建 `{id: data}`（后写不覆盖已有 id）；解析失败 / 无 id / 顶层非 dict 跳过；目录不存在或不可读 → 返 `None`，不抛栈。
+  - `calls(data: object) -> list[tuple[str, dict]]`：递归遍历任意嵌套 dict/list，凡 `type == SCRIPTED` 的 dict 收 `(script, args)`；`script` 非字符串或 `args` 非 dict → 跳过不报（归 `check_enchants`）；保序。
+  - `numbers(data: object) -> dict[str, list[float]]`：只看顶层 `effects` 数组里每项的 `args` dict，收有限数字（**bool 不算**，`NaN`/`Inf` 跳过），按 key 保序收集全部值（同名多次也全收，用于查内部不一致）。
+  - `diffs(enchant_args: dict, script_nums: dict[str, list[float]]) -> list[str]`：对每个 `enchant_args` 中的有限数字（bool 不算）键 `k`，目标键 `target = ALIASES.get(k, k)`；`target` 不在 `script_nums` → `脚本缺少参数 <target>（附魔声明 <k>=<v>）`；在但任一值 `abs(x - v) > 1e-9` → `脚本参数 <target> 与附魔声明不一致（附魔 <v> / 脚本 <x>）`（x 取首个不一致值）。结果按文案升序，数值文案用 `repr(float(v))`。脚本里多出来的键不报（脚本可有自有常量）。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 条 scripted 调用 · <m> 个数值参数 · <k> 份脚本`，n=调用数、m=附魔声明的数值参数总数、k=脚本份数）。任一目录读失败 → 打 `[问题] enchantments/scripts 目录读取失败`、末行 `共 0 份附魔脚本参数对账表 · 1 条问题`、EXIT=1；否则每条 problem 打 `[问题] <rel> <script_id> <msg>`，脚本 id 不存在打 `[问题] <rel> 引用的脚本 <id> 不存在`。末行 `共 1 份附魔脚本参数对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不核 `id`/`max_level`/`weight`/`anvil_cost`/`exclusive_set`/`supported_items`（归 `check_enchants` / `check_enchant_exclusive`）；不核原版附魔效果数值（只有 `redtale_project:scripted` 进范围）；不核 args 值域 `[0,1]`（归 `check_script_args`，本卡只核两处相等）；不核字符串参数、不核脚本内非 `effects[].args` 的值；不改运行期行为、不引入 `%var%` 解析；不读 Java AST / 不编译 / 不读 jar。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_enchant_args_sync.py` → 末行 `共 1 份附魔脚本参数对账表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 条 scripted 调用 · 2 个数值参数 · 1 份脚本`。
+  2. 六组夹具写到 `build/enchargsfix/`（每次从干净目录重来，各自只有一份 `enchantments/one.json5` 和需要的 `scripts/one.json5`；顶层带 `id`/`effects`，双引号 JSON5，script 顶层 `id: "enchants/test"`，scripted 节点形如 `{"type":"redtale_project:scripted","script":"enchants/test","args":{...}}`）：A 附魔 `heal_ratio: 0.12` + 脚本 `ratio: 0.08, per_level: 0.02` → 1 条 `脚本参数 ratio 与附魔声明不一致（附魔 0.12 / 脚本 0.08）` EXIT=1；B 附魔 `heal_ratio: 0.08, per_level: 0.02` + 脚本同名 `ratio: 0.08, per_level: 0.02` → 0 条 EXIT=0（别名命中）；C 附魔 `chance: 0.5` + 脚本 `ratio: 0.08` → 1 条 `脚本缺少参数 chance（附魔声明 chance=0.5）` EXIT=1；D 附魔 `script: "enchants/missing"` + 脚本 id `enchants/test` → 1 条 `引用的脚本 enchants/missing 不存在` EXIT=1；E 附魔 `type: "minecraft:damage"` 且带 `args: {heal_ratio: 0.99}` + 脚本无对应参数 → 0 条 EXIT=0（非 scripted 不进范围）；F 嵌套两层（`effects` 下再包一层 dict/list）的 scripted 节点，附魔 `crit_bonus: 0.3` + 脚本 `crit_bonus: 0.3` → 0 条 EXIT=0、`-v` 含 `已检查 1 条 scripted 调用 · 1 个数值参数 · 1 份脚本`。六组逐字对上。
+  3. `wc -l < tools/check_enchant_args_sync.py` ≤ 200；`grep -c "def diffs"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|check_enchants|check_script_args" tools/check_enchant_args_sync.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/enchargsfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4191,7 +4217,8 @@ fi
 | C36 | `tools/check_damage_whitelist.py`（伤害乘区 damage_types 白名单形态对账）→ **T-0086（R90 派 / R91 验）** | —— | —— |
 | C37 | ~~`tools/check_tree_reach.py`~~ → **T-0087（R91 派 / R92 验）** | —— | —— |
 | C38 | ~~`tools/check_enchant_exclusive.py`~~ → **T-0088（R92 派 / R93 验）** | —— | —— |
-| C39 | `tools/check_gem_types.py`（宝石类型孔位可达性对账）→ **T-0089（R93 派）** | `SocketSpec` 明写「孔类型词汇开放、不做枚举校验」，`types()`/`type()` 只做小写归一；`check_items.check_item` 只验 `sockets.types` 元素是字符串、不进值。`Socketer.accepts()` 严格字符串相等 → gem type 拼字永远 `TYPE_MISMATCH`，reload 零告警、全 check 绿。对账网第二十例，开放词汇跨字段可达性（不写死枚举） | 无 |
+| C39 | ~~`tools/check_gem_types.py`~~ → **T-0089（R93 派 / R94 验）** | —— | —— |
+| C40 | `tools/check_enchant_args_sync.py`（附魔 scripted.args ↔ 脚本数值同步对账）→ **T-0090（R94 派）** | `check_enchants` 只核 script id 存在、`check_script_args` 只核条件 args 值域，没人核两处数值相等；`ScriptContext.expand()` 只在字符串模板展开 `%var.*%`，`HealEffect` 用字面 `ratio`/`per_level` → 改附魔只改日志不改回血量、零 WARN。对账网第二十一例，跨文件同源数值脱钩。默认契约：新参数两处同名，历史 `heal_ratio → ratio` 别名冻结 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
