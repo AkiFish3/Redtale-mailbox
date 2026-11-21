@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-21 11:35 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-21 23:09 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0090 | OPEN | `tools/check_enchant_args_sync.py` —— 附魔 scripted.args ↔ 脚本数值同步对账（M4 / D32，单文件零接线） |
+| T-0091 | OPEN | `tools/check_affix_reach.py` —— 词条等级/类型可达性对账（M3 / D22，单文件零接线） |
 
-已验完 **87** 张 / 共 **90** 张。
+已验完 **88** 张 / 共 **91** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

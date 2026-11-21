@@ -2042,3 +2042,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0090**（基线 `共 1 份附魔脚本参数对账表 · 0 条问题` + `-v` 1/2/1 / 六夹具 A~F 逐字 / wc≤200、`def diffs`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 39`。
 2. 对账网已第二十一例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a/R94-a 判据核实后无真洞就转内容面，不硬凑。留池只剩 `spawn_rules.match[]`、`repair.targets[]`（待真写值）；附魔 `weight`/`anvil_cost` 已被 R86-b 排除。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R95 · 2026-11-21 22:5x~23:1x · 验 T-0090 + check_all 38→39 + 派 T-0091（词条等级可达性）
+
+- 卡板：T-0090 `check_enchant_args_sync.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立边界 18/18：基线 `共 1 份附魔脚本参数对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 条 scripted 调用 · 2 个数值参数 · 1 份脚本`；六夹具 A=`脚本参数 ratio 与附魔声明不一致（附魔 0.12 / 脚本 0.08）` · B=0 · C=`脚本缺少参数 chance（附魔声明 chance=0.5）` · D=`引用的脚本 enchants/missing 不存在` · E=0 · F=0（`-v` 1/1/1）逐字 EXIT=1/0/1/1/0/1；wc=174、`def diffs`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败不抛栈、`build/enchargsfix/` 已清）。裁定 S8 两处口径：`-v` 的 `<k>` = 被引用且存在的脚本份数（卡面期望值优先）；解析失败文案卡面未定义、补齐合理形态采纳不打回（R79-a 家族第七次）。**派 T-0091**（`tools/check_affix_reach.py`：词条 `item_level` + `kind` ↔ 池段可达性，单文件零接线、六夹具、基线 3 词条/1 池/2 有效槽位段/0 问题，`ITEM_LEVEL = 1` 由 S7 冻结），在制品 1/3。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 冻结跨语言常量**（R88-c/R89-c/R90-c 延续）：Explore 只读扫 39 check + 37 json5 + 142 Java，三候选中排除 mob skills chance（`MobSpec` 有 clamp，R86-b）、互斥组↔槽位联合可填满性（取舍留池，R92-b），落词条可达性；从源码取 `ITEM_LEVEL = 1` 写死进卡面，S8 不读源码。离线跑判定逻辑核基线 3/1/2/0 逐字一致（R82-c 正面版）。
+- 接线 `check_all` 38→**39** 全绿（39/39）；全套 0 问题：`check_checkall` 1 清单、`check_docs` 110 份/465 引用、`check_tasks` 90 卡在制品 1、`check_contracts` 55 条、`check_rounds`/`check_ownership`。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。踩坑预防：本轮在建脚本文档一律裸名 `check_affix_reach.py`（R63-e 后第十三次）。
+- 收尾：`docs/ROUND-R95-AFFIXREACH.md`、PLAN §13 R95 + §13.98、ROUNDS、TASKS（T-0090 VERIFIED + T-0091 OPEN + 池 C41）、CONTRACTS §4.55、`tools/check_all.py`、协作板 §3。源码 push 仍 443 reset（第 4 次，未 force）；镜像 retry 见收工记录。
+
+### 13.98 R95 的四条口径（对账网第二十二例 = 词条可达性 / 留池候选再排除 / 跨语言常量由 S7 冻结 / 裸名）+ 下一步（R96）
+
+| 编号 | 口径 |
+|---|---|
+| R95-a | **对账网第二十二例 = 词条等级 / 类型可达性**（…→附魔参数同步→词条可达）。首次核「池引用的条目在当前固定物品等级下能否被选中」：`check_items` 核形状、运行期 `AffixRoller.pick()` 核可执行但只静默 `continue`，两份检查之间无人核。判据仍是 R83-b「两份已有检查都绿、运行期才退化」。 |
+| R95-b | **留池候选逐轮复评**：Explore 本轮给出的三个候选中，mob skills chance 因运行期有 clamp 按 R86-b 排除、互斥组↔槽位联合填满属内容取舍按 R92-b 留池；不是「发现洞就派」，每次派前重新过判据（R88-c）。 |
+| R95-c | **跨语言常量由 S7 冻结进卡面**：`ITEM_LEVEL` 是 Java 常量，S8 卡禁止读源码；S7 先核值、写死 `ITEM_LEVEL = 1` 并注明「M3 接入后由 S7 改卡」，既不越界也不让 S8 自己发明来源。同 R94-b「契约先定死再派」。 |
+| R95-d | **裸名纪律第十三次**：派单当轮文档与台账里在建脚本一律裸名 `check_affix_reach.py`，不写 `tools/` 全路径，避免 `check_docs` 把未建文件当断链判红。 |
+
+下一步（R96）：
+
+1. **验 T-0091**（基线 `共 1 份词条等级可达性表 · 0 条问题` + `-v` 3/1/2/物品等级 1 / 六夹具 A~F 逐字 / wc≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 40`。
+2. 对账网已第二十二例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a/R94-a/R95-a 判据核实后无真洞就转内容面，不硬凑。留池：`spawn_rules.match[]`、`repair.targets[]`（待真写值）、互斥组↔槽位联合可填满性（待 S7 定「空槽是否故意」）。真人窗口 A~G 仍等 Aki，不排期。
+3. 重试源码 `git push`（连续 4 次 443 reset，本地 ahead 1，禁止 force）与镜像 sync；Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

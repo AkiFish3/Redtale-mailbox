@@ -1389,4 +1389,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `enchantments/*.json5` 中 `type == redtale_project:scripted` 的 `effect.args` 数值参数，与被引用 `scripts/*.json5` 的 `effects[].args` 数值逐键比对：新参数必须两处同名；历史别名冻结在 `ALIASES = {"heal_ratio": "ratio"}`，不推断、不模糊匹配；脚本自有常量不报。bool/非数字跳过，差值容差 `1e-9`。接口 `SCRIPTED` / `ALIASES` / `read_enchants` / `read_scripts` / `calls` / `numbers` / `diffs` / `main` 由 S7 定死；T-0090 派单时未实现、未接线，基线 1 调用 / 2 参数 / 1 脚本 / 0 问题。
 - 填补两份已有检查之间的缝：`check_enchants._script_refs` 只核 script id 存在、`check_script_args.check_args` 只核 conditions args 值域，都不读 `scripted.args` 的数值。运行期 `ScriptedEnchantmentEffect.java:90` 把附魔 args 灌进 `ctx.vars()`，`ScriptContext.expand()` 只在字符串模板里展开 `%var.*%`；`HealEffect.run()` 的 `ratio`/`per_level` 由 `num(args,key)` 读脚本字面值（只有非数字才 WARN）→ 改附魔 `heal_ratio` 后日志显示新值、实际回血仍按脚本旧值，零红零 ERROR（R94-a/b）。
-- 只核「两处写着同一份数值是否相等」，不核参数值域（归 `check_script_args`）、不核 id/weight/anvil_cost/exclusive_set（归 `check_enchants` / `check_enchant_exclusive`）、不核原版附魔组件数值、不引入 `%var%` 运行时解析、不改 Java。当前未接 `check_all`，T-0090 VERIFIED 后 R95 接 → 应 `跑成 39`。
+- 只核「两处写着同一份数值是否相等」，不核参数值域（归 `check_script_args`）、不核 id/weight/anvil_cost/exclusive_set（归 `check_enchants` / `check_enchant_exclusive`）、不核原版附魔组件数值、不引入 `%var%` 运行时解析、不改 Java。已接进 `tools/check_all.py`（`共 39 个脚本`，R95 接线）。T-0090 `[VERIFIED]`（R95）：基线 0 问题 / 六夹具 A~F 逐字 EXIT=1/0/1/1/0/1 / wc=174、S7 边界 18/18。
+
+### 4.55 词条等级 / 类型可达性对账 `check_affix_reach.py`（T-0091，R95 派，对账网第二十二例）
+
+- 只读扫 `affixes/*.json5` 与 `affix_pools/*.json5`：对每个池，凡 `slots[kind]` 是 >0 整数的段，要求至少一条被该段引用的词条同时满足 `kind` 相同、`item_level.min <= ITEM_LEVEL <= max`；否则报该段不可达。`ITEM_LEVEL = 1` 由 S7 从物品工厂源码冻结写死（S8 不读源码、不推断）；M3 接入等级系统后由 S7 改卡常量。`ident()` 按 `:` 取 id 最后一段；bool/NaN/Inf 不算数字。接口 `ITEM_LEVEL` / `KINDS` / `ident` / `read_defs` / `read_pools` / `covers` / `unreachable` / `main` 由 S7 定死；T-0091 派单时未实现、未接线，基线 3 词条 / 1 池 / 2 有效槽位段 / 0 问题。
+- 填补两份已有检查之间的缝：`check_items.check_affix` 只核 `item_level` min/max 为数字且 `min<=max`，`check_pool` 只核段内引用 id 存在与权重>0，都不进等级与 kind。运行期 `AffixRoller.pick()` 对越界等级与 kind 不符只 `continue`，候选空则 `break` 留空槽，无 WARN / ERROR；`check_all` 39 把尺子全绿（R95-a）。
+- 只核「固定物品等级下能否摇出至少一条」，不核 id/weight/kind 合法性、stats 属性 id、applies_to 基底（归 `check_items`）；不核互斥组与槽位数的联合可填满性（是否故意留空槽属取舍，留池，R92-b）；不核怪物技能 chance / cooldown（运行期有 clamp，R86-b）。当前未接 `check_all`，T-0091 VERIFIED 后 R96 接 → 应 `跑成 40`。
