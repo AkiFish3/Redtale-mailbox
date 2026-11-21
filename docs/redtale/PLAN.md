@@ -2111,3 +2111,25 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0093**（基线 `共 1 份物品技能引用表 · 0 条问题` + `-v` 7/4/1 / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(":")`=0）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 42`。
 2. 对账网已第二十四例；按 R97-a/b/c 判据核实后：mobs `skills[].skill`（同源、运行期无自动 WARN）是下一张候选，先离线核基线非空再派；`spawn_rules.match[]`、`repair.targets[]` 仍留池。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R98 · 2026-11-22 02:3x~02:4x · 验 T-0093 + check_all 41→42 + 派 T-0094（怪物绑定技能完整 id 引用对账）
+
+- 卡板：T-0093 `check_ability_refs.py` `[DONE]` → **VERIFIED**（3/3 + S7 六夹具独立复跑逐字一致）：基线 `共 1 份物品技能引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 4 条技能 id · 1 条 abilities 引用`；六夹具 A~F EXIT=1/0/1/0/0/1（A 写歪 ns、C `minecraft:` 跨命名空间、F q 写歪各 1 条，B/D/E 0 条；D/F 的 `-v` 逐字 1/2/2 与 2/2/2）；wc=110≤200、`def unmatched`=1、禁用 grep=0（`path_of`/`split(":")` 均未出现）、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条读失败 EXIT=1 不抛栈。S8 自测零偏差不打回；探针 `build/abilityrefsfix/` 与 pyc 已清。**派 T-0094**（`tools/check_mob_skills.py`：mobs `skills[].skill` ↔ skills 完整字符串 id，单文件零接线、六夹具、基线 2 怪/4 技能 id/3 引用/0 问题；接口 `read_ids`/`read_mobs`/`unmatched`/`main` S7 定死，**禁** `path_of`/`split(":")`），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 离线核基线**（R88-c/R95-b/R96/R97 延续）：Explore 只读扫 tools check + defaults json5 + Java，逐条排除 items abilities（已由 T-0093 堵住）、mobs equipment（T-0084 + `MobCheckCommand` 双覆盖）、drops（离线同源但运行期有 `warnOnce` 且按原版兜底、静默形态弱）、items set_id（同源但 `/redtale validate` 可手工发现、留池观察）、spawn_rules.match（比对值来自原版 registry、不是本项目两份配置互引、不同源）、repair.targets（基线空、三写法 union 无单一比较对），落 mobs `skills[].skill` 真洞。离线核基线逐字 2/4/3/0 一致（R82-c 正面版）。
+- 接线 `check_all` 41→**42** 全绿（42/42）；七门禁全 0 问题：check_checkall 1 清单/0、check_tasks 94 卡在制品 1（T-0094 OPEN）、check_contracts 59 条、check_docs 114 份/479 引用、check_rounds、check_ownership。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。踩坑预防：本轮在建脚本文档一律裸名 `check_mob_skills.py`（R63-e 后第十六次）。
+- 收尾：`docs/ROUND-R98-MOBSKILLS.md`、PLAN §13 R98 + §13.101、ROUNDS、TASKS（T-0093 VERIFIED + T-0094 OPEN + 池 C44）、CONTRACTS §4.58、`tools/check_all.py`、协作板 §3。
+
+### 13.101 R98 的五条口径（对账网第二十五例 = 怪物绑定技能完整 id / 静默形态强弱定序 / 同源洞边界排除 / 裸名）+ 下一步（R99）
+
+| R98-a | **对账网第二十五例 = 怪物绑定技能完整 id 引用**（…→套装档位→物品技能→怪物技能）。与 T-0093 同源但消费者不同：`check_mobs.py:88-95` 把 mob skills 与技能表两边都过 `path_of` 归一（技能表 id 在 `ids_of:34` 就被抹掉 ns），写歪 ns 甚至裸名全绿；运行期 `MobSpec.skill:198-207` 连冒号都不查、`SkillRegistry.get()` 完整 key 取不到 → `SkillEngine.castMob:158-166` 返 `NO_SKILL` **零日志**、`MobSkillCaster.tick` 每 10 tick 静默重试、`MobSpawner.spawn` 不读 skills 照常出生。判据仍是 R83-b「两份已有检查都绿、运行期才退化」。 |
+| R98-b | **同源洞按静默形态强弱定序**（R97-c 落地验证）：items abilities 每次右键有 `ContentItem.useAbility:99-101` 一次性 WARN，mobs skills 运行期完全静默、只能靠手工 `/redtale mob check` / `mob cast` 才看得见。R97 把 items 排前是因为「字面证据最硬」，R98 兑现剩下的 mobs；静默形态强弱是同批排序依据，不是「有没有 WARN」的二元判断。 |
+| R98-c | **同源不等于同尺**：drops 离线也过 `path_of` 归一（`check_mobs.py:96-98`），但运行期 `MobDrops:117-120` 有 `warnOnce` + 原版掉落兜底，且约定裸名 → 留池不派；spawn_rules.match 比对值来自 `BuiltInRegistries.ENTITY_TYPE`（原版 registry，非本项目配置表）→ 不同源直接排除；items set_id 同源但 `/redtale validate` 可手工发现 → 留池观察。判据：只有「两份本项目配置用完整 id 互引 + 运行期取不到静默退化」才立卡。 |
+| R98-d | **裸名纪律第十六次**：派单当轮文档与台账里在建脚本一律裸名 `check_mob_skills.py`，不写 `tools/` 全路径（连反例路径也会被 `check_docs` 扫到）。 |
+| R98-e | **k 的口径写死进卡面**：`-v` 的 `k` = 各怪 `skills` 数组里「dict 元素且 `skill` 是字符串」的字段数之和，不是数组长度（非 dict / 非字符串元素跳过，合法性归 `check_mobs`）。基线 3 = ash_caster 2 + ember_guard 1。避免 S8 又发明计数口径。 |
+
+下一步（R99）：
+
+1. **验 T-0094**（基线 `共 1 份怪物技能引用表 · 0 条问题` + `-v` 2/4/3 / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(":")`=0）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 43`。
+2. 对账网已第二十五例；按 R98-a/c 判据核实后：drops（`warnOnce` + 原版兜底、静默形态弱）与 items set_id（`/redtale validate` 手工可查）为留池候选，先离线核基线非空再决定；`spawn_rules.match[]`（不同源）、`repair.targets[]`（空基线）仍排除；真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
