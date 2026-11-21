@@ -1395,4 +1395,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `affixes/*.json5` 与 `affix_pools/*.json5`：对每个池，凡 `slots[kind]` 是 >0 整数的段，要求至少一条被该段引用的词条同时满足 `kind` 相同、`item_level.min <= ITEM_LEVEL <= max`；否则报该段不可达。`ITEM_LEVEL = 1` 由 S7 从物品工厂源码冻结写死（S8 不读源码、不推断）；M3 接入等级系统后由 S7 改卡常量。`ident()` 按 `:` 取 id 最后一段；bool/NaN/Inf 不算数字。接口 `ITEM_LEVEL` / `KINDS` / `ident` / `read_defs` / `read_pools` / `covers` / `unreachable` / `main` 由 S7 定死；T-0091 派单时未实现、未接线，基线 3 词条 / 1 池 / 2 有效槽位段 / 0 问题。
 - 填补两份已有检查之间的缝：`check_items.check_affix` 只核 `item_level` min/max 为数字且 `min<=max`，`check_pool` 只核段内引用 id 存在与权重>0，都不进等级与 kind。运行期 `AffixRoller.pick()` 对越界等级与 kind 不符只 `continue`，候选空则 `break` 留空槽，无 WARN / ERROR；`check_all` 39 把尺子全绿（R95-a）。
-- 只核「固定物品等级下能否摇出至少一条」，不核 id/weight/kind 合法性、stats 属性 id、applies_to 基底（归 `check_items`）；不核互斥组与槽位数的联合可填满性（是否故意留空槽属取舍，留池，R92-b）；不核怪物技能 chance / cooldown（运行期有 clamp，R86-b）。当前未接 `check_all`，T-0091 VERIFIED 后 R96 接 → 应 `跑成 40`。
+- 只核「固定物品等级下能否摇出至少一条」，不核 id/weight/kind 合法性、stats 属性 id、applies_to 基底（归 `check_items`）；不核互斥组与槽位数的联合可填满性（是否故意留空槽属取舍，留池，R92-b）；不核怪物技能 chance / cooldown（运行期有 clamp，R86-b）。已接进 `tools/check_all.py`（`共 40 个脚本`，R96 接线）。T-0091 `[VERIFIED]`（R96）：基线 0 问题 / `-v` 3 词条·1 池·2 有效段·物品等级 1 / 六夹具 A~F 逐字 EXIT=1/0/1/1/0/1 / wc=158、S7 边界 21/21。
+
+### 4.56 套装档位装备槽可达性对账 `check_set_reach.py`（T-0092，R96 派，对账网第二十三例）
+
+- 只读扫 `sets/*.json5` 的 `pieces[]` 与 `bonuses[].count`，经 `items/*.json5` 的 `base` JOIN S7 冻结的 `SLOT_OF`（14 基底 → 6 装备槽；`ring`/`amulet` 当前归 MAINHAND，M3 接 Curios 后由 S7 改表）。有效档数上界 = pieces 覆盖的不同槽位数；`count` 大于上界即报「档永远不可达」。`ident()` 按 `:` 取 id 最后一段；bool 不算整数；坏文件/缺字段归 `check_items` 跳过。接口 `SLOT_OF` / `ident` / `read_items` / `read_sets` / `reachable_slots` / `unreachable` / `main` 由 S7 定死；T-0092 派单时未实现、未接线，基线 1 套 / 2 件 / 2 档 / 2 可达槽 / 0 问题。
+- 填补两份已有检查之间的缝：`check_items.check_set` 只核 `count ≤ len(pieces)` 与 pieces id 存在，`check_items.check_item` 只核 `base ∈ 14 基底`，都不看「同一内容戴两件只算一件、同一槽只能放一件」。运行期 `SetBonus.counts()` 只统计 6 个装备槽里带 `ContentData.setId()` 的不同内容 id，`SetSpec.activeBonuses()` 只返回 `count <= wornPieces` 的档、不可达档零 WARN / ERROR → 写进 3 件同槽的档位静默永不触发（R96-a）。
+- 形态是跨三份配置的 JOIN（sets → items → 冻结槽位表），不同于前 22 例的两份对账；首次核「档位能否被玩家穿出来」。只核可达性，不核 id/name/pieces 存在/count 合法性/stats（归 `check_items`）；不核互斥组导致空槽（取舍留池）；不读存档 / 原版装备（运行期只认自家 `ContentData.setId()`）。当前未接 `check_all`，T-0092 VERIFIED 后 R97 接 → 应 `跑成 41`。

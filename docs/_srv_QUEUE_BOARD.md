@@ -294,6 +294,11 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-21 23:1x · S7 · 验收 **T-0090（`check_enchant_args_sync.py`）→ VERIFIED**（3/3 + 边界 18/18：基线 0 问题 / 六夹具 A~F 逐字 / wc=174；裁定两处 S8 口径不打回）+ 接 `check_all` **38→39**（跑成 39 红 0）+ **派 T-0091**（`check_affix_reach.py` 词条等级/类型可达性，S7 冻结 `ITEM_LEVEL=1`、六夹具、基线 3 词条/1 池/2 槽段/0 问题，在制品 1/3）——派前 Explore 全类排除 mob chance（有 clamp）与互斥组↔槽位（取舍留池）；本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN · 留下 `E:/RedtaleProject`（`PLAN.md` §13 R95 + §13.98、`docs/ROUND-R95-AFFIXREACH.md`、`docs/TASKS.md` T-0090 VERIFIED + T-0091 OPEN + 池 C41、`docs/CONTRACTS.md` §4.55、`docs/ROUNDS.md`、`tools/check_all.py`）· 源码 push 第 4 次 443 reset（本地 ahead 1，未 force）待重试 · 下一步：验 T-0091（过后 check_all 39→40）；真人 A~G 与 Q-021/022 等 Aki
 
+- 2026-11-21 23:2x · S7 · **更正（本轮上一条）**：源码 `git push` 第 5 次重试成功，`7e5076f` 与 R95 提交 `27c79d5` 均已进 `origin/main`（R94 挂账解除）；镜像 `mail_sync_docs.py sync` 仍 `SCAN clean` 但 PUSH 443 reset，下轮重试。未 force、未启停任何服
+- 2026-11-22 00:01 · S8 · T-0091 做完并自测过（验收 3/3 + 边界 14/14，基线 0 问题、六夹具逐字 EXIT=1/0/1/1/0/1；纯 Python 卡未取锁未构建）· 改了：新建 `E:/RedtaleProject/tools/check_affix_reach.py`（158 行）+ `docs/TASKS.md` 本卡 OPEN→DOING→DONE 与进度 1 行 + 本板 §3 · 下一步：等 S7 验收 T-0091 后接 check_all（39→40）；未碰 `src/`/`check_all.py`、未启停任何服务器。
+
+- 2026-11-22 00:3x · S7 · 验收 **T-0091（`check_affix_reach.py`）→ VERIFIED**（3/3 + S7 边界 21/21：基线 0 问题 / 六夹具逐字 / wc=158；零偏差不打回）+ 接 `check_all` **39→40**（40/40 红 0）+ **派 T-0092**（`check_set_reach.py` 套装档位装备槽可达性，S7 冻结 `SLOT_OF` 14 键 6 槽、ring/amulet 按源码归 MAINHAND、六夹具、基线 1 套/2 件/2 档/2 槽/0 问题，在制品 1/3）——派前 Explore 全类排除 points_per_level / applies_to / 留池三项；本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN · 留下 `E:/RedtaleProject`（`PLAN.md` §13 R96 + §13.99、`docs/ROUND-R96-SETREACH.md`、`docs/TASKS.md` T-0091 VERIFIED + T-0092 OPEN + 池 C42、`docs/CONTRACTS.md` §4.56、`docs/ROUNDS.md`、`tools/check_all.py`）· 全套门禁 0 问题 · 下一步：验 T-0092（过后 check_all 40→41）；真人 A~G 与 Q-021/022 等 Aki
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。

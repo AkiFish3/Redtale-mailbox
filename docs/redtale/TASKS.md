@@ -4181,7 +4181,7 @@ fi
 - 2026-11-21 22:58 · 完成 · `tools/check_enchant_args_sync.py`（174 行）· 构建 N/A（卡明令禁 gradle，未取锁未 build）· 验收 3/3：基线 `共 1 份附魔脚本参数对账表 · 0 条问题` EXIT=0、`-v` 含 `已检查 1 条 scripted 调用 · 2 个数值参数 · 1 份脚本`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（A `脚本参数 ratio 与附魔声明不一致（附魔 0.12 / 脚本 0.08）`、C `脚本缺少参数 chance（附魔声明 chance=0.5）`、D `引用的脚本 enchants/missing 不存在`；E 非 scripted=0；F 嵌套两层=0、`-v` 1 调用/1 参数/1 脚本）· wc=174≤200、`def diffs`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `目录读取失败` EXIT=1 不抛栈；函数边界 17/17；`build/enchargsfix/` 与自建 pyc 已清。口径请 S7 裁：`-v` 的 `<k>` 取「被 scripted 引用且存在的脚本份数」（基线 scripts/ 2 份、被引 1 份，按卡面期望 1）；附魔解析失败文案 `[问题] <rel> - 附魔配置解析失败`（卡面未定）。S7 验收后接 check_all（38→39）。
 - 2026-11-21 23:1x · **S7 验收通过（3/3 + S7 独立边界 18/18）** · 验收1 基线 `共 1 份附魔脚本参数对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 条 scripted 调用 · 2 个数值参数 · 1 份脚本`；验收2 六夹具独立干净目录 A `脚本参数 ratio 与附魔声明不一致（附魔 0.12 / 脚本 0.08）` · B=0（别名命中） · C `脚本缺少参数 chance（附魔声明 chance=0.5）` · D `引用的脚本 enchants/missing 不存在` · E=0（非 scripted 不进范围） · F=0（嵌套两层，`-v` 1/1/1）逐字 EXIT=1/0/1/1/0/1；验收3 wc=174、`def diffs`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈、`build/enchargsfix/` 已清。S7 边界 18/18：别名冻结 / bool 与 NaN·Inf 排除 / 同名多值 / 递归保序 / 首不一致 / 文案升序 / 脚本自有常量不报 / 重复 id 先写赢 / 坏文件不抛栈。裁定 S8 两处口径备注：`-v` 的 `<k>` = 被引用且存在的脚本份数（基线 2 份脚本、被引 1 份，卡面期望值优先）；解析失败文案 `[问题] <rel> - 附魔配置解析失败` 卡面未定义、补齐合理形态采纳不打回（R79-a 家族第七次）。接线 `check_all` 38→39 全绿（39/39），`check_checkall` 1 清单 0 问题。
 
-### T-0091 · [OPEN] `tools/check_affix_reach.py` —— 词条等级/类型可达性对账（M3 / D22，单文件零接线）
+### T-0091 · [VERIFIED] `tools/check_affix_reach.py` —— 词条等级/类型可达性对账（M3 / D22，单文件零接线）
 
 - 派单：S7 · 2026-11-21 23:1x（R95）
 - 目标：给 `affixes/*.json5` 与 `affix_pools/*.json5` 补一把「池里引用的词条在当前物品等级下真能被摇出来」的离线尺子。真洞：`ItemFactory.ITEM_LEVEL = 1`，`AffixRoller.pick()` 里 `itemLevel < min || > max` 与 `def.kind() != kind` 都只 `continue`，候选空则 `break` 留空槽，**无 WARN/ERROR、无红**；`check_items.check_affix` 只核 min/max 是数字且 `min<=max`，`check_pool` 只核引用 id 存在与权重>0，不进等级与 kind。默认基线 3 词条 / 1 池 / 2 个有槽位段（prefix 1、suffix 1、core 0）/ 0 问题（S7 已离线核判定逻辑）。
@@ -4203,6 +4203,31 @@ fi
   1. `python tools/check_affix_reach.py` → 末行 `共 1 份词条等级可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`。
   2. 六组夹具写到 `build/affixreachfix/`（每次从干净目录重来，各自只有 `affixes/`、`affix_pools/` 两个子目录；定义带 `id`/`kind`/`weight`，池带 `id`/`slots`/同名 kind 段，段内形如 `sharp: 100`）：A 单条 prefix 定义 `item_level {min:5,max:60}` + 池 `slots.prefix=1`、引用它 → 1 条 `词条池 p 的 prefix 槽无等级可达的同类型词条（物品等级 1）` EXIT=1；B 同 A 但 `min:1,max:1` → 0 条 EXIT=0；C 定义 `kind:"suffix"` 且 lv 覆盖 1、池 `prefix` 引用它、`slots.prefix=1` → 1 条 prefix 不可达 EXIT=1；D 定义缺 `item_level`、池 prefix 引用、`slots.prefix=1` → 1 条 prefix 不可达 EXIT=1；E 定义同 A（不可达），池 `slots.core=0` 且 `core` 段引用它 → 0 条 EXIT=0（无有效槽位段不进范围）；F 两条 prefix 定义 a(min5)/b(min1)，池 `slots.prefix=1`、同时引用 a 与 b → 0 条 EXIT=0、`-v` 含 `已检查 2 份词条定义 · 1 个词条池 · 1 个有效槽位段 · 物品等级 1`。六组逐字对上。
   3. `wc -l < tools/check_affix_reach.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items" tools/check_affix_reach.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/affixreachfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-22 00:01 · 完成 · `tools/check_affix_reach.py`（158 行新建，零接线）· 构建 N/A（卡明令禁 gradle：未取锁未 build，无退出码）· 验收 3/3：基线 `共 1 份词条等级可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（A/C/D 各 1 条 `词条池 p 的 prefix 槽无等级可达的同类型词条（物品等级 1）`；E slots.core=0 不进范围=0；F 两条 prefix 一不可达一可达=0、`-v` 2 定义/1 池/1 有效段）；wc=158≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条 `目录读取失败` EXIT=1 不抛栈；函数边界 14/14；`build/affixreachfix/` 与自建 pyc 已清。实现口径：`read_defs` 对 `ident(id)` 为空串（如 `ns:`）仍按键入表（卡未定，基线/夹具不覆盖）；`-v` 有效槽位段按 `slots[kind]` 为 >0 整数计，不要求同名引用段存在。S7 验收后接 check_all（39→40）。
+- 2026-11-22 00:1x · S7 验收 **PASS 3/3** · 基线 `共 1 份词条等级可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（A/C/D 各 1 条 `词条池 p 的 prefix 槽无等级可达的同类型词条（物品等级 1）`，E core=0 不进范围=0，F 两条 prefix 一条可达=0、`-v` 2/1/1/1）；wc=158≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1。S7 函数边界 21/21（ident 四种 / covers bool·NaN·Inf·字符串 / unreachable 槽 0·bool·float / 排序 / 双目录读失败）。`build/affixreachfix/` 已清。接线 `check_all` 39→40（R96），PLAN §13 R96 已记。**VERIFIED**。
+
+### T-0092 · [OPEN] `tools/check_set_reach.py` —— 套装档位装备槽可达性对账（M3 / D17，单文件零接线）
+
+- 派单：S7 · 2026-11-22 00:2x（R96）
+- 目标：给 `sets/*.json5` 补一把「档位 count 真能穿出来」的离线尺子。真洞：`check_items.check_set` 只核 `count <= len(pieces)` 与 pieces id 存在，`check_items.check_item` 只核 `base ∈ 14 基底`；运行期 `SetBonus.counts()` 只统计 6 个装备槽里带 `setId` 的不同内容 id（`SetBonus.java` SLOTS = HEAD/CHEST/LEGS/FEET/MAINHAND/OFFHAND），同内容戴两件只算一件，同槽只能放一件 → 可达件数上界 = pieces 覆盖的**不同槽位数**；`SetSpec.activeBonuses()` 对 `count > wornPieces` 的档直接不返回，零 WARN / ERROR。基线 1 套 / 2 件 / 2 档 / 2 可达槽 / 0 问题（S7 已离线核判定逻辑）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_set_reach.py`（新建，≤ 200 行）
+  - `build/setreachfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_items.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读 datapack；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字，S7 定死）：
+  - `SLOT_OF: dict[str, str]`：S7 从基底枚举冻结写死，`sword/dagger/axe/hammer/spear/staff/bow/ring/amulet -> MAINHAND`、`shield -> OFFHAND`、`helmet -> HEAD`、`chestplate -> CHEST`、`leggings -> LEGS`、`boots -> FEET`（14 键、6 槽；M3 接 Curios 后由 S7 改本表）。**脚本内任何位置都不写源码文件名**。
+  - `ident(v: object) -> str`：字符串按 `:` 取最后一段（无冒号原样返回），非字符串返 `""`。
+  - `read_items(root: str) -> dict[str, dict] | None`：扫 `<root>/items/*.json5`（文件名升序），`clean_json5` 解析；解析失败 / 顶层非 dict / 顶层 `id` 非字符串 → 跳过；键 = `ident(id)`，同键先写赢。目录不存在或不可读 → 返 `None`，不抛栈。
+  - `read_sets(root: str) -> list[tuple[str, dict]] | None`：扫 `<root>/sets/*.json5`（文件名升序），同样解析；解析失败 / 顶层非 dict / 无字符串 `id` → 跳过；返回 `(rel, data)`，`rel` 形如 `sets/xxx.json5`，保序。目录不存在或不可读 → 返 `None`，不抛栈。
+  - `reachable_slots(pieces: list, items: dict[str, dict]) -> int`：对每个 piece 经 `ident` 归一，取 `items[key]["base"]`（字符串）在 `SLOT_OF` 中的槽名，去重计数；piece 非字符串 / 未命中物品 / `base` 不在表中 → 跳过（合法性归 `check_items`）。
+  - `unreachable(sets: list[tuple[str, dict]], items: dict[str, dict]) -> list[str]`：对每个套装取 `bonuses`（必须是 list），其中 `count` 是整数（bool 不算）且 `>= 1` 的每一档，若 `count > reachable_slots(pieces, items)`（pieces 非 list 视为空）则产出一条 `套装 <id> 的 <count> 件档永远不可达（可达装备槽 <k>）`（`<id>` 取 `ident(pool["id"])`、`<k>` 为该套装可达槽数）。结果按文案升序，保稳定。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 份套装 · <m> 件引用 · <k> 个档位 · <s> 个可达装备槽`，n=套装数、m=各套装 pieces 元素数之和、k=各套装合法 count 档数之和、s=各套装 reachable_slots 之和）。任一目录读失败 → 打 `[问题] items/sets 目录读取失败`、末行 `共 1 份套装档位可达性表 · 1 条问题`、EXIT=1；否则每条 problem 打 `[问题] <rel> <msg>`，末行 `共 1 份套装档位可达性表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不核 `id`/`name`/`pieces` 引用存在 / `count` 合法性 / `stats` 属性 id（归 `check_items`）；不核「互斥组是否导致空槽」（属取舍留池，S7 独占）；不读玩家存档 / 不读原版装备（运行期只认带 `ContentData.setId()` 的自家物品）；不改运行期、不推断槽位、不读源码；不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_set_reach.py` → 末行 `共 1 份套装档位可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份套装 · 2 件引用 · 2 个档位 · 2 个可达装备槽`。
+  2. 六组夹具写到 `build/setreachfix/`（每次从干净目录重来，各自只有 `items/`、`sets/` 两个子目录；物品带 `id`/`base`，套装带 `id`/`pieces`/`bonuses[{count}]`）：A 两件 sword、count=2 → 1 条 `套装 p 的 2 件档永远不可达（可达装备槽 1）` EXIT=1；B sword+chestplate、count=2 → 0 条 EXIT=0；C sword+chestplate+ring（ring 归 MAINHAND）、count=3 → 1 条 `套装 p 的 3 件档永远不可达（可达装备槽 2）` EXIT=1；D 同 A 但 count=1 → 0 条 EXIT=0；E sword/chestplate/leggings/boots 四件、count=4 → 0 条 EXIT=0；F 两套：套 a 两 sword + count=2、套 b sword+chestplate + count=1 与 2 → 1 条（a 的 2 件档）、`-v` 含 `已检查 2 份套装 · 4 件引用 · 3 个档位 · 3 个可达装备槽` EXIT=1。六组逐字对上。
+  3. `wc -l < tools/check_set_reach.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items" tools/check_set_reach.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/setreachfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4245,7 +4270,8 @@ fi
 | C38 | ~~`tools/check_enchant_exclusive.py`~~ → **T-0088（R92 派 / R93 验）** | —— | —— |
 | C39 | ~~`tools/check_gem_types.py`~~ → **T-0089（R93 派 / R94 验）** | —— | —— |
 | C40 | `tools/check_enchant_args_sync.py`（附魔 scripted.args ↔ 脚本数值同步对账）→ **T-0090（R94 派 / R95 验）** | —— | —— |
-| C41 | `tools/check_affix_reach.py`（词条等级/类型可达性对账）→ **T-0091（R95 派）** | `check_items` 只核 min/max 数字与 min≤max、引用 id 存在与权重>0；`AffixRoller.pick()` 的等级不符与 kind 不符都只 `continue`、候选空 `break` 留空槽，无 WARN。对账网第二十二例，首次核「池引用词条在固定物品等级下可达」。常量 1 由 S7 冻结，S8 不读源码 | 无 |
+| C41 | ~~`tools/check_affix_reach.py`（词条等级/类型可达性对账）→ **T-0091（R95 派 / R96 验）**~~ | —— | —— |
+| C42 | `tools/check_set_reach.py`（套装档位装备槽可达性对账）→ **T-0092（R96 派）** | `check_items.check_set` 只核 count≤len(pieces)、`check_items.check_item` 只核 base∈14；运行期 `SetBonus.counts()` 按 6 装备槽去重内容 id，`SetSpec.activeBonuses()` 对不可达档静默不返回。对账网第二十三例，首次 JOIN 三份配置（sets→items→冻结槽位表）。`SLOT_OF` 由 S7 冻结，S8 不读源码 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

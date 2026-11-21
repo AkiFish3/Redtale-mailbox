@@ -2065,3 +2065,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0091**（基线 `共 1 份词条等级可达性表 · 0 条问题` + `-v` 3/1/2/物品等级 1 / 六夹具 A~F 逐字 / wc≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 40`。
 2. 对账网已第二十二例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a/R94-a/R95-a 判据核实后无真洞就转内容面，不硬凑。留池：`spawn_rules.match[]`、`repair.targets[]`（待真写值）、互斥组↔槽位联合可填满性（待 S7 定「空槽是否故意」）。真人窗口 A~G 仍等 Aki，不排期。
 3. 重试源码 `git push`（连续 4 次 443 reset，本地 ahead 1，禁止 force）与镜像 sync；Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R96 · 2026-11-22 00:1x~00:3x · 验 T-0091 + check_all 39→40 + 派 T-0092（套装档位装备槽可达性）
+
+- 卡板：T-0091 `check_affix_reach.py` `[DONE]` → **VERIFIED**（3/3 + S7 边界 21/21）：基线 `共 1 份词条等级可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（A/C/D 各 1 条 `词条池 p 的 prefix 槽无等级可达的同类型词条（物品等级 1）`，E slots.core=0 不进范围=0，F 两条 prefix 一条可达=0、`-v` 2/1/1/1）；wc=158≤200、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条读失败 EXIT=1 不抛栈；S7 函数边界 21/21（ident / covers bool·NaN·Inf / unreachable 槽 0·bool·float / 排序 / 双目录读失败）。六夹具各自从干净目录重来，`build/affixreachfix/` 已清。S8 零偏差不打回。
+- **派 T-0092**（`tools/check_set_reach.py`：套装 `bonuses[].count` ↔ pieces 可覆盖的装备槽数，单文件零接线、六夹具、基线 1 套/2 件/2 档/2 可达槽/0 问题），在制品 **1/3**。真洞 = `check_items.check_set` 只核 `count ≤ len(pieces)`、`check_items.check_item` 只核 `base ∈ 14 基底`；运行期 `SetBonus.counts()` 只统计 6 个装备槽里带 `setId` 的不同内容 id（同内容戴两件只算一件），`SetSpec.activeBonuses()` 对 `count > wornPieces` 静默不返回；默认配置注释已写明 demo_robe 故意不进池（同胸甲基底会造 3 件档永远到不了），但无机器尺子（对账网第二十三例，首次三份配置 JOIN）。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 冻结跨语言槽位表**（R88-c/R89-c/R90-c/R95-b 延续）：Explore 只读扫 36 json5 + 142 Java + 40 check，逐条排除 `skill_trees.points_per_level`（单字段基线仅 1 处、卡面薄）、`affix_pools.applies_to` 指向无实物（只是池空转、玩法退化弱）、`repair.targets`（默认空、永远绿）、`spawn_rules.match`（离线无实体注册表）、`passive.id`（死代码），落套装档位。从 `ItemBase` 冻结 `SLOT_OF`（**ring/amulet 归 MAINHAND**，与 Explore 初稿的 amulet 独立槽不同，已按源码更正），离线跑判定逻辑核基线 1/2/2/2/0 逐字一致（R82-c 正面版）。
+- 接线 `check_all` 39→**40** 全绿；全套 0 问题。环境：本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服 25567/25577 无 LISTEN。踩坑预防：ROUND 文档与台账在建脚本一律裸名 `check_set_reach.py`（R63-e 后第十四次）。
+- 收尾：`docs/ROUND-R96-SETREACH.md`、PLAN §13 R96 + §13.99、ROUNDS、TASKS（T-0091 VERIFIED + T-0092 OPEN + 池 C42）、CONTRACTS §4.55/§4.56、`tools/check_all.py`、协作板 §3。
+
+### 13.99 R96 的四条口径（对账网第二十三例 = 套装档位装备槽 / 三份配置 JOIN / 冻结表按源码更正 / 裸名）+ 下一步（R97）
+
+| 编号 | 口径 |
+|---|---|
+| R96-a | **对账网第二十三例 = 套装档位可达性**（…→附魔参数同步→词条可达→套装档位可达）。首次核「玩家最多能穿几件」：`check_items` 两把尺子按 `len(pieces)` 算上界都绿，运行期 `SetBonus.counts()` 按 6 槽去重内容 id、`SetSpec.activeBonuses()` 对够不到的档静默不返回；判据仍是 R83-b「两份已有检查都绿、运行期才退化」。与「互斥组导致空槽」不同：槽位可达是确定的物理上界，不是内容取舍（R92-b 留池不覆盖）。 |
+| R96-b | **冻结表以源码为准，不采信调研初稿**：Explore 初稿把 amulet 当独立槽，源码 `ItemBase` 明写 `RING/AMULET -> MAINHAND`（Curios D29 才扩槽）。S7 冻结 `SLOT_OF` 前逐字读枚举，14 键 6 槽写死进卡面，S8 不读源码；错表会让尺子误报真配置。 |
+| R96-c | **候选薄不等于不是洞**：`points_per_level` 静默回落确实存在，但基线单字段、卡面粒度太薄；派单优先选基线非空、能出六组夹具的对象。留池项逐轮复评（R95-b），不硬凑。 |
+| R96-d | **裸名纪律第十四次**：派单当轮文档与台账里在建脚本一律裸名 `check_set_reach.py`，不写 `tools/` 全路径（连反例路径也会被 `check_docs` 扫到）。 |
+
+下一步（R97）：
+
+1. **验 T-0092**（基线 `共 1 份套装档位可达性表 · 0 条问题` + `-v` 1/2/2/2 / 六夹具 A~F 逐字 / wc≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 41`。
+2. 对账网已第二十三例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a/R94-a/R95-a/R96-a 判据核实后无真洞就转内容面，不硬凑。留池：`spawn_rules.match[]`、`repair.targets[]`（待真写值）、互斥组↔槽位联合可填满性（待 S7 定「空槽是否故意」）。真人窗口 A~G 仍等 Aki，不排期。
+3. 继续重试源码 push / 镜像 sync（R95 挂账）；Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
