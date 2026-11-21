@@ -2155,3 +2155,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0095**（基线 `共 1 份词条池引用表 · 0 条问题` + `-v` 1/3/3 / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(":")`/`rsplit`/`ident(`=0）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 44`。
 2. 对账网已第二十六例；四个留池项本轮复评全不成熟（R99-b），下轮如无新真洞则转内容面（14 基底 / 80 属性 / 8 实体的默认配置是否填满、README 与真机验收材料），不硬凑对账卡。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
+
+## R100 · 2026-11-22 04:5x · 验 T-0095 + check_all 43→44 + 派 T-0096（修理模式激活字段有效性对账）
+
+- 卡板：T-0095 `check_affix_pool_refs.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具逐字）：基线 `共 1 份词条池引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份词条池 · 3 条词条定义 · 3 条词条引用`；六夹具 A~F EXIT=1/0/1/0/0/1（A 裸名定义+加 ns 引用、C 写歪 ns、F q 写歪各 1 条；B/D/E 0 条；D `-v` 1 池/2 定义/2 引用、F 2 池/2 定义/2 引用）；wc=121≤200、`def unmatched`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败不抛栈。S8 自测与 S7 复跑逐字一致、零偏差不打回，探针已清。**派 T-0096**（`check_repair_active.py`：repair.mode ↔ amount/percent 激活字段有效性，单文件零接线、六夹具、基线 7 物品/1 条 repair 段/0 问题；接口 `read_items`/`check_repair`/`main` S7 定死，语义从 Java 冻结进卡面），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 源码逐字核实 + 离线核基线**（R96-b/R99-b 延续）：Explore 只读扫 43 个 check 读取键 / 36 份 json5 / 运行期 Java，复核四个留池项全不成熟，另逐条排除 sets pieces（出口明确）/ unlock_skill / use.effects / mobs.attributes / 附魔 scripted.script（有 WARN 或已覆盖）/ consume 数值（有 clamp）/ 文案缺失（非玩法退化）/ 原版类引用（离线无注册表），落 repair 真洞。源码逐字核实 `RepairSpec:73-105` 激活字段缺省 0 零告警、`Repairer:72-77` `wanted<=0` → ALREADY_FULL 零日志、`ContentItem:142-169` 只发泛化玩家提示。离线实测 `grep -lE '"repair"|repair\.' tools/check_*.py` = 0、7 物品/1 条 repair 段。
+- 接线 `check_all` 43→**44** 全绿（44/44）；七门禁全 0：check_checkall 1 清单/0、check_tasks 96 卡在制品 1、check_contracts 60 条、check_docs 115 份/485 引用、check_rounds/ownership 0。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第十八次：本轮在建脚本文档一律裸名 `check_repair_active.py`。
+- 收尾：`docs/ROUND-R100-REPAIRACTIVE.md`、PLAN §13 R100 + §13.103、ROUNDS、TASKS（T-0095 VERIFIED + T-0096 OPEN + 池 C46）、CONTRACTS §4.60/§4.61、`tools/check_all.py`、协作板 §3。
+
+### 13.103 R100 的四条口径（对账网第二十七例 = 互斥模式 ↔ 激活字段 / 冻结语义 / 留池复评不派）+ 下一步（R101）
+
+| 编号 | 口径 |
+|---|---|
+| R100-a | **对账网第二十七例 = 互斥模式 ↔ 激活字段一致性**（…→怪物技能→词条池→修理有效性）。首次不是「两份名单互引」，而是「同一对象内 mode 选中哪个字段」：mode 合法但激活字段 0/缺失 → 运行期 `ALREADY_FULL` 零 WARN 零异常，43 个 check 无一读 repair 段。判据仍是 R83-b「配置层全绿、运行期才退化」。 |
+| R100-b | **冻结语义由 S7 从 Java 读出来写进卡面**：`RepairSpec` 对 mode 非法 / percent 越界 / 负数有 WARN，只有「合法 mode + 激活字段 0/缺失」静默；S7 把「哪些跳过、哪些报、amount 必须整数」逐条写死，S8 不读源码。与 R95-c 跨语言常量同口径，防止 S8 造一把连 WARN 场景都报的噪音尺。 |
+| R100-c | **留池项复评不派不是停滞**：R99-b 四留池项本轮由独立调研再次复核，结论一致（出口明确 / 不同源 / 空基线）；对账网扩到 27 例后新洞密度下降，继续按 R92-b 不硬凑永远绿的尺子。 |
+| R100-d | **裸名纪律第十八次**：派单当轮文档与台账在建脚本一律裸名 `check_repair_active.py`，不写 `tools/` 全路径（连反例路径也会被扫到）。 |
+
+下一步（R101）：
+
+1. **验 T-0096**（基线 `共 1 份修理有效性表 · 0 条问题` + `-v` 7 物品/1 repair 段 / 六夹具 A~F 逐字 / wc≤200、`def check_repair`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 45`。
+2. 对账网已第二十七例；按 R100-a/b 判据核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡。四留池项继续观察，repair.targets 待默认配置真写值。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。

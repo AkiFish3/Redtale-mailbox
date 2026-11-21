@@ -4277,7 +4277,7 @@ fi
 2026-11-22 03:12 · 完成 · tools/check_mob_skills.py（新建 114 行）· 构建退出码 N/A（卡明令禁 gradle）· 基线 2 怪/4 技能 id/3 引用/0 问题 EXIT=0；-v 逐字；六夹具 A~F EXIT=1/0/1/0/0/1 逐字；wc=114、def unmatched=1、禁用 grep=0、py_compile OK、--dir NO_SUCH 1 条读失败；函数边界 7/7；待 S7 验收并接 check_all
 - 2026-11-22 03:4x · **S7 验收通过（3/3）** · ①基线 `共 1 份怪物技能引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份怪物 · 4 条技能 id · 3 条 skills 引用`；②六夹具 A~F 逐字 EXIT=1/0/1/0/0/1（A 写歪 ns、C `minecraft:` 跨命名空间、F h 写歪各 1 条，B/D/E 0 条；D `-v` 1 怪/2 技能/2 引用、F 2 怪/2 技能/2 引用）；③wc=114≤200、`def unmatched`=1、禁用 grep=0（`path_of`/`split(":")` 均未出现）、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条 `mobs/skills 目录读取失败` EXIT=1 不抛栈。S8 自测与 S7 独立复跑逐字一致，零偏差不打回。探针 `build/mobskillsfix/` 与 pyc 已清。接线 check_all 42→43 全绿（43/43），七门禁全 0（check_checkall 1 清单/0、check_tasks 94 卡在制品 0、check_contracts 59 条、check_docs 114 份/479 引用）。
 
-### T-0095 · [OPEN] `tools/check_affix_pool_refs.py` —— 词条池词条 id 完整字符串引用对账（M3 / D22，单文件零接线）
+### T-0095 · [VERIFIED] `tools/check_affix_pool_refs.py` —— 词条池词条 id 完整字符串引用对账（M3 / D22，单文件零接线）
 
 - 派单：S7 · 2026-11-22 03:4x（R99）
 - 目标：给 `affix_pools/*.json5` 补一把「池内 `prefix`/`suffix`/`core` 段的词条 id 按**完整字符串**命中词条定义表」的离线尺子。真洞：`check_items.py:119` 核池引用时 `path_of(k) not in affix_ids`（`ids_of:28` 收定义 id 同样抹 ns）、`check_affix_reach.py:104` 用 `ident(ref)`（`rsplit(":",1)[-1]`）两边归一，写歪 ns（词条定义裸名 `sharp`，引用写成 `redtale_project:sharp` / `redtale_projectX:sharp`）归一后照样命中、全绿；运行期 `AffixPools.parseDefs:78` 定义按**原文 id**（`resolveId:139-146` 保留裸名/全名）入 `defs`，`parsePools:109` 池条目按**原文键**入 `entries`，`AffixRoller.java:133` `defs.get(entry.affixId())` 完整 key 取不到 → `:134-138` 记 `deadEntries` → `:119-121` 写进 `Result.warnings()`，而 `ItemFactory.java:148` 调用的是 `warnings=null` 的四参重载（`AffixRoller:93` 自建局部 list）、`:117` 只读 `rolled.stats()`/`affixIds()`，`Result.warnings()` 全仓无读取点 → 装备悄悄少词条、无红无 ERROR 无控制台 WARN（R83-b + R88-b 双命中，对账网第二十六例；此例是**裸名定义 vs 加 ns 引用**的不对称，静默形态强于 T-0093/T-0094 的「两边都带 ns 写歪一边」）。基线 3 词条定义 / 1 池 / 3 引用 / 0 问题（S7 已离线核实，id 均裸名逐字相等）。
@@ -4295,6 +4295,27 @@ fi
   1. `python tools/check_affix_pool_refs.py` → 末行 `共 1 份词条池引用表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份词条池 · 3 条词条定义 · 3 条词条引用`。
   2. 六组夹具写到 `build/affixpoolfix/`（每次从干净目录重来，各自只有 `affixes/`、`affix_pools/` 两个子目录；词条定义带 `id`，池带 `id`，段为 dict 如 `prefix: { sharp: 100 }`）：A 定义裸名 `sharp`、池 `prefix: { "redtale_project:sharp": 100 }`（加自家 ns）→ 1 条 `词条池 p 的 prefix 段引用了未定义的词条 redtale_project:sharp` EXIT=1（关键：`check_items`/`check_affix_reach` 归一后绿、本尺红）；B 同定义、池 `prefix: { sharp: 100 }` → 0 条 EXIT=0；C 池 `prefix: { "redtale_projectX:sharp": 100 }`（写歪 ns）→ 1 条 EXIT=1；D 两定义 `sharp` + `heavy`、池 `prefix: { sharp: 100, heavy: 80 }` → 0 条 EXIT=0、`-v` 含 `已检查 1 份词条池 · 2 条词条定义 · 2 条词条引用`；E 池无 prefix/suffix/core 段（只有 id + slots）→ 0 条 EXIT=0；F 两池：p `prefix: { sharp: 100 }`（合法）、q `suffix: { "redtale_projectX:of_the_bear": 60 }`（写歪），定义 `sharp` + `of_the_bear` → 1 条（q 的）、`-v` 含 `已检查 2 份词条池 · 2 条词条定义 · 2 条词条引用` EXIT=1。六组逐字对上。
   3. `wc -l < tools/check_affix_pool_refs.py` ≤ 200；`grep -c "def unmatched"`=1；`grep -cE 'check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items|check_affix_reach|split\(\":\"\)|rsplit|path_of|ident\(' tools/check_affix_pool_refs.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/affixpoolfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+2026-11-22 04:17 · 完成 · tools/check_affix_pool_refs.py（121 行） · 构建退出码 N/A（卡禁 gradle） · 自测：基线 0 问题 EXIT=0 / -v 1 池·3 定义·3 引用；六夹具 A~F EXIT=1/0/1/0/0/1 逐字命中；wc=121、def unmatched=1、禁用 grep=0、py_compile OK、--dir NO_SUCH 恰好 1 条读失败不抛栈；边界：完整字符串不对称命中 1 条、坏文件/无 id/非 dict 段跳过。
+- 2026-11-22 04:5x · **S7 验收通过（3/3）** · ①基线 `共 1 份词条池引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份词条池 · 3 条词条定义 · 3 条词条引用`；②六夹具 A~F 逐字 EXIT=1/0/1/0/0/1（A 裸名定义+加 ns 引用、C 写歪 ns、F q 写歪各 1 条；B/D/E 0 条；D `-v` 1 池/2 定义/2 引用、F 2 池/2 定义/2 引用）；③wc=121≤200、`def unmatched`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `目录读取失败` EXIT=1 不抛栈。S8 自测与 S7 独立复跑逐字一致，零偏差不打回。探针与 pyc 已清。接线 check_all 43→44 全绿。
+
+### T-0096 · [OPEN] `tools/check_repair_active.py` —— 修理模式激活字段有效性对账（M2 / D23，单文件零接线）
+
+- 派单：S7 · 2026-11-22 04:5x（R100）
+- 目标：给 `items/*.json5` 补一把「`repair.mode` 选中的数值字段（amount / percent）必须存在且 >0」的离线尺子。真洞：`RepairSpec.java:73-84` 只校验 mode 二选一；`:87-94` `amount` 缺省 0 且**零告警**（负数才 WARN），`:97-105` `percent` 缺省 0.0 且**零告警**（越界才 clamp+WARN）；`Repairer.java:72-77` 按 mode 取激活字段，`wanted<=0` 直接返回 `Status.ALREADY_FULL` 零 WARN 零异常，`ContentItem.java:142-161` 只发泛化玩家提示。把 `mode` 从 `amount` 改成 `percent` 却忘写 `percent:`（或写 0）→ 磨刀石永远修不动、全 check 绿（`check_items.py:57-88` 从不读 repair 段，全仓 43 个 check 无一读 repair；`grep -lE '"repair"|repair\.' tools/check_*.py` = 0）。对账网第二十七例，首次核**互斥模式 ↔ 激活字段**的一致性。基线 7 物品 / 1 条 repair 段 / 0 问题（demo_whetstone：mode=amount、amount=120，S7 已离线核）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_repair_active.py`（新建，≤ 200 行）
+  - `build/repairactivefix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_items.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读存档；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字，S7 定死；以下语义由 S7 从 Java 源码冻结，S8 不读源码）：
+  - `read_items(root: str) -> list[tuple[str, dict]] | None`：扫 `<root>/items/*.json5`（文件名升序），`clean_json5` 解析；解析失败 / 顶层非 dict / 顶层 `id` 非字符串 → 跳过；返回 `(rel, data)`，`rel` 形如 `items/xxx.json5`，保序。目录不存在或不可读 → 返 `None`，不抛栈。
+  - `check_repair(items: list[tuple[str, dict]]) -> list[str]`：只看 `data.get("repair")` 是 dict 的物品。取 `mode`：`"amount"` / `"percent"` 之外的任何值（含缺失、非字符串、非法枚举）一律**跳过该物品**——非法值运行期有 WARN，归别的检查，不重复报。`amount` 模式核 `repair["amount"]`，`percent` 模式核 `repair["percent"]`：字段缺失 / `None` / `bool` / 非数字 / `<=0` 均报；`amount` 额外要求整数（float 即使 >0 也报，Java `getAsInt()` 会把 0.5 截成 0）；`percent > 1` 运行期会 clamp+WARN，**跳过不报**。`repair` 缺失 / 非 dict / `targets` / `cost` / `consume_item` 一律不读。消息模板逐字：`物品 <iid> 的 repair.mode=<mode> 缺少有效的 <field>（必须 > 0）`（`<iid>` = 该物品 `data["id"]` 原文，`<field>` = `amount` 或 `percent`）。结果按文案升序、保稳定。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 份物品 · <m> 条 repair 段`，n=物品数、m=repair 是 dict 的物品数）。目录读失败 → 打 `[问题] items 目录读取失败`、末行 `共 1 份修理有效性表 · 1 条问题`、EXIT=1；否则每条 problem 打 `[问题] <rel> <msg>`（main 对每个物品单独调用 `check_repair([(rel, data)])` 恢复 rel，按 (rel,msg) 升序输出），末行 `共 1 份修理有效性表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不归一命名空间（本卡与 ns 无关，禁止出现 `path_of` / `split(":")`）；不核 mode 非法枚举 / percent>1 / 负数（运行期有 WARN，别造永远绿的红线）；不核 `targets` / `cost` / `consume_item` / `durability` / `base` / `rev`；不读源码、不改运行期；不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_repair_active.py` → 末行 `共 1 份修理有效性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 7 份物品 · 1 条 repair 段`。
+  2. 六组夹具写到 `build/repairactivefix/`（每次从干净目录重来，各自只有 `items/` 一个子目录，物品带 `id`，可带 `repair` 对象）：A `id:"w"`、`repair:{mode:"amount",amount:120}` → 0 条 EXIT=0；B 同 A 但缺 `amount` → 1 条 `物品 w 的 repair.mode=amount 缺少有效的 amount（必须 > 0）` EXIT=1；C `amount:0` → 1 条同文案 EXIT=1；D `repair:{mode:"percent",percent:0.25}` → 0 条 EXIT=0；E `repair:{mode:"percent",amount:120}`（切模式忘改字段）→ 1 条 `物品 w 的 repair.mode=percent 缺少有效的 percent（必须 > 0）` EXIT=1；F `repair:{mode:"percent",percent:0}` → 1 条同文案 EXIT=1。六组逐字对上。
+  3. `wc -l < tools/check_repair_active.py` ≤ 200；`grep -c "def check_repair"`=1；`grep -cE 'check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items|split\(\":\"\)|path_of|rsplit|ident\(' tools/check_repair_active.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/repairactivefix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4341,7 +4362,8 @@ fi
 | C42 | ~~`tools/check_set_reach.py`（套装档位装备槽可达性对账）→ **T-0092（R96 派 / R97 验）**~~ | —— | —— |
 | C43 | ~~`tools/check_ability_refs.py`~~ → **T-0093（R97 派 / R98 验）** | —— | —— |
 | C44 | ~~`tools/check_mob_skills.py`~~ → **T-0094（R98 派 / R99 验）** | —— | —— |
-| C45 | `tools/check_affix_pool_refs.py`（词条池词条 id 完整字符串引用对账）→ **T-0095（R99 派）** | `check_items.py:119` 与 `check_affix_reach.py:104` 都归一比对（path_of / ident），词条定义裸名 `sharp` 被引用成 `redtale_project:sharp` 时两把尺子全绿；运行期 `AffixPools.parseDefs:78` 按原文 id 入表、`AffixRoller:133` 完整 key 取不到 → deadEntries → `Result.warnings()` 全仓无人读，装备悄悄少词条、零红零 WARN（R83-b+R88-b，对账网第二十六例，首次「裸名定义 vs 加 ns 引用」不对称）。基线 3 定义/1 池/3 引用/0 问题 | 无 |
+| C45 | ~~`tools/check_affix_pool_refs.py`~~ → **T-0095（R99 派 / R100 验）** | —— | —— |
+| C46 | `tools/check_repair_active.py`（修理模式激活字段有效性对账）→ **T-0096（R100 派）** | `RepairSpec` 只校验 mode 枚举、激活字段缺省 0 零 WARN；`Repairer:72-77` wanted<=0 → ALREADY_FULL 零日志；43 个 check 无一读 repair 段（实测 grep=0）。对账网第二十七例，首次「互斥模式 ↔ 激活字段」。基线 7 物品/1 repair 段/0 问题 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
