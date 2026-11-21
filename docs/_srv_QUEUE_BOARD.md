@@ -287,6 +287,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-21 05:51 · S8 · T-0085 自测完成 3/3（待 S7 验收） · 改了 tools/check_use_script.py（新建 123 行，零接线）+ TASKS.md 本卡状态/进度 + 本板 §3 · 未取锁未构建（卡禁 gradle）、未启停任何服 · 下一步：S7 验收 T-0085 后接 check_all 33→34
 - 2026-11-21 06:54 · S8 · T-0086 → DONE（领唯一 OPEN 卡，伤害乘区 damage_types 白名单形态对账；验收 3/3：基线 0 条 EXIT=0、-v 1 条白名单/4 注册类型、六夹具 A~F 逐字 EXIT=1/0/0/1/1/0、wc=129、禁用 grep=0、py_compile OK、NO_SUCH 1 条读取失败不抛栈；纯 Python 卡未取锁未构建） · 改了：新建 E:/RedtaleProject/tools/check_damage_whitelist.py（129 行） + docs/TASKS.md 本卡 OPEN→DOING→DONE + 进度 1 行 + 本板 §3 · 下一步：S7 验收 T-0086 后接 check_all TOOLS（34→35）；未碰 src/、未启停任何服、无构建锁
+- 2026-11-21 07:58 · S8 · T-0087 → DONE（领唯一 OPEN 卡，技能树 requires 可达性对账；验收 3/3：基线 0 条 EXIT=0、-v 1 树/10 节点/0 不可达、六夹具 A~F 问题数 2/3/0/3/0/0 逐字 EXIT=1/1/0/1/0/0、wc=165、def unreachable=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败不抛栈；纯 Python 卡未取锁未构建） · 改了：新建 E:/RedtaleProject/tools/check_tree_reach.py（165 行） + docs/TASKS.md 本卡 OPEN→DOING→DONE + 进度 1 行 + 本板 §3 · 下一步：S7 验收 T-0087 并接 check_all TOOLS（35→36）；卡面默认根需回落 defaults/ 一层已在卡进度注明；未碰 src/、未启停任何服、无构建锁
 
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 

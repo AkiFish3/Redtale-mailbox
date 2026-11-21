@@ -4087,7 +4087,7 @@ fi
   - 2026-11-21 06:54 · 完成 · 新建 tools/check_damage_whitelist.py（129 行纯 Python：_loads 单引号 shim / read_entries / check_whitelist / main）；只 import check_progress.clean_json5 与 check_damage_types.read_registered，零接线 · 构建退出码 N/A（卡明令禁止 gradle，未取锁未构建） · 验收 3/3：基线「共 1 份伤害白名单 · 0 条问题」EXIT=0、`-v` 含「已检查 1 条白名单 · 4 个注册类型」；六夹具 A~F 逐字 EXIT=1/0/0/1/1/0（A 未注册 skill_ghost / B redtale_project:* 合法 / C minecraft 精确 id 跳过 / D 未知命名空间通配 / E 非法通配形态 / F 混合合法，每轮干净目录）；wc=129≤200、`def check_whitelist`=1、禁用 grep=0、`py_compile` OK、`--cfg NO_SUCH` 恰好 1 条 `damage.json5 读取失败` EXIT=1 不抛栈；边界 16/16；`build/dmgwlf/` 已清 · 待 S7 验收
   - 2026-11-21 07:5x · **S7 验收通过（3/3）** · 验收1 基线 `共 1 份伤害白名单 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 条白名单 · 4 个注册类型`；验收2 六夹具独立干净目录 A `未注册伤害类型：redtale_project:skill_ghost` · B `redtale_project:*` 0 条 · C `minecraft:player_attack` 0 条 · D `未知命名空间通配：redtale_projce:*` · E `非法通配形态：redtale_project:skill_magical*` · F 混合 0 条，逐字 EXIT=1/0/0/1/1/0；验收3 wc=129≤200、`def check_whitelist`=1、禁用 grep=0、`py_compile` OK、`--cfg NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈。接线 `check_all` 34→35 全绿。S8 无口径备注、零偏差，不打回
 
-### T-0087 · [OPEN] `tools/check_tree_reach.py` —— 技能树 requires 可达性对账（M7 / D25，单文件零接线）
+### T-0087 · [VERIFIED] `tools/check_tree_reach.py` —— 技能树 requires 可达性对账（M7 / D25，单文件零接线）
 
 - 派单：S7 · 2026-11-21 07:5x（R91）
 - 目标：给 `skill_trees/*.json5` 的 `nodes[*].requires` 补一把**可达性尺子**：`check_trees.check_tree` 只核 requires 是数组、元素存在且不等于自身，成环（A↔B）时两节点永远 `MISSING_PREREQ`、其上 `unlock_skill` 永久锁死，`TreeService`/`SkillCommand` 只有一句「技能未解锁」，全仓零 WARN、全 check 绿（对账网第十八例：图结构静默死锁）。基线：1 棵树 / 10 节点 / 0 不可达（S7 已离线跑判定逻辑核过）。
@@ -4105,6 +4105,28 @@ fi
   1. `python tools/check_tree_reach.py` → 末行 `共 1 份技能树可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 棵树 · 10 个节点 · 0 个不可达`。
   2. 六组夹具写到 `build/treereach/`（每次从干净目录重来，各自只有一份 json5，顶层只需 `nodes`）：A `nodes:{a:{requires:["b"]}, b:{requires:["a"]}}` → 2 条 `节点 a/b 永远不可达（requires 成环或依赖不可达节点）` EXIT=1；B `a→b→c→a` 三元环 → 3 条 EXIT=1；C `root:{requires:[]}, a:{requires:["root"]}, b:{requires:["a"]}` → 0 条 EXIT=0；D `a↔b` 加 `c:{requires:["a"]}` → 3 条（a/b/c）EXIT=1；E 自环 `a:{requires:["a"]}` → 0 条 EXIT=0（归 `check_trees`，本卡过滤为根）；F `root:{requires:[]}, good:{requires:["root"]}, bad:{requires:"root"}, ghost:{requires:["nope"]}` → 0 条 EXIT=0（非数组与不存在节点归 `check_trees`，本卡过滤）。六组逐字对上。
   3. `wc -l < tools/check_tree_reach.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|read_attrs" tools/check_tree_reach.py`=0；`py_compile` OK；`--trees NO_SUCH` → EXIT=1 且恰好 1 条 `skill_trees 目录读取失败`，不抛栈；夹具用完即删（`build/treereach/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-21 07:58 · 完成 · tools/check_tree_reach.py（新建 165 行） · 构建 N/A（卡禁 gradle，未取锁） · 基线 `共 1 份技能树可达性表 · 0 条问题` EXIT=0、`-v` `已检查 1 棵树 · 10 个节点 · 0 个不可达`；六夹具 A/B/C/D/E/F 问题数 2/3/0/3/0/0 逐字 EXIT=1/1/0/1/0/0；wc=165≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--trees NO_SUCH` 恰好 1 条读取失败不抛栈；边界 4/4。注：卡面默认根 `src/main/resources/redtale` 与仓库实际树路径差一层 `defaults/`，main 仅在默认参数且默认根无 skill_trees 时回落 `defaults/`，显式 --trees 不受影响。
+- 2026-11-21 08:5x · **S7 验收通过（3/3 + S7 独立边界 18/18）** · 验收1 基线 `共 1 份技能树可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 棵树 · 10 个节点 · 0 个不可达`；验收2 六夹具独立干净目录 A=2（a+b 二元环）· B=3（三元环）· C=0（root→a→b）· D=3（a↔b 加依赖 c）· E=0（自环过滤为根）· F=0（非数组/不存在节点归 check_trees）逐字；验收3 wc=165≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--trees NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈。S7 边界 18/18：read_nodes 七形态 + unreachable 八形态 + read_trees 读失败 + _loads 单/双引号。默认根回落经 `find` 证实：`defaults/skill_trees/warrior_vanguard.json5` 是唯一树、顶层无 `skill_trees`，回落逻辑生效。接线 `check_all` 35→36 全绿。S8 默认根回落备注采纳不打回。
+
+### T-0088 · [OPEN] `tools/check_enchant_exclusive.py` —— 附魔 exclusive_set 引用形态对账（M4 / D32，单文件零接线）
+
+- 派单：S7 · 2026-11-21 08:5x（R92）
+- 目标：给 `enchantments/*.json5` 的 `exclusive_set` 字段补一把**引用形态尺子**：该字段原样透传进附魔 datapack（`EnchantmentGenerator.PASS_THROUGH`），写歪命名空间（如 `redtale_projce`）时 `EnchantableTags.ensureExclusiveTags` 因 `!OWN_NS.equals(ns)` 直接跳过、不报错，原版加载时该 tag 视为空 → 本该互斥的附魔可同时附着，无红无 WARN、全 check 绿（对账网第十九例：透传字段引用型）。基线：2 条引用（`soul_reap` = `#redtale_project:exclusive_set/lifesteal`、`super_sharpness` = `#minecraft:exclusive_set/damage`）/ 0 问题（S7 已离线核判定逻辑）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_enchant_exclusive.py`（新建，≤ 200 行）
+  - `build/enchfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_enchants.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读 datapack；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `VALID_NS = ("minecraft", "redtale_project")`：合法命名空间白名单（D11 严格前置 + 自家 ns）。
+  - `read_configs(root: str) -> list[tuple[str, object, str | None]] | None`：扫 `<root>/enchantments/*.json5`（文件名升序），返回 `(rel, exclusive_set值, err)`，`rel` 形如 `enchantments/xxx.json5`；用 `clean_json5` 解析（单引号 shim 沿用既有口径），解析失败 / 顶层非 dict → `(rel, None, 错误文本)`；`exclusive_set` 字段缺失 / 值为 `None` → 该条 `exclusive_set值 = None`（合法，跳过不报）；目录不存在或不可读 → 返 `None`，不抛栈。
+  - `check_ref(value: object) -> str | None`：`value is None` → 返 `None`（字段可选，不强制）；非 `str` → 返问题文案「exclusive_set 必须是字符串」；字符串按以下规则，`#` 开头 = tag 引用，`#<ns>:<path>` 必须有冒号且 `ns` 在 `VALID_NS` 内、`path` 非空且不含 `..`，否则报：无冒号 →「exclusive_set tag 引用缺少命名空间：<值>」、`ns` 不在白名单 →「exclusive_set tag 引用命名空间未知：<ns>（允许：minecraft / redtale_project）」、`path` 空/含 `..` →「exclusive_set tag 引用路径非法：<值>」。不以 `#` 开头 = 单条附魔 id 引用，只核不得含空白、不得含 `#` 中段、形如 `<ns>:<path>` 或裸 id（`[a-z0-9_/.-]+`），否则报「exclusive_set 单条附魔 id 形态非法：<值>」；合法返 `None`。**只核写了的形态，不要求字段必存在。**
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 条 exclusive_set 引用 · <m> 份附魔配置`，n=写了该字段的条数、m=文件数）。`read_configs` 返 `None` → 打 `[问题] enchantments 目录读取失败`、末行 `共 0 份附魔互斥引用表 · 1 条问题`、EXIT=1；否则 `err` 非 None → `[问题] <rel> 配置读取失败：<err>`；`check_ref` 返问题 → `[问题] <rel> <文案>`。末行 `共 <n> 份附魔互斥引用表 · <p> 条问题`（n=文件数），0 问题 EXIT=0 否则 1。
+- 不要做：不核 `id`/`max_level`/`description`/`supported_items`/`effects`（归 `check_enchants`）；不核 tag 或附魔 id 是否真的存在（离线无注册表，原版 id 与第三方 tag 都不判）；不核 datapack 产物（不读 datapack）；不改绿红语义；不读 Java AST / 不编译 / 不读 jar。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_enchant_exclusive.py` → 末行 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`。
+  2. 六组夹具写到 `build/enchfix/`（每次从干净目录重来，各自只有一份 enchantments json5，含 `id` 字段即可）：A `exclusive_set: "#redtale_projce:exclusive_set/lifesteal"` → 1 条 `命名空间未知：redtale_projce` EXIT=1；B `exclusive_set: "#redtale_project:exclusive_set/lifesteal"` → 0 条 EXIT=0；C `exclusive_set: "#minecraft:exclusive_set/damage"` → 0 条 EXIT=0；D `exclusive_set: "#redtale_project:"`（path 空）→ 1 条 `路径非法` EXIT=1；E `exclusive_set: 5`（非字符串）→ 1 条 `必须是字符串` EXIT=1；F 无 `exclusive_set` 字段 → 0 条 EXIT=0（写了几条引用用 `-v` 看，F 应为 0 条引用 / 1 份配置）。六组逐字对上。
+  3. `wc -l < tools/check_enchant_exclusive.py` ≤ 200；`grep -c "def check_ref"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|check_enchants" tools/check_enchant_exclusive.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `enchantments 目录读取失败`，不抛栈；夹具用完即删（`build/enchfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4143,7 +4165,8 @@ fi
 | C34 | `tools/check_mob_equipment.py`（怪物装备物品 id ↔ 14 基底注册对账）→ **T-0084（R88 派）** | `check_mobs.check_mob` 只核 equipment[slot] 带冒号、不核 id 真能解析；运行期 `MobSpawner.applyEquipment` 对未知 id 只 `skips.add`，而 `Result.skips()` 全仓无人读 → 怪物光着手出生、无红无 WARN、全 check 绿。对账网第十五例，引用型（同 T-0079 damage_type 口径） | 无 |
 | C35 | ~~`tools/check_use_script.py`~~ → **T-0085（R89 派 / R90 验）** | —— | —— |
 | C36 | `tools/check_damage_whitelist.py`（伤害乘区 damage_types 白名单形态对账）→ **T-0086（R90 派 / R91 验）** | —— | —— |
-| C37 | `tools/check_tree_reach.py`（技能树 requires 可达性对账）→ **T-0087（R91 派）** | `check_trees.check_tree` 只核 requires 是数组、元素存在且非自身；运行期 `TreePoints.missingPrereqs` 要前置全在 selected，成环节点永不解锁，`SkillCommand` 只回「技能未解锁」零 WARN。对账网第十八例，图结构静默死锁 | 无 |
+| C37 | ~~`tools/check_tree_reach.py`~~ → **T-0087（R91 派 / R92 验）** | —— | —— |
+| C38 | `tools/check_enchant_exclusive.py`（附魔 exclusive_set 引用形态对账）→ **T-0088（R92 派）** | `check_enchants` 只核 id/max_level/supported_items/description/effects 脚本引用，不核 exclusive_set；运行期 `EnchantmentGenerator` 原样透传、`EnchantableTags.ensureExclusiveTags` 对非自家 ns 直接 continue，写歪命名空间让附魔互斥静默失效、零 WARN。对账网第十九例，透传字段引用型 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

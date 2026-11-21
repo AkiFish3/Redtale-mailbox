@@ -1371,4 +1371,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `skill_trees/*.json5` 的 `nodes[*].requires`，建「节点 → 合法前置」图（自环 / 不存在节点 / 非数组前置过滤，归 `check_trees` 不重复报），固定点迭代求可达集；不在可达集的节点（环上或依赖环）报「节点 <id> 永远不可达（requires 成环或依赖不可达节点）」。接口 `read_nodes` / `unreachable` / `read_trees` / `main` 由 S7 定死；T-0087 派单时未实现、未接线，基线 1 棵树 / 10 节点 / 0 不可达。
 - 填补 `check_trees.check_tree` 的盲区：它只核 requires 是数组、元素存在且 `!=name`，二元/三元环全绿；运行期 `TreePoints.missingPrereqs/canTakeWithCap` 要求前置全在 `selected`，环上节点永远 `MISSING_PREREQ`，其上 `unlock_skill` 技能永久锁死，`SkillCommand` 只回「技能未解锁」、零 WARN（R91-a 图结构静默死锁）。
-- 形态从「值域/引用」扩到**图结构**：离线可判、不依赖注册表/JAR；不核 id/name/cost/effects（归 `check_trees`）。当前未接 `check_all`，T-0087 VERIFIED 后 R92 接 → 应 `跑成 36`。
+- 形态从「值域/引用」扩到**图结构**：离线可判、不依赖注册表/JAR；不核 id/name/cost/effects（归 `check_trees`）。已接进 `tools/check_all.py`（`共 36 个脚本`，R92 接线）。T-0087 `[VERIFIED]`（R92）：基线 0 问题、六夹具 A~F 逐字、wc=165、S7 边界 18/18、默认根 `defaults/` 回落生效。
+
+### 4.52 附魔 exclusive_set 引用形态对账 `check_enchant_exclusive.py`（T-0088，R92 派，对账网第十九例）
+
+- 只读扫 `enchantments/*.json5` 的 `exclusive_set`，核引用形态：`#<ns>:<path>` tag 引用只许 `minecraft` / `redtale_project` 两个命名空间、path 非空且不含 `..`；单条附魔 id 只许 `<ns>:<path>` 或裸 id（`[a-z0-9_/.-]+`）；字段可省略（`None` 跳过）。接口 `VALID_NS` / `read_configs` / `check_ref` / `main` 由 S7 定死；T-0088 派单时未实现、未接线，基线 2 引用 / 0 问题（`soul_reap`=#redtale_project:...、`super_sharpness`=#minecraft:...）。
+- 填补 `check_enchants.check_file` 的盲区：它只核 id/max_level/supported_items/description/effects 脚本引用，不进 `exclusive_set`；运行期 `EnchantmentGenerator.java:40` 把该字段列进 PASS_THROUGH 原样透传、`numericKey()` 只验数值键，`EnchantableTags.java:154-155` 对非自家 ns 直接 continue（写歪命名空间时连补空 tag 的 WARN 都不触发），原版加载时按不存在 tag 当空集 → 本该互斥的附魔可共存、无红无 ERROR（R92-a 透传字段引用型）。
+- 只核「写了的形态」，不判 tag/附魔 id 是否真存在（离线无注册表），不读 datapack、不核 id/max_level/description/supported_items/effects（归 `check_enchants`）。当前未接 `check_all`，T-0088 VERIFIED 后 R93 接 → 应 `跑成 37`。

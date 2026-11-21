@@ -1971,3 +1971,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0087**（`check_tree_reach.py`：基线 `共 1 份技能树可达性表 · 0 条问题` + `-v` 1 棵树/10 节点/0 不可达 / 六夹具 A~F 逐字 / wc≤200、def unreachable=1、禁用 grep=0、py_compile OK、`--trees NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 36`。
 2. 对账网已第十八例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a 判据核实后无真洞就转内容面，不硬凑。留池候选（`spawn_rules.match[]` / `repair.targets[]`）按 R91-b 条件成熟时再派。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R92 · 2026-11-21 08:5x · 验 T-0087 + check_all 35→36 + 派 T-0088（附魔 exclusive_set 引用形态对账）
+
+- 卡板：T-0087 `check_tree_reach.py` `[DONE]` → **VERIFIED**（3/3 + S7 边界 18/18：基线 `共 1 份技能树可达性表 · 0 条问题` EXIT=0、`-v` 1 棵树/10 节点/0 不可达；六夹具 A=2·B=3·C=0·D=3·E=0·F=0 逐字 EXIT=1/1/0/1/0/0；wc=165、`def unreachable`=1、禁用 grep=0、`py_compile` OK、`--trees NO_SUCH` 1 条读失败不抛栈；S7 边界 18/18 = read_nodes 七 + unreachable 八 + read_trees 读失败 + _loads 单双引号）。默认根回落经 `find` 证实（`defaults/skill_trees/warrior_vanguard.json5` 唯一树、顶层无 `skill_trees`），S8 备注采纳不打回。
+- **派 T-0088**（`check_enchant_exclusive.py`：附魔 `exclusive_set` 引用形态，单文件零接线、六夹具 A~F、基线 2 引用/0 问题）。真洞 = `check_enchants` 只核 id/max_level/supported_items/description/effects 脚本引用，不核 `exclusive_set`；运行期 `EnchantmentGenerator.java:40` 原样透传、`EnchantableTags.java:154-155` 对非自家 ns 直接 continue（写歪命名空间如 `redtale_projce` 静默漏过），原版按不存在 tag 当空集 → 本该互斥的附魔可共存、无红无 WARN（对账网第十九例：透传字段引用型）。在制品 1/3。
+- **本轮 S7 最小一步 = 派前全类排除留证（R88-c/R89-c/R90-c/R91-b 延续，Explore 只读全量扫 37 json5 + Java + 36 check）**：`mobs.skills[].skill`（`check_mobs.py:88-95` 已核）/ 技能树 cost·effects·unlock_skill·classes·max_points（`check_trees.py:75-124` + `check_tree_reach.py` 已核；`passive.id` 只核非空但 `TreeUnlocks.passives()` 全仓无调用者=死代码无玩法退化）/ items affix kind·权重·池引用（`check_items.py:93-120` 已核，kind WARN+跳过是 R86-b 反例）/ `professions.grants`（原版 id，离线无注册表）/ `damage.json5` 其它字段（`check_numeric.py:78-138` 全覆盖）/ attribute 重复 id（`check_attrs.py:69-75,128-129` 已查）/ `repair.targets[]`（真洞：解析只验形态、运行期 `Repairer.matches()` 恒 false → `TARGET_MISMATCH` 无日志；但默认件 `targets: []` 空、基线 0 引用，按 R91-b 留池）——逐条排除后才落 `exclusive_set`。
+- 接线 `check_all` 35→**36** 全绿（`共 36 个脚本 · 跑成 36 · 跳过 0 · 红 0`）；接线前 `check_checkall` 已抓到漏接 1 条，接线后归零。`check_tasks` 88 卡在制品 1、`check_contracts` 52 条、`check_docs` 107 份 443 引用、`check_rounds`/`check_ownership` 全 0 问题。
+- 环境：本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。
+- 收尾：`docs/ROUND-R92-ENCHEXCLUSIVE.md`、PLAN §13 R92 + §13.95、ROUNDS、TASKS（T-0087 VERIFIED + T-0088 + 池 C38）、CONTRACTS §4.52、`tools/check_all.py`、协作板 §3。
+
+### 13.95 R92 的三条口径（对账网第十九例 = 附魔 exclusive_set 透传引用 / 死代码不算真洞 / 留池候选成熟再派）+ 下一步（R93）
+
+| 编号 | 口径 |
+|---|---|
+| R92-a | **对账网第十九例 = 附魔 `exclusive_set` 引用形态**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args→脚本 args→效果 target→怪物装备→消耗品脚本→伤害白名单→树前置可达→附魔互斥引用）。首次核「**原样透传字段**」：`EnchantmentGenerator` 把它列进 PASS_THROUGH 不校验，运行期只在自家 ns 分支补空 tag，别人的 ns 直接 continue；写歪命名空间时补空逻辑也不触发，全链无任何 WARN。判据仍是 R83-b「两份已有检查都绿、运行期才崩」。 |
+| R92-b | **死代码不算真洞**：`skill_trees.nodes[].effects` 的 `passive.id` 虽只核非空，`TreeUnlocks.passives()` 全仓无调用者——配置写歪不影响任何玩法，不构成「运行期静默退化」。派卡前先证消费端存在且被调用，无消费者一律排除（R86-b「先证无夹」的延伸）。 |
+| R92-c | **留池候选成熟再派**：`repair.targets[]` 是真洞但默认件空、基线 0 引用，派了就是「永远绿」的红线（R65-a）。按 R91-b 留池，等内容侧真写裸内容 id 再开卡；本轮宁可核有 2 条真实基线的 `exclusive_set`。 |
+
+下一步（R93）：
+
+1. **验 T-0088**（`check_enchant_exclusive.py`：基线 `共 2 份附魔互斥引用表 · 0 条问题` + `-v` 2 引用/2 配置 / 六夹具 A~F 逐字 / wc≤200、`def check_ref`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 37`。
+2. 对账网已第十九例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a 判据核实后无真洞就转内容面，不硬凑。留池候选（`spawn_rules.match[]` / `repair.targets[]`，后者待 targets 真写值）成熟再派。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
