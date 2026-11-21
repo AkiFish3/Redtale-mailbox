@@ -2202,3 +2202,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0097**（基线 `共 1 份伤害类别类型表 · 0 条问题` + `-v` 1 配置/2 type / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(`/`startswith`/`endswith`）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 46`。
 2. 对账网已第二十八例；按 R101-a/b/c/d 判据核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡。`consume` 模式 / `repair.mode` 枚举两候选与四老留池项继续观察。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
+
+## R102 · 2026-11-22 07:2x · 验 T-0097 + check_all 45→46 + 派 T-0098（怪物装备槽位 ↔ 基底槽位）
+
+- 卡板：T-0097 `check_category_types.py` `[DONE]` → **VERIFIED**（3/3 + S7 六夹具 6/6：基线 `共 1 份伤害类别类型表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份伤害配置 · 2 处类别 type 引用`；六夹具 A=0 · B=`skill_magical` · C=`minecraft:skill_magical` · D=`skill_magicalx` · E=`redtale_project:*` · F=1 条且 `-v` 2 处，逐字 EXIT=0/1/1/1/1/1；wc=83、`def unmatched`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败不抛栈；函数边界 4 形态通过）。S8 零偏差不打回。**派 T-0098**（`check_equipment_slots.py`：mobs `equipment[slot]` ↔ 基底声明槽位，单文件零接线、六夹具、基线 2 怪/4 引用/0 问题，`NS`/`SLOT_OF`/`SLOTS`/`read_mobs`/`mismatches`/`main` 由 S7 定死），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 源码逐字核实 + 反事实**（R96-b/R99-e 延续）：Explore 只读扫 45 个 check + 36 份默认配置 + Java，七类候选逐条排除（附魔 script 有两把尺会红且运行期 WARN / unlock_skill 有 WARN / operation 已有尺判红 / crit 属性 id 已被 check_numeric 覆盖 / exclusive_group 开放词汇无冻结集 / min_cost·max_cost 透传原版无离线真值 / points_per_level 单字段卡面太薄），落装备槽位真洞：`ItemBase` 冻结 14 基底槽位组、`ItemFactory` 按 `content.base().slot()` 注册 modifier，而 `MobSpawner.applyEquipment` 只按槽名 setItemSlot 与物品 id 解析、`worn++` 照记零 WARN；`check_mobs`/`check_mob_equipment` 对「剑塞头槽」全绿。临时把默认 `ember_guard` 的 chest 从 chestplate 改 ring，两把旧尺与其余内容尺仍全绿，随后还原、默认配置零 diff。离线核基线 2/4/14/0。
+- 接线 `check_all` 45→**46** 全绿；七门禁全 0 问题：check_checkall 1 清单、check_tasks 98 卡在制品 1、check_contracts 63 条、check_docs、check_rounds、check_ownership。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十次：本轮在建脚本文档与台账一律裸名 `check_equipment_slots.py`。
+- 收尾：`docs/ROUND-R102-EQSLOT.md`、PLAN §13 R102 + §13.105、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0097 VERIFIED + T-0098 OPEN + 池 C48）、`docs/CONTRACTS.md` §4.61/§4.62、`tools/check_all.py`、协作板 §3。
+
+### 13.105 R102 的五条口径（对账网第 29 例 = 基底 ↔ 槽位语义 / 合法 id ≠ 合法组合 / 反事实覆盖旧尺 / 裸名）+ 下一步（R103）
+
+| 编号 | 口径 |
+|---|---|
+| R102-a | **对账网第 29 例 = 物品基底 ↔ 目标槽位的语义一致性**（…→修理有效性→类别映射→装备槽位）。前 28 例核引用、值域、形态、图；本例核「两边各自合法但组合起来不生效」：`head: redtale_project:sword` 槽名合法、物品 id 命中 14 基底，穿上后属性 modifier 按 `ItemBase.slot()` 的 MAINHAND 组生效，头槽不认，零 WARN。判据仍是 R83-b。 |
+| R102-b | **合法 id ≠ 合法组合**：不能靠「各自命中集合」推出组合可用；冻结表由 S7 从源码取 14 键 6 槽写进卡面，S8 不读源码、不推断（R95-c/R96-b 延续）。 |
+| R102-c | **反事实必须覆盖「两把旧尺仍绿」**（R99-e 落地）：临时改一处真默认配置、逐把跑旧尺与总入口、再还原；若有旧尺已红则洞不存在，不派卡。 |
+| R102-d | **留池候选复评结论可以不派**：本轮七类候选（有 WARN / 已有尺 / 开放词汇 / 基线过薄）全部留池，不硬凑永远绿的红线（R92-b/R99-b 延续）。 |
+| R102-e | **裸名纪律第二十次**：派单当轮文档与台账在建脚本只写裸名 `check_equipment_slots.py`、夹具目录只写占位名，避免 `check_docs` 把未建文件当断链。 |
+
+下一步（R103）：
+
+1. **验 T-0098**（基线 `共 1 份怪物装备槽位对账表 · 0 条问题` + `-v` 2/4/14 / 六夹具 A~F 逐字 / wc≤200、`def mismatches`=1、禁用 grep=0、py_compile OK、`--mobs NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 47`。
+2. 对账网已第 29 例；按 R102-a/b/c/d 核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡；七类留池项继续观察。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。

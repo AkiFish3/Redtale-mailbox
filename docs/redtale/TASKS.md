@@ -4321,7 +4321,7 @@ fi
 
 - 2026-11-22 06:1x · S7 验收 **VERIFIED**：验收 3/3 —— 基线末行 `共 1 份修理有效性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 1 条 repair 段`；六夹具 A~F 独立干净目录逐字 EXIT=0/1/1/0/1/1（B/C amount 文案、E/F percent 文案）；wc=99≤200、`def check_repair`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `目录读取失败` EXIT=1 不抛栈。S7 附加边界 8/8（bool/float amount、percent>1、非法 mode、repair 非 dict、无 id、两条 message 按文案升序；首轮 sort 夹具把两条 JSON 塞一个文件被 `_load` 跳过，按 R65-a 改成两文件后全过，非代码缺陷）。夹具已清、S8 零偏差不打回。接线 `check_all` 44→45（R101）。
 
-### T-0097 · [OPEN] `tools/check_category_types.py` —— 伤害类别 type 完整形态对账（M2 / D31，单文件零接线）
+### T-0097 · [VERIFIED] `tools/check_category_types.py` —— 伤害类别 type 完整形态对账（M2 / D31，单文件零接线）
 
 - 派单：S7 · 2026-11-22 06:1x（R101）
 - 目标：给 `damage.json5` 的 `multiplier.category_attributes[].type` 补一把「精确完整 id」离线尺子。真洞：`MultiplierRules.java:43,45` 冻结的两个类别类型就是 `redtale_project:skill_magical` / `redtale_project:skill_physical`；`:143-154` `attributesFor()` 按 first-match 找类别，一条都不命中**静默回落** `percentAttributes`（零 WARN）；`:157-168` 入参 `normalise()` 把裸名补成 `minecraft:`，而 `:171-184` `matches()` 对 pattern 只 `trim().toLowerCase()`、**不补 ns**，非通配分支 `id.equals(e)` 精确比较。把默认配置 `:37` 写成裸 `skill_magical` 或 `minecraft:skill_magical` → 法术伤害吃物理属性池，日志全静。两把旧尺都绿：`check_numeric.py:121-129` 只查 type 是非空字符串；`check_damage_types.py:81-88,125-132` 对 `minecraft:` 直接跳过、裸名查注册集又确实注册。对账网第二十八例，首次核**类别映射的 pattern 形态**。基线 1 份伤害配置 / 2 处类别 type / 0 问题（S7 离线核 1/2/0；反事实裸名与跨 ns 两把旧尺仍 0 问题）。
@@ -4340,6 +4340,30 @@ fi
   1. `python tools/check_category_types.py` → 末行 `共 1 份伤害类别类型表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份伤害配置 · 2 处类别 type 引用`。
   2. 六组夹具写到 `build/categorytypefix/damage.json5`（每次从干净目录重来，最小内容 `{"multiplier":{"category_attributes":[...]}}`）：A 两条合法完整 id → 0 条 EXIT=0；B 裸 `skill_magical` → 1 条 `type skill_magical 不是有效的类别伤害类型…` EXIT=1；C `minecraft:skill_magical` → 1 条同模板 EXIT=1；D `redtale_project:skill_magicalx` → 1 条同模板 EXIT=1；E `redtale_project:*` → 1 条同模板 EXIT=1；F 一条合法 + 一条 `redtale_project:skill_magicalx` → 1 条且 `-v` 含 `2 处类别 type 引用` EXIT=1。六组逐字对上。
   3. `wc -l < tools/check_category_types.py` ≤ 200；`grep -c "def unmatched"`=1；`grep -cE 'path_of|split\(|rsplit|startswith|endswith|normali[sz]e|check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_damage|check_numeric' tools/check_category_types.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `damage.json5 读取失败`，不抛栈；夹具用完即删（`build/categorytypefix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-22 06:24 · 完成 · tools/check_category_types.py（新建 83 行）· 构建退出码 N/A（卡禁 gradle）· 自测：基线末行 `共 1 份伤害类别类型表 · 0 条问题` EXIT=0、`-v` 含 `2 处类别 type 引用`、六夹具 A~F 逐字 6/6（EXIT=0/1/1/1/1/1）、wc=83≤200、`def unmatched`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈，夹具与自建 pyc 已清；无 NEED-S7，待 S7 验收并接 check_all（45→46）
+- 2026-11-22 07:2x · **S7 验收通过（3/3 + S7 独立六夹具 6/6）** · ①基线 `共 1 份伤害类别类型表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份伤害配置 · 2 处类别 type 引用`；②六夹具独立干净目录 A=0 · B `type skill_magical 不是有效的类别伤害类型…` · C `minecraft:skill_magical` · D `skill_magicalx` · E `redtale_project:*` · F 1 条且 `-v` 2 处，逐字 EXIT=0/1/1/1/1/1；③wc=83≤200、`def unmatched`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `damage.json5 读取失败` EXIT=1 不抛栈；函数边界 4 形态（trim/空串/非字符串/非 dict 跳过）通过。S8 自测零偏差不打回，探针已清。接线 `check_all` 45→46（R102）。
+
+### T-0098 · [OPEN] `tools/check_equipment_slots.py` —— 怪物装备槽位 ↔ 基底槽位对账（M6 / D17，单文件零接线）
+
+- 派单：S7 · 2026-11-22 07:2x（R102）
+- 目标：给 `mobs/*.json5` 的 `equipment[slot]` 补一把「基底声明的 `EquipmentSlotGroup` 与配置槽位一致」的离线尺子。真洞：`check_mobs.check_mob` 只核 equipment 值是带冒号的字符串，`check_mob_equipment.check_equipment` 只核槽名 ∈ 6 槽、自家 ns 的 path ∈ 14 基底；两者对 `head: "redtale_project:sword"`（剑塞头槽）全绿。运行期 `MobSpawner.applyEquipment` 按槽名 `setItemSlot`、只核物品 id 能否解析，`worn++` 照记、生成消息照报「装备 N 件」，零 WARN；而 `ItemFactory` 的属性 modifier 按 `ItemBase.slot()` 声明的槽位组生效（剑 MAINHAND、护甲 HEAD/CHEST/LEGS/FEET、盾 OFFHAND、戒指/护符 MAINHAND），塞错槽 = 装备穿上了但属性/护甲不生效、玩家无从追因（对账网第 29 例，首次核「物品基底 ↔ 目标槽位」）。基线 2 怪 / 4 处自家基底引用 / 0 问题（S7 已离线核反事实：把 `ember_guard` 的 `chest: "redtale_project:chestplate"` 改成 `ring`，`check_mobs` 与 `check_mob_equipment` 仍 EXIT=0）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_equipment_slots.py`（新建，≤ 200 行）
+  - `build/equipslotfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_mobs.py` / `check_mob_equipment.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读存档；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字，S7 定死；`SLOT_OF` 由 S7 从源码冻结，S8 不读源码）：
+  - `NS = "redtale_project:"`：模块级常量。
+  - `SLOT_OF: dict[str, str]`：14 键 6 槽，`sword/dagger/axe/hammer/spear/staff/bow/ring/amulet -> MAINHAND`、`shield -> OFFHAND`、`helmet -> HEAD`、`chestplate -> CHEST`、`leggings -> LEGS`、`boots -> FEET`。脚本内任何位置都不写源码文件名。
+  - `SLOTS = ("mainhand", "offhand", "head", "chest", "legs", "feet")`：顺序固定。
+  - `read_mobs(root: str) -> list[tuple[str, object | None]] | None`：扫 `<root>/*.json5`（文件名升序），用 `clean_json5` 解析（单引号 shim 沿用既有口径）；返回 `(文件名, data|None)`，解析失败 / 顶层非 dict → `None` 值条目；目录不存在或不可读 → 返 `None`，不抛栈。
+  - `mismatches(rows: list[tuple[str, object | None]]) -> list[str]`：只看 `data["equipment"]` 是 dict 的条目。逐个 `(slot, value)`：槽名不在 `SLOTS` → 跳过（归 `check_mob_equipment`）；`value` 非字符串 / 不以 `NS` 开头 → 跳过（外部 ns 离线无基底表、非法形态归 `check_mob_equipment`）；取 `base = value[len(NS):]`，`base` 不在 `SLOT_OF` → 跳过（未知基底归 `check_mob_equipment`）；`SLOT_OF[base] != slot.upper()` → 产一条 `怪物 <mid> 的装备槽 <slot> 放了 <base>，该基底只能在 <target> 槽生效`，其中 `<mid>` = 该怪 `data["id"]` 字符串（非字符串则取文件名去掉 `.json5`，保序），`<target>` = `SLOT_OF[base]` 原值（大写）。结果按文案升序、保稳定；不重复报同一条。
+  - `main() -> int`：CLI `--mobs <dir>`（默认 `src/main/resources/redtale/defaults/mobs`）、`-v`（多打一行 `已检查 <n> 份怪物 · <k> 处自家基底装备引用 · 14 个基底`，n=文件数、k=`equipment` 内以 `NS` 开头的字符串值个数）。`read_mobs` 返 `None` → 打 `[问题] mobs 目录读取失败`、末行 `共 1 份怪物装备槽位对账表 · 1 条问题`、EXIT=1；否则每条 problem 打 `[问题] <文件名> <msg>`，末行 `共 1 份怪物装备槽位对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不核槽名合法性 / 物品 id 是否命中 14 基底 / 是否带冒号（归 `check_mob_equipment`）；不核外部命名空间物品（离线无基底表）；不核 `skills` / `drops` / `attributes` / `level` / `undead`（归 `check_mobs` 及其它尺）；不读原版注册表、不改运行期、不读源码；不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_equipment_slots.py` → 末行 `共 1 份怪物装备槽位对账表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 份怪物 · 4 处自家基底装备引用 · 14 个基底`。
+  2. 六组夹具写到 `build/equipslotfix/`（每次从干净目录重来，各自只有一份 `mobs/one.json5`，双引号 JSON5，形如 `{"id":"g","equipment":{"head":"redtale_project:sword"}}`）：A `head: "redtale_project:sword"` → 1 条 `怪物 g 的装备槽 head 放了 sword，该基底只能在 MAINHAND 槽生效` EXIT=1；B `head: "redtale_project:helmet"` → 0 条 EXIT=0；C `chest: "redtale_project:ring"` → 1 条 `只能在 MAINHAND 槽生效` EXIT=1；D `mainhand: "redtale_project:shield"` → 1 条 `只能在 OFFHAND 槽生效` EXIT=1；E `offhand: "redtale_project:shield"` → 0 条 EXIT=0；F 两份怪物：g 为 `mainhand: "redtale_project:sword"` + `head: "redtale_project:helmet"`（合法），h 为 `chest: "redtale_project:leggings"`（错，应 LEGS）+ `mainhand: "redtale_project:amulet"`（合法）→ 恰好 1 条（h 的）、`-v` 含 `已检查 2 份怪物 · 4 处自家基底装备引用 · 14 个基底` EXIT=1。六组逐字对上。
+  3. `wc -l < tools/check_equipment_slots.py` ≤ 200；`grep -c "def mismatches"`=1；`grep -cE 'check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_mobs|check_mob_equipment' tools/check_equipment_slots.py`=0；`py_compile` OK；`--mobs NO_SUCH` → EXIT=1 且恰好 1 条 `mobs 目录读取失败`，不抛栈；夹具用完即删（`build/equipslotfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4388,7 +4412,8 @@ fi
 | C44 | ~~`tools/check_mob_skills.py`~~ → **T-0094（R98 派 / R99 验）** | —— | —— |
 | C45 | ~~`tools/check_affix_pool_refs.py`~~ → **T-0095（R99 派 / R100 验）** | —— | —— |
 | C46 | ~~`tools/check_repair_active.py`（修理模式激活字段有效性对账）→ **T-0096（R100 派 / R101 验）**~~ | —— | —— |
-| C47 | `tools/check_category_types.py`（伤害类别 type 完整形态对账）→ **T-0097（R101 派）** | `category_attributes[].type` 是 pattern：入参补 ns、pattern 不补，裸名/跨 ns 写歪静默回落物理属性池零 WARN；`check_numeric` 只核字符串、`check_damage_types` 对跨 ns 直接跳过且裸名已注册。对账网第二十八例，首次核类别映射 pattern。基线 1 配置/2 type/0 问题 | 无 |
+| C47 | `tools/check_category_types.py`（伤害类别 type 完整形态对账）→ **T-0097（R101 派 / R102 验）** | —— | —— |
+| C48 | `tools/check_equipment_slots.py`（怪物装备槽 ↔ 基底槽位对账）→ **T-0098（R102 派）** | `check_mobs` 只核带冒号、`check_mob_equipment` 只核槽名与 14 基底，两者对「剑塞头槽」全绿；运行期 `MobSpawner.applyEquipment` 按槽名 setItemSlot 零 WARN、照记 worn，属性 modifier 按 `ItemBase.slot()` 声明的槽位组生效 → 穿上了但不生效。对账网第 29 例，首次核槽位 ↔ 基底语义。基线 2 怪 / 4 引用 / 0 问题 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
