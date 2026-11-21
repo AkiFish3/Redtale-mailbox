@@ -4254,7 +4254,7 @@ fi
 - 2026-11-22 02:07 · 完成 · `tools/check_ability_refs.py`（新建 110 行、零接线；只 import `check_progress.clean_json5`）· 构建 N/A（卡明令禁 gradle：未取锁未 build，无退出码）· 验收 3/3：基线 `共 1 份物品技能引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 4 条技能 id · 1 条 abilities 引用`；六夹具 A~F 逐字 EXIT=1/0/1/0/0/1（A 写歪 ns、C 跨命名空间、F q 写歪各 1 条，B/D/E 0 条；D `-v` `已检查 1 份物品 · 2 条技能 id · 2 条 abilities 引用`，F `-v` `已检查 2 份物品 · 2 条技能 id · 2 条 abilities 引用`，每轮从干净目录重来）；wc=110≤200、`def unmatched`=1、禁用 grep=0（`path_of`/`split(":")` 均未出现）、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条 `items/skills 目录读取失败` EXIT=1 不抛栈；函数边界 5/5；`build/abilityrefsfix/` 与自建 pyc 已清。实现口径：`read_ids`/`read_items` 收 id 原文不归一；`unmatched` 按文案升序，main 逐物品重跑恢复 rel 后按文案排序输出；非字符串 abilities 元素与非 list abilities 均跳过。S7 验收后接 check_all（41→42）。
 - 2026-11-22 02:4x · **S7 验收通过（3/3）** · ①基线 `共 1 份物品技能引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 4 条技能 id · 1 条 abilities 引用`；②六夹具 A~F 逐字 EXIT=1/0/1/0/0/1——A `redtale_projectX:gale_slash` 1 条、B 0 条、C `minecraft:gale_slash` 1 条、D 0 条 + `-v` 1 物品/2 技能/2 引用、E 0 条、F q 写歪 1 条 + `-v` 2 物品/2 技能/2 引用；③wc=110≤200、`def unmatched`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条读失败 EXIT=1 不抛栈。S8 自测数字与 S7 逐字一致，零偏差不打回。探针 `build/abilityrefsfix/` 与 pyc 已清。接线 check_all 41→42 全绿（42/42），七门禁全 0（check_docs 113 份/473 引用、check_tasks 93 卡在制品 0、check_contracts 58 条）。
 
-### T-0094 · [OPEN] `tools/check_mob_skills.py` —— 怪物绑定技能完整 id 引用对账（M6 / D6，单文件零接线）
+### T-0094 · [VERIFIED] `tools/check_mob_skills.py` —— 怪物绑定技能完整 id 引用对账（M6 / D6，单文件零接线）
 
 - 派单：S7 · 2026-11-22 02:4x（R98）
 - 目标：给 `mobs/*.json5` 补一把「`skills[].skill` 的技能 id 按**完整字符串**命中技能表」的离线尺子。真洞：`check_mobs.py:88-95` 核 skills 时把两边都过 `path_of()`（`:10-14` 去命名空间）再比对，写歪 ns（`redtale_projectX:gale_slash` / `minecraft:gale_slash`）甚至裸名 `gale_slash` 归一后照样命中、全绿；运行期 `MobSpec.skill:198-207` 只收非空字符串（连冒号都不查）、不校验存在，`SkillRegistry.get()`（完整 key）取不到 → `SkillEngine.castMob:158-166` 返回 `NO_SKILL` **零日志**，`MobSkillCaster.tick` 每 10 tick 静默重试、怪物照常出生（R83-b，对账网第二十五例；静默形态强于 T-0093 items——那边至少 `ContentItem.useAbility:99-101` 有一次性 WARN）。基线 2 怪物 / 4 技能 id / 3 条 skills 引用 / 0 问题（S7 已离线核实）。
@@ -4272,6 +4272,29 @@ fi
   1. `python tools/check_mob_skills.py` → 末行 `共 1 份怪物技能引用表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 份怪物 · 4 条技能 id · 3 条 skills 引用`。
   2. 六组夹具写到 `build/mobskillsfix/`（每次从干净目录重来，各自只有 `mobs/`、`skills/` 两个子目录；技能带 `id`，怪物带 `id`，`skills` 为 dict 数组 `[{"skill": "<id>", "cooldown_ticks": 100, "chance": 0.5}]`）：A 技能 `redtale_project:gale_slash`、怪绑 `redtale_projectX:gale_slash`（写歪 ns）→ 1 条 `怪物 g 绑定的技能 redtale_projectX:gale_slash 未命中技能表完整 id` EXIT=1（关键：`check_mobs` 归一后绿、本尺红）；B 同技能、怪绑 `redtale_project:gale_slash` → 0 条 EXIT=0；C 绑 `minecraft:gale_slash` → 1 条 EXIT=1；D 两技能 `redtale_project:gale_slash` + `redtale_project:ember_burst`、怪绑这两条 → 0 条 EXIT=0、`-v` 含 `已检查 1 份怪物 · 2 条技能 id · 2 条 skills 引用`；E 怪无 `skills` 字段 → 0 条 EXIT=0；F 两怪：g 绑 `redtale_project:gale_slash`（合法）、h 绑 `redtale_projectX:quake_slam`（写歪），技能 `redtale_project:gale_slash` + `redtale_project:quake_slam` → 1 条（h 的）、`-v` 含 `已检查 2 份怪物 · 2 条技能 id · 2 条 skills 引用` EXIT=1。六组逐字对上。
   3. `wc -l < tools/check_mob_skills.py` ≤ 200；`grep -c "def unmatched"`=1；`grep -cE 'check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_mobs|split\(\":\"\)|path_of' tools/check_mob_skills.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/mobskillsfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+
+2026-11-22 03:12 · 完成 · tools/check_mob_skills.py（新建 114 行）· 构建退出码 N/A（卡明令禁 gradle）· 基线 2 怪/4 技能 id/3 引用/0 问题 EXIT=0；-v 逐字；六夹具 A~F EXIT=1/0/1/0/0/1 逐字；wc=114、def unmatched=1、禁用 grep=0、py_compile OK、--dir NO_SUCH 1 条读失败；函数边界 7/7；待 S7 验收并接 check_all
+- 2026-11-22 03:4x · **S7 验收通过（3/3）** · ①基线 `共 1 份怪物技能引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份怪物 · 4 条技能 id · 3 条 skills 引用`；②六夹具 A~F 逐字 EXIT=1/0/1/0/0/1（A 写歪 ns、C `minecraft:` 跨命名空间、F h 写歪各 1 条，B/D/E 0 条；D `-v` 1 怪/2 技能/2 引用、F 2 怪/2 技能/2 引用）；③wc=114≤200、`def unmatched`=1、禁用 grep=0（`path_of`/`split(":")` 均未出现）、`py_compile` OK、`--dir NO_SUCH` 恰好 1 条 `mobs/skills 目录读取失败` EXIT=1 不抛栈。S8 自测与 S7 独立复跑逐字一致，零偏差不打回。探针 `build/mobskillsfix/` 与 pyc 已清。接线 check_all 42→43 全绿（43/43），七门禁全 0（check_checkall 1 清单/0、check_tasks 94 卡在制品 0、check_contracts 59 条、check_docs 114 份/479 引用）。
+
+### T-0095 · [OPEN] `tools/check_affix_pool_refs.py` —— 词条池词条 id 完整字符串引用对账（M3 / D22，单文件零接线）
+
+- 派单：S7 · 2026-11-22 03:4x（R99）
+- 目标：给 `affix_pools/*.json5` 补一把「池内 `prefix`/`suffix`/`core` 段的词条 id 按**完整字符串**命中词条定义表」的离线尺子。真洞：`check_items.py:119` 核池引用时 `path_of(k) not in affix_ids`（`ids_of:28` 收定义 id 同样抹 ns）、`check_affix_reach.py:104` 用 `ident(ref)`（`rsplit(":",1)[-1]`）两边归一，写歪 ns（词条定义裸名 `sharp`，引用写成 `redtale_project:sharp` / `redtale_projectX:sharp`）归一后照样命中、全绿；运行期 `AffixPools.parseDefs:78` 定义按**原文 id**（`resolveId:139-146` 保留裸名/全名）入 `defs`，`parsePools:109` 池条目按**原文键**入 `entries`，`AffixRoller.java:133` `defs.get(entry.affixId())` 完整 key 取不到 → `:134-138` 记 `deadEntries` → `:119-121` 写进 `Result.warnings()`，而 `ItemFactory.java:148` 调用的是 `warnings=null` 的四参重载（`AffixRoller:93` 自建局部 list）、`:117` 只读 `rolled.stats()`/`affixIds()`，`Result.warnings()` 全仓无读取点 → 装备悄悄少词条、无红无 ERROR 无控制台 WARN（R83-b + R88-b 双命中，对账网第二十六例；此例是**裸名定义 vs 加 ns 引用**的不对称，静默形态强于 T-0093/T-0094 的「两边都带 ns 写歪一边」）。基线 3 词条定义 / 1 池 / 3 引用 / 0 问题（S7 已离线核实，id 均裸名逐字相等）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_affix_pool_refs.py`（新建，≤ 200 行）
+  - `build/affixpoolfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_items.py` / `check_affix_reach.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读 datapack；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字，S7 定死）：
+  - `read_defs(root: str) -> set[str] | None`：扫 `<root>/affixes/*.json5`（文件名升序），`clean_json5` 解析；解析失败 / 顶层非 dict / 顶层 `id` 非字符串 → 跳过；**收完整字符串 id，绝不归一**（`sharp` 与 `redtale_project:sharp` 是两个不同 key）。目录不存在或不可读 → 返 `None`，不抛栈。
+  - `read_pools(root: str) -> list[tuple[str, dict]] | None`：扫 `<root>/affix_pools/*.json5`（文件名升序），同样解析；解析失败 / 顶层非 dict / 无字符串 `id` → 跳过；返回 `(rel, data)`，`rel` 形如 `affix_pools/xxx.json5`，保序。目录不可读 → 返 `None`，不抛栈。
+  - `unmatched(pools: list[tuple[str, dict]], def_ids: set[str]) -> list[str]`：对每个池取 `prefix`/`suffix`/`core` 三段（每段必须是 dict，否则跳过），段内每个**字符串键**（即词条 id，权重值不核）按**完整字符串**比对 `def_ids`，不在则产出一条 `词条池 <pid> 的 <kind> 段引用了未定义的词条 <key>`（`<pid>` 取该池 `data["id"]` 原样）。非 dict 段跳过；结果按文案升序、保稳定。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <n> 份词条池 · <m> 条词条定义 · <k> 条词条引用`，n=池数、m=定义 id 数、k=各池三个段内字符串键数之和）。任一目录读失败 → 打 `[问题] affixes/affix_pools 目录读取失败`、末行 `共 1 份词条池引用表 · 1 条问题`、EXIT=1；否则每条 problem 打 `[问题] <rel> <msg>`，末行 `共 1 份词条池引用表 · <p> 条问题`，0 问题 EXIT=0 否则 1。
+- 不要做：不归一命名空间（这是本卡的全部意义——**禁止**出现 `path_of` / `split(":")` / `rsplit` / `ident(` 取后段比对）；不核权重数值 / `item_level` / `kind` / `slots` / `applies_to`（归 `check_items` / `check_affix_reach`）；不核词条定义自身合法性（归 `check_items`）；不改运行期、不读源码、不读存档；不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_affix_pool_refs.py` → 末行 `共 1 份词条池引用表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 1 份词条池 · 3 条词条定义 · 3 条词条引用`。
+  2. 六组夹具写到 `build/affixpoolfix/`（每次从干净目录重来，各自只有 `affixes/`、`affix_pools/` 两个子目录；词条定义带 `id`，池带 `id`，段为 dict 如 `prefix: { sharp: 100 }`）：A 定义裸名 `sharp`、池 `prefix: { "redtale_project:sharp": 100 }`（加自家 ns）→ 1 条 `词条池 p 的 prefix 段引用了未定义的词条 redtale_project:sharp` EXIT=1（关键：`check_items`/`check_affix_reach` 归一后绿、本尺红）；B 同定义、池 `prefix: { sharp: 100 }` → 0 条 EXIT=0；C 池 `prefix: { "redtale_projectX:sharp": 100 }`（写歪 ns）→ 1 条 EXIT=1；D 两定义 `sharp` + `heavy`、池 `prefix: { sharp: 100, heavy: 80 }` → 0 条 EXIT=0、`-v` 含 `已检查 1 份词条池 · 2 条词条定义 · 2 条词条引用`；E 池无 prefix/suffix/core 段（只有 id + slots）→ 0 条 EXIT=0；F 两池：p `prefix: { sharp: 100 }`（合法）、q `suffix: { "redtale_projectX:of_the_bear": 60 }`（写歪），定义 `sharp` + `of_the_bear` → 1 条（q 的）、`-v` 含 `已检查 2 份词条池 · 2 条词条定义 · 2 条词条引用` EXIT=1。六组逐字对上。
+  3. `wc -l < tools/check_affix_pool_refs.py` ≤ 200；`grep -c "def unmatched"`=1；`grep -cE 'check_all.*append|net\.minecraft|subprocess|exec\(|\.java|check_items|check_affix_reach|split\(\":\"\)|rsplit|path_of|ident\(' tools/check_affix_pool_refs.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `目录读取失败`，不抛栈；夹具用完即删（`build/affixpoolfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4317,7 +4340,8 @@ fi
 | C41 | ~~`tools/check_affix_reach.py`（词条等级/类型可达性对账）→ **T-0091（R95 派 / R96 验）**~~ | —— | —— |
 | C42 | ~~`tools/check_set_reach.py`（套装档位装备槽可达性对账）→ **T-0092（R96 派 / R97 验）**~~ | —— | —— |
 | C43 | ~~`tools/check_ability_refs.py`~~ → **T-0093（R97 派 / R98 验）** | —— | —— |
-| C44 | `tools/check_mob_skills.py`（怪物绑定技能完整 id 引用对账）→ **T-0094（R98 派）** | `check_mobs.py:88-95` 把 mob skills 与技能表两边都过 `path_of` 归一、写歪 ns 甚至裸名全绿；运行期 `MobSpec.skill` 只收非空字符串、`SkillRegistry.get()` 完整 key 取不到 → `SkillEngine.castMob` 返回 `NO_SKILL` **零日志**、`MobSkillCaster` 每 10 tick 静默重试、怪照常出生（静默形态强于 T-0093）。对账网第二十五例。基线 2 怪/4 技能 id/3 引用/0 问题 | 无 |
+| C44 | ~~`tools/check_mob_skills.py`~~ → **T-0094（R98 派 / R99 验）** | —— | —— |
+| C45 | `tools/check_affix_pool_refs.py`（词条池词条 id 完整字符串引用对账）→ **T-0095（R99 派）** | `check_items.py:119` 与 `check_affix_reach.py:104` 都归一比对（path_of / ident），词条定义裸名 `sharp` 被引用成 `redtale_project:sharp` 时两把尺子全绿；运行期 `AffixPools.parseDefs:78` 按原文 id 入表、`AffixRoller:133` 完整 key 取不到 → deadEntries → `Result.warnings()` 全仓无人读，装备悄悄少词条、零红零 WARN（R83-b+R88-b，对账网第二十六例，首次「裸名定义 vs 加 ns 引用」不对称）。基线 3 定义/1 池/3 引用/0 问题 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

@@ -2133,3 +2133,25 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0094**（基线 `共 1 份怪物技能引用表 · 0 条问题` + `-v` 2/4/3 / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(":")`=0）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 43`。
 2. 对账网已第二十五例；按 R98-a/c 判据核实后：drops（`warnOnce` + 原版兜底、静默形态弱）与 items set_id（`/redtale validate` 手工可查）为留池候选，先离线核基线非空再决定；`spawn_rules.match[]`（不同源）、`repair.targets[]`（空基线）仍排除；真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R99 · 2026-11-22 03:4x · 验 T-0094 + check_all 42→43 + 派 T-0095（词条池词条 id 完整字符串引用对账）
+
+- 卡板：T-0094 `check_mob_skills.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具逐字一致）：基线 `共 1 份怪物技能引用表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份怪物 · 4 条技能 id · 3 条 skills 引用`；六夹具 A~F EXIT=1/0/1/0/0/1（S7 自造独立探针 `build/_s7_verify_t0094.py`）；wc=114≤200、`def unmatched`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败不抛栈。S8 零偏差不打回、探针已清。**派 T-0095**（`tools/check_affix_pool_refs.py`：affix_pools 的 `prefix`/`suffix`/`core` 段键 ↔ affixes 完整字符串 id，单文件零接线、六夹具、基线 3 定义/1 池/3 引用/0 问题；接口 `read_defs`/`read_pools`/`unmatched`/`main` S7 定死，**禁** `path_of`/`split(":")`/`rsplit`/`ident(`），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 源码逐字核实 + 离线核基线**（R96-b「以源码为准不采信调研初稿」）：Explore 只读扫 tools check + defaults json5 + Java，复核四个留池项——drops（`MobDrops:96-99/117-121` 有 `warnOnce` + 原版兜底，静默弱）/ set_id（`check_items:69-70` + `ValidateCommand:123-125` 出口明确）/ spawn_rules.match（原版 registry 不同源）/ repair.targets（`Repairer:96-120` 真静默但默认空基线永远绿）——**四项全部不成熟、继续留池**；另排除 jobs exp_sources / skill_trees unlock_skill / items.use.effects / mobs.attributes / 附魔 scripted.script（均有 WARN 出口或已有 check）。落 affix_pools 段键真洞。源码逐字核实 `AffixPools.resolveId:139-146` 保留 id 原文、`parseDefs:78` 完整 id 入表、`parsePools:109` 段键原文入 entries、`AffixRoller:133-138` 完整 key 取不到→deadEntries→`:119-121` `Result.warnings()` 全仓无人读。离线核基线 3/1/3/0 一致。
+- 接线 `check_all` 42→**43** 全绿（43/43）；七门禁全 0：check_checkall 1 清单/0、check_tasks 94 卡在制品 0、check_contracts 59 条、check_docs 114 份/479 引用、check_rounds/ownership/primitives 全 0。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。踩坑：S7 探针首轮 `grep -c` 零匹配返回 1 截断 `&&` 链，分组重跑后全过（非脚本问题）。
+- 收尾：`docs/ROUND-R99-AFFIXPOOLREF.md`、PLAN §13 R99 + §13.102、ROUNDS、TASKS（T-0094 VERIFIED + T-0095 OPEN + 池 C45）、CONTRACTS §4.59、`tools/check_all.py`、协作板 §3。
+
+### 13.102 R99 的五条口径（对账网第二十六例 = 词条池词条 id 完整 id 引用 / 留池项季度复评 / 裸名）+ 下一步（R100）
+
+| R99-a | **对账网第二十六例 = 词条池词条 id 完整字符串引用**。与 §4.57/§4.58 同族（完整 key vs 归一），但首次是**裸名定义 vs 加 ns 引用**的不对称：默认配置里词条定义 id 是裸名（`sharp`），池引用也裸名；一旦有人把池引用写成 `redtale_project:sharp`（看着「更规范」），两把尺子抹 ns 后仍绿，运行期 `defs.get("redtale_project:sharp")` 取不到裸名 key → 装备悄悄少词条。判据仍是 R83-b + R88-b 双命中。 |
+| R99-b | **留池项季度复评的结论可以不派**：四个留池项（drops / set_id / spawn_rules.match / repair.targets）本轮逐一复核源码，全部不成熟（出口明确 / 不同源 / 空基线）。「对账网要一直长大」不是派单理由，基线空或出口明确的洞宁可留池，也别造一把永远绿的尺子（R92-b 延续）。 |
+| R99-c | **静默形态再分级**：§4.57 items abilities 有一次 WARN、§4.58 mobs skills 零 WARN 但怪照常出生、§4.59 词条池少词条且连 Result.warnings() 都无人读——同族三例按「失败出口存在性」排序，词条池最静（玩家只看到装备词条变少、无从追因）。这是 R97-c/R98-b 的定序判据第三次落地。 |
+| R99-d | **裸名纪律第十七次**：派单当轮文档与台账在建脚本一律裸名 `check_affix_pool_refs.py`，不写 `tools/` 全路径。 |
+| R99-e | **反事实验证是核真洞的必要一步**：核基线不只跑「当前 0 问题」，还要离线把一个 ref 改成加 ns 形态、确认「完整 key 判定报 1 条 + 两把旧尺仍绿」，才算把洞坐实（R82-c 的正面版补充）。 |
+
+下一步（R100）：
+
+1. **验 T-0095**（基线 `共 1 份词条池引用表 · 0 条问题` + `-v` 1/3/3 / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(":")`/`rsplit`/`ident(`=0）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 44`。
+2. 对账网已第二十六例；四个留池项本轮复评全不成熟（R99-b），下轮如无新真洞则转内容面（14 基底 / 80 属性 / 8 实体的默认配置是否填满、README 与真机验收材料），不硬凑对账卡。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。

@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-22 02:39 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-22 03:52 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0094 | OPEN | `tools/check_mob_skills.py` —— 怪物绑定技能完整 id 引用对账（M6 / D6，单文件零接线） |
+| T-0095 | OPEN | `tools/check_affix_pool_refs.py` —— 词条池词条 id 完整字符串引用对账（M3 / D22，单文件零接线） |
 
-已验完 **91** 张 / 共 **94** 张。
+已验完 **92** 张 / 共 **95** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
