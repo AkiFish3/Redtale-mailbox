@@ -1994,3 +1994,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0088**（`check_enchant_exclusive.py`：基线 `共 2 份附魔互斥引用表 · 0 条问题` + `-v` 2 引用/2 配置 / 六夹具 A~F 逐字 / wc≤200、`def check_ref`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 37`。
 2. 对账网已第十九例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a 判据核实后无真洞就转内容面，不硬凑。留池候选（`spawn_rules.match[]` / `repair.targets[]`，后者待 targets 真写值）成熟再派。真人窗口 A~G 仍等 Aki，不排期。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。
+
+## R93 · 2026-11-21 10:1x · 验 T-0088 + check_all 36→37 + 派 T-0089（宝石类型孔位可达性）
+
+- 卡板：T-0088 `check_enchant_exclusive.py` `[DONE]` → **VERIFIED**（3/3 + S7 边界 18/18 + 读失败/排序 3 形态）：验收1 基线 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0、`-v` `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`；验收2 六夹具独立干净目录 A=`命名空间未知：redtale_projce`·B=0·C=0·D=`路径非法：#redtale_project:`·E=`必须是字符串`·F=0（`0 条引用/1 份配置`）逐字 EXIT=1/0/0/1/1/0；验收3 wc=143、`def check_ref`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `enchantments 目录读取失败` EXIT=1 不抛栈、`build/enchfix/` 已清。S7 边界：`check_ref` 18/18 + `read_configs` 缺目录返 None / 坏文件 2 条不抛栈 / 文件名升序。S8 零偏差不打回。
+- **派 T-0089**（`check_gem_types.py`：items `gem.type` ↔ `sockets.types[]` 开放词汇可达性，单文件零接线、六夹具、基线 7 份物品/2 种宝石类型/2 种孔类型/0 不可达），在制品 1/3。真洞 = `SocketSpec.Layout` 明写「孔类型词汇开放（不做枚举校验）」，`types()`/`type()` 只做 `strip + toLowerCase`，拼错不告警；`Socketer.accepts()` 严格字符串相等 → 永远 `TYPE_MISMATCH`，`check_items.check_item` 只验 `types` 元素是字符串、`check_all` 36 把尺子全绿（对账网第二十例，开放词汇跨字段可达性）。定为「可达性」而非「固定枚举」，尊重开放词汇设计（R93-b）。
+- **本轮 S7 最小一步 = 派前全类排除留证（R88-c/R89-c/R90-c/R91-b 延续，Explore 只读全量扫 36 json5 + Java + 36 check）**：`spawn_rules.match[]`（离线无实体注册表）/ `repair.targets[]`（真洞但默认空、基线 0 引用，R91-b 留池）/ `passive.id`（死代码无消费者，R92-b）/ 附魔 `scripted.args` ↔ 脚本硬编码数值脱钩（配置层无映射契约，跨文件语义改动需 S7 先定默认，留池）/ 附魔 `weight`/`anvil_cost`（透传原版，离线无法证明原版不夹，R86-b「先证无夹」不过）——逐条排除后才落 gem/socket；离线按接口跑判定逻辑核基线 7/2/2/0 通过。
+- 接线 `check_all` 36→**37** 全绿（`共 37 个脚本 · 跑成 37 · 跳过 0 · 红 0`）；`check_checkall`/`check_tasks`（89 卡在制品 1）/`check_contracts`（53 条）/`check_docs`（108 份 452 引用）/`check_rounds`/`check_ownership` 全 0 问题。
+- 环境：本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。
+- 收尾：`docs/ROUND-R93-GEMTYPES.md`、PLAN §13 R93 + §13.96、ROUNDS、TASKS（T-0088 VERIFIED + T-0089 OPEN + 池 C39）、CONTRACTS §4.52/§4.53、`tools/check_all.py`、协作板 §3。
+
+### 13.96 R93 的四条口径（对账网第二十例 = 开放词汇可达性 / 玩家反馈不等于配置对账 / 跨文件语义先定默认 / 裸名）+ 下一步（R94）
+
+| 编号 | 口径 |
+|---|---|
+| R93-a | **对账网第二十例 = 宝石类型 ↔ 孔类型可达性**（清单→命令→原语→生成器前缀→索引→原语 id→lang 重复键→卡独占→事件注册→damage_type→刷怪 conditions→技能 args→脚本 args→效果 target→怪物装备→消耗品脚本→伤害白名单→树前置可达→附魔互斥引用→宝石孔位可达）。首次核「**开放词汇的跨字段可达性**」：不判字符串是否属于固定枚举，只判「写出来的宝石类型至少有一个孔能收」，与 `SocketSpec` 注释「词汇开放、不做枚举校验」一致；否则尺子自己会先违反设计（R93-b）。 |
+| R93-b | **开放词汇不写死枚举**：`SocketSpec` 明确不做枚举校验，对账脚本不得引入 `offensive/defensive/any` 白名单；合法新词只要被某孔接受即放行。先证「消费端规则」再写尺子，规则是字符串相等 + `any` 通配，不是枚举表。 |
+| R93-c | **有玩家侧单次反馈 ≠ 配置层已对账**：`Socketer.accepts()` 失败会由命令回显给操作者，但 reload 期零告警、日志零痕迹；管理员无法区分「配置写歪」与「玩家选错宝石」。判据仍是 R83-b「两份已有检查都绿、运行期才退化」，不因单次操作反馈而豁免。 |
+| R93-d | **跨文件语义改动先定默认再派 + 裸名纪律**：附魔 `scripted.args` 与脚本硬编码数值脱钩（日志显示新值、玩法用旧值）是真实现象，但「键名映射由谁持有、是否改成 `%var%` 引用」属内容契约，未定默认前派卡 = 让 S8 自己发明接口（R3 铁律），先留池。派单当轮在建文件文档一律裸名（R63-e 后第十一次），不写 `tools/` 全路径，避免 `check_docs` 把未建文件当断链。 |
+
+下一步（R94）：
+
+1. **验 T-0089**（`check_gem_types.py`：基线 `共 1 份宝石孔位可达性表 · 0 条问题` + `-v` 2 宝石类型/2 孔类型/7 物品 / 六夹具 A~F 逐字 / wc≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 38`。
+2. 对账网已第二十例；按 R80-b/R84-b/R85-d/R86-b/R87-a/R88-a/R89-b/R90-a/R91-a/R92-a/R93-a 判据核实后无真洞就转内容面，不硬凑。留池候选：`spawn_rules.match[]`、`repair.targets[]`（待真写值）、`enchantments.scripted.args` ↔ 脚本数值映射（待 S7 定默认）；附魔 `weight`/`anvil_cost` 已被 R86-b 排除。真人窗口 A~G 仍等 Aki，不排期。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走。

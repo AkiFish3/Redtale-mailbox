@@ -4109,7 +4109,7 @@ fi
 - 2026-11-21 07:58 · 完成 · tools/check_tree_reach.py（新建 165 行） · 构建 N/A（卡禁 gradle，未取锁） · 基线 `共 1 份技能树可达性表 · 0 条问题` EXIT=0、`-v` `已检查 1 棵树 · 10 个节点 · 0 个不可达`；六夹具 A/B/C/D/E/F 问题数 2/3/0/3/0/0 逐字 EXIT=1/1/0/1/0/0；wc=165≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--trees NO_SUCH` 恰好 1 条读取失败不抛栈；边界 4/4。注：卡面默认根 `src/main/resources/redtale` 与仓库实际树路径差一层 `defaults/`，main 仅在默认参数且默认根无 skill_trees 时回落 `defaults/`，显式 --trees 不受影响。
 - 2026-11-21 08:5x · **S7 验收通过（3/3 + S7 独立边界 18/18）** · 验收1 基线 `共 1 份技能树可达性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 棵树 · 10 个节点 · 0 个不可达`；验收2 六夹具独立干净目录 A=2（a+b 二元环）· B=3（三元环）· C=0（root→a→b）· D=3（a↔b 加依赖 c）· E=0（自环过滤为根）· F=0（非数组/不存在节点归 check_trees）逐字；验收3 wc=165≤200、`def unreachable`=1、禁用 grep=0、py_compile OK、`--trees NO_SUCH` 恰好 1 条读取失败 EXIT=1 不抛栈。S7 边界 18/18：read_nodes 七形态 + unreachable 八形态 + read_trees 读失败 + _loads 单/双引号。默认根回落经 `find` 证实：`defaults/skill_trees/warrior_vanguard.json5` 是唯一树、顶层无 `skill_trees`，回落逻辑生效。接线 `check_all` 35→36 全绿。S8 默认根回落备注采纳不打回。
 
-### T-0088 · [OPEN] `tools/check_enchant_exclusive.py` —— 附魔 exclusive_set 引用形态对账（M4 / D32，单文件零接线）
+### T-0088 · [VERIFIED] `tools/check_enchant_exclusive.py` —— 附魔 exclusive_set 引用形态对账（M4 / D32，单文件零接线）
 
 - 派单：S7 · 2026-11-21 08:5x（R92）
 - 目标：给 `enchantments/*.json5` 的 `exclusive_set` 字段补一把**引用形态尺子**：该字段原样透传进附魔 datapack（`EnchantmentGenerator.PASS_THROUGH`），写歪命名空间（如 `redtale_projce`）时 `EnchantableTags.ensureExclusiveTags` 因 `!OWN_NS.equals(ns)` 直接跳过、不报错，原版加载时该 tag 视为空 → 本该互斥的附魔可同时附着，无红无 WARN、全 check 绿（对账网第十九例：透传字段引用型）。基线：2 条引用（`soul_reap` = `#redtale_project:exclusive_set/lifesteal`、`super_sharpness` = `#minecraft:exclusive_set/damage`）/ 0 问题（S7 已离线核判定逻辑）。
@@ -4127,6 +4127,30 @@ fi
   1. `python tools/check_enchant_exclusive.py` → 末行 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`。
   2. 六组夹具写到 `build/enchfix/`（每次从干净目录重来，各自只有一份 enchantments json5，含 `id` 字段即可）：A `exclusive_set: "#redtale_projce:exclusive_set/lifesteal"` → 1 条 `命名空间未知：redtale_projce` EXIT=1；B `exclusive_set: "#redtale_project:exclusive_set/lifesteal"` → 0 条 EXIT=0；C `exclusive_set: "#minecraft:exclusive_set/damage"` → 0 条 EXIT=0；D `exclusive_set: "#redtale_project:"`（path 空）→ 1 条 `路径非法` EXIT=1；E `exclusive_set: 5`（非字符串）→ 1 条 `必须是字符串` EXIT=1；F 无 `exclusive_set` 字段 → 0 条 EXIT=0（写了几条引用用 `-v` 看，F 应为 0 条引用 / 1 份配置）。六组逐字对上。
   3. `wc -l < tools/check_enchant_exclusive.py` ≤ 200；`grep -c "def check_ref"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|check_enchants" tools/check_enchant_exclusive.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `enchantments 目录读取失败`，不抛栈；夹具用完即删（`build/enchfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-21 09:21 · 完成 · `tools/check_enchant_exclusive.py`（143 行）· 构建 N/A（卡明令禁 gradle，未取锁未 build）· 验收 3/3：基线 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0、`-v` `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`；六夹具 A~F 逐字 EXIT=1/0/0/1/1/0 + 文案全中（每轮从干净目录重来，F=`0 条引用/1 份配置`）；wc=143≤200 · `def check_ref`=1 · 禁用 grep=0 · py_compile OK · `--dir NO_SUCH` 恰好 1 条目录读取失败 EXIT=1 不抛栈；check_ref 边界 13/13；build/enchfix 与 pyc 已清。git 仅 TASKS.md + 新脚本。S7 验收后 R93 接 check_all（→37）。
+- 2026-11-21 10:1x · **S7 验收通过（3/3 + S7 独立边界 18/18 + 读失败/排序 3 形态）** · 验收1 基线 `共 2 份附魔互斥引用表 · 0 条问题` EXIT=0、`-v` `已检查 2 条 exclusive_set 引用 · 2 份附魔配置`；验收2 六夹具独立干净目录 A=`命名空间未知：redtale_projce`·B=0·C=0·D=`路径非法：#redtale_project:`·E=`必须是字符串`·F=0（`0 条引用/1 份配置`）逐字 EXIT=1/0/0/1/1/0；验收3 wc=143、`def check_ref`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条 `enchantments 目录读取失败` EXIT=1 不抛栈、`build/enchfix/` 已清。S7 边界 18/18：None/非字符串/tag 四形态/单条 id 八形态/单引号与冒号回落；read_configs 缺目录返 None、坏文件 2 条不抛栈、文件名升序。接线 `check_all` 36→37。S8 零偏差不打回。
+
+### T-0089 · [OPEN] `tools/check_gem_types.py` —— 宝石类型孔位可达性对账（M3 / D17，单文件零接线）
+
+- 派单：S7 · 2026-11-21 10:1x（R93）
+- 目标：给 `items/*.json5` 的 `gem.type` ↔ `sockets.types[]` 补一把**类型可达性尺子**。`SocketSpec.Layout` 注释明写「孔类型词汇开放（不做枚举校验）」；`SocketSpec.types()` 只把字符串 `toLowerCase()`、`type()` 只 `trim + toLowerCase()`，拼错一个字母不告警；运行期 `Socketer.accepts()` 规则是「任一侧 any 否则字符串严格相等」，`check_items.check_item` 只验 `types` 元素是字符串、从不看值。结果：宝石 type 写歪 → 永远 `TYPE_MISMATCH` 镶不上，reload 零告警、全 check 绿、玩家只看到一次操作失败（对账网第二十例，跨字段开放词汇可达性）。基线：7 份物品 / 2 种宝石类型（`offensive`/`defensive`）/ 2 种孔类型（`offensive`/`any`）/ 0 不可达（S7 已离线核判定逻辑）。
+- 独占文件（**唯一可写**）：
+  - `tools/check_gem_types.py`（新建，≤ 200 行）
+  - `build/gemfix/` 下可选夹具文件（不入库）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py` / `check_items.py`）；不改 TOOLS 清单；不 import 其它 check 模块（唯一例外：允许 `from check_progress import clean_json5`）；不读 Java / 不读 jar / 不读 datapack；不改卡板；不起服务、不执行 gradle。
+- 接口（逐字）：
+  - `ANY = "any"`。
+  - `read_items(root: str) -> list[tuple[str, object, str | None]] | None`：扫 `<root>/items/*.json5`（文件名升序），返回 `(rel, data, err)`，`rel` 形如 `items/xxx.json5`；用 `clean_json5` 解析（单引号 shim 沿用既有口径），解析失败 / 顶层非 dict → `(rel, None, 错误文本)`；目录不存在或不可读 → 返 `None`，不抛栈。
+  - `gem_types(rows) -> set[str]`：只收 `data["gem"]["type"]` 为非空白字符串的值，`strip().lower()` 后入集；字段缺失 / 空串 / 非字符串一律跳过（归 `check_items`，不合成 `any`、不报警）。
+  - `socket_types(rows) -> set[str]`：收 `data["sockets"]["types"]` 数组中每个非空白字符串的 `strip().lower()`；若 `sockets.count` 是 `int > 0` 且 `types` 缺失 / 非数组，按运行期补位语义加入 `ANY`；`sockets` 缺失 / `count <= 0` → 不加入任何孔类型。非字符串元素跳过（归 `check_items`）。
+  - `unreachable(gems: set[str], sockets: set[str]) -> list[str]`：返回升序列表，含每个满足 `t != ANY and ANY not in sockets and t not in sockets` 的宝石类型 `t`；`gems` 为空或 `sockets` 含 `any` → 空表。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`（多打一行 `已检查 <g> 种宝石类型 · <s> 种孔类型 · <k> 份物品配置`，g/s 为归一化后去重数、k 为文件数）。`read_items` 返 `None` → 打 `[问题] items 目录读取失败`、末行 `共 0 份宝石孔位可达性表 · 1 条问题`、EXIT=1；否则 `err` 非 None → `[问题] <rel> 配置读取失败：<err>`；不可达类型 → `[问题] <rel> 宝石类型 <t> 没有任何孔位可接受（sockets.types 中既无 'any' 也无同值）`（`<rel>` 为该宝石类型首次出现的物品文件）。末行 `共 1 份宝石孔位可达性表 · <p> 条问题`（整目录算一份表，与既有 check 口径一致），0 问题 EXIT=0 否则 1。
+- 不要做：不核 type 是不是固定枚举（`SocketSpec` 明确开放词汇，拼错靠「没有孔能收」判）；不核 `sockets.count` 范围 / `gem.tier` / `stats` / `id` / `base`（归 `check_items`）；不要求每个孔都有宝石能填；不核槽位里已镶的宝石（存档层，离线无数据）；不读 Java AST / 不编译 / 不读 jar。
+- 验收（**三条，全部可机器执行**）：
+  1. `python tools/check_gem_types.py` → 末行 `共 1 份宝石孔位可达性表 · 0 条问题` EXIT=0；`-v` → 含 `已检查 2 种宝石类型 · 2 种孔类型 · 7 份物品配置`。
+  2. 六组夹具写到 `build/gemfix/`（每次从干净目录重来，各自只有一份 `items/one.json5`；格式用双引号 JSON5）：A `gem.type: "offensiv"` + `sockets.types: ["offensive"]` → 1 条 `宝石类型 offensiv 没有任何孔位可接受` EXIT=1；B `offensive` + `["offensive"]` → 0 条 EXIT=0；C `defensive` + `["any"]` → 0 条 EXIT=0；D `defensive` 且无 `sockets` 段 → 1 条 `defensive` EXIT=1；E `gem.type: "OFFENSIVE"` + `sockets.types: ["offensive"]` → 0 条 EXIT=0（大小写归一）；F 两份物品，一份 `gem.type: "arcane"`、一份 `sockets.types: ["offensive"]`，另有 `gem.type: "offensive"` → 恰好 1 条 `arcane` EXIT=1、`-v` 为 `2 种宝石类型 · 1 种孔类型 · 2 份物品配置`。六组逐字对上。
+  3. `wc -l < tools/check_gem_types.py` ≤ 200；`grep -c "def unreachable"`=1；`grep -cE "check_all.*append|net\.minecraft|subprocess|exec\(|check_items" tools/check_gem_types.py`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `items 目录读取失败`，不抛栈；夹具用完即删（`build/gemfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4166,7 +4190,8 @@ fi
 | C35 | ~~`tools/check_use_script.py`~~ → **T-0085（R89 派 / R90 验）** | —— | —— |
 | C36 | `tools/check_damage_whitelist.py`（伤害乘区 damage_types 白名单形态对账）→ **T-0086（R90 派 / R91 验）** | —— | —— |
 | C37 | ~~`tools/check_tree_reach.py`~~ → **T-0087（R91 派 / R92 验）** | —— | —— |
-| C38 | `tools/check_enchant_exclusive.py`（附魔 exclusive_set 引用形态对账）→ **T-0088（R92 派）** | `check_enchants` 只核 id/max_level/supported_items/description/effects 脚本引用，不核 exclusive_set；运行期 `EnchantmentGenerator` 原样透传、`EnchantableTags.ensureExclusiveTags` 对非自家 ns 直接 continue，写歪命名空间让附魔互斥静默失效、零 WARN。对账网第十九例，透传字段引用型 | 无 |
+| C38 | ~~`tools/check_enchant_exclusive.py`~~ → **T-0088（R92 派 / R93 验）** | —— | —— |
+| C39 | `tools/check_gem_types.py`（宝石类型孔位可达性对账）→ **T-0089（R93 派）** | `SocketSpec` 明写「孔类型词汇开放、不做枚举校验」，`types()`/`type()` 只做小写归一；`check_items.check_item` 只验 `sockets.types` 元素是字符串、不进值。`Socketer.accepts()` 严格字符串相等 → gem type 拼字永远 `TYPE_MISMATCH`，reload 零告警、全 check 绿。对账网第二十例，开放词汇跨字段可达性（不写死枚举） | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

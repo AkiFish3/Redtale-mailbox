@@ -1377,4 +1377,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 只读扫 `enchantments/*.json5` 的 `exclusive_set`，核引用形态：`#<ns>:<path>` tag 引用只许 `minecraft` / `redtale_project` 两个命名空间、path 非空且不含 `..`；单条附魔 id 只许 `<ns>:<path>` 或裸 id（`[a-z0-9_/.-]+`）；字段可省略（`None` 跳过）。接口 `VALID_NS` / `read_configs` / `check_ref` / `main` 由 S7 定死；T-0088 派单时未实现、未接线，基线 2 引用 / 0 问题（`soul_reap`=#redtale_project:...、`super_sharpness`=#minecraft:...）。
 - 填补 `check_enchants.check_file` 的盲区：它只核 id/max_level/supported_items/description/effects 脚本引用，不进 `exclusive_set`；运行期 `EnchantmentGenerator.java:40` 把该字段列进 PASS_THROUGH 原样透传、`numericKey()` 只验数值键，`EnchantableTags.java:154-155` 对非自家 ns 直接 continue（写歪命名空间时连补空 tag 的 WARN 都不触发），原版加载时按不存在 tag 当空集 → 本该互斥的附魔可共存、无红无 ERROR（R92-a 透传字段引用型）。
-- 只核「写了的形态」，不判 tag/附魔 id 是否真存在（离线无注册表），不读 datapack、不核 id/max_level/description/supported_items/effects（归 `check_enchants`）。当前未接 `check_all`，T-0088 VERIFIED 后 R93 接 → 应 `跑成 37`。
+- 只核「写了的形态」，不判 tag/附魔 id 是否真存在（离线无注册表），不读 datapack、不核 id/max_level/description/supported_items/effects（归 `check_enchants`）。已接进 `tools/check_all.py`（`共 37 个脚本`，R93 接线）。T-0088 `[VERIFIED]`（R93）：基线 `共 2 份附魔互斥引用表 · 0 条问题` / `-v` 2 引用·2 配置 / 六夹具 A~F 逐字 EXIT=1/0/0/1/1/0 / wc=143、S7 边界 18/18。
+
+### 4.53 宝石孔位类型可达性对账 `check_gem_types.py`（T-0089，R93 派，对账网第二十例）
+
+- 只读扫 `items/*.json5` 的 `gem.type` 与 `sockets.types[]`，按运行期口径 `trim + toLowerCase()` 归一：宝石类型必须至少被某个孔类型接受（`any` 通配或同值）；`sockets.count > 0` 但无 `types` 时按运行期补位语义视作 `any`；非字符串 / 空串跳过（归 `check_items`）。接口 `ANY` / `read_items` / `gem_types` / `socket_types` / `unreachable` / `main` 由 S7 定死；T-0089 派单时未实现、未接线，基线 7 份物品 / 2 种宝石类型 / 2 种孔类型 / 0 不可达。
+- 填补 `check_items.check_item` 的盲区：该函数只核 `sockets.types` 元素是字符串、gem 段只核 stats/tier，从不看类型值；`SocketSpec.Layout` 明写「孔类型词汇开放（不做枚举校验）」，`types()`/`type()` 只做小写归一，拼错无 WARN；`Socketer.accepts()` 严格字符串相等 → 永远 `TYPE_MISMATCH`、宝石镶不上，reload 零告警（R93-a/b/c）。
+- 只核开放词汇的**跨字段可达性**，不引入固定枚举白名单（否则尺子违反 `SocketSpec` 设计）；不核 `count`/`tier`/`stats`/`id`/`base`（归 `check_items`）、不要求每个孔都有宝石能填、不读存档里的已镶宝石。当前未接 `check_all`，T-0089 VERIFIED 后 R94 接 → 应 `跑成 38`。
