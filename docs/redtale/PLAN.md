@@ -2178,3 +2178,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0096**（基线 `共 1 份修理有效性表 · 0 条问题` + `-v` 7 物品/1 repair 段 / 六夹具 A~F 逐字 / wc≤200、`def check_repair`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 45`。
 2. 对账网已第二十七例；按 R100-a/b 判据核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡。四留池项继续观察，repair.targets 待默认配置真写值。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
+
+## R101 · 2026-11-22 06:1x · 验 T-0096 + check_all 44→45 + 派 T-0097（伤害类别 type 完整形态对账）
+
+- 卡板：T-0096 `check_repair_active.py` `[DONE]` → **VERIFIED**（3/3 + S7 边界 8/8）：基线 `共 1 份修理有效性表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 1 条 repair 段`；六夹具 A~F 独立干净目录逐字 EXIT=0/1/1/0/1/1（B/C amount 文案、E/F percent 文案）；wc=99≤200、`def check_repair`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 恰好 1 条读失败 EXIT=1 不抛栈。S7 附加边界首轮 sort 夹具误把两条 JSON 塞同一文件被解析跳过，按 R65-a 改两文件后 8/8 全过，不打回；S8 零偏差。夹具已清。**派 T-0097**（`check_category_types.py`：damage.json5 `multiplier.category_attributes[].type` 完整形态对账，单文件零接线、六夹具、基线 1 配置/2 type/0 问题；接口 `CATEGORY_TYPES`/`read_config`/`read_types`/`unmatched`/`main` S7 定死、禁任何归一与前缀匹配），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 源码逐字核实 + 离线核基线 + 反事实验证**（R96-b/R99-e 延续）：Explore 只读扫 45 个 check + 36 份 json5 + Java，复核四留池项（drops 有 warnOnce+兜底 / set_id 出口明确 / spawn match 原版 registry 不同源 / repair.targets 空基线）全不成熟；另逐条排除 `consume` 字符串模式（clamp+reload WARN，静默弱于零 WARN，留池）、`repair.mode` 枚举（与刚验 T-0096 同段，留池）、`professions.grants`（合法值在原版注册表、Java 无集合可冻结）、附魔 slots/tag（纯透传、无合法集）、mobs level/undead（clamp+WARN）、attack_speed.effect id（仅一份 check 读、开放词汇），落类别映射 pattern 真洞。源码逐字核实 `MultiplierRules:43,45` 冻结两常量、`:143-154` 不命中静默回落、`:157-168` 入参补 ns、`:171-184` pattern 不补且精确相等、`:321-357` 只做结构校验。离线核基线 1/2/0；反事实：裸 `skill_magical` 与 `minecraft:skill_magical` 两把旧尺仍 0 问题（R99-e）。
+- 接线 `check_all` 44→**45** 全绿；七门禁全 0：check_checkall 1 清单/0、check_tasks 97 卡在制品 1、check_contracts 62 条、check_docs 117 份/495 引用、check_rounds/ownership 0。
+- 环境：本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第十九次：本轮在建脚本文档一律裸名 `check_category_types.py`。
+- 收尾：`docs/ROUND-R101-CATEGORYTYPE.md`、PLAN §13 R101 + §13.104、ROUNDS、TASKS（T-0096 VERIFIED + T-0097 OPEN + 池 C47）、CONTRACTS §4.60/§4.61、`tools/check_all.py`、协作板 §3。
+
+### 13.104 R101 的五条口径（对账网第二十八例 = 类别映射 pattern / pattern 与入参归一不对称 / 静默强弱定序）+ 下一步（R102）
+
+| 编号 | 口径 |
+|---|---|
+| R101-a | **对账网第二十八例 = 伤害类别 type 的 pattern 形态**（…→修理有效性→类别映射）。首次核「匹配串本身写得能不能命中」：运行期对**入参**补 `minecraft:` 命名空间、对**pattern**只 trim/lowercase，两边归一规则不对称；裸名与跨 ns 的 pattern 在 `check_numeric`（只看非空串）与 `check_damage_types`（跨 ns 跳过、裸名已注册）下全绿，运行期 first-match 落空静默吃物理属性池。判据仍是 R83-b。 |
+| R101-b | **pattern 与入参的不对称以运行期为准**：尺子禁止 `path_of` / `split(":")` / `startswith` / `endswith` / 任何归一；合法集 = Java 冻结的两个完整 id（`CATEGORY_TYPES`）。通配 `*` / `redtale_project:*` 虽被 `matches()` 支持，但在类别表里会 first-match 遮蔽后续类别，卡面明确也报（R100-b「冻结语义由 S7 写死」同口径）。 |
+| R101-c | **同源候选按静默强弱定序**（R97-c/R98-b 第四次落地）：`consume` 字符串写歪有 clamp+reload WARN、`repair.mode` 枚举写歪也有 WARN，都弱于类别表零 WARN；先派零 WARN 的类别映射，两个有 WARN 的留池，不连派同段两张尺。 |
+| R101-d | **可冻结集合是立卡前提**：`professions.grants` / 附魔 slots·tag 的运行期合法值在原版注册表而非自家 Java，S8 离线无真值可比对 → 排除；即使静默存在也不硬凑（R86-b 延伸）。 |
+| R101-e | **裸名纪律第十九次**：派单当轮文档与台账在建脚本一律裸名 `check_category_types.py`，夹具目录写占位符，不写 `build/` 下具体路径（R63-e 第十九次）。 |
+
+下一步（R102）：
+
+1. **验 T-0097**（基线 `共 1 份伤害类别类型表 · 0 条问题` + `-v` 1 配置/2 type / 六夹具 A~F 逐字 / wc≤200、`def unmatched`=1、禁用 grep=0（含 `path_of`/`split(`/`startswith`/`endswith`）、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 46`。
+2. 对账网已第二十八例；按 R101-a/b/c/d 判据核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡。`consume` 模式 / `repair.mode` 枚举两候选与四老留池项继续观察。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
