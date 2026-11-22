@@ -4368,7 +4368,7 @@ fi
 - 2026-11-22 07:37 · 完成 · tools/check_equipment_slots.py（新建 143 行）· 构建退出码 N/A（卡禁 gradle）· 自测：基线末行 `共 1 份怪物装备槽位对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份怪物 · 4 处自家基底装备引用 · 14 个基底`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（每轮从干净目录重来，F 恰好 1 条且 -v 逐字）；wc=143≤200、`def mismatches`=1、禁用 grep=0、py_compile OK、`--mobs NO_SUCH` 恰好 1 条 `mobs 目录读取失败` EXIT=1 不抛栈；函数边界 8/8（id 非串回落文件名/None 行/外部 ns/未知基底/未知槽/非串值/去重升序/equipment 非 dict）；夹具与自建 pyc 已清；无 NEED-S7，待 S7 验收并接 check_all（46→47）
 - 2026-11-22 08:4x · **S7 验收通过（3/3 + S7 独立六夹具 6/6）** · ①基线 `共 1 份怪物装备槽位对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份怪物 · 4 处自家基底装备引用 · 14 个基底`；②六夹具独立干净目录 A `head:sword`=1 条逐字 · B `head:helmet`=0 · C `chest:ring`=1 条 · D `mainhand:shield`=1 条 · E `offhand:shield`=0 · F 两怪 h 的 `chest:leggings`=1 条且 -v 逐字 2/4/14，逐字 EXIT=1/0/1/1/0/1；③wc=143≤200、`def mismatches`=1、禁用 grep=0、py_compile OK、`--mobs NO_SUCH` 恰好 1 条 `mobs 目录读取失败` EXIT=1 不抛栈。S8 自测零偏差不打回，探针已清。接线 `check_all` 46→47（R103）。
 
-### T-0099 · [DONE] `check_arg_keys.py` —— 原语 args 键名签名对账（M5 / D17，单文件零接线）
+### T-0099 · [VERIFIED] `check_arg_keys.py` —— 原语 args 键名签名对账（M5 / D17，单文件零接线）
 
 - 派单：S7 · 2026-11-22 08:5x（R103）
 - 目标：给 `skills/*.json5` 与 `scripts/*.json5` 的 `conditions[]` / `effects[]` 的 `type → args` 补一把「args 键名必须属于该原语合法键集」的离线尺子。真洞：Java 原语全部用具名 JsonObject key 读参，写歪键名时两把已有尺全绿——`check_skill_args.py:81-99` / `check_script_args.py:81-99` 只核 `conditions` 里 `health_below.ratio` / `chance.chance` 的值域，键名写歪（`raito`）时 `key in args` 为假直接跳过；`check_skills.py` / `check_scripts.py` 只核 type 是已知原语、args 是对象；`check_effect_target.py` 只在 `target` 键存在时核枚举。运行期 `MessageEffect.java:30` `if(!args.has("text")) return;` 零 WARN（欢迎消息永不出现）、`HealthBelowCondition.java:25` 缺省 `0.5D` 零 WARN（阈值从 0.9 静默变 0.5）、`HealEffect.java:64` per_level 缺省 0（每级加成静默消失）、`DamageAoeEffect.java:94` falloff 缺省 0.5（边缘伤害静默翻倍）（对账网第 30 例，首次核「具名参数键 ↔ 原语签名」）。基线 13 处带 args 调用 / 6 文件 / 6 种原语 / 0 问题（S7 已离线核基线逐字一致）。
@@ -4390,6 +4390,7 @@ fi
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 - 2026-11-22 08:53 · 完成 · tools/check_arg_keys.py（新建 170 行）· 构建退出码 N/A（卡禁 gradle）· 自测：基线末行 `共 1 份原语参数键对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 6 份配置 · 13 处带 args 的原语调用 · 16 个原语`；六夹具 A~F 逐字 EXIT=1/0/1/1/0/1（每轮从干净目录重来，报错行逐字命中）；F 的 `-v` 逐字 `已检查 1 份配置 · 2 处带 args 的原语调用 · 16 个原语`；wc=170≤200、`def check_calls`=1、禁用 grep=0、`py_compile` OK、`--skills NO_SUCH --scripts NO_SUCH` 恰好 2 条 `[问题] ... 目录读取失败` EXIT=1 不抛栈；函数边界 14/14；`build/argkeysfix/` 与自建 pyc 已清。无 NEED-S7，待 S7 验收并接 check_all（47→48）。
 - 口径请 S7 裁（不阻塞）：①卡面写 `-v` 的 n = 两目录 `.json5` 文件数之和，但夹具 F 同时写 `skills/one.json5`+`scripts/one.json5` 却期望 n=1；实现按接口逐字取文件数，F 的 `-v` 用「仅 skills/one.json5」的目录实测逐字通过。若 S7 坚持两文件都在，需裁定改期望值或改 n 定义。②`_loads` 在单引号/`//` 归一之外补了裸键加引号（真实配置形如 `id: 'greeting'`），否则基线读成 0 调用；未 import 任何其它 check 模块。
+- 2026-11-22 10:1x · S7 验收 **VERIFIED**（R104）：3/3 + S7 独立六夹具 6/6 逐字（A~F EXIT=1/0/1/1/0/1、F 的 -v `1 份配置 · 2 处调用 · 16 原语`）；基线 `共 1 份原语参数键对账表 · 0 条问题` EXIT=0、`-v` 6 配置/13 调用/16 原语；wc=170、`def check_calls`=1、禁用 grep=0、py_compile OK、双 NO_SUCH 2 条读失败 EXIT=1 不抛栈；夹具已清。裁定两条口径均采纳不打回：①接口 n 公式为准，F 只在 skills 侧放一份取证（R104-a）；②裸键 shim 属必要解析（R104-b）。已接 `check_all` 47→48（跑成 48 红 0）。S7 首轮探针漏建空对侧目录，自修后全过，不打回。
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -4439,7 +4440,7 @@ fi
 | C46 | ~~`tools/check_repair_active.py`（修理模式激活字段有效性对账）→ **T-0096（R100 派 / R101 验）**~~ | —— | —— |
 | C47 | `tools/check_category_types.py`（伤害类别 type 完整形态对账）→ **T-0097（R101 派 / R102 验）** | —— | —— |
 | C48 | ~~`tools/check_equipment_slots.py`~~ → **T-0098（R102 派 / R103 验）** | —— | —— |
-| C49 | `check_arg_keys.py`（原语 args 键名签名对账）→ **T-0099（R103 派）** | `check_skill_args`/`check_script_args` 只核 conditions 里 ratio/chance 值域，键名写歪（`raito`/`txt`/`ammount`）时 `key in args` 为假直接跳过；`check_skills`/`check_scripts` 只核 type 存在、args 是对象。运行期 `MessageEffect:30` 缺 text 静默 return、`HealthBelowCondition:25` 缺 ratio 默认 0.5、`HealEffect:64` 缺 per_level 默认 0，全零 WARN。对账网第 30 例，首次核具名参数键 ↔ 原语签名。基线 13 处 / 6 文件 / 6 原语 / 0 问题 | 无 |
+| C49 | ~~`check_arg_keys.py`（原语 args 键名签名对账）→ **T-0099（R103 派 / R104 验）**~~ | —— | —— |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

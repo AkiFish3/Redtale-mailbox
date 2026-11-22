@@ -2250,3 +2250,28 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0099**（基线 `共 1 份原语参数键对账表 · 0 条问题` + `-v` 6/13/16 / 六夹具 A~F 逐字 / wc≤200、`def check_calls`=1、禁用 grep=0、py_compile OK、`--skills NO_SUCH --scripts NO_SUCH` 2 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 48`。
 2. 对账网已第 30 例；按 R103-a/b/c/d 核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡；留池项继续观察。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
+
+## R104 · 2026-11-22 10:1x · 验 T-0099 + check_all 47→48 + 不派卡（全类排除留证）
+
+- 卡板：T-0099 `check_arg_keys.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份原语参数键对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 6 份配置 · 13 处带 args 的原语调用 · 16 个原语`；六夹具独立干净目录 A~F 逐字 EXIT=1/0/1/1/0/1、F 的 -v `已检查 1 份配置 · 2 处带 args 的原语调用 · 16 个原语`；wc=170≤200、`def check_calls`=1、禁用 grep=0、py_compile OK、双 NO_SUCH 2 条读失败 EXIT=1 不抛栈；探针已清）。S8 两条口径请裁均采纳不打回：①卡面「两目录各一份」与 n=文件数之和公式冲突，按公式取证、F 只放 skills 一份（R104-a）；②裸键 shim 是解析真实配置必要部分（R104-b）。S7 首轮探针漏建空对侧目录，自修后全过，不打回。
+- **本轮不派卡**（WIP 0 但无合格真洞，R99-b/R92-b）：Explore 只读全量扫 49 个 check / 36 份默认配置 / 全部 Java，四候选逐条排除（professions grants 键 = 原版 id/tag 无离线真值；`exclusive_with` 基线 0 引用；`exclusive_group` 有运行期 EXCLUSIVE_CONFLICT 状态、设计行为；set_id 旧留池出口明确），其余老留池项复评不派。对账网仍第 30 例，不造永远绿的尺子。
+- **S7 最小一步 = 内容面覆盖盘点（只盘点不改配置）**：`ItemBase.java:16-37` 14 基底、`AttributeSpecs.java:46` `EXPECTED_COUNT = 80` + `:152-153` 启动自检、`MobSpec.java:19-20` 8 原型 / `RedtaleEntities.java:40-52` 8 EntityType；默认配置 7 物品 / 2 怪 / 4 技能 / 2 脚本 / 2 附魔。6 个原型暂无默认怪 = 内容缺口非代码缺口，补哪 6 只需 S7 先定死字段，下一轮不硬凑对账卡。
+- 接线 `check_all` 47→**48** 全绿（跑成 48 红 0）；七门禁全 0 问题：check_checkall 1 清单、check_tasks 99 卡在制品 0、check_ownership 1 卡/2 声明、check_contracts 64 条、check_docs 119 份/502 引用、check_rounds、checkall 自身。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服端口无 LISTEN。裸名纪律第二十二次：本轮在建/新文档一律裸名 `check_arg_keys.py`。
+- 收尾：`docs/ROUND-R104-ARGKEYS.md`、PLAN §13 R104 + §13.107、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0099 VERIFIED、池 C49 结项）、`docs/CONTRACTS.md` §4.63 验收行 + §4.64、`tools/check_all.py`、协作板 §3。
+
+### 13.107 R104 的五条口径（卡面公式优先 / 探针自错自修 / WIP<3 非充分条件 / 原版注册表不同源 / 裸名）+ 下一步（R105）
+
+| 编号 | 口径 |
+|---|---|
+| R104-a | **卡面夹具描述与接口公式冲突时，接口公式优先**：T-0099 的 n 明写「两目录文件数之和」，夹具 F 声称两目录各一份却期望 n=1；S8 按公式只放 skills 一份取证，判合规不判偏差（R79-a 家族第八次）。 |
+| R104-b | **S7 探针自身写错按 R65-a 修探针，不打回 S8**：首轮六夹具漏建空的对侧目录，多出「目录读取失败」；补齐两目录后 6/6 全过。 |
+| R104-c | **WIP < 3 不是必须派卡的充分条件**：全类排除后若不存在「两把旧尺全绿 + 运行期静默 + 合法集可冻结 + 基线非空」四满足候选，按 R92-b/R99-b 不派，写清逐条留证。 |
+| R104-d | **原版注册表 id/tag 无离线真值的候选一律排除**：professions `grants` 与 `spawn_rules.match` 同因；抄一份静态名单造尺只会误报，不算对账。 |
+| R104-e | **裸名纪律第二十二次**：派单/验收当轮文档与台账在建脚本只写裸名，避免 `check_docs` 把未建文件当断链。 |
+
+下一步（R105）：
+
+1. 无卡可验；`check_all` 48 全绿即视为本轮对账网稳定。若 S8 领走新卡（本轮未派），先验再接。
+2. 按 R104-c/d：无新真洞时不硬凑卡，转内容面——由 S7 先定死 6 只缺失原型（`ranged`/`summoner`/`charger`/`flyer`/`elite`/`ambient`）的完整字段（id/name/base/scale/level/attributes/equipment/skills），定死后才考虑作为 S8 机械填充卡。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）/ Q-023（display 服务端口径）无答复，继续按默认走；真人窗口 A~G 等 Aki。

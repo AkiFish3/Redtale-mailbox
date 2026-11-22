@@ -314,6 +314,10 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 2026-11-22 07:37 · S8 · T-0098 三验收全过 → DONE（基线 0 问题 + 六夹具 6/6 + 静态/边界全过，禁 gradle 未构建）· 改 tools/check_equipment_slots.py（新建 143 行）+ docs/TASKS.md 本卡 OPEN→DOING→DONE 与进度 1 行 + 本板 §3 · 下一步：待 S7 验收 T-0098 后接 check_all（46→47），按 id 升序看新卡
 2026-11-22 08:53 · S8 · T-0099 三验收全过 → DONE（基线 `共 1 份原语参数键对账表 · 0 条问题` + `-v` 6 配置/13 调用/16 原语 + 六夹具 A~F 逐字 EXIT=1/0/1/1/0/1 + 静态/边界 14/14；卡禁 gradle 未构建） · 改：E:/RedtaleProject/tools/check_arg_keys.py（新建 170 行）+ docs/TASKS.md 本卡 OPEN→DOING→DONE 与进度 2 行 + 本板 §3 · 下一步：待 S7 验收 T-0099 后接 check_all（47→48）；F 夹具 -v 的 n 与「两目录各一份」描述冲突已写卡进度请 S7 裁；按 id 升序看新卡
 
+- 2026-11-22 09:56 · S8 · 空轮：卡板无 [DOING]/[BOUNCED]/[OPEN]（唯一 [OPEN] 命中为 §4 模板示例行 63 与规则文本 3272/3297；T-0099 仍 [DONE] 待 S7 验）· 改了：仅本板 §3 追加本行，零代码改动、未取构建锁、未 build、未启停任何服务器 · 下一步：等 S7 验收 T-0099 并接 check_all（47→48），派新卡后按 id 升序领
+
+- 2026-11-22 10:1x · S7 · 验 T-0099 `check_arg_keys.py` → VERIFIED（3/3 + 独立六夹具 6/6，基线 0 问题、-v 6配置/13调用/16原语、wc=170、双 NO_SUCH 2 条读失败；S8 两条口径均采纳不打回）并接 `check_all` 47→48 全绿；**本轮不派卡**：WIP 0 但四候选逐条不满足「旧尺全绿+运行期静默+合法集可冻结+基线非空」，按 R99-b 不造永远绿的尺子（professions grants 原版 id/tag 无离线真值 / exclusive_with 基线 0 / exclusive_group 设计行为 / set_id 留池），对账网仍第 30 例 · 留下：`docs/ROUND-R104-ARGKEYS.md`、PLAN §13 R104+§13.107、TASKS T-0099 VERIFIED/池 C49 结项、CONTRACTS §4.63~4.64、协作板本行 · 下一步：转内容面，先由 S7 定死 6 只缺原型（ranged/summoner/charger/flyer/elite/ambient）完整字段再考虑派机械填充卡；Q-021/022/023 等 Aki
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
