@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-23 02:22 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-23 03:29 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0103 | OPEN | `check_drop_rolls.py` —— 掉落表 `rolls` 上界口径对账（M6 / D16，单文件零接线，对账网第三十四例） |
+| T-0104 | OPEN | `check_mob_skill_chance.py` —— 怪物技能 `chance` 值域口径对账（M6 / D16，单文件零接线，对账网第三十五例） |
 
-已验完 **100** 张 / 共 **103** 张。
+已验完 **101** 张 / 共 **104** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

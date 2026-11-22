@@ -1488,3 +1488,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 填补旧尺 `check_mobs.check_drop:126-128` 的上界缝：旧尺只判 `rolls>=1` 整数，反事实 `17`/`100` 全绿；运行期 `DropSpec.java:91` `Math.max(1, Math.min(MAX_ROLLS, integer(...)))` 静默夹到 16、零 WARN（`:60`/`:89`/`:107` 的 WARN 路径反证夹取出口有意不告警）→ 内容写 100 次掷骰实际只掷 16 次（R106-b 落地）。
 - 只核显式 `rolls` 的整数上界，不核缺键 / 非整数 / `<1`（归 `check_mobs.check_drop`）、不核 `xp`/`min`/`max`/`chance`/`item`/`id`/drops 引用（同族留池或归 `check_mobs`）、不核期望掉落量（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0103 VERIFIED 后 R109 接 → 应 `跑成 52`。
 - 同族 `xp` 上界 `MAX_XP=1_000_000`、件数 `MAX_COUNT=64`、`min` 负值夹零同样是静默改写，按 R107-a「同父异尺不合并」与 R107-d「分支多的字段不派」留池，待本卡落地后按四满足判据逐条复评。
+- T-0103 `[VERIFIED]`（R109）：基线 `共 1 份掉落掷骰次数口径对账表 · 0 条问题` EXIT=0 / `-v` 1 表·3 引用 / 六夹具 A~F 逐字 EXIT=0/1/1/0/1/0 / wc=165、`def check_rolls`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；S7 独立六夹具 6/6（首轮探针 E 期望自错改正，不打回），探针已清，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 52 个脚本`，R109 接线）。
+
+### 4.70 怪物技能 chance 值域口径对账 `check_mob_skill_chance.py`（T-0104，R109 派，对账网第三十五例）
+
+- 只读扫 `mobs/*.json5` 的 `skills[].chance`：缺键 / 非数字 / bool 跳过（`MobSpec.java:220-222` 缺省 1.0、非数字有 WARN），显式数字必须满足 `CHANCE_MIN=0.0 ≤ v ≤ CHANCE_MAX=1.0`，越界或 `nan`/`inf` 产 `<文件名>: skills[<i>].chance 值 <repr(v)> 不在 [0,1]`。常量由 S7 从 `MobSpec.java:220,224` 逐字冻结，S8 不读源码。`CHANCE_MIN` / `CHANCE_MAX` / `_loads` / `read_mobs` / `check_chances` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 2 怪 / 3 处 chance 引用（0.35 / 0.5 / 0.25）/ 0 问题（S7 离线核逐字）。
+- 填补 52 把尺的共同盲区：`check_mobs.py:88-95` 的 `check_mob` 只查 `skills[].skill` 引用命中，不进 `chance`；S7 内存反事实把 `chance` 换成 `2.5 / -0.5 / inf / true / "2.5" / 0`，`check_mob()` 报错集合逐字相同（技能 id 命中时全 `[]`）。运行期 `MobSpec.java:224` `Math.max(0.0D, Math.min(1.0D, value))` 静默夹取零 WARN；`:221` 非数字 WARN 是反证出口形态差异 → 配置写 2.5 实际 100% 释放，运营看不见（R106-b「夹之前的配置值」第三次落地）。
+- 只核显式 `chance` 的数字形态与区间，不核缺键 / 非数字 / bool（有合法缺省或 WARN）、不核 `skills[].skill`（归 `check_mob_skills.py`）、不核 `cooldown_ticks`（同源留池 C56）、不核 level/scale/drops/spawn_rules、不核释放概率的内容平衡；不读源码/存档、不改运行期。当前未接 `check_all`，T-0104 VERIFIED 后 R110 接 → 应 `跑成 53`。

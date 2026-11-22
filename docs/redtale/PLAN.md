@@ -2370,3 +2370,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0103**（基线 `共 1 份掉落掷骰次数口径对账表 · 0 条问题` + `-v` 1 表/3 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_rolls`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 51→52。
 2. 按 R108-b 复评 `xp` 上界 / `min` 负值 / `max` 上界三同族字段；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑卡。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R109 · 2026-11-23 03:2x · 验 T-0103 + check_all 51→52 + 派 T-0104（怪物技能 chance 值域口径）
+
+- 卡板：T-0103 `check_drop_rolls.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份掉落掷骰次数口径对账表 · 0 条问题` EXIT=0 / `-v` 1 表·3 引用·边界 [1,16] / 六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（B `17`、C `100` 各 1 条，E 两条按 a/b，F `-v` 逐字 2·2）/ wc=165≤200、`def check_rolls`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1 不抛栈；S7 探针首轮 E 期望自错按 R65-a 改正后 6/6，S8 零偏差不打回，探针已清）。**派 T-0104**（`check_mob_skill_chance.py`：mobs `skills[].chance` 显式数字必须 `[0,1]`，常量由 `MobSpec.java:220,224` 冻结，单文件零接线、六夹具、基线 2 怪/3 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = 全类排除留证 + 源码逐字核实 + 内存反事实 + 离线核基线**：Explore 只读扫 52 把 check / 默认配置 / Java；复核四老留池项与 `xp`/`min`/`max` 同族字段后，落 `mobs[].skills[].chance`（R103 初筛曾以「有 clamp」排除，本轮按 R106-b「夹之前的配置值」重评：clamp 零 WARN 恰是真洞而非排除理由）。证据：`check_mobs.py:88-95` 只查 skill id；内存反事实 `2.5/-0.5/inf/true/"2.5"/0` 六形态旧尺报错集合逐字相同；`MobSpec.java:224` 静默夹 `[0,1]`，`:221` 非数字 WARN 反证出口形态差异；离线核基线 2/3/0 逐字一致。对账网第 35 例。
+- 接线 `check_all` 51→**52** 全绿（52/52 红 0）；七门禁全 0（check_docs / check_tasks 104 卡在制品 1 / check_contracts 71 条 / check_checkall / check_rounds / check_ownership / check_docs 引用）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十七次。
+- 收尾：`docs/ROUND-R109-MOBSKILLCHANCE.md`、`PLAN.md` §13 R109 + §13.112、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0103 VERIFIED + T-0104 OPEN + 池 C55/C56/C57）、`docs/CONTRACTS.md` §4.69 验收行 + §4.70、`tools/check_all.py`、协作板 §3。
+
+### 13.112 R109 的五条口径（clamp 重评 / 同父异尺 / WARN 反证 / 留池复评 / 裸名）+ 下一步（R110）
+
+| 编号 | 口径 |
+|---|---|
+| R109-a | **「有 clamp」不是排除理由，要看 clamp 出口是否告警**：R103 曾因 `mobs skills chance` 有 clamp 排除；本轮按 R106-b 重评，`MobSpec.java:224` 的 clamp 零 WARN 恰是玩家看不见的洞，R115-d「有 WARN 的兄弟路径是反证」同向。 |
+| R109-b | **同父异尺继续拆卡**：`chance` 与 `cooldown_ticks` 同在 `MobSpec.SkillRef`，但常量、基线、语义各自独立；先派出口更干净的 `chance`，`cooldown_ticks` 留池 C56。 |
+| R109-c | **旧尺反事实要覆盖多形态**：`2.5 / -0.5 / inf / true / "2.5" / 0` 六种写法传进 `check_mob()` 报错集合逐字相同，才能确认不是「某一种值旧尺会红」。 |
+| R109-d | **留池项逐轮复评不等于停滞**：四老留池项 + `xp`/`min`/`max` 本轮复评后仍不成熟，按 R99-b/R100-c 不硬凑尺子；T-0104 落地后再核 C56。 |
+| R109-e | **裸名纪律第二十七次**：派单当轮文档与台账在建脚本只写裸名 `check_mob_skill_chance.py`，避免文档路径检查把未建文件当断链。 |
+
+下一步（R110）：
+
+1. **验 T-0104**（基线 `共 1 份怪物技能概率口径对账表 · 0 条问题` + `-v` 2 怪·3 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_chances`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 52→53。
+2. 按 C56 复评 `mobs[].skills[].cooldown_ticks`（具名常量已取证）；C57 `xp`/`min`/`max` 同族字段复评；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑卡。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
