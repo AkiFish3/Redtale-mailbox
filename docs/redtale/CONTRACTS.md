@@ -1480,3 +1480,11 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 填补旧尺 `check_mobs.py:72-73` 的 `(0,0.25)` 下界缝：旧尺只判 `0 < scale <= 4`，反事实 `0.1 / 0.24 / 0.25` 全绿；运行期 `MobSpec.java:113-121` 把合法区间外的值静默夹进 `[0.25,4.0]` 且零 WARN，`MobSpawner.java:73,124-135` 将结果写进 `minecraft:generic.scale` 基值 → 配置写 `0.1` 的怪实际只有 ×0.25 体积，日志全静（R107-a/b）。
 - 只核显式 `scale` 的数值形态与区间，不核缺键 / `level`（归 `check_mob_levels.py`）/ id·base·undead·attributes·equipment·skills·drops（归 `check_mobs` 等）/ 与属性的乘积（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0102 VERIFIED 后 R108 接 → 应 `跑成 51`。
 - `skill_trees[].points_per_level` 五形态旧尺全绿但多出口、无具名常量、基线薄，按 R107-c/d 留池（C53）；`mobs[].skills[].cooldown_ticks`（clamp 先例）与 `skill_trees.nodes[].effects[].value`（无可冻结区间）继续留池。
+- T-0102 `[VERIFIED]`（R108）：基线 0 问题 / `-v` 2·2 / 六夹具 A~F 逐字 EXIT=0/1/1/0/1/0 / wc=166、`def check_scales`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；S7 独立六夹具 6/6，探针已清，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 51 个脚本`，R108 接线）。
+
+### 4.69 掉落表 rolls 上界口径对账 `check_drop_rolls.py`（T-0103，R108 派，对账网第三十四例）
+
+- 只读扫 `drops/*.json5` 的 `drops[].rolls`：缺键 / 非 int / bool 跳过（旧尺已报或运行期有 WARN），显式 int 必须满足 `ROLLS_MIN=1 ≤ v ≤ ROLLS_MAX=16`，超上界产 `<文件名>: drops[<i>].rolls 值 <repr(v)> 不在 [1,16]`。常量由 S7 从 `DropSpec.java:22,91` 冻结，S8 不读源码。`ROLLS_MIN` / `ROLLS_MAX` / `_loads` / `read_drops` / `check_rolls` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 1 张掉落表 / 3 处 rolls 引用（2/1/1）/ 0 问题。
+- 填补旧尺 `check_mobs.check_drop:126-128` 的上界缝：旧尺只判 `rolls>=1` 整数，反事实 `17`/`100` 全绿；运行期 `DropSpec.java:91` `Math.max(1, Math.min(MAX_ROLLS, integer(...)))` 静默夹到 16、零 WARN（`:60`/`:89`/`:107` 的 WARN 路径反证夹取出口有意不告警）→ 内容写 100 次掷骰实际只掷 16 次（R106-b 落地）。
+- 只核显式 `rolls` 的整数上界，不核缺键 / 非整数 / `<1`（归 `check_mobs.check_drop`）、不核 `xp`/`min`/`max`/`chance`/`item`/`id`/drops 引用（同族留池或归 `check_mobs`）、不核期望掉落量（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0103 VERIFIED 后 R109 接 → 应 `跑成 52`。
+- 同族 `xp` 上界 `MAX_XP=1_000_000`、件数 `MAX_COUNT=64`、`min` 负值夹零同样是静默改写，按 R107-a「同父异尺不合并」与 R107-d「分支多的字段不派」留池，待本卡落地后按四满足判据逐条复评。

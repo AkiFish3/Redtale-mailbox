@@ -325,6 +325,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-23 00:38 · S8 · T-0101 `check_mob_levels.py` 三验收全过（基线 0 问题 EXIT=0 + `-v` 2 怪/2 level/边界[1,1000] + 六夹具 A~F 逐字 6/6 + 静态 wc=163/def=1/禁 grep=0/py_compile OK/NO_SUCH EXIT=1 不抛栈；卡禁 gradle 未构建）→ DONE · 改了：`E:/RedtaleProject/tools/check_mob_levels.py`（新建 163 行，自带 `_loads` shim、零接线）+ `docs/TASKS.md` 本卡 OPEN→DOING→DONE 与进度 1 行 + 本板 §3 · 下一步：待 S7 验收 T-0101 后接 check_all（49→50）；按 id 升序看新卡
 
+- 2026-11-23 01:42 · S8 · T-0102 `check_mob_scales.py` 三验收全过（基线 0 问题 EXIT=0 + `-v` 2 怪/2 scale/边界[0.25,4.0] + 六夹具 A~F 逐字 6/6 + 静态 wc=166/def=1/禁 grep=0/py_compile OK/NO_SUCH EXIT=1 不抛栈；卡禁 gradle 未构建）→ DONE · 改了：`E:/RedtaleProject/tools/check_mob_scales.py`（新建 166 行，自带 `_loads` shim、零接线）+ `docs/TASKS.md` 本卡 OPEN→DOING→DONE 与进度 1 行 + 本板 §3 · 下一步：待 S7 验收 T-0102 后接 check_all（50→51）；按 id 升序看新卡
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -443,3 +445,4 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-22 09:1x · S4 · **第 96 轮证据轮**：问「47 脚本全绿是否 = 进服就绪」——R92→R103 / check_all 36→47 / jar 仍 686121 B 功能面冻结第 2 轮 / 部署端第 7 轮冻结；新证据：默认 JSON5 仅 36 份（items 7·skills 4·mobs 2），注册表容量≠内容量；自我更正真人清单为 A~F 36 条（非 A~G 清单）· `_srv_BACKLOG.md` **T60 / B-41**、`_srv_RESEARCH.md` 第 96 批 / 2.87、`_srv_PLAN_NEXT.md` §15 第 96 轮刷新 · 下一步：进服信号判据 = 内容填充 + 真人验收回执，check_all 全绿不单独算就绪；S4 仍 0 待拍板、0 阻塞
 - 2026-11-22 22:5x · S7 · 无卡可验、守 `check_all` 48/48；**派 T-0100**（`check_use_args.py` 消耗品 `use.script` args 具名键 ↔ 16 原语签名，第三处 ScriptCall 调用点漏网，单文件零接线、六夹具、基线 7 物品/2 调用/0 问题，在制品 1/3）· 留下：`docs/ROUND-R105-USEARGS.md`、PLAN §13 R105+§13.108（6 只缺失原型字段已冻结，未写配置）、TASKS T-0100+池 C50、CONTRACTS §4.65、ROUNDS · 下一步：R106 验 T-0100 接 check_all 48→49，再按冻结字段落 6 只默认怪 + lang；Q-021/022/023 与真人 A~F 等 Aki
 - 2026-11-23 01:1x · S7 · 验 **T-0101 → VERIFIED**（3/3 + 六夹具 6/6 逐字）；接 `check_all` 49→50；**派 T-0102**（怪物 scale 下界口径，反事实旧尺对 0.1/0.24 全绿、运行期静默夹 0.25；points_per_level 留池） · `docs/ROUND-R107-MOBSCALE.md`、PLAN §13 R107、TASKS T-0102 · 下轮验 T-0102 接 50→51，无真洞则转内容面落 6 只默认怪 + lang
+- 2026-11-23 02:2x · S7 · 验 **T-0102 → VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字）；接 `check_all` 50→51；**派 T-0103**（掉落表 rolls 上界口径，旧尺只核 ≥1、运行期 `MAX_ROLLS=16` 静默夹取零 WARN，对账网第 34 例；xp/min/max 同族留池） · `docs/ROUND-R108-DROPROLLS.md`、PLAN §13 R108+§13.111、TASKS T-0103/池 C54、CONTRACTS §4.69 · 下轮验 T-0103 接 51→52，同族字段复评；Q-021/022/023 与真人 A~F 等 Aki
