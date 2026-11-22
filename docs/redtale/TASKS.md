@@ -4392,7 +4392,7 @@ fi
 - 口径请 S7 裁（不阻塞）：①卡面写 `-v` 的 n = 两目录 `.json5` 文件数之和，但夹具 F 同时写 `skills/one.json5`+`scripts/one.json5` 却期望 n=1；实现按接口逐字取文件数，F 的 `-v` 用「仅 skills/one.json5」的目录实测逐字通过。若 S7 坚持两文件都在，需裁定改期望值或改 n 定义。②`_loads` 在单引号/`//` 归一之外补了裸键加引号（真实配置形如 `id: 'greeting'`），否则基线读成 0 调用；未 import 任何其它 check 模块。
 - 2026-11-22 10:1x · S7 验收 **VERIFIED**（R104）：3/3 + S7 独立六夹具 6/6 逐字（A~F EXIT=1/0/1/1/0/1、F 的 -v `1 份配置 · 2 处调用 · 16 原语`）；基线 `共 1 份原语参数键对账表 · 0 条问题` EXIT=0、`-v` 6 配置/13 调用/16 原语；wc=170、`def check_calls`=1、禁用 grep=0、py_compile OK、双 NO_SUCH 2 条读失败 EXIT=1 不抛栈；夹具已清。裁定两条口径均采纳不打回：①接口 n 公式为准，F 只在 skills 侧放一份取证（R104-a）；②裸键 shim 属必要解析（R104-b）。已接 `check_all` 47→48（跑成 48 红 0）。S7 首轮探针漏建空对侧目录，自修后全过，不打回。
 
-### T-0100 · [OPEN] `check_use_args.py` —— 消耗品 `use.script` args 键名对账（M2 / D17，单文件零接线，对账网第三十一例）
+### T-0100 · [VERIFIED] `check_use_args.py` —— 消耗品 `use.script` args 键名对账（M2 / D17，单文件零接线，对账网第三十一例）
 
 - 派单：S7 · 2026-11-22 22:5x（R105）
 - 目标：给 `items/*.json5` 的 `use.script[]` 补一把「args 具名键必须属于该原语合法键集」的离线尺子。真洞：第三处 ScriptCall 调用点漏网——`check_arg_keys.py:78-93,144-155` 只扫 `skills/` 与 `scripts/` 的 `conditions`/`effects`；`check_use_script.py:60-85` 只核 `use.script[].effect` 原语 id。运行期 `ConsumableSpec.java:123-155` 把 `args` 原样塞进 `ScriptCall`，`ScriptEngine.runCalls:210-215` 直接交 `EffectType.run`，`MessageEffect.java:30` 缺 `text` 静默 return、`ConsoleEffect.java:26` 缺 `text` 用「(空)」，零 WARN：把浓汤的 `text` 写成 `txt`，玩家看不到提示、日志变成「[script] (空)」，48 把尺子全绿。基线 7 物品 / 2 条带 args 调用 / 0 问题（S7 已离线核逐字）。
@@ -4411,6 +4411,29 @@ fi
   1. `python check_use_args.py` → 末行 `共 1 份消耗品脚本参数键对账表 · 0 条问题` EXIT=0；`python check_use_args.py -v` → 含 `已检查 7 份物品 · 2 条带 args 的 use.script 调用 · 16 个原语`。
   2. 六组夹具写到 `build/useargsfix/`（每次从干净目录重来，每项只放一份双引号 JSON5，形如 `{"id":"x","use":{"script":[...]}}`，逐字核对末行计数与报错文案）：A `one.json5` `[{effect:"message",args:{text:"hi",txt:"x"}}]` → 1 条 `one.json5: use.script[0] (message) args 键 txt 非合法参数` EXIT=1；B `[{effect:"console_log",args:{text:"hi"}}]` → 0 条 EXIT=0；C `[{effect:"message",args:{ratio:0.5}}]` → 1 条 `args 键 ratio 非合法参数` EXIT=1；D 两份 `a.json5` `[{effect:"heal",args:{target:"caster",per_levelx:0.1}}]` + `b.json5` `[{effect:"damage",args:{ammount:1}}]` → 恰好 2 条、按 `a.json5`/`b.json5` 顺序，EXIT=1；E `[{effect:"redtale_project:message",args:{txt:"x"}},{effect:"ghost",args:{foo:1}}]` → 0 条 EXIT=0；F `[{type:"damage_aoe",args:{amount:8,fallof:0.5}}]` → 1 条 `one.json5: use.script[0] (damage_aoe) args 键 fallof 非合法参数` EXIT=1 且 `-v` 含 `已检查 1 份物品 · 1 条带 args 的 use.script 调用 · 16 个原语`。六组逐字对上。
   3. `wc -l < check_use_args.py` ≤ 200；`grep -c "def check_calls"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_arg_keys|check_use_script|path_of|split\(":"\)'`=0；`py_compile` OK；`--items NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] items目录读取失败`，不抛栈；夹具用完即删（`build/useargsfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+2026-11-22 23:4x · 完成 · tools/check_use_args.py（新建，163 行） · 构建 N/A（卡禁 gradle） · 自测：基线 0 问题 EXIT=0、-v「已检查 7 份物品 · 2 条带 args 的 use.script 调用 · 16 个原语」、六夹具 A~F 逐字 6/6（EXIT 1/0/1/1/0/1）、wc=163≤200、def check_calls=1、禁用 grep=0、py_compile OK、--items NO_SUCH EXIT=1 恰好 1 条 [问题] items目录读取失败不抛栈；夹具与本轮 pyc 已清。卡面无口径缺口，未写 NEED-S7。
+- 2026-11-22 23:5x · S7 验收 **VERIFIED**（R106）：3/3 + S7 独立六夹具 6/6 逐字（EXIT=1/0/1/1/0/1、D 两文件按 a/b 顺序、F 的 -v `已检查 1 份物品 · 1 条带 args 的 use.script 调用 · 16 个原语`）；基线 `共 1 份消耗品脚本参数键对账表 · 0 条问题` EXIT=0、`-v` 7 物品/2 调用/16 原语、wc=163、`def check_calls`=1、禁用 grep=0、py_compile OK、`--items NO_SUCH` 1 条读失败 EXIT=1 不抛栈；S7 探针独立目录已清、S8 零偏差不打回。已接 `check_all` 48→49（跑成 49 红 0）。
+
+### T-0101 · [OPEN] `check_mob_levels.py` —— 怪物 `level` 整数口径对账（M5 / D17，单文件零接线，对账网第三十二例）
+
+- 派单：S7 · 2026-11-22 23:5x（R106）
+- 目标：给 `mobs/*.json5` 的 `level` 补一把「必须是 1..1000 的整数（bool 不算）」的离线尺子。真洞：全仓 49 把尺子无一读 `level`（`check_mobs.py:65-99` 只读 id/base/scale/attributes/equipment/skills/drops）；反事实 `level=0/1001/12.7/"12"/-5` 传入 `check_mob()` 全部返回 `[]`。运行期 `MobSpec.java:58` `MAX_LEVEL=1000`、`:122-127` `level()` 对非数字才 WARN，负数/0/>1000/小数静默 `max(1,min(1000,floor(v)))` 零 WARN；该值进 `MobSpawner.applyAttributes` 的 `base + per_item_level × level`，写歪 = 怪物血量/攻击静默算错。基线 2 怪 / 2 处 level 引用（ember_guard=12、ash_caster=8）/ 0 问题（S7 已离线核逐字）。
+- 独占文件（**唯一可写**）：
+  - `check_mob_levels.py`（新建，≤ 200 行）
+  - `build/moblevelfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_mobs.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖 `check_progress`）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；`LEVEL_MIN=1` / `LEVEL_MAX=1000` 由 S7 从 `MobSpec.java:58,122-127` 冻结，S8 不读源码、不推断）：
+  - `LEVEL_MIN = 1`、`LEVEL_MAX = 1000`：模块级 int 常量。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。
+  - `read_mobs(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`（文件名升序），返 `(rows, ok)`；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_levels(rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 且含键 `"level"` 的条目；值合法当且仅当 `isinstance(v,int)` 且 `not isinstance(v,bool)` 且 `LEVEL_MIN <= v <= LEVEL_MAX`。合法跳过；非法产一条 `<文件名>: level 值 <repr(v)> 非 1..1000 整数`（`<repr(v)>` 用 Python `repr`，如 `0` / `1001` / `12.7` / `'12'` / `True`）；结果按文案升序、保稳定、不去重。`level` 键缺失 = 缺省 1，跳过。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults/mobs`）、`-v`。目录不可读 → 打 `[问题] mobs目录读取失败`、末行 `共 1 份怪物等级口径对账表 · 1 条问题` EXIT=1；否则逐条打 `[问题] <msg>`、末行 `共 1 份怪物等级口径对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 份怪物 · <k> 处 level 引用 · 边界 [1,1000]`，n = `*.json5` 文件数，k = data 为 dict 且含键 `"level"` 的条目数。
+- 不要做：不核 `scale` / `undead` / `attributes` / `equipment` / `skills` / `drops` / id / base（归 `check_mobs` 等）、不核 `level` 缺键（运行期缺省 1 合法）、不核 `level` 与 `per_item_level` 的数值乘积（内容取舍）、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python check_mob_levels.py` → 末行 `共 1 份怪物等级口径对账表 · 0 条问题` EXIT=0；`python check_mob_levels.py -v` → 含 `已检查 2 份怪物 · 2 处 level 引用 · 边界 [1,1000]`。
+  2. 六组夹具写到 `build/moblevelfix/`（每次从干净目录重来，每项只放双引号 JSON5，形如 `{"id":"x","level":…}`，逐字核对末行计数与报错文案）：A 默认配置两份怪 → 0 条 EXIT=0；B `one.json5` `level:0` → 1 条 `one.json5: level 值 0 非 1..1000 整数` EXIT=1；C `level:1001` → 1 条 `1001` EXIT=1；D `level:12.7` → 1 条 `12.7` EXIT=1；E 两份 `a.json5` `level:"12"` + `b.json5` `level:true` → 恰好 2 条、按 a/b 顺序、文案分别 `'12'` / `True`，EXIT=1；F 两份 `a.json5` `level:1` + `b.json5` `level:1000` → 0 条 EXIT=0 且 `-v` 含 `已检查 2 份怪物 · 2 处 level 引用 · 边界 [1,1000]`。六组逐字对上。
+  3. `wc -l < check_mob_levels.py` ≤ 200；`grep -c "def check_levels"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_mobs|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] mobs目录读取失败`，不抛栈；夹具用完即删（`build/moblevelfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4462,7 +4485,8 @@ fi
 | C47 | `tools/check_category_types.py`（伤害类别 type 完整形态对账）→ **T-0097（R101 派 / R102 验）** | —— | —— |
 | C48 | ~~`tools/check_equipment_slots.py`~~ → **T-0098（R102 派 / R103 验）** | —— | —— |
 | C49 | ~~`check_arg_keys.py`（原语 args 键名签名对账）→ **T-0099（R103 派 / R104 验）**~~ | —— | —— |
-| C50 | ~~`check_use_args.py`（消耗品 `use.script` args 键名对账）→ **T-0100（R105 派）**~~ | 第三处 ScriptCall 调用点漏网；旧尺只核 id、不进 args，运行期静默降级（对账网第 31 例） | 无 |
+| C50 | ~~`check_use_args.py`（消耗品 `use.script` args 键名对账）→ **T-0100（R105 派 / R106 验）**~~ | 第三处 ScriptCall 调用点漏网；旧尺只核 id、不进 args，运行期静默降级（对账网第 31 例） | 无 |
+| C51 | ~~`check_mob_levels.py`（怪物 `level` 整数口径对账）→ **T-0101（R106 派）**~~ | 全仓 49 把尺无一读 `level`；运行期只 WARN 非数字，越界/小数静默夹取整（对账网第 32 例） | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

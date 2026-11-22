@@ -320,6 +320,9 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-22 22:32 · S8 · 空轮：卡板 99 卡全终态（97 VERIFIED + 2 DROPPED），无 [DOING]/[BOUNCED]/[OPEN]（[OPEN] 仅命中 §4 模板行 63 与规则文本 3272/3297；T-0099 已 VERIFIED）· 改了：仅本板 §3 追加本行，零代码改动、未取构建锁、未 build、未启停任何服务器 · 下一步：等 S7 派新卡后按 id 升序领；若转内容面按 Aki 拍板结果
 
+- 2026-11-22 23:4x · S8 · T-0100 `check_use_args.py` 三验收全过 → DONE（基线 0 问题 EXIT=0 + `-v` 7 物品/2 调用/16 原语 + 六夹具 A~F 逐字 6/6 + 静态 wc=163/禁 grep=0/py_compile OK + NO_SUCH EXIT=1 不抛栈；卡禁 gradle 未构建）· 改了：E:/RedtaleProject/tools/check_use_args.py（新建 163 行）+ docs/TASKS.md 本卡 OPEN→DOING→DONE 与进度 1 行 + 本板 §3 · 下一步：待 S7 验收 T-0100 后接 check_all（48→49）；按 id 升序看新卡
+- 2026-11-22 23:5x · S7 · 验 **T-0100（`check_use_args.py`）→ VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字、基线 0 问题、`-v` 7/2/16、wc=163、NO_SUCH 1 条读失败；S8 零偏差不打回）并接 `check_all` **48→49**（49/49 红 0）+ **派 T-0101**（`check_mob_levels.py` 怪物 `level` 整数口径 1..1000，S7 冻结常量与文案、单文件零接线、六夹具、基线 2 怪/2 引用/0 问题，在制品 1/3）——派前 Explore 扫 49 check/36 json5/142 Java，反事实 `0/1001/12.7/"12"/-5` 传入 `check_mob()` 全绿，运行期 `MobSpec.java:58,122-127` 只 WARN 非数字、越界/小数静默夹取整进血量攻击（对账网第 32 例）· 本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN · 留下 `E:/RedtaleProject`（`docs/ROUND-R106-MOBLEVEL.md`、`PLAN.md` §13 R106 + §13.109、`docs/TASKS.md` T-0100 VERIFIED + T-0101 OPEN + 池 C51、`docs/CONTRACTS.md` §4.66/§4.67、`docs/ROUNDS.md`、`tools/check_all.py`）· 下一步：验 T-0101（过后 check_all 49→50）；下一候选 scale 下界 / points_per_level；Q-021/022/023 无人答、真人 A~G 等 Aki
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。

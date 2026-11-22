@@ -1460,3 +1460,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 填补第二处已有检查之间的缝：`check_arg_keys.py:78-93,144-155` 只覆盖 skills/scripts 两条 ScriptCall 路径；`check_use_script.py:60-85` 只核 `use.script[].effect` 是否注册（`:81-82` 带冒号直接跳过）。运行期 `ConsumableSpec.java:123-155` 把 args 原样入 `ScriptCall`，`ScriptEngine.runCalls:210-215` 直接交 `EffectType.run`，`MessageEffect.java:30` 缺 `text` 静默 return、`ConsoleEffect.java:26` 缺 `text` 用「(空)」，零 WARN：浓汤提示键写歪后玩家看不到消息、日志退化为「(空)」，48 把尺子仍全绿（R105-a，第三处调用点）。
 - 只核 args 键名，不核 `use.effects` / `restore_food` / `saturation` / `cooldown_ticks` / `consume`（归 `ConsumableSpec` 与 `check_items`）、不核原语 id（归 `check_use_script`）、不核值域与缺键（多数有合法缺省，不造永远绿红线）、不核数值类型、不读源码/存档、不改运行期。当前未接 `check_all`，T-0100 VERIFIED 后 R106 接 → 应 `跑成 49`。
 - 6 只缺失原型的完整字段由 S7 在 PLAN §13.108 冻结（ranged/summoner/charger/flyer/elite/ambient），属内容面，与 T-0100 独占文件不重叠；详见 `docs/ROUND-R105-USEARGS.md`。
+- T-0100 `[VERIFIED]`（R106）：基线 `共 1 份消耗品脚本参数键对账表 · 0 条问题` EXIT=0 / `-v` 7 物品·2 调用·16 原语 / 六夹具 A~F 逐字 EXIT=1/0/1/1/0/1 / wc=163、`def check_calls`=1、禁用 grep=0、py_compile OK、`--items NO_SUCH` 1 条读失败；S7 独立六夹具 6/6，探针已清，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 49 个脚本`，R106 接线）。
+
+### 4.66 怪物 level 整数口径对账 `check_mob_levels.py`（T-0101，R106 派，对账网第三十二例）
+
+- 只读扫 `mobs/*.json5` 显式写出的 `level`：合法当且仅当 `isinstance(int) and not isinstance(bool)` 且 `1 ≤ v ≤ 1000`；缺键合法（运行期缺省 1）；非法产 `<文件名>: level 值 <repr(v)> 非 1..1000 整数`。`LEVEL_MIN=1` / `LEVEL_MAX=1000` 由 S7 从 `MobSpec.java:58,122-127` 逐字冻结，S8 不读源码、不推断。`LEVEL_MIN` / `LEVEL_MAX` / `_loads` / `read_mobs` / `check_levels` / `main` 接口由 S7 定死。T-0101 派单时未实现、未接线，基线 2 怪 / 2 处 level 引用（12、8）/ 0 问题（S7 离线核逐字）。
+- 填补全仓 49 把尺的共同盲区：`check_mobs.py:65-99` 的 `check_mob()` 只读 id/base/scale/attributes/equipment/skills/drops，全仓 grep `level` 零命中；反事实 `level=0/1001/12.7/"12"/-5` 传 `check_mob()` 全部返回 `[]`。运行期 `MobSpec.java:122-127` 仅对非数字 WARN，越界/负数/小数静默 `max(1,min(1000,floor(v)))`；该值进 `MobSpawner.applyAttributes` 的 `base + per_item_level × level` → 怪物血量/攻击静默算错（对账网第 32 例，首次核静默夹取整前的配置形态）。
+- 只核显式 `level` 的整数性与区间，不核缺键 / `scale` / `undead` / `attributes` / `equipment` / `skills` / `drops`（归 `check_mobs` 等）、不核 `level × per_item_level` 乘积（内容取舍）、不读源码/存档、不改运行期。当前未接 `check_all`，T-0101 VERIFIED 后 R107 接 → 应 `跑成 50`。
+
+### 4.67 R106 的验收与派单留证
+
+- T-0100 VERIFIED 证据：S7 独立六夹具写在独立目录（与 S8 卡内 `build/useargsfix/` 不冲突）逐字 6/6，基线/静态/边界全过；S8 零偏差不打回。接线后 `check_all` 49/49 EXIT=0。
+- T-0101 派单证据：`check_mob()` 对五种非法 level 全绿（内存直接调用），运行期静默路径有 Java 行号，冻结表来自源码而非旧尺，默认基线 2/2/0 非空；六夹具能覆盖上下越界、小数、字符串、bool 与合法边界。详见 `docs/ROUND-R106-MOBLEVEL.md`。

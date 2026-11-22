@@ -2298,3 +2298,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0100**（基线 `共 1 份消耗品脚本参数键对账表 · 0 条问题` / `-v` 7 物品·2 调用·16 原语 / 六夹具 A~F 逐字 / wc≤200、`def check_calls`=1、禁用 grep=0、py_compile OK、`--items NO_SUCH` 1 条读失败）；过后 `check_all` 48→49。
 2. 按 §13.108 R105-d 的字段表落 6 只默认怪 + 同步 `gen_entity_lang.py` 产物；属内容面（S7 独占），与 T-0100 独占文件不重叠，可同轮做，但不得在 T-0100 `VERIFIED` 前改它。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~G 等 Aki。
+
+## R106 · 2026-11-22 23:5x · 验 T-0100 + check_all 48→49 + 派 T-0101（怪物 level 整数口径）
+
+- 卡板：T-0100 `check_use_args.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份消耗品脚本参数键对账表 · 0 条问题` EXIT=0 / `-v` 7 物品·2 调用·16 原语 / 六夹具 EXIT=1/0/1/1/0/1 逐字、D 按 a/b 顺序、F 的 `-v` 1/1/16 / wc=163、`def check_calls`=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败；S7 独立探针目录已清，S8 零偏差不打回）。**派 T-0101**（`check_mob_levels.py`：mobs `level` 必须是 1..1000 整数且 bool 不算，S7 冻结 `LEVEL_MIN/LEVEL_MAX` 与文案签名、单文件零接线、六夹具、基线 2 怪/2 引用/0 问题），在制品 1/3。
+- **S7 最小一步 = 派前全类排除留证 + 源码逐字核实 + 反事实**：Explore 只读扫 49 check / 36 json5 / 142 Java，四满足判据逐条核过；旧尺 `check_mobs.check_mob:65-99` 完全不读 level，反事实 `0/1001/12.7/"12"/-5` 全绿；运行期 `MobSpec.java:58,122-127` 只 WARN 非数字，越界/小数静默夹取整进血量/攻击。对账网第 32 例 = 首次核「静默夹取整前的配置形态」。`scale` 下界口径过宽、`points_per_level` 非整数静默回落列为下一张候选，本轮不合并、不硬凑。
+- 接线 `check_all` 48→**49** 全绿（49/49 红 0）；七门禁全 0 问题（check_docs / check_tasks / check_contracts / check_rounds / ownership / check_checkall / checkall 自身）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十四次。
+- 收尾：`docs/ROUND-R106-MOBLEVEL.md`、PLAN §13 R106 + §13.109、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0100 VERIFIED + T-0101 OPEN + 池 C51）、`docs/CONTRACTS.md` §4.66/§4.67、`tools/check_all.py`、协作板 §3。
+
+### 13.109 R106 的五条口径（怪物等级 / 旧尺口径过宽 / 缺键合法 / 源码优先 / 裸名）+ 下一步（R107）
+
+| 编号 | 口径 |
+|---|---|
+| R106-a | **对账网第 32 例 = 怪物 `level` 的整数口径**：不是引用型也不是完整 id 型，第一次核「静默夹取整前的配置形态」。 |
+| R106-b | **旧尺口径过宽也是洞**：`check_mobs.py:72-73` 的 `0 < scale <= 4` 放行 `(0,0.25]`，运行期夹到 0.25；`scale` 与 `level` 语义不同，不合并成一张卡。 |
+| R106-c | **缺键合法不报**：`MobSpec.level()` 缺省 1，新尺只核显式写出的值，不造「必须写 level」的红线。 |
+| R106-d | **冻结语义从 Java 反推不照抄旧尺**：旧尺对非法值全绿，常量以 `MobSpec.java:58,122-127` 为准（R96-b 延续）。 |
+| R106-e | **裸名纪律第二十四次**：派单当轮文档与台账在建脚本只写裸名，避免文档路径检查把未建文件当断链。 |
+
+下一步（R107）：
+
+1. **验 T-0101**（基线 0 问题 / `-v` 2 怪·2 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_levels`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 49→50。
+2. 下一张候选：`mobs[].scale` 旧尺下界口径过宽（冻结 `[0.25,4.0]`）；`skill_trees[].points_per_level` 非整数静默回落 1（冻结整数、`0`=关门槛合法）。按四满足判据逐条核过再派，不足则不派。
+3. 按 R105-d 的六原型字段表落默认怪 + lang（S7 内容面独占）；Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~G 等 Aki。
