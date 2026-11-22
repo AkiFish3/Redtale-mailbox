@@ -2418,3 +2418,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0105**（基线 `共 1 份怪物技能冷却口径对账表 · 0 条问题` + `-v` 2 怪·3 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_cooldowns`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败；函数边界小数/inf/重复值）；过后 `check_all` 53→54。
 2. C57 `xp` 上界 / `min` 负值 / `max` 上界按 R109-d 继续逐出口取证，四判据齐了再拆卡；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R111 · 2026-11-23 05:4x · 验 T-0105 + check_all 53→54 + 派 T-0106（掉落表 xp/min/max 边界口径）
+
+- 卡板：T-0105 `check_mob_skill_cooldowns.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6 + 函数边界：从仓库根基线 `共 1 份怪物技能冷却口径对账表 · 0 条问题` EXIT=0 / `-v` 2 怪·3 引用 / 六夹具 EXIT=0/1/1/0/1/0 逐字 / wc=144、`def check_cooldowns`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；小数/inf/nan/重复值/下标独立断言）。**派 T-0106**（`check_drop_values.py`：drops 顶层 `xp` 与 `drops[].min/max` 绝对边界，常量从 `DropSpec.java:22,57-62,86-89` 冻结，单文件零接线、六夹具、基线 1 表/1 xp/3 min/3 max/0 问题），在制品 **1/3**。
+- **S7 最小一步 = C57 复评 + 全类排除 + 三出口逐字取证 + 反事实**：`DropSpec.java:61` xp 超 1e6 静默夹、`:86` min 夹 `[0,64]`、`:87-88` max 夹 `[0,64]`，`:60/:89/:107` 的 WARN 反证夹取出口故意静默；旧尺 `check_drop_rolls.py` / `check_mobs.py` / `check_all --only drop` 对 `xp:1000001` / `min:-5` / `max:65` 全绿；基线 1/1/3/3 非空。同族三字段同出口一次收口，对账网第 37 例。`drops[].chance` 越界夹 `[0,1]` 留池 C58；六只默认怪 + lang 仍属内容面，不硬凑。
+- 接线 `check_all` 53→**54** 全绿；七门禁全 0（check_tasks 106 卡在制品 1、check_contracts 75 条、check_docs 127 份/536 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十九次。
+- 收尾：`docs/ROUND-R111-DROPVALUES.md`、`PLAN.md` §13 R111 + §13.114、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0105 VERIFIED + T-0106 OPEN + 池 C57 结项/C58）、`docs/CONTRACTS.md` §4.73/§4.74、`tools/check_all.py`、协作板 §3。
+
+### 13.114 R111 的五条口径（三出口同族一次收口 / 根路径验收 / 静默与 WARN 反证 / 留池升级 / 裸名）+ 下一步（R112）
+
+| 编号 | 口径 |
+|---|---|
+| R111-a | **同族同出口可一次收口**：C57 的 xp/min/max 三字段同属一张掉落表、同一解析器、同一类静默 `Math.min/max` 出口（零 WARN），用一把尺收口；与 R110-b「技能定义顶层 vs 怪物技能引用」那种同名不同对象不同常量必须拆卡区分。 |
+| R111-b | **验收命令的工作目录要按卡面写死**：`check_mob_skill_cooldowns.py` 默认路径是仓库相对路径，在 `tools/` 下直接跑会误判目录不可读；S7 首跑踩过一次，按卡面从仓库根重跑即过，不算 S8 偏差。 |
+| R111-c | **WARN 反证出口形态**：`DropSpec.java:60`（xp 负）/`:89`（max<min）/`:107`（非整数）都有 WARN，唯独 `:61/:86/:87-88` 的夹取静默 → 尺子只报静默越界，跳过有 WARN 的形态，避免和既有告警重复报同一件事。 |
+| R111-d | **留池项按四判据升级**：具名常量 + 静默出口零 WARN + 旧尺反事实全绿 + 基线非空，四条齐才派；`drops[].chance` 目前只满足前三条，基线/形态未逐条取证，留 C58。 |
+| R111-e | **裸名纪律第二十九次**：派单当轮文档与台账在建脚本只写裸名 `check_drop_values.py`，避免路径检查把未建文件当断链。 |
+
+下一步（R112）：
+
+1. **验 T-0106**（基线 1 表/1 xp/3 min/3 max + 六夹具 A~F 逐字 + wc≤200、`def check_values`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败；浮点整数形态/重复值/下标）；过后 `check_all` 54→55。
+2. C58 `drops[].chance` 越界按 R111-d 四判据逐出口取证；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

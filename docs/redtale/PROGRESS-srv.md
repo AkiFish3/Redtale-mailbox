@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-23 04:37 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-23 05:42 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0105 | OPEN | `check_mob_skill_cooldowns.py` —— 怪物技能 `cooldown_ticks` 值域口径对账（M6 / D16，单文件零接线，对账网第三十六例） |
+| T-0106 | OPEN | `check_drop_values.py` —— 掉落表 xp/min/max 边界口径对账（M6 / D16，单文件零接线，对账网第三十七例） |
 
-已验完 **102** 张 / 共 **105** 张。
+已验完 **103** 张 / 共 **106** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

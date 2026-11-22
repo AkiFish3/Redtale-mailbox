@@ -1502,9 +1502,22 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 只读扫 `mobs/*.json5` 的 `skills[].cooldown_ticks`：缺键 / 非数字 / bool 跳过（缺省 100、非数字有 WARN），显式数字必须是整数形态且 `COOLDOWN_MIN=1 ≤ v ≤ COOLDOWN_MAX=1_000_000`，否则产 `<文件名>: skills[<i>].cooldown_ticks 值 <repr(v)> 不在 [1,1000000] 整数`。常量由 S7 从 `MobSpec.java:58,208-215` 逐字冻结，S8 不读源码。`COOLDOWN_MIN` / `COOLDOWN_MAX` / `_loads` / `read_mobs` / `check_cooldowns` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 2 怪 / 3 处引用（200 / 80 / 120）/ 0 问题（S7 离线核逐字）。
 - 填补 53 把尺的共同盲区：`check_mobs.py:88-95` 的 `check_mob()` 只查 `skills[].skill` 引用，`check_mob_skill_chance.py:88-103` 只查 `chance`；技能定义顶层 `check_skills.py:94-97` 核的是另一对象（常量 1e9，不可混用）。S7 内存反事实把 `cooldown_ticks` 换成 `-5 / 0 / 1000001 / 2000000 / 0.5 / "abc" / true / 缺键`，`check_mob()` + `check_chances()` 报错集合逐字相同。运行期 `MobSpec.java:212` 仅非数字 WARN，`:214-215` 对 `<=0` / 非有限 / 超上界 / 小数静默归零或截断零 WARN，`SkillEngine.java:158,196` 再把 `ticks<=0` 改走技能自身冷却（R106-b「夹之前的配置值」第四次落地）。
 - 只核显式 `cooldown_ticks` 的整数形态与区间，不核缺键 / 非数字 / bool（有合法缺省或 WARN）、不核小数截断结果、不核 skill id / chance（归各自尺）、不核技能定义顶层同名字段（归 `check_skills.py`）、不核 level/scale/drops/spawn_rules、不核冷却平衡（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0105 VERIFIED 后 R111 接 → 应 `跑成 54`。
+- T-0105 `[VERIFIED]`（R111）：从仓库根基线 0 问题 / `-v` 2 怪·3 引用 / S7 独立六夹具 6/6 逐字 EXIT=0/1/1/0/1/0 / wc=144、`def check_cooldowns`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；函数边界 1.5/0.5/0/inf/nan 报、True/字符串/缺键跳过、重复值不合并、下标正确。已接进 `tools/check_all.py`（`共 54 个脚本`，R111 接线）。
 
 ### 4.72 R110 的验收与派单留证
 
 - T-0104 VERIFIED 证据：S7 独立六夹具写在独立目录（与 S8 卡内 `build/mobskillchancefix/` 不冲突）逐字 6/6，基线/静态/边界全过；S8 零偏差不打回。
 - T-0105 派单证据：`MobSpec.java:58,208-215` 具名常量与静默出口逐字取证；旧尺八形态反事实报错集合逐字相同；默认基线 2 怪 / 3 处 / 0 问题非空；六夹具覆盖上下越界、小数、合法边界、字符串、bool 与缺键。对账网第 36 例。详见 `docs/ROUND-R110-MOBCOOLDOWN.md`。
 - 留池复评：C57 `xp` 上界 / `min` 负值 / `max` 上界同族静默改写本轮按 R107-a/d 仍不派——`xp` 基线仅 1 处、`min` 负值受旧尺 `lo>hi` 部分间接覆盖、`min/max` 同时抬高时旧尺全绿但分支多（非负整数 + `[0,64]` + 相互大小），待逐出口取证后再定；`points_per_level` 等四老留池项不变。
+
+### 4.73 掉落表 xp/min/max 边界口径对账 `check_drop_values.py`（T-0106，R111 派，对账网第三十七例）
+
+- 只读扫 `drops/*.json5` 的顶层 `xp` 与 `drops[].min` / `drops[].max`：缺键 / 非数字 / bool / 非整数形态跳过（运行期 `DropSpec.java:104-110` 有 WARN，`xp` 负值 `:60` 有 WARN），显式整数必须在 `XP_MIN=0 ≤ xp ≤ XP_MAX=1_000_000` 与 `COUNT_MIN=0 ≤ min,max ≤ COUNT_MAX=64` 内，越界产 `<文件名>: xp 值 <repr(v)> 不在 [0,1000000]` / `<文件名>: drops[<i>].min|max 值 <repr(v)> 不在 [0,64]`。常量由 S7 从 `DropSpec.java:22,57-62,86-89` 冻结，S8 不读源码。四个常量 / `_loads` / `read_drops` / `check_values` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 1 张掉落表 / 1 处 xp / 3 处 min / 3 处 max / 0 问题（S7 离线核逐字）。
+- 填补 54 把尺的共同盲区：`check_drop_rolls.py:117-133` 只核 `rolls`，`check_mobs.check_drop:126-128` 只核引用形态。S7 反事实 `xp:1000001` / `min:-5` / `max:65` 写进 drops 配置，`check_drop_rolls.py` 与 `check_mobs.py` 报错集合逐字相同（全绿），`check_all --only drop` 亦绿。运行期 `DropSpec.java:61` / `:86` / `:87-88` 三处 `Math.min/Math.max` 静默夹取零 WARN；`:60` / `:89` / `:107` 的 WARN 反证夹取出口有意不告警（R106-b「夹之前的配置值」第五次落地）。
+- 只核三个字段的绝对边界与整数形态，不核 xp 负值 / 非整数 / bool / 缺键（有 WARN 或合法缺省）、不核 `max<min` 相对关系（`:89` 有 WARN）、不核 rolls/chance/item/id/drops 引用（归各自尺）、不核掉落量平衡（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0106 VERIFIED 后 R112 接 → 应 `跑成 55`。
+- 同族 `drops[].chance` 越界静默夹 `[0,1]`（`DropSpec.java:94-101`）留池 C58，与 T-0104 怪物技能 chance 同形态不同对象；`points_per_level` 等四老留池项不变。
+
+### 4.74 R111 的验收与派单留证
+
+- T-0105 VERIFIED 证据：从仓库根跑基线（在 `tools/` 下跑会因相对默认路径误判读失败，卡面验收按仓库根），S7 独立六夹具写在独立目录（与 S8 卡内 fixture 目录不冲突）逐字 6/6，函数边界用直接 import 独立断言；S8 零偏差不打回。
+- T-0106 派单证据：`DropSpec.java:22,57-62,86-89` 具名常量与三处静默夹取逐字取证；旧尺反事实全绿；默认基线 1 表 / xp 1 / min 3 / max 3 非空；六夹具覆盖上下越界、浮点整数形态、合法边界、字符串、bool 与缺键。同族三字段同出口一次收口（与 R107-a 的 mobs level/scale 不同：那条是不同常量不同出口）。对账网第 37 例。详见 `docs/ROUND-R111-DROPVALUES.md`。
