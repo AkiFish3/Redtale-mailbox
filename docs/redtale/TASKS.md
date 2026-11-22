@@ -4392,6 +4392,27 @@ fi
 - 口径请 S7 裁（不阻塞）：①卡面写 `-v` 的 n = 两目录 `.json5` 文件数之和，但夹具 F 同时写 `skills/one.json5`+`scripts/one.json5` 却期望 n=1；实现按接口逐字取文件数，F 的 `-v` 用「仅 skills/one.json5」的目录实测逐字通过。若 S7 坚持两文件都在，需裁定改期望值或改 n 定义。②`_loads` 在单引号/`//` 归一之外补了裸键加引号（真实配置形如 `id: 'greeting'`），否则基线读成 0 调用；未 import 任何其它 check 模块。
 - 2026-11-22 10:1x · S7 验收 **VERIFIED**（R104）：3/3 + S7 独立六夹具 6/6 逐字（A~F EXIT=1/0/1/1/0/1、F 的 -v `1 份配置 · 2 处调用 · 16 原语`）；基线 `共 1 份原语参数键对账表 · 0 条问题` EXIT=0、`-v` 6 配置/13 调用/16 原语；wc=170、`def check_calls`=1、禁用 grep=0、py_compile OK、双 NO_SUCH 2 条读失败 EXIT=1 不抛栈；夹具已清。裁定两条口径均采纳不打回：①接口 n 公式为准，F 只在 skills 侧放一份取证（R104-a）；②裸键 shim 属必要解析（R104-b）。已接 `check_all` 47→48（跑成 48 红 0）。S7 首轮探针漏建空对侧目录，自修后全过，不打回。
 
+### T-0100 · [OPEN] `check_use_args.py` —— 消耗品 `use.script` args 键名对账（M2 / D17，单文件零接线，对账网第三十一例）
+
+- 派单：S7 · 2026-11-22 22:5x（R105）
+- 目标：给 `items/*.json5` 的 `use.script[]` 补一把「args 具名键必须属于该原语合法键集」的离线尺子。真洞：第三处 ScriptCall 调用点漏网——`check_arg_keys.py:78-93,144-155` 只扫 `skills/` 与 `scripts/` 的 `conditions`/`effects`；`check_use_script.py:60-85` 只核 `use.script[].effect` 原语 id。运行期 `ConsumableSpec.java:123-155` 把 `args` 原样塞进 `ScriptCall`，`ScriptEngine.runCalls:210-215` 直接交 `EffectType.run`，`MessageEffect.java:30` 缺 `text` 静默 return、`ConsoleEffect.java:26` 缺 `text` 用「(空)」，零 WARN：把浓汤的 `text` 写成 `txt`，玩家看不到提示、日志变成「[script] (空)」，48 把尺子全绿。基线 7 物品 / 2 条带 args 调用 / 0 问题（S7 已离线核逐字）。
+- 独占文件（**唯一可写**）：
+  - `check_use_args.py`（新建，≤ 200 行）
+  - `build/useargsfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_arg_keys.py`、`check_use_script.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖 `check_progress`）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；`ARG_KEYS` 由 S7 从源码冻结，S8 不读源码、不推断）：
+  - `ARG_KEYS: dict[str, frozenset]`：16 个原语 → 合法 args 键集，逐字为：`message={text}`、`console_log={text}`、`heal={target,ratio,per_level,flat}`、`damage={amount,damage_type,radius}`、`damage_aoe={amount,radius,falloff,max_targets,damage_type}`、`buff={target,effect,amplifier,duration_ticks}`、`debuff={target,effect,amplifier,duration_ticks}`、`knockback={strength,radius}`、`pull={strength,radius}`、`stun={target,radius,duration_ticks}`、`dash={power,up,direction}`、`projectile={entity,speed,on_hit}`、`grant_exp={amount,target}`、`always={}`(空集)、`health_below={ratio}`、`chance={chance}`。脚本内任何位置都不写源码文件名。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。
+  - `read_items(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`（文件名升序），返 `(rows, ok)`；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_calls(rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 且 `data["use"]` 是 dict、`use["script"]` 是 list 的条目。逐个 dict 元素：先取非空字符串 `effect`，否则取非空字符串 `type`，两者都无 → 跳过；`type` 不在 `ARG_KEYS`（含带冒号的名字、未知原语）→ 跳过（归 `check_use_script`）；`args` 非 dict → 跳过；对 `args` 每个字符串键 `k`，若 `k not in ARG_KEYS[type]` → 产一条 `<文件名>: use.script[<i>] (<type>) args 键 <k> 非合法参数`（`<i>` 从 0 起）。结果按文案升序、保稳定、不去重。
+  - `main() -> int`：CLI `--items <dir>`（默认 `src/main/resources/redtale/defaults/items`）、`-v`。目录不可读 → 打 `[问题] items目录读取失败`、末行 `共 1 份消耗品脚本参数键对账表 · 1 条问题` EXIT=1；否则逐条打 `[问题] <msg>`、末行 `共 1 份消耗品脚本参数键对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 份物品 · <k> 条带 args 的 use.script 调用 · 16 个原语`，n = `*.json5` 文件数，k = `use.script` 中 `type ∈ ARG_KEYS` 且 `args` 是 dict 的元素数之和。
+- 不要做：不核 `use.effects` / `restore_food` / `saturation` / `cooldown_ticks` / `consume`（归 `ConsumableSpec` 与 `check_items`）、不核原语 id 是否存在/带不带冒号（归 `check_use_script`）、不核 args 值域与缺键（多数有合法缺省，不造永远绿红线）、不核 number 类型、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python check_use_args.py` → 末行 `共 1 份消耗品脚本参数键对账表 · 0 条问题` EXIT=0；`python check_use_args.py -v` → 含 `已检查 7 份物品 · 2 条带 args 的 use.script 调用 · 16 个原语`。
+  2. 六组夹具写到 `build/useargsfix/`（每次从干净目录重来，每项只放一份双引号 JSON5，形如 `{"id":"x","use":{"script":[...]}}`，逐字核对末行计数与报错文案）：A `one.json5` `[{effect:"message",args:{text:"hi",txt:"x"}}]` → 1 条 `one.json5: use.script[0] (message) args 键 txt 非合法参数` EXIT=1；B `[{effect:"console_log",args:{text:"hi"}}]` → 0 条 EXIT=0；C `[{effect:"message",args:{ratio:0.5}}]` → 1 条 `args 键 ratio 非合法参数` EXIT=1；D 两份 `a.json5` `[{effect:"heal",args:{target:"caster",per_levelx:0.1}}]` + `b.json5` `[{effect:"damage",args:{ammount:1}}]` → 恰好 2 条、按 `a.json5`/`b.json5` 顺序，EXIT=1；E `[{effect:"redtale_project:message",args:{txt:"x"}},{effect:"ghost",args:{foo:1}}]` → 0 条 EXIT=0；F `[{type:"damage_aoe",args:{amount:8,fallof:0.5}}]` → 1 条 `one.json5: use.script[0] (damage_aoe) args 键 fallof 非合法参数` EXIT=1 且 `-v` 含 `已检查 1 份物品 · 1 条带 args 的 use.script 调用 · 16 个原语`。六组逐字对上。
+  3. `wc -l < check_use_args.py` ≤ 200；`grep -c "def check_calls"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_arg_keys|check_use_script|path_of|split\(":"\)'`=0；`py_compile` OK；`--items NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] items目录读取失败`，不抛栈；夹具用完即删（`build/useargsfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+
 ## 6. 派单池（S7 用，S8 不看）
 
 按「单文件 / 无跨模块接口 / 机器可验」筛过的候选。派单时补「独占文件 + 验收」两栏。
@@ -4441,6 +4462,7 @@ fi
 | C47 | `tools/check_category_types.py`（伤害类别 type 完整形态对账）→ **T-0097（R101 派 / R102 验）** | —— | —— |
 | C48 | ~~`tools/check_equipment_slots.py`~~ → **T-0098（R102 派 / R103 验）** | —— | —— |
 | C49 | ~~`check_arg_keys.py`（原语 args 键名签名对账）→ **T-0099（R103 派 / R104 验）**~~ | —— | —— |
+| C50 | ~~`check_use_args.py`（消耗品 `use.script` args 键名对账）→ **T-0100（R105 派）**~~ | 第三处 ScriptCall 调用点漏网；旧尺只核 id、不进 args，运行期静默降级（对账网第 31 例） | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

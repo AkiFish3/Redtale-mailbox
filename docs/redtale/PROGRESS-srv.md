@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-22 10:16 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-22 22:52 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -10,9 +10,11 @@
 
 ## 2. 进行中（在制品上限 3 张）
 
-无（卡板空闲，等派单）
+| 卡 | 状态 | 标题 |
+|---|---|---|
+| T-0100 | OPEN | `check_use_args.py` —— 消耗品 `use.script` args 键名对账（M2 / D17，单文件零接线，对账网第三十一例） |
 
-已验完 **97** 张 / 共 **99** 张。
+已验完 **97** 张 / 共 **100** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

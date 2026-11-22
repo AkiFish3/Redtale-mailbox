@@ -1453,3 +1453,10 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - 在制品 0 < 3 时仍可能**不派**：本轮 Explore 全量扫 49 个 check / 36 份默认配置 / 全部 Java，四候选逐条排除——professions `grants` 键是原版物品/方块 id 与 tag，离线无真值（与 `spawn_rules.match` 同因）；`exclusive_with` 基线 0 引用；`exclusive_group` 有显式运行期状态、属设计行为；`set_id` 旧留池出口明确。按 §13.107 R104-c/d 不造永远绿的尺子，对账网仍第 30 例。
 - 内容面盘点存档：`ItemBase.java:16-37` 14 基底 / `AttributeSpecs.java:46` 80 条 / `MobSpec.java:19-20` 8 原型，默认配置 7 物品 / 2 怪 / 4 技能 / 2 脚本；6 个原型无默认怪属内容缺口（非代码缺口），补齐需 S7 先定死字段，不在本轮派卡。详见 `docs/ROUND-R104-ARGKEYS.md`。
+
+### 4.65 消耗品脚本 args 键名对账 `check_use_args.py`（T-0100，R105 派，对账网第三十一例）
+
+- 只读扫 `items/*.json5` 的 `use.script[]`：先取非空字符串 `effect`、否则 `type`，`type ∈ ARG_KEYS` 且 `args` 是 dict 时，args 的每个字符串键必须属于该原语合法键集。**带冒号的名字与未知原语跳过**（归 `check_use_script`），不归一、不猜命名空间。`ARG_KEYS` 16 原语逐字继承 T-0099 冻结表（S8 不读源码、不推断）；`ARG_KEYS` / `_loads` / `read_items` / `check_calls` / `main` 接口由 S7 定死。T-0100 派单时未实现、未接线，基线 7 物品 / 2 条带 args 调用 / 0 问题（S7 离线核逐字）。
+- 填补第二处已有检查之间的缝：`check_arg_keys.py:78-93,144-155` 只覆盖 skills/scripts 两条 ScriptCall 路径；`check_use_script.py:60-85` 只核 `use.script[].effect` 是否注册（`:81-82` 带冒号直接跳过）。运行期 `ConsumableSpec.java:123-155` 把 args 原样入 `ScriptCall`，`ScriptEngine.runCalls:210-215` 直接交 `EffectType.run`，`MessageEffect.java:30` 缺 `text` 静默 return、`ConsoleEffect.java:26` 缺 `text` 用「(空)」，零 WARN：浓汤提示键写歪后玩家看不到消息、日志退化为「(空)」，48 把尺子仍全绿（R105-a，第三处调用点）。
+- 只核 args 键名，不核 `use.effects` / `restore_food` / `saturation` / `cooldown_ticks` / `consume`（归 `ConsumableSpec` 与 `check_items`）、不核原语 id（归 `check_use_script`）、不核值域与缺键（多数有合法缺省，不造永远绿红线）、不核数值类型、不读源码/存档、不改运行期。当前未接 `check_all`，T-0100 VERIFIED 后 R106 接 → 应 `跑成 49`。
+- 6 只缺失原型的完整字段由 S7 在 PLAN §13.108 冻结（ranged/summoner/charger/flyer/elite/ambient），属内容面，与 T-0100 独占文件不重叠；详见 `docs/ROUND-R105-USEARGS.md`。

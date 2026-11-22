@@ -2275,3 +2275,26 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. 无卡可验；`check_all` 48 全绿即视为本轮对账网稳定。若 S8 领走新卡（本轮未派），先验再接。
 2. 按 R104-c/d：无新真洞时不硬凑卡，转内容面——由 S7 先定死 6 只缺失原型（`ranged`/`summoner`/`charger`/`flyer`/`elite`/`ambient`）的完整字段（id/name/base/scale/level/attributes/equipment/skills），定死后才考虑作为 S8 机械填充卡。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）/ Q-023（display 服务端口径）无答复，继续按默认走；真人窗口 A~G 等 Aki。
+
+## R105 · 2026-11-22 22:5x · 无卡可验守 48 + 派 T-0100（消耗品 use.script args 键名）+ 冻结 6 原型字段
+
+- 卡板：`[DONE]` 0 张、在制品 0 张；基线 `check_all` **48/48** EXIT=0，本轮不接线。**派 T-0100**（`check_use_args.py`：items `use.script[]` 的 `effect`/`type` → args 具名键 ↔ 16 原语合法键集，单文件零接线、六夹具、基线 7 物品/2 调用/0 问题；接口 `ARG_KEYS`/`_loads`/`read_items`/`check_calls`/`main` 由 S7 定死），在制品 **1/3**。
+- **S7 最小一步 = 派前全类排除留证 + 离线核基线 + 内容面字段冻结**：四满足判据逐条核过，第三处 ScriptCall 调用点 `use.script` 落真洞（旧尺 `check_arg_keys` 只扫 skills/scripts、`check_use_script` 只核 id；运行期 `MessageEffect:30` 静默 return、`ConsoleEffect:26` 兜底「(空)」）；离线核 7/2/0 逐字一致。按 R104 遗留项，先由 S7 定死 6 只缺失原型（ranged/summoner/charger/flyer/elite/ambient）的完整字段表，未写任何 `src/` 配置。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服无 LISTEN。裸名纪律第二十三次。
+- 收尾：`docs/ROUND-R105-USEARGS.md`、PLAN §13 R105 + §13.108、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0100 OPEN + 池 C50）、`docs/CONTRACTS.md` §4.65、协作板 §3。
+
+### 13.108 R105 的五条口径（第三处调用点 / 冻结表复用 / 同点多原语不拆卡 / 内容字段先冻 / 裸名）+ 下一步（R106）
+
+| 编号 | 口径 |
+|---|---|
+| R105-a | **对账网第 31 例 = 第三处 ScriptCall 调用点**：skills / scripts / items 三条路径，`ARG_KEYS` 尺必须覆盖每一处；只核其中两处等于没核（T-0099 的盲区）。 |
+| R105-b | **冻结表跨卡复用不重推**：T-0100 原样继承 T-0099 的 16 原语签名字面量，合法集不因调用点变化而扩张；S8 不读源码、不推断（R103-d 延续）。 |
+| R105-c | **同调用点多原语不拆卡**：`message` 静默 return 强于 `console_log` 兜底「(空)」（R98-b 静默分级），但共用冻结表与单文件，拆开只会造两张互相依赖的空卡。 |
+| R105-d | **内容面冻结先于派单**：R104 遗留的 6 只缺失原型字段由 S7 逐字段定死（id/name/base/scale/level/undead/attributes/equipment/skills），后续机械填充卡不得自行取舍。 |
+| R105-e | **裸名纪律第二十三次**：派单当轮文档与台账在建脚本只写裸名，避免文档路径检查把未建文件当断链。 |
+
+下一步（R106）：
+
+1. **验 T-0100**（基线 `共 1 份消耗品脚本参数键对账表 · 0 条问题` / `-v` 7 物品·2 调用·16 原语 / 六夹具 A~F 逐字 / wc≤200、`def check_calls`=1、禁用 grep=0、py_compile OK、`--items NO_SUCH` 1 条读失败）；过后 `check_all` 48→49。
+2. 按 §13.108 R105-d 的字段表落 6 只默认怪 + 同步 `gen_entity_lang.py` 产物；属内容面（S7 独占），与 T-0100 独占文件不重叠，可同轮做，但不得在 T-0100 `VERIFIED` 前改它。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~G 等 Aki。
