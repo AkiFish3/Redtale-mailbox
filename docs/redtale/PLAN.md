@@ -2226,3 +2226,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0098**（基线 `共 1 份怪物装备槽位对账表 · 0 条问题` + `-v` 2/4/14 / 六夹具 A~F 逐字 / wc≤200、`def mismatches`=1、禁用 grep=0、py_compile OK、`--mobs NO_SUCH` 1 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 47`。
 2. 对账网已第 29 例；按 R102-a/b/c/d 核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡；七类留池项继续观察。
 3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
+
+## R103 · 2026-11-22 08:4x~08:5x · 验 T-0098 + check_all 46→47 + 派 T-0099（原语 args 键名签名对账）
+
+- 卡板：T-0098 `check_equipment_slots.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份怪物装备槽位对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份怪物 · 4 处自家基底装备引用 · 14 个基底`；六夹具独立干净目录 A `head:sword`=1 条逐字 · B helmet=0 · C `chest:ring`=1 · D `mainhand:shield`=1 · E `offhand:shield`=0 · F 两怪 h 的 `chest:leggings`=1 条且 -v 逐字 2/4/14，逐字 EXIT=1/0/1/1/0/1；wc=143≤200、`def mismatches`=1、禁用 grep=0、py_compile OK、`--mobs NO_SUCH` 恰好 1 条读失败 EXIT=1 不抛栈；探针已清）。S8 自测零偏差不打回。**派 T-0099**（`check_arg_keys.py`：skills/scripts 的 `conditions[]`/`effects[]` args 键名 ↔ 原语合法键集，单文件零接线、六夹具、基线 13 处/6 文件/6 原语/0 问题，`ARG_KEYS`/`_loads`/`read_configs`/`check_calls`/`main` 由 S7 定死），在制品 **1/3**。
+- **本轮 S7 最小一步 = 派前全类排除留证 + 源码逐字核实 + 离线核基线**（R102-b/R99-e 延续）：两轮 Explore 只读扫全量 check + 默认配置 + Java。第一轮候选逐条排除：`%var.<key>%` 占位符（`ScriptContext.java:92-94` 注释明确「未定义键原样保留——写错应出现在日志里」= Aki 有意可观测设计，非静默；且合法集由调用方动态注入 args，无法静态冻结）/ mobs skills chance·cooldown（clamp）/ enchant slots（原版 `EquipmentSlot` 无离线冻结常量）。第二轮落真洞：Java 原语全用具名 `args.has("K")` 读参，写歪键名时 `check_skill_args.py:81-99`/`check_script_args.py:81-99` 只核 ratio/chance 值域、`key in args` 为假直接跳过，`check_skills`/`check_scripts` 只核 type 存在，`check_effect_target` 只在 target 键存在时核枚举——两把旧尺全绿；运行期 `MessageEffect:30` 缺 text 静默 return、`HealthBelowCondition:25` 缺 ratio 默认 0.5、`HealEffect:64` 缺 per_level 默认 0、`DamageAoeEffect:94` 缺 falloff 默认 0.5，零 WARN。从 `builtin/*.java` 逐字冻结 16 原语键集写进卡面。离线核基线 13/6/6/0 逐字一致（R82-c）。
+- 接线 `check_all` 46→**47** 全绿（跑成 47 红 0）；七门禁全 0 问题：check_checkall 1 清单、check_tasks 99 卡在制品 1、check_contracts 63 条、check_docs 118 份/501 引用、check_rounds、check_ownership。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十一次：本轮在建脚本文档与台账一律裸名 `check_arg_keys.py`。
+- 收尾：`docs/ROUND-R103-ARGKEYS.md`、PLAN §13 R103 + §13.106、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0098 VERIFIED + T-0099 OPEN + 池 C49）、`docs/CONTRACTS.md` §4.63、`tools/check_all.py`、协作板 §3。
+
+### 13.106 R103 的五条口径（对账网第 30 例 = 具名参数键 ↔ 原语签名 / 有意设计非洞 / 具名键无位置概念 / 冻结表从源码逐字 / 裸名）+ 下一步（R104）
+
+| 编号 | 口径 |
+|---|---|
+| R103-a | **对账网第 30 例 = 具名参数键 ↔ 原语签名**（…→装备槽位→args 键名）。前 29 例核引用/值域/形态/图/组合语义；本例核「JsonObject 具名键写歪」：Java 全用 `args.has("K")`，无位置参数概念，键名拼错即落入缺省分支零 WARN。判据仍是 R83-b + R88-b。 |
+| R103-b | **源码注释写明「有意保留」的不是洞**：`ScriptContext.java:92-94` 明确「未定义键原样保留、写错应出现在日志里」——这是可观测设计，不是静默失效，排除。派前必须读注释区分「忘了处理」与「有意如此」（R88-c 全类排除的深化）。 |
+| R103-c | **合法集由调用方动态注入时不可静态冻结**：`%var` 的合法键 = 各脚本被哪个附魔/技能调用 + 各自 args，离线无稳定全集，宁可不派也不造误报尺（R92-b/R100-b 延续）。本例 args 键集则来自 fixed 的 16 个 Java 类，可冻结。 |
+| R103-d | **冻结表从源码逐字抄**：16 原语键集由 S7 从 `builtin/*.java` 的 `args.has/get/num` 字面量提取、逐类复核写进卡面，S8 不读源码、不推断（R95-c/R96-b 延续）。 |
+| R103-e | **裸名纪律第二十一次**：派单当轮文档与台账在建脚本只写裸名 `check_arg_keys.py`，避免 `check_docs` 把未建文件当断链。 |
+
+下一步（R104）：
+
+1. **验 T-0099**（基线 `共 1 份原语参数键对账表 · 0 条问题` + `-v` 6/13/16 / 六夹具 A~F 逐字 / wc≤200、`def check_calls`=1、禁用 grep=0、py_compile OK、`--skills NO_SUCH --scripts NO_SUCH` 2 条读失败）；过后 `check_all` 末尾追加 → 应 `跑成 48`。
+2. 对账网已第 30 例；按 R103-a/b/c/d 核实后若无新真洞，按 R99-b 转内容面（14 基底 / 80 属性 / 8 实体默认配置是否填满、README 与真机验收材料），不硬凑对账卡；留池项继续观察。
+3. Q-021（`respec` 免费）/ Q-022（原语按需补，13/25）无答复，继续按默认走；真人窗口 A~G 等 Aki。
