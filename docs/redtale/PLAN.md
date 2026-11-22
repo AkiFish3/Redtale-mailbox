@@ -2442,3 +2442,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0106**（基线 1 表/1 xp/3 min/3 max + 六夹具 A~F 逐字 + wc≤200、`def check_values`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败；浮点整数形态/重复值/下标）；过后 `check_all` 54→55。
 2. C58 `drops[].chance` 越界按 R111-d 四判据逐出口取证；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R112 · 2026-11-23 06:4x · 验 T-0106 + check_all 54→55 + 派 T-0107（技能树 points_per_level 整数形态）
+
+- 卡板：T-0106 `check_drop_values.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份掉落数值边界口径对账表 · 0 条问题` EXIT=0 / `-v` 1 表·1 xp·3 min·3 max / 六夹具 EXIT=0/1/1/1/1/0 逐字 / wc=156、`def check_values`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界 6/6（浮点 repr、字符串、bool、重复不合并、下标）；S8 零偏差不打回，探针已清）。**派 T-0107**（`check_tree_ppl.py`：技能树顶层 `points_per_level` 显式值必须是非负整数形态，缺省 1 / 负数 WARN 均跳过，常量从 `SkillTreeSpec.java:70-72,154-162` 冻结，单文件零接线、六夹具、基线 1 树/1 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = C58 反证排除 + C53 四判据升级**：①C58 `drops[].chance` 原假设「旧尺全不读」被推翻——`check_mobs.py:123-125` 已在役尺核 `[0,1]` 且内存反事实 `1.5/-0.2/2/nan/"1.5"/true/缺键` 全部报同一句，按 R111-d 第③判据不成立，C58 留池标注反证；②C53 `points_per_level` 四判据齐：`SkillTreeSpec.java:70,160-162` 非整数静默回落 1（`:71-72` 负数分支才 WARN）、`check_trees.py:45-125` 与全仓 tools 零读、九形态旧尺报错逐字相同、默认基线 1/1/0；后果链 `TreePoints.java:28-29` 的 `ppl × level`。对账网第 38 例。六只默认怪 + lang 仍属内容面，不硬凑。
+- 接线 `check_all` 54→**55** 全绿（55/55 红 0）；七门禁全 0（check_tasks 107 卡在制品 1、check_contracts 77 条、check_docs 128 份/539 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN。裸名纪律第三十次。
+- 收尾：`docs/ROUND-R112-TREEPOINT.md`、`PLAN.md` §13 R112 + §13.115、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0106 VERIFIED + T-0107 OPEN + 池 C53 结项/C58 反证）、`docs/CONTRACTS.md` §4.75/§4.76、`tools/check_all.py`、协作板 §3。
+
+### 13.115 R112 的五条口径（反证优先 / 留池升级四判据 / 同族不同尺 / 静默形态扩张 / 裸名）+ 下一步（R113）
+
+| 编号 | 口径 |
+|---|---|
+| R112-a | **反证优先于卡面假设**：C58 卡面写「旧尺全不读 chance」，`check_mobs.py:123-125` 实为已读；在役尺对八形态反事实全红，派卡会造成两把尺同报一条，直接排除。判据③必须实跑旧尺，不能只 grep 一把。 |
+| R112-b | **留池项按四判据可升可降**：C58 从「待基线取证」降为「反证排除」；C53 `points_per_level` 从 R107/R111 两次留池升为 T-0107——具名缺省 + 静默零 WARN + 旧尺九形态全绿 + 基线非空，四条齐就派。 |
+| R112-c | **「非整数」包含非数字形态**：`SkillTreeSpec.intOf` 对 `1.5` / `"2"` / `true` / `nan` 一律静默回落 1；新尺按「显式值非整数形态」统一报，负数整数形态（有 WARN）跳过，避免与运行期告警重复。 |
+| R112-d | **同族字段按尺归属拆分**：drops 的 `rolls`/`xp`/`min`/`max`/`chance` 分属 `check_drop_rolls` / `check_drop_values` / `check_mobs`，不因为同在一张配置就合并卡；R108-b 的「同父异尺」在技能树点数字段上同样适用。 |
+| R112-e | **裸名纪律第三十次**：派单当轮文档与台账在建脚本只写裸名 `check_tree_ppl.py`，避免路径检查把未建文件当断链。 |
+
+下一步（R113）：
+
+1. **验 T-0107**（基线 `共 1 份技能树点数口径对账表 · 0 条问题` + `-v` 1 树·1 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_ppl`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；非数字/负数/浮点整数形态边界）；过后 `check_all` 55→56。
+2. C58 只在「决定把引用形态校验与数值形态校验拆成两把尺」时重开，否则永久留池；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

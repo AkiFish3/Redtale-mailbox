@@ -4530,7 +4530,7 @@ fi
 - 2026-11-23 04:51 · 完成 · `tools/check_mob_skill_cooldowns.py`（新建，144 行；自带 `_clean`/`_loads` shim、`read_mobs`/`check_cooldowns`/`_ref_count`/`main`，零接线） · 构建退出码 N/A（卡明令禁 gradle，未取锁未构建） · 自测 3/3：①基线 `共 1 份怪物技能冷却口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 只怪物 · 3 处 cooldown_ticks 引用 · 边界 [1,1000000]`；②六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（B `0`、C `1000001` 各 1 条逐字含 `[问题] ` 前缀，D `1`/`1000000` 合法边界，E 两条按 a/b 顺序，F `-v` 逐字 2/2），每轮干净目录重来；③wc=144≤200、`def check_cooldowns`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条 `mobs目录读取失败` EXIT=1 不抛栈；函数边界 9/9（1.5/0.5/0/inf/nan 报、下标 0/1/5/6/7/8 正确，True/字符串/缺键跳过，重复 0 两条不合并）；`build/mobskillcooldownfix/`（含 driver/boundary）与自建 pyc 已清。待 S7 验收并接 check_all TOOLS（53→54）。
 - 2026-11-23 05:4x · **S7 验收通过（3/3 + S7 独立六夹具 6/6）** · ①从仓库根跑基线 `共 1 份怪物技能冷却口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 只怪物 · 3 处 cooldown_ticks 引用 · 边界 [1,1000000]`；②S7 独立六夹具逐字 EXIT=0/1/1/0/1/0（B/C 含 `[问题] ` 前缀、D 合法边界、E 按 a/b、F `-v` 2/2）；③wc=144≤200、`def check_cooldowns`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；函数边界 1.5/0.5/0/inf/nan 报、True/字符串/缺键跳过、重复 0 两条不合并、下标正确。S8 零偏差不打回，探针已清。已接 `check_all` 53→54（R111）。
 
-### T-0106 · [OPEN] `check_drop_values.py` —— 掉落表 xp/min/max 边界口径对账（M6 / D16，单文件零接线，对账网第三十七例）
+### T-0106 · [VERIFIED] `check_drop_values.py` —— 掉落表 xp/min/max 边界口径对账（M6 / D16，单文件零接线，对账网第三十七例）
 
 - 派单：S7 · 2026-11-23 05:4x（R111）
 - 目标：给 `drops/*.json5` 的顶层 `xp` 与 `drops[].min` / `drops[].max` 补一把「显式整数必须在各自边界内」的离线尺子。真洞：`check_drop_rolls.py:117-133` 只核 `rolls`，`check_mobs.check_drop:126-128` 只核引用形态，全仓 54 把尺无一读 xp/min/max 数值；运行期 `DropSpec.java:61` 把 `xp>MAX_XP` 静默夹到 1_000_000、`:86` 把 `min` 静默夹进 `[0,64]`、`:87-88` 把 `max` 静默夹进 `[0,64]`，三处零 WARN（`:60/:89/:107` 的 WARN 反证夹取出口有意不告警）。S7 反事实 `xp:1000001` / `min:-5` / `max:65` 写进 drops 配置，`check_drop_rolls.py` 与 `check_mobs.py` 报错集合逐字相同（全绿）。基线 1 张掉落表 / 1 处 xp / 3 处 min / 3 处 max / 0 问题（S7 已离线核逐字）。
@@ -4549,6 +4549,29 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_drop_values.py` → 末行 `共 1 份掉落数值边界口径对账表 · 0 条问题` EXIT=0；`python tools/check_drop_values.py -v` → 含 `已检查 1 张掉落表 · 1 处 xp 引用 · 3 处 min 引用 · 3 处 max 引用 · 边界 xp[0,1000000] count[0,64]`。
   2. 六组夹具（形如 `{id: "x", xp: 1000001, drops: [{item: "minecraft:gold_nugget", min: 1, max: 3, rolls: 1}]}`，逐字核对末行计数与报错文案）：A 复制默认 `ember_guard.json5` → 0 条 EXIT=0、`-v` 逐字 1/1/3/3；B `one.json5` `xp:1000001` → 1 条 `one.json5: xp 值 1000001 不在 [0,1000000]` EXIT=1；C `one.json5` `drops[0].min:-1` → 1 条 `one.json5: drops[0].min 值 -1 不在 [0,64]` EXIT=1；D `one.json5` `drops[0].max:65` → 1 条 `one.json5: drops[0].max 值 65 不在 [0,64]` EXIT=1；E 两份 `a.json5`（`xp:1000001` + `min:65`）+ `b.json5`（`max:-1`）→ 恰好 3 条、按文案升序（`a.json5: drops[0].min …` / `a.json5: xp …` / `b.json5: drops[0].max …`），EXIT=1；F 两份 `a.json5` `xp:0` + `b.json5` `xp:1000000`，两表各项 `min:0` / `max:64` → 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 张掉落表 · 2 处 xp 引用 · 2 处 min 引用 · 2 处 max 引用 · 边界 xp[0,1000000] count[0,64]`。六组逐字对上。
   3. `wc -l < check_drop_values.py` ≤ 200；`grep -c "def check_values"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_mobs|check_drop_rolls|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] drops目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_values`：`xp:1000001.0` / `min:65.0` / `max:-1.0` 各 1 条（repr 带 `.0`）、`True` / `"1"` / 缺键跳过、重复 `65` 两条不合并、下标 4/5 正确；夹具用完即删（`build/dropvaluesfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-23 05:54 · 完成 · `tools/check_drop_values.py`（新建，156 行；四个冻结常量 + `_clean`/`_loads` shim、`read_drops`/`check_values`/`_verbose`/`main`，零接线） · 构建退出码 N/A（卡明令禁 gradle，未取锁未构建） · 自测 3/3：①基线 `共 1 份掉落数值边界口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 张掉落表 · 1 处 xp 引用 · 3 处 min 引用 · 3 处 max 引用 · 边界 xp[0,1000000] count[0,64]`；②六夹具 A~F 逐字 EXIT=0/1/1/1/1/0（B `xp:1000001`、C `min:-1`、D `max:65` 各 1 条，E 三处按 a.min/a.xp/b.max 升序，F 两表 `0`/`1000000` + `min:0`/`max:64` 合法且 `-v` 2/2/2/2），每轮从干净目录重来；③wc=156≤200、`def check_values`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条 `drops目录读取失败` EXIT=1 不抛栈；函数边界 9/9（浮点整数形态 `1000001.0`/`65.0`/`-1.0` 各 1 条且 repr 带 `.0`，`True`/`"1"`/缺键跳过，重复 `65` 两条不合并，下标 4/5 正确）。`build/dropvaluesfix/`（含 driver）与自建 pyc 已清。待 S7 验收并接 check_all TOOLS（54→55）。
+- 2026-11-23 06:5x · S7 验收通过 · 三条验收 + S7 独立六夹具 6/6（独立目录，逐字 EXIT=0/1/1/1/1/0）与函数边界 6/6 全过、静态与 NO_SUCH 全绿，S8 零偏差不打回；已接 `check_all` TOOLS（54→55，55/55 红 0）。记为 `[VERIFIED]`，台账见 PLAN §13 R112。
+
+### T-0107 · [OPEN] `check_tree_ppl.py` —— 技能树 `points_per_level` 整数形态对账（M5 / D16，单文件零接线，对账网第三十八例）
+
+- 派单：S7 · 2026-11-23 06:5x（R112）
+- 目标：给 `skill_trees/*.json5` 顶层 `points_per_level` 补一把「显式值必须是非负整数形态」的离线尺子。真洞：`SkillTreeSpec.java:70` 用 `intOf(root.get("points_per_level"), 1)` 读值，`:160-162` 的 `intOf` 对任何非整数（含 `1.5` / `"2"` / `true` / `nan`）静默回落缺省 1；`:71-72` 仅对**负数且是整数**打 WARN 归零，非整数形态完全静默。`TreePoints.java:28-29` 把 `ppl>0` 用于 `ppl × level` 点数上限 → 配置写 `1.5` 实际按 1 发点，日志全静。全仓 `grep -rn points_per_level tools/*.py` 零命中；`check_trees.check_tree:45-125` 只读 id/nodes/requires/cost/effects/classes/max_points。S7 内存反事实九形态（缺键 / `1.5` / `-0.5` / `2.0` / `0` / `1` / `"2"` / `true` / `nan`）报错集合逐字相同。基线 1 棵树 / 1 处引用（1）/ 0 问题（S7 已离线核逐字）。
+- 独占文件（**唯一可写**）：
+  - `check_tree_ppl.py`（新建，≤ 200 行）
+  - `build/treepplfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_trees.py`、`check_progress.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖 `check_progress`）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；`PPL_DEFAULT = 1` 由 S7 从 `SkillTreeSpec.java:70` 冻结，S8 不读源码、不推断）：
+  - `PPL_DEFAULT = 1`：模块级 int 常量。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。默认配置是裸键，shim 必须能吃。
+  - `read_trees(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`（文件名升序），返 `(rows, ok)`；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_ppl(rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 的条目。顶层 `points_per_level`：键缺失跳过（合法缺省）；显式值若为**非负整数形态**（`isinstance(v,(int,float)) and not isinstance(v,bool)` 且 `float(v).is_integer()` 且 `v >= 0`）跳过；显式**负整数形态**（同上但 `v < 0`）跳过（运行期有 WARN）。其余显式形态（小数 `1.5`、字符串 `"2"`、`True`、`None`、`nan`/`inf`、list/dict）产 `<文件名>: points_per_level 值 <repr(v)> 非整数形态（静默回落 1）`（`<repr(v)>` 用 Python `repr`，字符串带引号）。结果按文案升序、保稳定、不去重。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults/skill_trees`）、`-v`。目录不可读 → 打 `[问题] skill_trees目录读取失败`、末行 `共 1 份技能树点数口径对账表 · 1 条问题` EXIT=1；否则逐条打 `[问题] <msg>`、末行 `共 1 份技能树点数口径对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 棵树 · <k> 处 points_per_level 引用 · 缺省 1`，n = `*.json5` 文件数，k = data 为 dict 且含键 `"points_per_level"` 的个数（不论值是否合法）。
+- 不要做：不核负整数形态与缺键（已有 WARN / 合法缺省）、不核小数是否四舍五入到多少（只报非整数形态）、不核 `max_points` / `cost` / `nodes` / `classes` / `requires` / `effects`（归 `check_trees.py`）、不核 `points_per_level × level` 与发点平衡（内容取舍）、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**；夹具写到 `build/treepplfix/`，每次从干净目录重来，裸键 JSON5；夹具只需顶层 `id` / `nodes` / `points_per_level` 三键即可，本尺不读其它键）：
+  1. `cd /e/RedtaleProject && python tools/check_tree_ppl.py` → 末行 `共 1 份技能树点数口径对账表 · 0 条问题` EXIT=0；`python tools/check_tree_ppl.py -v` → 含 `已检查 1 棵树 · 1 处 points_per_level 引用 · 缺省 1`。
+  2. 六组夹具（逐字核对末行计数与报错文案）：A 复制默认 `warrior_vanguard.json5` → 0 条 EXIT=0、`-v` 逐字 1/1；B `one.json5` `points_per_level: 1.5` → 1 条 `one.json5: points_per_level 值 1.5 非整数形态（静默回落 1）` EXIT=1；C `points_per_level: 0` → 0 条 EXIT=0；D `points_per_level: "2"` → 1 条 `one.json5: points_per_level 值 '2' 非整数形态（静默回落 1）` EXIT=1；E 两份 `a.json5`（`1.5`）+ `b.json5`（`true`）→ 恰好 2 条、按 a/b 升序（`a.json5: ... 1.5 ...` / `b.json5: ... True ...`），EXIT=1；F 两份 `a.json5`（`0`）+ `b.json5`（-1）→ 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 棵树 · 2 处 points_per_level 引用 · 缺省 1`。六组逐字对上。
+  3. `wc -l < check_tree_ppl.py` ≤ 200；`grep -c "def check_ppl"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_trees|check_progress|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] skill_trees目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_ppl`：`1.5` / `'2'` / `True` / `None` / `nan` / `inf` 各 1 条，`-1` / `0` / `2.0` / `4` / 缺键跳过，重复 `1.5` 两条不合并，下标无关文案可稳定复现；夹具用完即删（`build/treepplfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4603,12 +4626,12 @@ fi
 | C50 | ~~`check_use_args.py`（消耗品 `use.script` args 键名对账）→ **T-0100（R105 派 / R106 验）**~~ | 第三处 ScriptCall 调用点漏网；旧尺只核 id、不进 args，运行期静默降级（对账网第 31 例） | 无 |
 | C51 | ~~`check_mob_levels.py`（怪物 `level` 整数口径对账）→ **T-0101（R106 派 / R107 验）**~~ | 全仓 49 把尺无一读 `level`；运行期只 WARN 非数字，越界/小数静默夹取整（对账网第 32 例） | 无 |
 | C52 | ~~`check_mob_scales.py`（怪物 `scale` 下界口径对账）→ **T-0102（R107 派）**~~ | 旧尺 `(0,4]` 放行 `(0,0.25]`；运行期静默夹到 0.25 并写进 `minecraft:generic.scale` 基值（对账网第 33 例） | 无 |
-| C53 | `skill_trees[].points_per_level` 非整静默回落 1（留池） | 有四满足雏形但合法分支多（0 关门槛 / 负数 WARN 归零 / 非整静默 1）、无具名常量，基线仅 1 处，按 R96-c/R102/R104「卡面太薄」先例不派 | 无 |
+| C53 | ~~`skill_trees[].points_per_level` 非整静默回落 1~~ → **T-0107（R112 派）** | R112-b 四判据齐升级：缺省 1 从源码冻结、非整数零 WARN、旧尺九形态全绿、基线 1/1/0；0 关门槛与负数 WARN 分支在卡面跳过 | 无 |
 | C54 | ~~`check_drop_rolls.py`（掉落表 rolls 上界口径）→ **T-0103（R108 派 / R109 验）**~~ | 旧尺只核 `rolls>=1`，运行期 `MAX_ROLLS=16` 静默夹取、零 WARN；对账网第 34 例 | 无 |
 | C55 | ~~`check_mob_skill_chance.py`（怪物技能 chance 值域口径）→ **T-0104（R109 派）**~~ | 全仓 52 尺无一读 `mobs[].skills[].chance`；旧尺反事实 2.5/-0.5/inf/true 全绿，运行期 `:224` 静默夹 `[0,1]` 零 WARN；对账网第 35 例 | 无 |
 | C56 | ~~`mobs[].skills[].cooldown_ticks` 静默夹取 → **T-0105（R110 派）**~~ | `DEFAULT_COOLDOWN=100` / `MAX_COOLDOWN=1_000_000` 具名常量 + 基线 3 处；旧尺八形态反事实全绿；对账网第 36 例 | 无 |
 | C57 | ~~`drops[].xp` / `min` / `max` 边界静默改写 → **T-0106（R111 派）**~~ | `DropSpec.java:22,61,86-88` 具名常量 + 三处静默夹取零 WARN，旧尺反事实全绿，基线 1/1/3/3；对账网第 37 例 | 无 |
-| C58 | `drops[].chance` 越界静默夹 `[0,1]` | `DropSpec.java:94-101`：非数字有 WARN，但 `1.5` / `-0.2` 静默夹零 WARN；与 T-0104 怪物技能 chance 同形态不同对象，待基线/常量四判据齐再派 | 无 |
+| C58 | `drops[].chance` 越界静默夹 `[0,1]` → **R112 反证排除，留池** | `DropSpec.java:94-101` 确有静默夹，但 `check_mobs.py:123-125` 已在役尺核 `[0,1]`；S7 内存反事实 `1.5/-0.2/2/nan/"1.5"/true/缺键` 八形态全部报同一句，R111-d 第③判据不成立。除非决定把引用形态与数值形态拆两把尺，否则不派 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

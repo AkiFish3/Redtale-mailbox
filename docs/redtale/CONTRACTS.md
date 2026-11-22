@@ -1521,3 +1521,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0105 VERIFIED 证据：从仓库根跑基线（在 `tools/` 下跑会因相对默认路径误判读失败，卡面验收按仓库根），S7 独立六夹具写在独立目录（与 S8 卡内 fixture 目录不冲突）逐字 6/6，函数边界用直接 import 独立断言；S8 零偏差不打回。
 - T-0106 派单证据：`DropSpec.java:22,57-62,86-89` 具名常量与三处静默夹取逐字取证；旧尺反事实全绿；默认基线 1 表 / xp 1 / min 3 / max 3 非空；六夹具覆盖上下越界、浮点整数形态、合法边界、字符串、bool 与缺键。同族三字段同出口一次收口（与 R107-a 的 mobs level/scale 不同：那条是不同常量不同出口）。对账网第 37 例。详见 `docs/ROUND-R111-DROPVALUES.md`。
+
+### 4.75 掉落表 xp/min/max 边界对账落地 `check_drop_values.py`（T-0106，R112 验收，对账网第三十七例结项）
+
+- 契约维持 §4.73：四个冻结常量（XP_MIN/XP_MAX/COUNT_MIN/COUNT_MAX）、`_loads` / `read_drops` / `check_values` / `main` 接口与「跳过有 WARN 形态」语义未变，S8 逐字实现。
+- T-0106 `[VERIFIED]`（R112）：基线 0 问题 / `-v` 1 表·1 xp·3 min·3 max / S7 独立六夹具 6/6 逐字 EXIT=0/1/1/1/1/0 / wc=156、`def check_values`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界 6/6；S8 零偏差不打回。已接进 `tools/check_all.py`（`共 55 个脚本`，R112 接线）。
+
+### 4.76 技能树 points_per_level 整数形态对账 `check_tree_ppl.py`（T-0107，R112 派，对账网第三十八例）
+
+- 只读扫 `skill_trees/*.json5` 顶层 `points_per_level`：缺键跳过（合法缺省 1）、非负整数形态跳过、负整数形态跳过（运行期 `SkillTreeSpec.java:71-72` 有 WARN）；其余显式形态（小数、字符串、bool、None、`nan`/`inf`、容器）产 `<文件名>: points_per_level 值 <repr(v)> 非整数形态（静默回落 1）`，按文案升序、保稳定、不去重。`PPL_DEFAULT = 1` 与接口 `_loads` / `read_trees` / `check_ppl` / `main` 由 S7 定死，S8 不读源码、不推断。
+- 填补全仓 55 把尺的共同盲区：`grep -rn points_per_level tools/*.py` 零命中，`check_trees.check_tree:45-125` 不读该字段；S7 内存反事实九形态（缺键 / `1.5` / `-0.5` / `2.0` / `0` / `1` / `"2"` / `true` / `nan`）报错集合逐字相同。运行期 `SkillTreeSpec.java:70,160-162` 对非整数静默回落 1，`:71-72` 只对负数整数告警；`TreePoints.java:28-29` 用 `ppl × level` 算点数上限 → 配 `1.5` 实按 1 发点、日志全静。
+- 只核顶层 `points_per_level` 的显式整数形态，不核缺键 / 负数整数（有 WARN 或合法缺省）、不核 `max_points` / `cost` / `nodes` / `classes` / `requires` / `effects`（归 `check_trees.py`）、不核发点平衡（内容取舍）；不读源码/存档、不改运行期。派单时未实现、未接线，基线 1 棵树 / 1 处引用（1）/ 0 问题（S7 离线核逐字）；T-0107 VERIFIED 后 R113 接 → 应 `跑成 56`。
+- C58 `drops[].chance` 不派的反证：`check_mobs.py:123-125` 已在役尺核 `[0,1]`，八形态反事实全红；`DropSpec.java:101` 的静默夹虽在，但不满足 R111-d 第③判据。详见 `docs/ROUND-R112-TREEPOINT.md`。
