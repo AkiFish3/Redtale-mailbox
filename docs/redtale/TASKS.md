@@ -4484,7 +4484,7 @@ fi
 - 2026-11-23 02:4x · 完成 · `tools/check_drop_rolls.py`（新建，165 行；自带 `_loads` shim，零接线，卡明令禁 gradle 故未取锁未构建，构建退出码 N/A） · 基线 `共 1 份掉落掷骰次数口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 张掉落表 · 3 处 rolls 引用 · 边界 [1,16]`；六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（B `17`、C `100` 各 1 条逐字，D `16` 放行，E 两条按 a/b 顺序，F `-v` 逐字 2·2），每轮干净目录重来；wc=165≤200、`def check_rolls`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条 `drops目录读取失败` EXIT=1 不抛栈；函数边界 2/2（0/-5/True/False/'17'/1.5 跳过、重复 17 逐条保留、下标 7/8 正确）；`build/droprollsfix/` 与自建 pyc 已清。待 S7 验收并接 check_all TOOLS（51→52）。
 - 2026-11-23 03:2x · **S7 验收通过（3/3 + S7 独立六夹具 6/6）** · ①基线 `共 1 份掉落掷骰次数口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 张掉落表 · 3 处 rolls 引用 · 边界 [1,16]`；②S7 独立干净目录六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（B `17`、C `100` 各 1 条逐字，D `16` 放行，E 两条按 a/b 顺序，F `-v` 逐字 2·2）；③wc=165≤200、`def check_rolls`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1 不抛栈。S7 首轮探针把 E 期望写成 1 条（实际 2 条）属探针自错，改正后 6/6；S8 零偏差不打回，探针已清。已接 `check_all` 51→52（R109）。
 
-### T-0104 · [OPEN] `check_mob_skill_chance.py` —— 怪物技能 `chance` 值域口径对账（M6 / D16，单文件零接线，对账网第三十五例）
+### T-0104 · [VERIFIED] `check_mob_skill_chance.py` —— 怪物技能 `chance` 值域口径对账（M6 / D16，单文件零接线，对账网第三十五例）
 
 - 派单：S7 · 2026-11-23 03:2x（R109）
 - 目标：给 `mobs/*.json5` 的 `skills[].chance` 补一把「显式值必须在 `[0,1]` 内」的离线尺子。真洞：`check_mobs.py:88-95` 的 `check_mob` 只读 `skills[].skill` 做引用命中，全仓 52 把尺无一读怪物技能 `chance`；S7 内存反事实：把 `chance` 依次换成 `2.5 / -0.5 / inf / true / "2.5" / 0`，`check_mob()` 报错集合逐字相同（技能 id 命中时全为 `[]`）。运行期 `MobSpec.java:217-225` 注释逐字「夹到 `[0.0,1.0]` 不告警」，`:224` `Math.max(0.0D, Math.min(1.0D, value))` 静默改写；唯一 WARN 出口是 `:221` 非数字（反证夹取出口有意静默）。配置写 `chance: 2.5` 的精英怪技能实际 100% 释放、零 WARN（对账网第 35 例，R106-b「夹之前的配置值」第三次落地，首次核怪物技能释放概率）。基线 2 怪 / 3 处 chance 引用（0.35 / 0.5 / 0.25）/ 0 问题（S7 已离线核逐字）。
@@ -4503,6 +4503,29 @@ fi
   1. `python check_mob_skill_chance.py` → 末行 `共 1 份怪物技能概率口径对账表 · 0 条问题` EXIT=0；`python check_mob_skill_chance.py -v` → 含 `已检查 2 只怪物 · 3 处 chance 引用 · 边界 [0,1]`。
   2. 六组夹具写到 `build/mobskillchancefix/`（每次从干净目录重来，裸键 JSON5，形如 `{id: "x", skills: [{skill: "redtale_project:arc_bolt", chance: 2.5}]}`，逐字核对末行计数与报错文案）：A 默认配置两份怪（0.35 / 0.5+0.25）→ 0 条 EXIT=0、`-v` 逐字 2/3；B `one.json5` `chance:2.5` → 1 条 `one.json5: skills[0].chance 值 2.5 不在 [0,1]` EXIT=1；C `chance:-0.5` → 1 条同模板 EXIT=1；D 两份 `a.json5` `chance:0` + `b.json5` `chance:1` → 0 条 EXIT=0（合法边界）；E 两份 `a.json5` `chance:2.5` + `b.json5` `chance:-0.5` → 恰好 2 条、按 a/b 顺序，EXIT=1；F 两份 `a.json5` `chance:0.35` + `b.json5` `chance:1.0` → 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 只怪物 · 2 处 chance 引用 · 边界 [0,1]`。六组逐字对上。
   3. `wc -l < check_mob_skill_chance.py` ≤ 200；`grep -c "def check_chances"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_mobs|check_mob_scales|check_drop_rolls|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] mobs目录读取失败`，不抛栈；夹具用完即删（`build/mobskillchancefix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-23 03:47 · 完成 · `tools/check_mob_skill_chance.py`（新建，139 行；自带 `_clean`/`_loads` shim、`read_mobs`/`check_chances`/`main`，零接线） · 构建退出码 N/A（卡明令禁 gradle，未取锁未构建） · 自测 3/3：①基线 `共 1 份怪物技能概率口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 只怪物 · 3 处 chance 引用 · 边界 [0,1]`；②六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（B `2.5`、C `-0.5` 各 1 条逐字，D `0`/`1` 合法边界，E 两条按 a/b 顺序，F `-v` 逐字 2/2），每轮干净目录重来；③wc=139≤200、`def check_chances`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条 `mobs目录读取失败` EXIT=1 不抛栈；函数边界：bool/字符串/缺键跳过，`inf`/`nan` 按 `repr` 报、下标 4/5 正确；`build/mobskillchancefix/`（含 driver）与自建 pyc 已清。待 S7 验收并接 check_all TOOLS（52→53）。
+- 2026-11-23 04:3x · **S7 验收通过（3/3 + S7 独立六夹具 6/6）** · ①基线 `共 1 份怪物技能概率口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 只怪物 · 3 处 chance 引用 · 边界 [0,1]`；②S7 独立干净目录六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（B/C 各 1 条逐字含 `[问题] ` 前缀、D 合法边界、E 两条按 a/b、F `-v` 2/2）；③wc=139≤200、`def check_chances`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1 不抛栈。S7 首轮探针 B/C 期望漏写 `[问题] ` 前缀属探针自错，改正后 6/6；S8 零偏差不打回，探针已清。已接 `check_all` 52→53（R110）。
+
+### T-0105 · [OPEN] `check_mob_skill_cooldowns.py` —— 怪物技能 `cooldown_ticks` 值域口径对账（M6 / D16，单文件零接线，对账网第三十六例）
+
+- 派单：S7 · 2026-11-23 04:3x（R110）
+- 目标：给 `mobs/*.json5` 的 `skills[].cooldown_ticks` 补一把「显式值必须是 `[1,1000000]` 内整数」的离线尺子。真洞：`check_mobs.py:88-95` 的 `check_mob` 只查 `skills[].skill` 引用，`check_mob_skill_chance.py:88-103` 只查 `chance`，全仓 53 把尺无一读怪物技能 `cooldown_ticks`（技能定义顶层 `check_skills.py:94-97` 是另一对象，常量 1e9，不可混用）。S7 内存反事实：把 `cooldown_ticks` 换成 `-5 / 0 / 1000001 / 2000000 / 0.5 / "abc" / true / 缺键`，`check_mob()` + `check_chances()` 报错集合逐字相同。运行期 `MobSpec.java:208-215` 注释「夹到 `[0,1000000]`」：`:212` 只对非数字 WARN，`:214-215` 对 `<=0` / 非有限 / 超上界 / 小数静默归零或 `(int)Math.min(...)` 截断，零 WARN；`SkillEngine.java:158,196` 又把 `ticks<=0` 改写为技能自身冷却。配置写 `cooldown_ticks: 0.5` 的怪技能按技能默认冷却释放、零日志（对账网第 36 例，R106-b「夹之前的配置值」第四次落地）。基线 2 怪 / 3 处引用（200 / 80 / 120）/ 0 问题（S7 已离线核逐字）。
+- 独占文件（**唯一可写**）：
+  - `check_mob_skill_cooldowns.py`（新建，≤ 200 行）
+  - `build/mobskillcooldownfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_mobs.py`、`check_mob_scales.py`、`check_mob_skill_chance.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖 `check_progress`）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；`COOLDOWN_MIN=1` / `COOLDOWN_MAX=1_000_000` 由 S7 从 `MobSpec.java:58,208-215` 冻结，S8 不读源码、不推断）：
+  - `COOLDOWN_MIN = 1`、`COOLDOWN_MAX = 1_000_000`：模块级 int 常量。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。默认配置是裸键（`cooldown_ticks: 200`），shim 必须能吃。
+  - `read_mobs(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`（文件名升序），返 `(rows, ok)`；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_cooldowns(rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 且 `data["skills"]` 是 list 的条目。逐个 **dict 元素**：`cooldown_ticks` 键缺失 / 非数字 / bool 一律跳过（缺键运行期缺省 100、非数字有 WARN，不重复造红线）；数字（`isinstance(v,(int,float)) and not isinstance(v,bool)`）必须同时满足 `COOLDOWN_MIN <= v <= COOLDOWN_MAX` 且 `float(v).is_integer()`（整数形态，防小数静默截断）；其余（含 `nan` / `inf` / `-inf`，Python 比较与 `is_integer()` 天然为 False）产一条 `<文件名>: skills[<i>].cooldown_ticks 值 <repr(v)> 不在 [1,1000000] 整数`（`<i>` 为元素在 `skills` 中的下标，从 0 起；`<repr(v)>` 用 Python `repr`）。结果按文案升序、保稳定、不去重。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults/mobs`）、`-v`。目录不可读 → 打 `[问题] mobs目录读取失败`、末行 `共 1 份怪物技能冷却口径对账表 · 1 条问题` EXIT=1；否则逐条打 `[问题] <msg>`、末行 `共 1 份怪物技能冷却口径对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 只怪物 · <k> 处 cooldown_ticks 引用 · 边界 [1,1000000]`，n = `*.json5` 文件数，k = data 为 dict、`skills` 为 list 时其中 dict 元素含键 `"cooldown_ticks"` 的个数之和。
+- 不要做：不核 `cooldown_ticks` 缺键 / 非数字 / bool（有合法缺省或 WARN）、不核小数是否「四舍五入到多少」（只报配置非整数）、不核 `skills[].skill` 与 `chance`（归各自尺）、不核技能定义顶层 `cooldown_ticks`（归 `check_skills.py`，常量不同）、不核 `level`/`scale`/drops/spawn_rules（归各自尺）、不核技能冷却平衡（内容取舍）、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**）：
+  1. `python check_mob_skill_cooldowns.py` → 末行 `共 1 份怪物技能冷却口径对账表 · 0 条问题` EXIT=0；`python check_mob_skill_cooldowns.py -v` → 含 `已检查 2 只怪物 · 3 处 cooldown_ticks 引用 · 边界 [1,1000000]`。
+  2. 六组夹具写到 `build/mobskillcooldownfix/`（每次从干净目录重来，裸键 JSON5，形如 `{id: "x", skills: [{skill: "redtale_project:arc_bolt", cooldown_ticks: 0}]}`，逐字核对末行计数与报错文案）：A 默认配置两份怪（200 / 80+120）→ 0 条 EXIT=0、`-v` 逐字 2/3；B `one.json5` `cooldown_ticks:0` → 1 条 `one.json5: skills[0].cooldown_ticks 值 0 不在 [1,1000000] 整数` EXIT=1；C `cooldown_ticks:1000001` → 1 条同模板 EXIT=1；D 两份 `a.json5` `cooldown_ticks:1` + `b.json5` `cooldown_ticks:1000000` → 0 条 EXIT=0（合法边界）；E 两份 `a.json5` `cooldown_ticks:0` + `b.json5` `cooldown_ticks:1000001` → 恰好 2 条、按 a/b 顺序，EXIT=1；F 两份 `a.json5` `cooldown_ticks:200` + `b.json5` `cooldown_ticks:80` → 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 只怪物 · 2 处 cooldown_ticks 引用 · 边界 [1,1000000]`。六组逐字对上。
+  3. `wc -l < check_mob_skill_cooldowns.py` ≤ 200；`grep -c "def check_cooldowns"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_mobs|check_mob_scales|check_mob_skill_chance|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] mobs目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_cooldowns`：小数 `1.5` / `0.5` 各 1 条、`True` / `"200"` / 缺键跳过、`float("inf")` 1 条、重复 `0` 两条不合并、下标 4/5 正确；夹具用完即删（`build/mobskillcooldownfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4560,7 +4583,7 @@ fi
 | C53 | `skill_trees[].points_per_level` 非整静默回落 1（留池） | 有四满足雏形但合法分支多（0 关门槛 / 负数 WARN 归零 / 非整静默 1）、无具名常量，基线仅 1 处，按 R96-c/R102/R104「卡面太薄」先例不派 | 无 |
 | C54 | ~~`check_drop_rolls.py`（掉落表 rolls 上界口径）→ **T-0103（R108 派 / R109 验）**~~ | 旧尺只核 `rolls>=1`，运行期 `MAX_ROLLS=16` 静默夹取、零 WARN；对账网第 34 例 | 无 |
 | C55 | ~~`check_mob_skill_chance.py`（怪物技能 chance 值域口径）→ **T-0104（R109 派）**~~ | 全仓 52 尺无一读 `mobs[].skills[].chance`；旧尺反事实 2.5/-0.5/inf/true 全绿，运行期 `:224` 静默夹 `[0,1]` 零 WARN；对账网第 35 例 | 无 |
-| C56 | `mobs[].skills[].cooldown_ticks` 静默夹取（`DEFAULT_COOLDOWN=100` / `MAX_COOLDOWN=1_000_000`，`MobSpec.java:208-215`） | 具名常量 + 基线 3 处、旧尺不读，形态与 chance 同源；按 R107-a 同父异尺不合并，等 T-0104 落地后复评再派 | 无 |
+| C56 | ~~`mobs[].skills[].cooldown_ticks` 静默夹取 → **T-0105（R110 派）**~~ | `DEFAULT_COOLDOWN=100` / `MAX_COOLDOWN=1_000_000` 具名常量 + 基线 3 处；旧尺八形态反事实全绿；对账网第 36 例 | 无 |
 | C57 | `drops[].xp` 上界 / `min` 负值 / `max` 上界同族静默改写 | R109 复评：与 T-0103 的 `rolls` 同父异尺、语义不同，待 `xp`/`min`/`max` 各自常量与 WARN 出口逐条取证后再定是否派 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。

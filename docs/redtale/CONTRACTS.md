@@ -1495,3 +1495,16 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 只读扫 `mobs/*.json5` 的 `skills[].chance`：缺键 / 非数字 / bool 跳过（`MobSpec.java:220-222` 缺省 1.0、非数字有 WARN），显式数字必须满足 `CHANCE_MIN=0.0 ≤ v ≤ CHANCE_MAX=1.0`，越界或 `nan`/`inf` 产 `<文件名>: skills[<i>].chance 值 <repr(v)> 不在 [0,1]`。常量由 S7 从 `MobSpec.java:220,224` 逐字冻结，S8 不读源码。`CHANCE_MIN` / `CHANCE_MAX` / `_loads` / `read_mobs` / `check_chances` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 2 怪 / 3 处 chance 引用（0.35 / 0.5 / 0.25）/ 0 问题（S7 离线核逐字）。
 - 填补 52 把尺的共同盲区：`check_mobs.py:88-95` 的 `check_mob` 只查 `skills[].skill` 引用命中，不进 `chance`；S7 内存反事实把 `chance` 换成 `2.5 / -0.5 / inf / true / "2.5" / 0`，`check_mob()` 报错集合逐字相同（技能 id 命中时全 `[]`）。运行期 `MobSpec.java:224` `Math.max(0.0D, Math.min(1.0D, value))` 静默夹取零 WARN；`:221` 非数字 WARN 是反证出口形态差异 → 配置写 2.5 实际 100% 释放，运营看不见（R106-b「夹之前的配置值」第三次落地）。
 - 只核显式 `chance` 的数字形态与区间，不核缺键 / 非数字 / bool（有合法缺省或 WARN）、不核 `skills[].skill`（归 `check_mob_skills.py`）、不核 `cooldown_ticks`（同源留池 C56）、不核 level/scale/drops/spawn_rules、不核释放概率的内容平衡；不读源码/存档、不改运行期。当前未接 `check_all`，T-0104 VERIFIED 后 R110 接 → 应 `跑成 53`。
+- T-0104 `[VERIFIED]`（R110）：基线 `共 1 份怪物技能概率口径对账表 · 0 条问题` EXIT=0 / `-v` 2 怪·3 引用 / 六夹具 A~F 逐字 EXIT=0/1/1/0/1/0 / wc=139、`def check_chances`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；S7 独立六夹具 6/6（首轮探针 B/C 期望漏写 `[问题] ` 前缀自错改正，不打回），探针已清，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 53 个脚本`，R110 接线）。
+
+### 4.71 怪物技能 cooldown_ticks 值域口径对账 `check_mob_skill_cooldowns.py`（T-0105，R110 派，对账网第三十六例）
+
+- 只读扫 `mobs/*.json5` 的 `skills[].cooldown_ticks`：缺键 / 非数字 / bool 跳过（缺省 100、非数字有 WARN），显式数字必须是整数形态且 `COOLDOWN_MIN=1 ≤ v ≤ COOLDOWN_MAX=1_000_000`，否则产 `<文件名>: skills[<i>].cooldown_ticks 值 <repr(v)> 不在 [1,1000000] 整数`。常量由 S7 从 `MobSpec.java:58,208-215` 逐字冻结，S8 不读源码。`COOLDOWN_MIN` / `COOLDOWN_MAX` / `_loads` / `read_mobs` / `check_cooldowns` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 2 怪 / 3 处引用（200 / 80 / 120）/ 0 问题（S7 离线核逐字）。
+- 填补 53 把尺的共同盲区：`check_mobs.py:88-95` 的 `check_mob()` 只查 `skills[].skill` 引用，`check_mob_skill_chance.py:88-103` 只查 `chance`；技能定义顶层 `check_skills.py:94-97` 核的是另一对象（常量 1e9，不可混用）。S7 内存反事实把 `cooldown_ticks` 换成 `-5 / 0 / 1000001 / 2000000 / 0.5 / "abc" / true / 缺键`，`check_mob()` + `check_chances()` 报错集合逐字相同。运行期 `MobSpec.java:212` 仅非数字 WARN，`:214-215` 对 `<=0` / 非有限 / 超上界 / 小数静默归零或截断零 WARN，`SkillEngine.java:158,196` 再把 `ticks<=0` 改走技能自身冷却（R106-b「夹之前的配置值」第四次落地）。
+- 只核显式 `cooldown_ticks` 的整数形态与区间，不核缺键 / 非数字 / bool（有合法缺省或 WARN）、不核小数截断结果、不核 skill id / chance（归各自尺）、不核技能定义顶层同名字段（归 `check_skills.py`）、不核 level/scale/drops/spawn_rules、不核冷却平衡（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0105 VERIFIED 后 R111 接 → 应 `跑成 54`。
+
+### 4.72 R110 的验收与派单留证
+
+- T-0104 VERIFIED 证据：S7 独立六夹具写在独立目录（与 S8 卡内 `build/mobskillchancefix/` 不冲突）逐字 6/6，基线/静态/边界全过；S8 零偏差不打回。
+- T-0105 派单证据：`MobSpec.java:58,208-215` 具名常量与静默出口逐字取证；旧尺八形态反事实报错集合逐字相同；默认基线 2 怪 / 3 处 / 0 问题非空；六夹具覆盖上下越界、小数、合法边界、字符串、bool 与缺键。对账网第 36 例。详见 `docs/ROUND-R110-MOBCOOLDOWN.md`。
+- 留池复评：C57 `xp` 上界 / `min` 负值 / `max` 上界同族静默改写本轮按 R107-a/d 仍不派——`xp` 基线仅 1 处、`min` 负值受旧尺 `lo>hi` 部分间接覆盖、`min/max` 同时抬高时旧尺全绿但分支多（非负整数 + `[0,64]` + 相互大小），待逐出口取证后再定；`points_per_level` 等四老留池项不变。

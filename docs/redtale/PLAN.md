@@ -2394,3 +2394,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0104**（基线 `共 1 份怪物技能概率口径对账表 · 0 条问题` + `-v` 2 怪·3 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_chances`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 52→53。
 2. 按 C56 复评 `mobs[].skills[].cooldown_ticks`（具名常量已取证）；C57 `xp`/`min`/`max` 同族字段复评；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑卡。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R110 · 2026-11-23 04:3x · 验 T-0104 + check_all 52→53 + 派 T-0105（怪物技能 cooldown_ticks 值域口径）
+
+- 卡板：T-0104 `check_mob_skill_chance.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份怪物技能概率口径对账表 · 0 条问题` EXIT=0 / `-v` 2 怪·3 引用 / 六夹具 EXIT=0/1/1/0/1/0 逐字（B/C 含 `[问题] ` 前缀、E 按 a/b、F `-v` 2/2）/ wc=139、`def check_chances`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；S7 探针 B/C 期望自错改正不打回，探针已清）。**派 T-0105**（`check_mob_skill_cooldowns.py`：mobs `skills[].cooldown_ticks` 显式数字必须 `[1,1000000]` 内整数形态，常量从 `MobSpec.java:58,208-215` 冻结，单文件零接线、六夹具、基线 2 怪/3 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = C56 复评 + 全类排除留证 + 源码逐字核实 + 八形态反事实**：Explore 只读扫 53 check / 36 默认 JSON5 / Java；排除技能定义顶层 cooldown（已有尺 + WARN + 常量 1e9）、rolls（已落地）、drops chance（已堵）、tree effect value / spawn match / repair targets（无可冻结真值或基线 0）。落 `MobSpec.java:212` 仅非数字 WARN、`:214-215` 静默归零/截断、`SkillEngine.java:158,196` 改写走技能冷却；旧尺八形态报错集合逐字相同。对账网第 36 例。C57 `xp/min/max` 本轮复评仍不派（基线薄 / 分支多 / 部分间接覆盖）。
+- 接线 `check_all` 52→**53** 全绿（53/53 红 0）；七门禁全 0（check_tasks 105 卡在制品 1、check_contracts 71 条、check_docs 125 份/523 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十八次。
+- 收尾：`docs/ROUND-R110-MOBCOOLDOWN.md`、`PLAN.md` §13 R110 + §13.113、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0104 VERIFIED + T-0105 OPEN + 池 C56 结项）、`docs/CONTRACTS.md` §4.70 验收行 + §4.71/§4.72、`tools/check_all.py`、协作板 §3。
+
+### 13.113 R110 的五条口径（留池复评 / 同名字段不同对象 / 整数形态 / 探针自错 / 裸名）+ 下一步（R111）
+
+| 编号 | 口径 |
+|---|---|
+| R110-a | **留池复评有证据就派**：C56 在 R107/R109 两次留池，本轮按 R109-a「clamp 出口是否告警」逐字取证后转为 T-0105；留池不是否决，是等证据。 |
+| R110-b | **同名字段不同对象不可合并**：技能定义顶层 `cooldown_ticks`（`SkillSpec`，上限 1e9、有 WARN、已有尺）与怪物技能引用上的同名字段（`MobSpec.SkillRef`，上限 1e6、静默截断）只因键名相同，不共用卡与常量。 |
+| R110-c | **静默小数截断也按「夹之前的配置值」核**：`cooldown_ticks: 0.5` 最终被 `(int)` 截成 0，虽仍在 `[1,1e6]` 之外，但小数形态须单列为非整数红线。 |
+| R110-d | **探针期望漏写前缀属探针自错**：S7 首轮 B/C 只写消息正文未写 `[问题] ` 前缀，按 R65-a 修探针不打回；S8 逐字交付与卡面一致。 |
+| R110-e | **裸名纪律第二十八次**：派单当轮文档与台账在建脚本只写裸名 `check_mob_skill_cooldowns.py`，避免文档路径检查把未建文件当断链。 |
+
+下一步（R111）：
+
+1. **验 T-0105**（基线 `共 1 份怪物技能冷却口径对账表 · 0 条问题` + `-v` 2 怪·3 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_cooldowns`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败；函数边界小数/inf/重复值）；过后 `check_all` 53→54。
+2. C57 `xp` 上界 / `min` 负值 / `max` 上界按 R109-d 继续逐出口取证，四判据齐了再拆卡；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
