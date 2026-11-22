@@ -1472,3 +1472,11 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0100 VERIFIED 证据：S7 独立六夹具写在独立目录（与 S8 卡内 `build/useargsfix/` 不冲突）逐字 6/6，基线/静态/边界全过；S8 零偏差不打回。接线后 `check_all` 49/49 EXIT=0。
 - T-0101 派单证据：`check_mob()` 对五种非法 level 全绿（内存直接调用），运行期静默路径有 Java 行号，冻结表来自源码而非旧尺，默认基线 2/2/0 非空；六夹具能覆盖上下越界、小数、字符串、bool 与合法边界。详见 `docs/ROUND-R106-MOBLEVEL.md`。
+- T-0101 `[VERIFIED]`（R107）：基线 0 问题 / `-v` 2·2 / 六夹具 A~F 逐字 EXIT=0/1/1/1/1/0 / wc=163、`def check_levels`=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败；S7 独立六夹具 6/6，探针已清，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 50 个脚本`，R107 接线）。
+
+### 4.68 怪物 scale 下界口径对账 `check_mob_scales.py`（T-0102，R107 派，对账网第三十三例）
+
+- 只读扫 `mobs/*.json5` 显式写出的 `scale`：合法当且仅当有限数字（bool 不算）且 `0.25 ≤ v ≤ 4.0`；缺键合法（运行期缺省 1.0）；非法产 `<文件名>: scale 值 <repr(v)> 不在 [0.25,4.0]`。`SCALE_MIN=0.25` / `SCALE_MAX=4.0` 由 S7 从 `MobSpec.java:57` 逐字冻结，S8 不读源码。`SCALE_MIN` / `SCALE_MAX` / `_loads` / `read_mobs` / `check_scales` / `main` 接口由 S7 定死。派单时未实现、未接线，基线 2 怪 / 2 处 scale 引用（1.15、1.0）/ 0 问题。
+- 填补旧尺 `check_mobs.py:72-73` 的 `(0,0.25)` 下界缝：旧尺只判 `0 < scale <= 4`，反事实 `0.1 / 0.24 / 0.25` 全绿；运行期 `MobSpec.java:113-121` 把合法区间外的值静默夹进 `[0.25,4.0]` 且零 WARN，`MobSpawner.java:73,124-135` 将结果写进 `minecraft:generic.scale` 基值 → 配置写 `0.1` 的怪实际只有 ×0.25 体积，日志全静（R107-a/b）。
+- 只核显式 `scale` 的数值形态与区间，不核缺键 / `level`（归 `check_mob_levels.py`）/ id·base·undead·attributes·equipment·skills·drops（归 `check_mobs` 等）/ 与属性的乘积（内容取舍）；不读源码/存档、不改运行期。当前未接 `check_all`，T-0102 VERIFIED 后 R108 接 → 应 `跑成 51`。
+- `skill_trees[].points_per_level` 五形态旧尺全绿但多出口、无具名常量、基线薄，按 R107-c/d 留池（C53）；`mobs[].skills[].cooldown_ticks`（clamp 先例）与 `skill_trees.nodes[].effects[].value`（无可冻结区间）继续留池。

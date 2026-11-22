@@ -2322,3 +2322,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0101**（基线 0 问题 / `-v` 2 怪·2 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_levels`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 49→50。
 2. 下一张候选：`mobs[].scale` 旧尺下界口径过宽（冻结 `[0.25,4.0]`）；`skill_trees[].points_per_level` 非整数静默回落 1（冻结整数、`0`=关门槛合法）。按四满足判据逐条核过再派，不足则不派。
 3. 按 R105-d 的六原型字段表落默认怪 + lang（S7 内容面独占）；Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~G 等 Aki。
+
+## R107 · 2026-11-23 01:1x · 验 T-0101 + check_all 49→50 + 派 T-0102（怪物 scale 下界口径）
+
+- 卡板：T-0101 `check_mob_levels.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 0 问题 EXIT=0 / `-v` 2 怪·2 引用 / 六夹具 EXIT=0/1/1/1/1/0 逐字、E 两条按 a/b、F `-v` 逐字 / wc=163、`def check_levels`=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条读失败；S8 零偏差不打回，探针已清）。**派 T-0102**（`check_mob_scales.py`：mobs `scale` 必须 `[0.25,4.0]` 内有限数字且 bool 不算，S7 冻结常量/文案/CLI，单文件零接线、六夹具、基线 2 怪/2 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = 反事实 + 全类排除留证**：核实 `MobSpec.java:57,113-121` 的 `MIN_SCALE=0.25D/MAX_SCALE=4.0D` 与静默夹取、`MobSpawner.java:73,124-135` 写到 `minecraft:generic.scale`；旧尺 `check_mobs.py:72-73` 对 `0.1/0.24/0.25` 全绿（只漏 `(0,0.25)` 带）。对账网第 33 例。`points_per_level` 五形态旧尺全绿但分支多、无具名常量、基线薄 → 留池 C53；`cooldown_ticks`（clamp 先例）与 `nodes[].effects[].value`（无合法区间）继续留池。
+- 接线 `check_all` 49→**50** 全绿（50/50 红 0）；七门禁全 0（check_checkall / check_tasks 102 卡在制品 1 / check_contracts 68 条 / check_docs 122 份·510 引用 / check_rounds / check_ownership）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 常驻未动、测试服 25567/25577 无 LISTEN。裸名纪律第二十五次。
+- 收尾：`docs/ROUND-R107-MOBSCALE.md`、PLAN §13 R107 + §13.110、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0101 VERIFIED + T-0102 OPEN + 池 C52/C53）、`docs/CONTRACTS.md` §4.68、协作板 §3。
+
+### 13.110 R107 的五条口径（同父异尺 / 静默夹取 / 基线非空优先 / 分支复杂度 / 裸名）+ 下一步（R108）
+
+| 编号 | 口径 |
+|---|---|
+| R107-a | **对账网第 33 例 = 怪物 `scale` 的下界形态**：与 T-0101 同为 mobs 字段，但一个是整数口径、一个是浮点夹取带，不合并成一张卡（R106-b 落地）。 |
+| R107-b | **静默夹取要核「夹之前的配置值」**：运行期保证结果合法不等于配置写对了；玩家看到的体积已被悄悄改写且零 WARN。 |
+| R107-c | **两候选都成立时按「冻结常量 + 基线厚度」定序**：scale 有具名常量与 2 处基线，ppl 无具名常量且基线 1 处，先派 scale。 |
+| R107-d | **合法分支多的字段不派 S8**：0 关门槛 / 负数 WARN 归零 / 非整静默 1 这类多出口语义，卡面写不全就是让 S8 发明接口，留池。 |
+| R107-e | **裸名纪律第二十五次**：派单当轮文档与台账在建脚本只写裸名，避免文档路径检查把未建文件当断链。 |
+
+下一步（R108）：
+
+1. **验 T-0102**（基线 0 问题 / `-v` 2 怪·2 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_scales`=1、禁用 grep=0、py_compile OK、`--dir NO_SUCH` 1 条读失败）；过后 `check_all` 50→51。
+2. 无新真洞则按 R99-b 转内容面：按 R105-d 冻结字段落 6 只默认怪 + lang（S7 独占）。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

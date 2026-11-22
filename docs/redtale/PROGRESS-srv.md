@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-23 00:04 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-23 01:12 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0101 | OPEN | `check_mob_levels.py` —— 怪物 `level` 整数口径对账（M5 / D17，单文件零接线，对账网第三十二例） |
+| T-0102 | OPEN | `check_mob_scales.py` —— 怪物 `scale` 体积下界口径对账（M6 / D4+D9，单文件零接线，对账网第三十三例） |
 
-已验完 **98** 张 / 共 **101** 张。
+已验完 **99** 张 / 共 **102** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
