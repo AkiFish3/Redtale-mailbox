@@ -1570,3 +1570,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0109 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录（与 S8 卡内夹具目录不冲突）逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
 - T-0110 派单证据：`ConsumableSpec.java:25-26,75-118,184-190` 逐字取证；旧尺四把在干净目录反事实报错集合逐字不变；默认基线 7/1/6/0 非空；六夹具覆盖缺省/四处路径/域外 WARN 形态/多文件。对账网第 41 例。
+- T-0110 `[VERIFIED]`（R116）：基线 0 问题 / `-v` 7 物品·6 引用 / S7 独立六夹具 6/6 逐字 EXIT=0/1/1/0/1/0 / wc=171、`def check_ints`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界 22 形态 + 重复不合并；S8 零偏差不打回。已接进 `tools/check_all.py`（`共 59 个脚本`，R116 接线）。
+
+### 4.83 词条权重 `(int)` 静默截断对账 `check_affix_weights.py`（T-0111，R116 派，对账网第四十二例）
+
+- 只读扫 `affixes/*.json5` 顶层 `weight` 与 `affix_pools/*.json5` 的 `prefix`/`suffix`/`core` 三段权重：缺键跳过（合法缺省顶层 100）；bool / 非数字 / 非有限数 / `v > MAX_WEIGHT` / `v <= 0` 跳过（截断语义不同或在役尺 `check_items.py` 已报）；其余显式小数（`v != int(v)` 或 `int(v) <= 0`）产 `<文件名>: <path> 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`，`<path>` 逐字为 `weight` 或 `<kind>.<键>`，按文案升序、保稳定、不去重。`KINDS = ("prefix","suffix","core")`、`MAX_WEIGHT = 2147483647` 由 S7 从 `AffixPools.java:44,72,106-110,162-168` 冻结；接口 `_loads` / `read_rows` / `check_weights` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 59 把尺的共同盲区：`AffixPools.java:72,162-168` 顶层 `integer()` 与 `:106-110` 池段直接 `getAsInt()` 都零 WARN；`AffixRoller.java:140` 的 `entry.weight() <= 0` 把 `0.4` 截断后的 0 静默丢词条。`check_items.py:94-95/:118-120` 读 weight 却只核 `_num>0`；`check_affix_reach.py` 只读 item_level；`check_affix_pool_refs.py` 只读键名。S7 干净目录反事实把 `100→100.7`、`sharp:100→2.5` 后三把尺 EXIT/末行逐字不变（全绿）。
+- 只核两处权重显式小数的截断，不核缺键 / `v <= 0` / 非数字 / bool / 非有限数 / 超 int（已有 WARN 或在役尺已报）、不核词条 id/kind/level/stats/applies_to/slots（归 `check_items.py`、`check_affix_reach.py`、`check_affix_pool_refs.py`）、不核附魔 weight（原版透传无离线真值）、不核权重平衡（内容取舍）；不读源码/存档、不改运行期。派单时未实现、未接线，基线 3 定义 / 1 池 / 6 处引用 / 0 问题（S7 离线核逐字）；T-0111 VERIFIED 后 R117 接 → 应 `跑成 60`。
+
+### 4.84 R116 的验收与派单留证
+
+- T-0110 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
+- T-0111 派单证据：源码两处 `getAsInt()` 与 `weight<=0` 下游逐字取证；三把旧尺对 `100.7` / `2.5` 干净目录反事实逐字全绿；默认基线 3/1/6/0 非空；六夹具覆盖顶层/池段/截断归零/域外 WARN 形态/多文件。对账网第 42 例。详见 `docs/ROUND-R116-AFFIXWEIGHT.md`。

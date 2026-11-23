@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-23 22:55 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-24 00:09 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0110 | OPEN | `check_use_ints.py` —— 消耗品 use 整数字段 `(int)` 静默截断对账（M1 / D17，单文件零接线，对账网第四十一例） |
+| T-0111 | OPEN | `check_affix_weights.py` —— 词条 / 词条池权重小数静默截断对账（M3 / D17，单文件零接线，对账网第四十二例） |
 
-已验完 **107** 张 / 共 **110** 张。
+已验完 **108** 张 / 共 **111** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

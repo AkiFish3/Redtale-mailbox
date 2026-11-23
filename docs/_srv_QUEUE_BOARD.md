@@ -343,6 +343,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-23 22:34 · S8 · 空轮：卡板无 [DOING]/[BOUNCED]/[OPEN]（命中仅 §4 模板行 63、规则文本 3272/3297），末卡 T-0109 仍 [DONE] 待 S7 验，按规则不领终态卡；零代码改动、未取构建锁、未 build、未启停服务器 · 改了：仅本板 §3 本行 · 下一步：等 S7 派新卡后按 id 升序领；T-0109 待验并接 check_all（57→58）
 
+- 2026-11-23 23:37 · S8 · T-0110 `check_use_ints.py` 三验收全过 → `[DONE]`（基线 0 问题 EXIT=0、`-v` 7 份/6 处；六夹具 A~F 逐字 EXIT=0/1/1/0/1/0；wc=171≤200、def check_ints=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条 EXIT=1、函数边界 22/22；卡明令禁 gradle 未构建）· 改了：`E:/RedtaleProject/tools/check_use_ints.py`（新建 171 行，自带 JSON5 shim、零接线）、`E:/RedtaleProject/docs/TASKS.md`（仅本卡 OPEN→DOING→DONE + 进度 1 行）、本板 §3（本行）；夹具与 pyc 已清，未碰 src/、未启停服务器 · 下一步：S7 验 T-0110 并接 check_all（58→59）；按 id 升序看新卡
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -475,3 +477,5 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-23 09:2x · S4 · **第 97 轮证据轮**：问「转内容面动没动」——R103→R114 / check_all 47→57（实跑 57 脚本·1 红=未接线，非回归）/ defaults 仍 36 份零增长（R104 只盘点、R105 只冻结 6 怪字段）/ jar 冻结第 3 轮 / 部署端第 8 轮冻结 · `_srv_BACKLOG.md` **T61 / B-42**、`_srv_RESEARCH.md` 第 97 批 / 2.88、`_srv_PLAN_NEXT.md` §15 第 97 轮刷新 · 下一步：进服信号只认三个只读观察点（mobs 2→8+lang / defaults 36→>36 / jar mtime），S4 仍 0 待拍板、0 阻塞
 
 - 2026-11-23 22:5x · S7 · 验 **T-0109 → VERIFIED**（3/3 + S7 独立六夹具 6/6 + 函数边界 13 形态；S8 零偏差不打回）；接 `check_all` **57→58**（58/58 红 0，接线前 check_checkall 正确报漏接 1 条）；**派 T-0110**（`check_use_ints.py`：消耗品 use 四处整数截断，四把旧尺干净目录反事实全绿、基线 7/1/6/0，对账网第 41 例；C62 显示面留池） · 留下：`E:/RedtaleProject/docs/ROUND-R115-USEINTS.md`、`PLAN.md` §13 R115、`docs/TASKS.md` T-0110、`tools/check_all.py` · 下一步：验 T-0110（过后 58→59）；C62 独立卡；Q-021/022/023 无人答、真人 A~F 等 Aki
+
+- 2026-11-23 23:5x · S7 · 验 **T-0110（`check_use_ints.py`）→ VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 EXIT=0/1/1/0/1/0 + 函数边界 22 形态；S8 零偏差不打回）· 接 `check_all` **58→59**（59/59 红 0，七门禁全 0）· **派 T-0111**（`check_affix_weights.py`：词条顶层/池段权重 `getAsInt()` 静默截断，`AffixRoller:140` 让归零后整条词条静默丢弃；三把旧尺对 100.7/2.5 反事实全绿、基线 3 定义/1 池/6 处，对账网第 42 例；C62 显示面继续留池） · 本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服 25567/25577 无 LISTEN · 留下 `E:/RedtaleProject`（`docs/ROUND-R116-AFFIXWEIGHT.md`、`PLAN.md` §13 R116 + §13.119、`docs/TASKS.md` T-0110 VERIFIED + T-0111 + 池 C64、`docs/CONTRACTS.md` §4.83/§4.84、`docs/ROUNDS.md`、`tools/check_all.py`） · 下一步：验 T-0111（过后 check_all 59→60）；C62 独立卡；Q-021/022/023 无人答、真人 A~F 等 Aki
