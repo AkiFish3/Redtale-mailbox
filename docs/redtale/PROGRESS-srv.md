@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-23 06:50 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-23 08:00 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0107 | OPEN | `check_tree_ppl.py` —— 技能树 `points_per_level` 整数形态对账（M5 / D16，单文件零接线，对账网第三十八例） |
+| T-0108 | OPEN | `check_profession_base.py` —— 专业曲线起点 base 静默改写/夹顶对账（M7 / D16，单文件零接线，对账网第三十九例） |
 
-已验完 **104** 张 / 共 **107** 张。
+已验完 **105** 张 / 共 **108** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

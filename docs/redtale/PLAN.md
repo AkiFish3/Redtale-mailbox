@@ -2466,3 +2466,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0107**（基线 `共 1 份技能树点数口径对账表 · 0 条问题` + `-v` 1 树·1 引用 / 六夹具 A~F 逐字 / wc≤200、`def check_ppl`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；非数字/负数/浮点整数形态边界）；过后 `check_all` 55→56。
 2. C58 只在「决定把引用形态校验与数值形态校验拆成两把尺」时重开，否则永久留池；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R113 · 2026-11-23 07:5x · 验 T-0107 + check_all 55→56 + 派 T-0108（专业曲线 base 静默改写/夹顶）
+
+- 卡板：T-0107 `check_tree_ppl.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份技能树点数口径对账表 · 0 条问题` EXIT=0 / `-v` 1 树·1 引用 / 六夹具 EXIT=0/1/0/1/1/0 逐字（E 按 a/b 升序、F `0`/`-1` 全放行且 `-v` 2/2）/ wc=164、`def check_ppl`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界 6 形态 + 重复不合并逐字；探针已清、S8 零偏差不打回）。**派 T-0108**（`check_profession_base.py`：`professions/*.json5` 的 `curve.base` 为 0 或超 `MAX_STEP_EXP=1e9` 时报，负值/非数字/缺键跳过，两常量从 `ProfessionSpec.java:93,102` 与 `ExpCurve.java:8,43-45` 冻结，单文件零接线、六夹具、基线 2 专业/2 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = 全类排除留证 + 源码逐字核实 + 干净探针反事实**：Explore 只读扫 56 尺 / 36 json5 / Java，三候选满足四判据（professions base / trees icon / items durability），另排除 `curve.mode` 非法枚举（`ProgressSpec.java:72-73` 有 WARN）、`effect_attack_speed.minecraft:haste`（`check_numeric.py:59-61` 已在役尺）、`exclusive_with`（无基线）。落 `base` 真洞：`ProfessionSpec.java:114` 用 `v < min` 让 0 零 WARN、`ExpCurve.java:19` 静默改回 100、`:43-45` 静默夹顶；`check_professions.py:56-72` 与全仓 tools 零读。探针（`0/1.5/-5/"x"/1e300`）逐形态跑 `check_professions.py` 全部 `共 1 个文件 · 0 条问题` EXIT=0，报错集合逐字相同；基线 2/2/0 一致。对账网第 39 例。
+- 接线 `check_all` 55→**56** 全绿（56/56 红 0）；七门禁全 0（check_tasks 108 卡在制品 1、check_contracts 79 条、check_docs 129 份/542 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN。裸名纪律第三十一次。
+- 收尾：`docs/ROUND-R113-PROFBASE.md`、`PLAN.md` §13 R113 + §13.116、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0107 VERIFIED + T-0108 OPEN + 池 C59~C61）、`docs/CONTRACTS.md` §4.77/§4.78、`tools/check_all.py`、协作板 §3。
+
+### 13.116 R113 的五条口径（同字段不同出口 / WARN 差异即根因 / 干净探针 / 留池降级 / 裸名）+ 下一步（R114）
+
+| 编号 | 口径 | 描述 |
+|---|---|---|
+| R113-a | **同字段不同出口要拆尺**：`curve.base` 与 `growth`/`exponent`/`mode` 虽同在 `check_professions.py` 的 curve 段，但出口不同（解析 WARN vs 下游静默），新尺只认 base，不把整段重实现。 | 承接 R112-d 的同族拆分。 |
+| R113-b | **WARN 边界符号差异就是根因**：`ProfessionSpec.java:114` 的 `v < min` 对 0 放行、`ProgressSpec.java:130` 的 `v <= min` 对 0 告警；取证要逐字抄符号，不能只写「有边界校验」。 | 派卡卡面冻结该差异。 |
+| R113-c | **反事实探针必须每形态干净目录**：首轮把五种 base 写在同一目录，被 `check_professions.py` 的 id 重复定义误报盖过；改成每形态独立目录后五形态逐字全绿。 | 与 R65-a 同类坑。 |
+| R113-d | **显示面候选留池不硬凑**：`trees icon` / `items durability` 虽四判据齐，本轮只派数值面最高优先级的 base；两条进池 C60/C61，不合并成一卡。 | 单卡粒度纪律。 |
+| R113-e | **裸名纪律第三十一次**：派单当轮文档与台账在建脚本只写裸名 `check_profession_base.py`，避免路径检查把未建文件当断链。 | —— |
+
+下一步（R114）：
+
+1. **验 T-0108**（基线 2 专业/2 引用 + 六夹具 A~F 逐字 + wc≤200、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；零/硬顶/有 WARN 形态边界）；过后 `check_all` 56→57。
+2. C60/C61 按四判据逐出口取证后再定；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
