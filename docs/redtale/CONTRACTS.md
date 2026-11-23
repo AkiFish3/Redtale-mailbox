@@ -1616,3 +1616,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0112 VERIFIED 后接线 `check_all` 61 个脚本（R118）；T-0113 VERIFIED 后接 62（R119），`check_checkall` 清单对账 0 问题。
 - T-0114 派单证据：五处 Java 出口逐字取证；五把旧尺两组反事实逐字全绿；默认基线 4/2/1/3/0 非空；六夹具覆盖缺省/数值/文档语义冲突/跨目录排序/非目标原语/负值回落。C66 三处 `name` 与 C68 ANY 同族留池——R118「数值洞收口」前提被本轮新证据推翻，按 R119-a 数值优先。详见 `docs/ROUND-R119-AOEARGS.md`。
+
+### 4.91 宝石/孔位解析静默回落对账 `check_socket_fallbacks.py`（T-0115，R120 派，对账网第四十六例）
+
+- 只读扫 `items/*.json5` 的 `sockets` 与 `gem` 段三落点：`sockets.types` 是 list 且 `count` 有效且 `len(types) < count` → 报「末位静默补 any」（对照 `SocketSpec.java:116-118` 超长有 WARN，`:120` 短补零 WARN）；`gem.type` 空白串 → 报「静默回落 any」（`:132-133` 零 WARN，对照 `:128-130` 非字符串有 WARN）；`gem.exclusive_group` 空白串 → 报「静默回落空串，互斥失效」（`:159` 零 WARN，对照 `:156` 有 WARN，下游 `Socketer.java:192` 空串跳过互斥）。常量 `ANY="any"`（`:39`）/ `MAX_COUNT=6`（`:37`）由 S7 从源码冻结；接口 `_loads` / `read_items` / `check_fallbacks` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 63 把尺的共同盲区：`check_items.py:75-82` 只核 count 整数与 types 元素字符串、不比长度、不读 gem.type/exclusive_group；`check_gem_types.py:91-94` 对空白串 `_nonblank()` 跳过、`:106-115` 只收现有元素；全 tools grep `exclusive_group` 零命中。S7 干净目录三坏值反事实在两把旧尺上报错集合逐字 SAME（0→0）。默认基线 7 物品 / 1 sockets / 2 gem / 0 问题（S7 离线核逐字）。
+- 只核三处静默回落，不核 count 范围 / gem.tier（归 `check_items.py`）、不核 gem.type 集合可达性（归 `check_gem_types.py`）、不核非字符串回落与 types 超长截断（源码已有 WARN）、不核 id/base/rarity/rev/stats（归 `check_items.py`）；不读源码/存档、不改运行期。派单时未实现、未接线，T-0115 VERIFIED 后 R121 接 → 应 `跑成 64`。
+
+### 4.92 R120 的验收与派单留证
+
+- T-0113 VERIFIED 后接线 `check_all` 62（R119）；T-0114 VERIFIED 后接 63（R120），`check_checkall` 清单对账 0 问题。
+- T-0114 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录逐字 6/6 EXIT=0/1/1/1/0/1，函数边界 22 形态；S8 卡进度报文案前缀歧义，按 R120-d（R104-a 延伸）接口优先裁定不打回；S7 探针 1 处自错自改。已接 `tools/check_all.py`。
+- T-0115 派单证据：`SocketSpec.java:39,116-120,128-133,156-159` 与 `Socketer.java:192` 逐字取证；两把旧尺三坏值反事实逐字全绿；默认基线 7/1/2/0 非空；六夹具覆盖短补/空白串/互斥失效/合法写法/缺键与非字符串跳过。C68 从留池升级派单（数值面无新洞、玩法面优先于 C66 显示面）。对账网第 46 例。详见 `docs/ROUND-R120-SOCKETFALLBACK.md`。

@@ -2634,3 +2634,29 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0114**（基线 4 技能/2 脚本/1 调用 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_calls`=1、禁用 grep=0、`py_compile` OK、双目录 NO_SUCH 2 条读失败；七形态函数边界 + 重复不合并）；过后 `check_all` 62→63。
 2. C66 三处 `name` 显示面单卡；C68 `SocketSpec` ANY 同族逐出口取证；六只默认怪 + lang 仍属 S7 内容面，不硬凑。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R120 · 2026-11-24 04:4x · 验 T-0114 + check_all 62→63 + 派 T-0115（宝石/孔位静默回落族）
+
+- 卡板：T-0114 `check_damage_aoe_args.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 EXIT=0/1/1/1/0/1：基线 0 问题 / `-v` 4 技能·2 脚本·1 调用 / B radius 40 夹顶 / C falloff 0 回落 / D scripts 先 skills 后升序 / E 4/0/3 / F 负值两条且 radius 0 跳过；wc=200、`def check_calls`=1、禁用 grep=0、`py_compile` OK、双目录 NO_SUCH 2 条读失败 EXIT=1、函数边界 22 形态；S7 探针 1 处自错自改、S8 零偏差不打回，探针已清）。**派 T-0115**（`check_socket_fallbacks.py`：`items/*.json5` 的 sockets.types 短补 any / gem.type 空白串回落 any / gem.exclusive_group 空白串回落空串三落点，常量 `ANY="any"`/`MAX_COUNT=6` 从 `SocketSpec.java:39,37` 冻结，单文件零接线、六夹具、基线 7 物品/1 sockets/2 gem、接口与文案 S7 定死），在制品 **1/3**。
+- **S7 最小一步 = 全类排除留证 + 源码逐字核实 + 内存反事实**：Explore 扫 142 Java / 60 尺 / 默认配置，数值面 79 处 `(int)`/clamp 调用逐点排除（有 WARN / 在役尺覆盖 / 运行期计算 / D16 有意夹取），新洞未现。Top1 落 `SocketSpec.java` 三落点同源：`Socketer.java:192` 空串跳过互斥 → 同组宝石可无限镶嵌（玩法面，重）。旧尺两把（`check_items` / `check_gem_types`）三坏值反事报错集合逐字 SAME（0→0）；全 tools grep `exclusive_group` 零命中。对账网第 46 例。
+- 口径 §13.123 R120-a~e：同族多点一次收口 / 玩法面优先于显示面 / types 短补非 D16 / 卡面示例裸名从接口 / 裸名纪律第三十八次。
+- 接线 `check_all` 62→**63** 全绿；七门禁全 0 问题（check_tasks 115 卡在制品 1、check_contracts 93 条、check_docs 136 份/577 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服无 LISTEN。裸名纪律第三十八次。
+- 收尾：`docs/ROUND-R120-SOCKETFALLBACK.md`、PLAN §13 R120 + §13.123、ROUNDS、TASKS（T-0114 VERIFIED + T-0115 OPEN + 池 C68 结项）、CONTRACTS §4.91/§4.92、`tools/check_all.py`、协作板 §3。
+- 下轮：验 T-0115（过后 check_all 63→64）；C66 显示面单卡；六原型默认怪仍属 S7 内容面；Q-021/022/023 无人答、真人 A~F 等 Aki。
+
+### §13.123 R120 口径
+
+| 编号 | 结论 |
+|---|---|
+| R120-a | **同族多点一次收口**：同一解析器的多处静默回落尾出口合成一卡（单文件、单目录、六夹具），不因"三条落点"拆三卡。 |
+| R120-b | **玩法面优先于显示面**：exclusive_group 空白串导致同组宝石可无限镶嵌（`Socketer.java:192` 跳过互斥），比 C66 的 name 静默成串影响重，插队到 C66 前。 |
+| R120-c | **开放词汇数组长度不足不是 D16 异常保护**：D16 的零 WARN 缺省是数值异常保护；`sockets.types` 短于 `count` 补 any 是内容容错，显式写歪应被尺子报。 |
+| R120-d | **卡面示例裸名从接口**：B/C/D 文案前缀以冻结接口为准；卡面举例的裸文件名是描述简写，S8 按接口实现不算偏差（R104-a 延伸）。 |
+| R120-e | **裸名纪律第三十八次**：派单当轮文档与台账在建脚本只写裸名 `check_socket_fallbacks.py`。 |
+
+下一步（R121）：
+
+1. **验 T-0115**（基线 7 物品/1 sockets/2 gem + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_fallbacks`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败；三落点函数边界 + 重复不合并）；过后 `check_all` 63→64。
+2. C66 三处 `name` 显示面单卡；六只默认怪 + lang 仍属 S7 内容面，不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
