@@ -1593,3 +1593,14 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0111 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录（与 S8 卡内夹具目录不冲突）逐字 6/6 + 两个 E 变体，函数边界直接 import 独立断言 15 形态；S8 零偏差不打回。已接进 `tools/check_all.py`（`共 60 个脚本`，R117 接线）。
 - T-0112 派单证据：`AffixPools.java:69-71,162-168` 逐字取证；四把旧尺对 `0.9`/`60.9` 干净目录反事实逐字全绿（剥掉 `min:1.7` 的下游可达性症状后）；默认基线 3/6/0 非空；六夹具覆盖顶层 min/max / 截断归零 / 数学整数 / `lo>hi` / 域外 WARN 形态 / 多文件。对账网第 43 例。详见 `docs/ROUND-R117-AFFIXLEVEL.md`。
+
+### 4.87 技能树 icon 静默回落对账 `check_tree_icons.py`（T-0113，R118 派，对账网第四十四例）
+
+- 只读扫 `skill_trees/*.json5` 顶层 `icon`：缺键跳过（合法缺省 `minecraft:stone`）；非空字符串跳过；显式 `null` / bool / 数字 / 空白字符串（含纯空白、制表换行）/ 列表 / 对象产 `<文件名>: icon 值 <repr(v)> 静默回落 minecraft:stone（解析零 WARN）`，按文案升序、保稳定、不去重。`DEFAULT_ICON = "minecraft:stone"` 由 S7 从 `SkillTreeSpec.java:73-74,145-147` 冻结；接口 `_loads` / `read_rows` / `check_icons` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 61 把尺的共同盲区：`SkillTreeSpec.java:73` 的 `stringOf()` 对非字符串 JSON 一律返 `null`（`:145-147` 无告警出口），`:74` 的 `trim().isEmpty()` 对空白串静默换默认值；`check_trees.py:45-125` 逐节点只核 `requires`/`cost`/`effects`/`classes`/`max_points`，`check_tree_reach.py` 只读 `requires`，`check_tree_ppl.py` 只读 `points_per_level`，全 tools 零读 `icon`。默认基线 1 树 / 1 处显式引用 / 0 问题（S7 离线核逐字）；T-0113 VERIFIED 后 R119 接 → 应 `跑成 62`。
+- 只核顶层 `icon` 的非字符串/空白静默回落，不核缺键与合法非空串、不核 `id`/`name`/`classes`/`max_points`/`points_per_level`/`nodes`/`requires`/`cost`/`pos`/`effects`（归 `check_trees.py`、`check_tree_reach.py`、`check_tree_ppl.py`）、不核 lang 与资源包路径存在性（无离线真值）、不核图标美术取舍（内容取舍）；不读源码/存档、不改运行期。同族显示面候选 `items[].name` / 树 `name` / 节点 `name` 入池 C66，不与本卡合并。详见 `docs/ROUND-R118-TREEICON.md`。
+
+### 4.88 R118 的验收与派单留证
+
+- T-0112 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立夹具写在自建目录（与 S8 卡内 `build/affixlevelfix/` 不冲突）逐字 6/6 EXIT=0/1/1/1/0/1，函数边界直接 import 断言 27 形态；首轮探针自错（1.7 用例 max 也写小数）按 R118-c 修正，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 61 个脚本`，R118 接线）。
+- T-0113 派单证据：`SkillTreeSpec.java:73-74,145-147` 逐字取证；`check_trees.py` / `check_tree_reach.py` / `check_tree_ppl.py` 零读 `icon`；默认基线 1/1/0 非空；六夹具覆盖缺省/数字/空白串/多文件/null/对象，空白串用 Python `repr` 逐字断言。R118 全类扫描确认数值出口已收口、余候选均显示面 —— 连续四轮留池的 C62 按 R117 下一步转派。对账网第 44 例。
