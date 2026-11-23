@@ -2562,3 +2562,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0111**（基线 3 定义/1 池/6 引用 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_weights`=1、禁用 grep=0、`py_compile` OK、双目录 NO_SUCH 2 条读失败；截断归零/域外边界）；过后 `check_all` 59→60。
 2. C62 树 icon 若转派须单独卡；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑卡。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R117 · 2026-11-24 01:1x · 验 T-0111 + check_all 59→60 + 派 T-0112（词条 item_level 截断）
+
+- 卡板：T-0111 `check_affix_weights.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 EXIT=0/1/1/1/0/0/1 + 函数边界 15 形态：基线 0 问题 / `-v` 3 定义·1 池·6 引用 / A~F 含两个 E 变体逐字 / wc=162、`def check_weights`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 2 条读失败、截断归零与域外全跳过、重复不合并；S7 探针已清、S8 零偏差不打回）。**派 T-0112**（`check_affix_levels.py`：`affixes[].item_level.min/max` 显式值必须是整数形态，常量 `MIN_DEFAULT=1`/`MAX_DEFAULT=60`/`MAX_LEVEL=2147483647` 从 `AffixPools.java:69-71,162-168` 冻结，S7 定死接口与文案，单文件零接线、六夹具、基线 3 定义/6 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = 派前全类排除 + 源码逐字 + 干净目录反事实**：Explore 只读扫 `AffixPools.java:69-71,162-168` 与 `check_items.py:48,96-99`、`check_affix_reach.py:78-86`，确认 `item_level` 两处零 WARN `getAsInt()` 出口无人核整数形态；S7 独立干净目录把三份默认词条改 `min:0.9/0.5/0.25`、`max:60.9/60.5/60.75`（保持 `lo<=1<=hi` 避下游症状），`check_items.py` / `check_affix_reach.py` / `check_affix_weights.py` / `check_affix_pool_refs.py` 四把旧尺末行逐字全绿 EXIT 全 0，已还原。排除 sockets.count / gem.tier / set bonuses.count（已有 `_int` 尺）、tree cost（已有尺）、profession growth/exponent（有 WARN）、spawn chance/per_chunk_cap（已有尺）、skills cooldown_ticks（已有尺）、repair.amount（已有尺）、repair.cost.amount（默认空基线）；C62 树 icon 连续留池。对账网第 **43** 例。
+- 接线 `check_all` 59→**60** 全绿（60/60 红 0）；接线后 `check_checkall` `共 1 份清单 · 0 条问题`。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN。裸名纪律第三十五次。
+- 收尾：`docs/ROUND-R117-AFFIXLEVEL.md`、PLAN §13 R117 + §13.120、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0111 VERIFIED + T-0112 OPEN + 池 C65）、`docs/CONTRACTS.md` §4.85/§4.86、`tools/check_all.py`、协作板 §3。
+
+### 13.120 R117 的五条口径（同族字段接力 / 下游症状≠截断口径 / 旧尺读字段不等于覆盖形态 / 显示面续留池 / 裸名）+ 下一步（R118）
+
+| 编号 | 口径 |
+|---|---|
+| R117-a | **同族字段接力成卡**：T-0111 覆盖词条权重，T-0112 覆盖同一解析类的 `item_level` 边界；同 `AffixPools.integer()` 出口的两批字段按具名路径分卡，不合并（承接 R116-b「同语义多入口一次收口」，本次是「同出口不同语义分卡」）。 |
+| R117-b | **下游症状不能替代截断口径证据**：反事实探针先试 `min:1.7` 被 `check_affix_reach` 以「无可达词条」报红，改 `min:0.9` 后全绿；断言「旧尺盲」时必须剥掉下游症状，只留纯静默截断形态。 |
+| R117-c | **旧尺读了字段 ≠ 覆盖形态**：`check_items.py` 用 `_num()` 放行 float、`check_affix_reach.py` 用 float 比大小，两者都「读过 item_level」却都放过小数；R116-a 的第二例。 |
+| R117-d | **显示面候选继续留池**：C62 树 icon 第四轮不派；数值面仍有真洞，不硬凑显示面卡（R113-d/R115-d/R116-d 延续）。 |
+| R117-e | **裸名纪律第三十五次**：派单当轮文档与台账在建脚本只写裸名 `check_affix_levels.py`，避免路径检查把未建文件当断链。 |
+
+下一步（R118）：
+
+1. **验 T-0112**（基线 3 定义/6 引用 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_levels`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败；数学整数 / `lo>hi` / 域外边界）；过后 `check_all` 60→61。
+2. C62 树 icon 若转派须单独卡；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑卡。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

@@ -4645,7 +4645,7 @@ fi
 - 2026-11-23 23:37 · 完成 · `tools/check_use_ints.py`（新建 171 行） · 构建 N/A（卡明令禁 gradle） · 基线 `共 1 份消耗品整数口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 7 份/6 处；六夹具 A~F 逐字 EXIT=0/1/1/0/1/0；函数边界 22/22；wc=171、`def check_ints`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；`build/useintfix/` 与自建 pyc 已清
 - 2026-11-23 23:5x · S7 验收通过 · 三条验收全跑：基线 `-v` 逐字 7 份/6 处 EXIT=0、S7 独立六夹具 A~F 逐字 EXIT=0/1/1/0/1/0 + 函数边界 22/22 + 重复不合并、NO_SUCH 1 条读失败；wc=171、`def check_ints`=1、禁用 grep=0、`py_compile` OK。已接 `check_all` TOOLS（58→59，59/59 红 0）。记为 `[VERIFIED]`，台账见 PLAN §13 R116。
 
-### T-0111 · [OPEN] `check_affix_weights.py` —— 词条 / 词条池权重小数静默截断对账（M3 / D17，单文件零接线，对账网第四十二例）
+### T-0111 · [VERIFIED] `check_affix_weights.py` —— 词条 / 词条池权重小数静默截断对账（M3 / D17，单文件零接线，对账网第四十二例）
 
 - 派单：S7 · 2026-11-23 23:5x（R116）
 - 目标：给 `affixes/*.json5` 顶层 `weight` 与 `affix_pools/*.json5` 三段权重补一把「解析零 WARN、`getAsInt()` 静默截断」的离线尺子。真洞：`AffixPools.java:72` 顶层权重走 `integer(root,"weight",100,...)`，`:162-168` 的 `integer()` 对任意数字直接 `getAsInt()`（只有非数字才 WARN）；`:106-110` 池段权重同样直接 `getAsInt()`。`AffixRoller.java:140` 的 `entry.weight() <= 0` 让 `0.4` 截断成 0 后整条词条被静默跳过；`100.7` 截成 100 则概率悄悄变。在役尺：`check_items.py:94-95/:118-120` 用 `_num` + `>0`，小数全绿；`check_affix_reach.py` 只读 item_level；`check_affix_pool_refs.py` 只读键名。S7 干净目录反事实：把默认 `sharp` 顶层权重改 `100.7`、池段 `sharp` 改 `2.5` 后三把尺逐字全绿（末行 `共 12 个文件 · 0 条问题` / `共 1 份词条等级可达性表 · 0 条问题` / `共 1 份词条池引用表 · 0 条问题`，EXIT 全 0），已还原。基线：3 份词条定义 + 1 份词条池 + 6 处显式权重（100/80/60 + 100/80/60）/ 0 问题。
@@ -4664,6 +4664,29 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_affix_weights.py` → 末行 `共 1 份词条权重口径对账表 · 0 条问题` EXIT=0；`python tools/check_affix_weights.py -v` → 含 `已检查 3 份词条定义 · 1 份词条池 · 6 处权重引用 · 截断 (int) · 静默零 WARN`。
   2. 六组夹具（逐字核对末行计数与报错文案；每次两目录都要存在，空目录也算可读）：A 复制默认 `affixes/` 三份 + `affix_pools/` 一份 → 0 条 EXIT=0、`-v` 逐字 3/1/6；B 定义 `one.json5` 顶层 `weight: 100.7` → 1 条 `one.json5: weight 值 100.7 被 (int) 静默截断（解析零 WARN）` EXIT=1；C 池 `one.json5` 的 `prefix: { sharp: 2.5 }` → 1 条 `one.json5: prefix.sharp 值 2.5 被 (int) 静默截断（解析零 WARN）` EXIT=1；D 定义 `one.json5` 的 `weight: 0.4` → 1 条 `one.json5: weight 值 0.4 被 (int) 静默截断（解析零 WARN）` EXIT=1（截断归零被 `AffixRoller` 静默跳过）；E 定义 `weight: "100.7"` + 池 `heavy: -2` + 定义 `weight: 0` → 0 条 EXIT=0、`-v` 逐字 1 份/1 份/3 处；F 定义两份 `a.json5`（`weight: 80.5`）+ `b.json5`（`weight: 90.2`）→ 恰好 2 条、按 a/b 升序 EXIT=1。六组逐字对上。
   3. `wc -l < check_affix_weights.py` ≤ 200；`grep -c "def check_weights"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_items|check_affix|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 2 条读失败（`[问题] 词条目录读取失败` + `[问题] 词条池目录读取失败`），不抛栈；函数边界直接 import 本模块调用 `check_weights`：`100.7` / `2.5` / `0.4` 各 1 条且路径逐字，`0` / `-2` / `"100.7"` / `True` / `None` / `nan` / `inf` / `2147483648` / `100` / `80` / 缺键全跳过，重复值两条不合并；夹具用完即删（`build/affixweightfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-24 00:41 · 完成 · `tools/check_affix_weights.py`（新建 162 行，自带 JSON5 shim、零接线） · 构建 N/A（卡明令禁 gradle） · 基线 `共 1 份词条权重口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 3 定义/1 池/6 处；七夹具 A/B/C/D/E1/E2/F 逐字 7/7（E 卡面「1 份/1 份/3 处」与两份定义文件写法并存，同测 E1 两份定义 2/1/3、E2 一份定义+池两键 1/1/3，均 0 条 EXIT=0）；wc=162≤200、`def check_weights`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 2 条读失败 EXIT=1、函数边界 10/10；`build/affixweightfix/` 与自建 pyc 已清
+- 2026-11-24 01:1x · **S7 验收通过（3/3）** · ①仓库根跑基线 `共 1 份词条权重口径对账表 · 0 条问题` EXIT=0，`-v` 逐字 `已检查 3 份词条定义 · 1 份词条池 · 6 处权重引用 · 截断 (int) · 静默零 WARN`；②S7 独立六夹具 A/B/C/D/E1/E2/F 逐字全过（EXIT=0/1/1/1/0/0/1，末行计数与报错文案逐条一致，含两个 E 变体）；③wc=162、`def check_weights`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰好 2 条读失败 EXIT=1、函数边界 15 形态（含截断归零 / 域外跳过 / 重复不合并）逐字。S8 零偏差不打回；S7 探针目录已删。已接进 `tools/check_all.py`（`共 60 个脚本 · 跑成 60 · 红 0`，R117 接线）。
+
+### T-0112 · [OPEN] `check_affix_levels.py` —— 词条 `item_level.min/max` 小数静默 `(int)` 截断对账（M3 / D17，单文件零接线，对账网第四十三例）
+
+- 派单：S7 · 2026-11-24 01:1x（R117）
+- 目标：给 `affixes/*.json5` 的 `item_level.min` / `item_level.max` 补一把「解析零 WARN、`getAsInt()` 静默截断」的离线尺子。真洞：`AffixPools.java:69-71` 两处 `integer(level,"min"/"max",…)`，`:162-168` 的 `integer()` 对任意数字直接 `getAsInt()`（只有非数字才 WARN）；`0.9` 截成 0、`60.9` 截成 60 全程零日志。在役尺：`check_items.py:96-99` 只核 `_num()` + `lo<=hi`（`_num` 放行 float）；`check_affix_reach.py:78-86` 用 float 直接比较；`check_affix_weights.py` 只读权重、`check_affix_pool_refs.py` 只读键名。S7 干净目录反事实：三份默认 affix 改 `min:0.9/0.5/0.25`、`max:60.9/60.5/60.75` 后四把尺末行逐字全绿（EXIT 全 0），已还原。基线：3 份词条定义 + 6 处显式 `item_level` 边界 / 0 问题。
+- 独占文件（**唯一可写**）：
+  - `check_affix_levels.py`（新建，≤ 200 行）
+  - `build/affixlevelfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_items.py`、`check_affix_reach.py`、`check_affix_weights.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖任何 check）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；`MIN_DEFAULT = 1`、`MAX_DEFAULT = 60`、`MAX_LEVEL = 2147483647`，从 `AffixPools.java:69-71,162-168` 冻结，S8 不读源码、不推断）：
+  - 两个模块级常量：`MIN_DEFAULT = 1`、`MAX_DEFAULT = 60`、`MAX_LEVEL = 2147483647`。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。默认配置是裸键，shim 必须能吃。
+  - `read_rows(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`，文件名升序；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_levels(def_rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 的条目；`item_level` 不是 dict → 跳过（`object()` 有 WARN 或合法缺省）。取 `("min","max")` 两段显式值：对每处 `v`，若 `v` 是 bool / 非数字 / 非有限数 / `v > MAX_LEVEL` / `v == int(v)`（数学整数含 `1.0`）→ 跳过；若整段 `min`/`max` 同为有限数字且 `min > max` → 两段都跳过（`check_items.py` 已报 `item_level min/max 非法`，避免两尺同报）；其余产 `<文件名>: item_level.<min|max> 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`，`<repr(v)>` 用 Python `repr`。结果按文案升序、保稳定、不去重。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults`）、`-v`。子目录固定为 `<dir>/affixes`；不可读 → 打一条 `[问题] 词条目录读取失败`，末行 `共 1 份词条等级口径对账表 · <p> 条问题` EXIT=1，p = 读失败数（0 或 1）；否则逐条打 `[问题] <msg>`、末行同格式，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 份词条定义 · <k> 处 item_level 引用 · 截断 (int) · 静默零 WARN`，n = affixes 目录 `*.json5` 文件数，k = `item_level` 是 dict 时其中显式 `min`/`max` 键的个数（不论值是否合法，不可读目录计 0）。
+- 不要做：不核缺 `item_level` / 非 dict / `min > max` / `v == int(v)` / bool / 非数字 / 非有限数 / `> MAX_LEVEL`（合法缺省、已有 WARN 或在役尺已报）、不核 weight / id / kind / stats / applies_to / slots（归 `check_affix_weights.py`、`check_items.py`、`check_affix_reach.py`、`check_affix_pool_refs.py`）、不核附魔数值、不核等级平衡（内容取舍）、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**；夹具写到 `build/affixlevelfix/`，每次从干净目录重来，顶层花括号 + 裸键 JSON5；定义夹具只需 `id` 与 `item_level`）：
+  1. `cd /e/RedtaleProject && python tools/check_affix_levels.py` → 末行 `共 1 份词条等级口径对账表 · 0 条问题` EXIT=0；`python tools/check_affix_levels.py -v` → 含 `已检查 3 份词条定义 · 6 处 item_level 引用 · 截断 (int) · 静默零 WARN`。
+  2. 六组夹具（逐字核对末行计数与报错文案；每次 affixes 目录都要存在，空目录也算可读）：A 复制默认 `affixes/` 三份 → 0 条 EXIT=0、`-v` 逐字 3/6；B 定义 `one.json5` 的 `item_level: { min: 0.9, max: 60 }` → 1 条 `one.json5: item_level.min 值 0.9 被 (int) 静默截断（解析零 WARN）` EXIT=1；C `item_level: { min: 1, max: 60.9 }` → 1 条 `one.json5: item_level.max 值 60.9 被 (int) 静默截断（解析零 WARN）` EXIT=1；D `item_level: { min: 0.4, max: 60.5 }` → 恰好 2 条、按文案升序（max 先 min 后）EXIT=1；E 四份定义：`a` 的 `min:"1.7",max:true`、`b` 的 `min:-2,max:2147483648`、`c` 无 `item_level`、`d` 的 `item_level:5` → 0 条 EXIT=0、`-v` 逐字 `4 份词条定义 · 4 处 item_level 引用`；F 两份定义 `a`（`min:1.7,max:60.2`）+ `b`（`min:2.5,max:61.7`）→ 恰好 4 条、按文案升序（a.max / a.min / b.max / b.min）EXIT=1。六组逐字对上。
+  3. `wc -l < check_affix_levels.py` ≤ 200；`grep -c "def check_levels"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_items|check_affix|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] 词条目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_levels`：`0.9`/`60.9`/`0.4`/`1.7` 各 1 条且路径逐字，`1`/`60`/`1.0`/`60.0`/`0`/`-2`/`"1.7"`/`True`/`None`/`nan`/`inf`/`2147483648`/缺键全跳过，`{min:60.9,max:1.5}` 整段跳过，重复值两条不合并；夹具用完即删（`build/affixlevelfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4730,6 +4753,7 @@ fi
 | C62 | `skill_trees[].icon` 非字符串/空白静默回落 `minecraft:stone` | `SkillTreeSpec.java:73-74,145-147` 零 WARN（`SkillSpec.java:111-113` 的 skills icon 有 WARN 反证）；`check_trees.py:45-125` 不读 icon，基线 1 处；落点仅显示面，优先级低于数值洞，R114/R115 不派 | 无 |
 | C63 | ~~`items use` 四处整数小数 `(int)` 静默截断 → **T-0110（R115 派）**~~ | `ConsumableSpec.java:184-190` 对数字零 WARN 直接 `getAsInt()`，四个调用点 `:76/:81/:96/:115`；旧尺四把干净目录反事实全绿，基线 7 物品/1 带 use/6 处/0 问题；对账网第 41 例 | 无 |
 | C64 | ~~`affixes` / `affix_pools` 权重小数 `(int)` 静默截断 → **T-0111（R116 派）**~~ | `AffixPools.java:72,162-168` 与 `:106-110` 数字直接 `getAsInt()` 零 WARN；`AffixRoller.java:140` 截断归零后静默跳过整条词条；`check_items.py:94-95/:118-120` 用 `_num>0` 放过小数，三把旧尺反事实全绿；基线 3 定义/1 池/6 处/0 问题；对账网第 42 例 | 无 |
+| C65 | ~~`affixes item_level.min/max` 小数 `(int)` 静默截断 → **T-0112（R117 派）**~~ | `AffixPools.java:69-71` 两处 `integer()` 与 `:162-168` 零 WARN `getAsInt()`；`check_items.py:96-99` 只核 `_num()` + `lo<=hi`、`check_affix_reach.py:78-86` 用 float 直接比较，四把旧尺干净目录反事实全绿；基线 3 定义/6 处/0 问题；对账网第 43 例 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

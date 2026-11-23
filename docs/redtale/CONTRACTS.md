@@ -1582,3 +1582,14 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0110 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
 - T-0111 派单证据：源码两处 `getAsInt()` 与 `weight<=0` 下游逐字取证；三把旧尺对 `100.7` / `2.5` 干净目录反事实逐字全绿；默认基线 3/1/6/0 非空；六夹具覆盖顶层/池段/截断归零/域外 WARN 形态/多文件。对账网第 42 例。详见 `docs/ROUND-R116-AFFIXWEIGHT.md`。
+
+### 4.85 词条 `item_level` 整数形态对账 `check_affix_levels.py`（T-0112，R117 派，对账网第四十三例）
+
+- 只读扫 `affixes/*.json5` 的 `item_level.min` / `item_level.max`：缺段 / 非 dict / 缺键跳过（合法缺省 min=1 / max=60，或 `object()` 已有 WARN）；bool / 非数字 / 非有限数 / `v > MAX_LEVEL` / `v == int(v)` 跳过（有 WARN、收敛语义不同或无损）；整段 `min > max` 两段都跳过（`check_items.py` 已报）；其余显式小数产 `<文件名>: item_level.<min|max> 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`，按文案升序、保稳定、不去重。`MIN_DEFAULT=1` / `MAX_DEFAULT=60` / `MAX_LEVEL=2147483647` 由 S7 从 `AffixPools.java:69-71,162-168` 冻结；接口 `_loads` / `read_rows` / `check_levels` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 60 把尺的共同盲区：`AffixPools.java:69-71` 的 `integer(level,"min"/"max",…)` 经 `:162-168` 的 `getAsInt()` 零 WARN 截断；`check_items.py:96-99` 只核 `_num()` + `lo<=hi`，`check_affix_reach.py:78-86` 用 float 直接比大小，`check_affix_weights.py` 只读 weight、`check_affix_pool_refs.py` 只读键名。S7 干净目录反事实把三份默认词条改 `min:0.9/0.5/0.25`、`max:60.9/60.5/60.75` 后四把尺 EXIT/末行逐字不变（全绿）。
+- 只核两处显式小数的截断，不核缺段 / `lo>hi` / 数学整数 / 非数字 / bool / 非有限数 / 超 int（合法缺省、已有 WARN 或在役尺已报）、不核 weight / id / kind / stats / applies_to / slots（归 `check_affix_weights.py`、`check_items.py`、`check_affix_reach.py`、`check_affix_pool_refs.py`）、不核等级平衡（内容取舍）；不读源码/存档、不改运行期。派单时未实现、未接线，基线 3 定义 / 6 处引用 / 0 问题（S7 离线核逐字）；T-0112 VERIFIED 后 R118 接 → 应 `跑成 61`。
+
+### 4.86 R117 的验收与派单留证
+
+- T-0111 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录（与 S8 卡内夹具目录不冲突）逐字 6/6 + 两个 E 变体，函数边界直接 import 独立断言 15 形态；S8 零偏差不打回。已接进 `tools/check_all.py`（`共 60 个脚本`，R117 接线）。
+- T-0112 派单证据：`AffixPools.java:69-71,162-168` 逐字取证；四把旧尺对 `0.9`/`60.9` 干净目录反事实逐字全绿（剥掉 `min:1.7` 的下游可达性症状后）；默认基线 3/6/0 非空；六夹具覆盖顶层 min/max / 截断归零 / 数学整数 / `lo>hi` / 域外 WARN 形态 / 多文件。对账网第 43 例。详见 `docs/ROUND-R117-AFFIXLEVEL.md`。
