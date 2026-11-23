@@ -4599,7 +4599,7 @@ fi
 - 2026-11-23 08:03 · 完成 · `tools/check_profession_base.py`（新建 127 行） · 构建 N/A（卡明令禁 gradle） · 基线末行 `共 1 份专业起点经验口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 2 份/2 处；六夹具 A~F 逐字全过 EXIT=0/1/1/0/1/0；函数边界 13/13；wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；`build/profbasefix/` 与自建 pyc 已清
 - 2026-11-23 09:1x · S7 验收通过 · 三条验收全跑：基线 `-v` 逐字 2 份/2 处、六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（S7 首轮夹具漏外层花括号自行改正，不算 S8 偏差）、函数边界逐字 0/超顶各 1 条其余跳过且重复不合并；wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败。已接 `check_all` TOOLS（56→57，57/57 红 0）。记为 `[VERIFIED]`，台账见 PLAN §13 R114。
 
-### T-0109 · [DONE] `check_item_durability.py` —— 物品 durability `(int)` 静默截断/夹顶对账（M1 / D17，单文件零接线，对账网第四十例）
+### T-0109 · [VERIFIED] `check_item_durability.py` —— 物品 durability `(int)` 静默截断/夹顶对账（M1 / D17，单文件零接线，对账网第四十例）
 
 - 派单：S7 · 2026-11-23 09:1x（R114）
 - 目标：给 `items/*.json5` 的 `durability` 补一把「解析零 WARN、但下游 `(int)` 静默改写」的离线尺子。真洞：`ItemContent.java:101` 用 `(int) num(root, "durability", base.defaultDurability(), warnings, source)`，`:257-266` 的 `num()` 对任意数字直接 `return el.getAsDouble()`（仅非数字才 WARN），`:102-105` 只有结果为负才 WARN → 显式 `1200.9` 静默成 1200、`2147483648` 静默夹到 `Integer.MAX_VALUE=2147483647`，日志全静。全仓 57 把尺无一读 `durability`：`check_items.py:57-88` 的 `check_item` 只读 id/base/rarity/stats/gem/set_id/abilities/sockets/weapon_attributes/rev，tools 目录对该键 grep=0。S7 内存反事实（`1200.9` / `200.5` / `2147483648` / `0.0` / `1200` / `-5` / `"1200.9"` / `true` / 缺键）九形态旧尺报错集合逐字相同。基线 7 份物品 / 5 处显式 durability（600 / 1200 / 200 / 0 / 0）/ 0 问题（S7 已离线核逐字）。
@@ -4620,6 +4620,28 @@ fi
   3. `wc -l < check_item_durability.py` ≤ 200；`grep -c "def check_durability"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_items|check_progress|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] items目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_durability`：`1200.9` / `2147483648` 各 1 条、`0.5` 1 条、`-5` / `"1200.9"` / `True` / `None` / `nan` / `inf` / 缺键 / `1200` / `0` / `2147483647` 全跳过，重复 `1200.9` 两条不合并、下标无关文案可稳定复现；夹具用完即删（`build/durfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 - 2026-11-23 09:16 · 完成 · `tools/check_item_durability.py`（新建 128 行） · 构建 N/A（卡明令禁 gradle） · 基线末行 `共 1 份物品耐久口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 7 份/5 处；六夹具 A~F 逐字全过 EXIT=0/1/1/0/1/0；函数边界 13/13；wc=128、`def check_durability`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；`build/durfix/` 与自建 pyc 已清
+- 2026-11-23 22:5x · S7 验收通过 · 三条验收全跑：基线 `-v` 逐字 7 份/5 处 EXIT=0、S7 独立六夹具 A~F 逐字 EXIT=0/1/1/0/1/0、函数边界 13 形态 + 重复不合并逐字；wc=128、`def check_durability`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1。已接 `check_all` TOOLS（57→58）。记为 `[VERIFIED]`，台账见 PLAN §13 R115。
+
+### T-0110 · [OPEN] `check_use_ints.py` —— 消耗品 use 整数字段 `(int)` 静默截断对账（M1 / D17，单文件零接线，对账网第四十一例）
+
+- 派单：S7 · 2026-11-23 22:5x（R115）
+- 目标：给 `items/*.json5` 的 `use` 段四个整数字段补一把「解析零 WARN、下游 `getAsInt()` 静默截断」的离线尺子。真洞：`ConsumableSpec.java:184-190` 的 `integer()` 对任意 `isNumber(e)` 直接 `return e.getAsInt()`（仅非数字才 WARN），`:76` duration / `:81` amplifier / `:96` restore_food / `:115` cooldown_ticks 四处调用；小数如 `duration: 200.9` → 200、`restore_food: 6.7` → 6，截断后落在合法域内则日志全静。全仓 58 把尺无一读这四个键：`check_items.py` 不读 `use` 段、`check_use_args.py` 与 `check_use_script.py` 只读 `use.script[]`，`check_item_durability.py` 只读顶层 `durability`。S7 干净目录反事实：把默认 `demo_stew.json5` 六处整数全改成小数后，`check_items.py` / `check_use_args.py` / `check_use_script.py` / `check_item_durability.py` 四条报错集合逐字不变（全绿）。基线 7 份物品 / 1 份带 `use` / 6 处整数引用（200/1/1/0/6/400）/ 0 问题（S7 已离线核逐字）。
+- 独占文件（**唯一可写**）：
+  - `check_use_ints.py`（新建，≤ 200 行）
+  - `build/useintfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_items.py`、`check_durability.py`、`check_use_args.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖任何 check）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；常量从 `ConsumableSpec.java:25-26,75-118,184-190` 冻结，S8 不读源码、不推断）：
+  - 一个模块级常量：`MAX_RESTORE_FOOD = 20`。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。默认配置是裸键，shim 必须能吃。
+  - `read_items(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`（文件名升序），返 `(rows, ok)`；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_ints(rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 的条目；取顶层 `use`，非 dict 跳过。取四处具名字段：`use.restore_food`、`use.cooldown_ticks`、`use.effects[i].duration`、`use.effects[i].amplifier`（`use.effects` 非 list 跳过，项非 dict 跳过，下标从 0）。对每处显式值：键缺失跳过（合法缺省 duration=200 / 其余=0）；`v` 是 bool、非数字、非有限数、或 `v > 2147483647` 跳过；`iv = int(v)`（向零截断）；再按字段合法域跳过有 WARN 的形态：`duration` 要求 `iv >= 1`、`amplifier` 要求 `iv >= 0`、`restore_food` 要求 `0 <= iv <= MAX_RESTORE_FOOD`、`cooldown_ticks` 要求 `iv >= 0`；域外跳过（运行期对应 `:78-81` / `:83-85` / `:93-95` / `:105-107` 有 WARN）；其余 `v != iv` 显式小数产 `<文件名>: <path> 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`，其中 `<path>` 逐字为 `use.restore_food` / `use.cooldown_ticks` / `use.effects[<i>].duration` / `use.effects[<i>].amplifier`；其它值（整数形态）跳过。`<repr(v)>` 用 Python `repr`。结果按文案升序、保稳定、不去重。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults/items`）、`-v`。目录不可读 → 打 `[问题] items目录读取失败`、末行 `共 1 份消耗品整数口径对账表 · 1 条问题` EXIT=1；否则逐条打 `[问题] <msg>`、末行 `共 1 份消耗品整数口径对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 份物品 · <k> 处 use 整数引用 · 截断 (int) · 静默零 WARN`，n = `*.json5` 文件数，k = 四处路径里显式含键的个数（`use` 是 dict 才计入顶层两键，`use.effects` 的项是 dict 才计入两项，不论值是否合法）。
+- 不要做：不核缺键 / 有 WARN 的域外值 / 非数字 / bool / 非有限数 / 超 int 值（已有 WARN 或收敛语义不同）、不核 `use.script`（归 `check_use_args.py`/`check_use_script.py`）、不核 `durability`/`base`/`rarity`/其它物品字段（归 `check_item_durability.py`/`check_items.py`）、不核数值平衡（内容取舍）、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**；夹具写到 `build/useintfix/`，每次从干净目录重来，顶层花括号 + 裸键 JSON5）：
+  1. `cd /e/RedtaleProject && python tools/check_use_ints.py` → 末行 `共 1 份消耗品整数口径对账表 · 0 条问题` EXIT=0；`python tools/check_use_ints.py -v` → 含 `已检查 7 份物品 · 6 处 use 整数引用 · 截断 (int) · 静默零 WARN`。
+  2. 六组夹具（逐字核对末行计数与报错文案）：A 复制默认 `demo_stew.json5` → 0 条 EXIT=0、`-v` 逐字 1/6；B `one.json5` 的 `use.effects` 一项 `duration: 200.9` → 1 条 `one.json5: use.effects[0].duration 值 200.9 被 (int) 静默截断（解析零 WARN）` EXIT=1；C `one.json5` 的 `use` 顶层 `restore_food: 6.7` + `cooldown_ticks: 400.2` → 恰好 2 条、按文案升序先 `use.cooldown_ticks` 后 `use.restore_food` EXIT=1；D `one.json5` 的 `use.effects` 两项 `amplifier: 1.5` 与 `amplifier: 0.5` → 恰好 2 条、下标 0/1 逐字 EXIT=1；E `one.json5` 的 `restore_food: 21.5` + `duration: 0.5` → 0 条 EXIT=0、`-v` 逐字 `已检查 1 份物品 · 3 处 use 整数引用 · 截断 (int) · 静默零 WARN`；F 两份 `a.json5`（无 `use`）+ `b.json5`（`use.restore_food: 6.7`）→ 恰好 1 条报 `b.json5: use.restore_food 值 6.7 被 (int) 静默截断（解析零 WARN）` EXIT=1、`-v` 逐字 2 份/1 处。六组逐字对上。
+  3. `wc -l < check_use_ints.py` ≤ 200；`grep -c "def check_ints"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_items|check_durability|check_use_|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] items目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_ints`：`200.9` / `6.7` / `400.2` / `1.5` 各 1 条且路径逐字；`21.5`（restore_food 域外）/ `0.5`（duration 域外）/ `-5` / `"6.7"` / `True` / `None` / `nan` / `inf` / `2147483648` / 缺键 / 整数 `6`·`200`·`0`·`20` 全跳过；重复 `6.7` 两条不合并；夹具用完即删（`build/useintfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -4682,7 +4704,8 @@ fi
 | C59 | ~~`professions curve.base` 静默回落/夹顶 → **T-0108（R113 派）**~~ | `ProfessionSpec.java:102,114` 的 `v < min` 让 0 零 WARN，`ExpCurve.java:19` 静默改回 100，`:43-45` 静默夹 1e9；旧尺五形态反事实全绿、基线 2/2/0；对账网第 39 例 | 无 |
 | C60 | `skill_trees[].icon` 非字符串/空白静默回落 `minecraft:stone` | `SkillTreeSpec.java:73-74,145-147` 零 WARN（`SkillSpec.java:111-113` 的 skills icon 有 WARN 反证）；`check_trees.py:45-125` 不读 icon，基线 1 处；落点仅显示面，优先级低于数值洞 | 无 |
 | C61 | ~~`items/*.json5` 的 `durability` 小数 `(int)` 截断 → **T-0109（R114 派）**~~ | `ItemContent.java:101,257-266` 对任意数字直接返回、`(int)` 静默截断/超 int 静默夹顶，负数才有 WARN；`check_items.py:57-88` 不读该字段，九形态旧尺反事实全绿，基线 7/5/0 | 无 |
-| C62 | `skill_trees[].icon` 非字符串/空白静默回落 `minecraft:stone` | `SkillTreeSpec.java:73-74,145-147` 零 WARN（`SkillSpec.java:111-113` 的 skills icon 有 WARN 反证）；`check_trees.py:45-125` 不读 icon，基线 1 处；落点仅显示面，优先级低于数值洞，R114 不派 | 无 |
+| C62 | `skill_trees[].icon` 非字符串/空白静默回落 `minecraft:stone` | `SkillTreeSpec.java:73-74,145-147` 零 WARN（`SkillSpec.java:111-113` 的 skills icon 有 WARN 反证）；`check_trees.py:45-125` 不读 icon，基线 1 处；落点仅显示面，优先级低于数值洞，R114/R115 不派 | 无 |
+| C63 | ~~`items use` 四处整数小数 `(int)` 静默截断 → **T-0110（R115 派）**~~ | `ConsumableSpec.java:184-190` 对数字零 WARN 直接 `getAsInt()`，四个调用点 `:76/:81/:96/:115`；旧尺四把干净目录反事实全绿，基线 7 物品/1 带 use/6 处/0 问题；对账网第 41 例 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

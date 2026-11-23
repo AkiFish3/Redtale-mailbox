@@ -1558,3 +1558,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0108 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写独立目录逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
 - T-0109 派单证据：`ItemContent.java:101-105,257-266` 逐字取证；旧尺九形态反事实在役尺报错集合逐字相同；默认基线 7/5/0 非空；六夹具覆盖缺省/小数/超顶/负值/字符串/整数。对账网第 40 例。详见 `docs/ROUND-R114-DURABILITY.md`。
+- T-0109 `[VERIFIED]`（R115）：基线 0 问题 / `-v` 7 物品·5 引用 / S7 独立六夹具 6/6 逐字 EXIT=0/1/1/0/1/0 / wc=128、`def check_durability`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界 13 形态 + 重复不合并；已接进 `tools/check_all.py`（`共 58 个脚本`，R115 接线）。
+
+### 4.81 消耗品 use 整数字段 `(int)` 静默截断对账 `check_use_ints.py`（T-0110，R115 派，对账网第四十一例）
+
+- 只读扫 `items/*.json5` 的 `use` 段四处具名字段：`use.restore_food`、`use.cooldown_ticks`、`use.effects[i].duration`、`use.effects[i].amplifier`：缺键跳过（合法缺省 duration=200 / 其余=0）；bool / 非数字 / 非有限数 / `>2147483647` 跳过；按字段合法域（`duration >= 1`、`amplifier >= 0`、`restore_food ∈ [0,20]`、`cooldown_ticks >= 0`）截断后落域外者跳过（运行期有 WARN）；其余显式小数产 `<文件名>: <path> 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`，按文案升序、保稳定、不去重。`MAX_RESTORE_FOOD = 20` 由 S7 从 `ConsumableSpec.java:25-26,75-118` 冻结；接口 `_loads` / `read_items` / `check_ints` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 58 把尺的共同盲区：`ConsumableSpec.java:184-190` 的 `integer()` 对所有 `isNumber(e)` 直接 `e.getAsInt()`（仅非数字才 WARN），四个调用点 `:76/:81/:96/:115`；`check_items.py` 不读 `use` 段，`check_use_args.py` / `check_use_script.py` 只走 `use.script[]`，`check_item_durability.py` 只读顶层 `durability`。S7 在干净目录复制默认配置并把六处整数全改小数，四条在役尺退出码与末行逐字不变（全绿）。
+- 只核四处显式小数的截断，不核缺键 / 截断后越域 / 非数字 / bool / 非有限数 / 超 int 值（有 WARN 或收敛语义不同）、不核 `use.script`/`use.consume`/`saturation`/`effect` id（归各自尺）、不核消耗品平衡（内容取舍）；不读源码/存档、不改运行期。派单时未实现、未接线，基线 7 物品 / 1 带 use / 6 处引用 / 0 问题（S7 离线核逐字）；T-0110 VERIFIED 后 R116 接 → 应 `跑成 59`。详见 `docs/ROUND-R115-USEINTS.md`。
+
+### 4.82 R115 的验收与派单留证
+
+- T-0109 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录（与 S8 卡内夹具目录不冲突）逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
+- T-0110 派单证据：`ConsumableSpec.java:25-26,75-118,184-190` 逐字取证；旧尺四把在干净目录反事实报错集合逐字不变；默认基线 7/1/6/0 非空；六夹具覆盖缺省/四处路径/域外 WARN 形态/多文件。对账网第 41 例。

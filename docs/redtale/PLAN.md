@@ -2514,3 +2514,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0109**（基线 7 物品/5 引用 + 六夹具 A~F 逐字 + wc≤200、`def check_durability`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；截断/夹顶/有 WARN 形态边界）；过后 `check_all` 57→58。
 2. C62 树 icon 若转派须单独卡（显示面，不与数值洞合并）；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R115 · 2026-11-23 22:5x · 验 T-0109 + check_all 57→58 + 派 T-0110（消耗品 use 整数截断）
+
+- 卡板：T-0109 `check_item_durability.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6：基线 `共 1 份物品耐久口径对账表 · 0 条问题` EXIT=0 / `-v` 逐字 7 份·5 处 / 六夹具 EXIT=0/1/1/0/1/0 逐字 / wc=128、`def check_durability`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界 13 形态 + 重复不合并逐字；探针已清、S8 零偏差不打回）。**派 T-0110**（`check_use_ints.py`：`use` 段四处整数显式小数被 `getAsInt()` 静默截断，域外有 WARN 的形态跳过，`MAX_RESTORE_FOOD=20` 从 `ConsumableSpec.java:25-26,75-118,184-190` 冻结，接口 `_loads`/`read_items`/`check_ints`/`main` S7 定死，单文件零接线、六夹具、基线 7 物品/1 带 use/6 引用/0 问题），在制品 **1/3**。
+- **S7 最小一步 = 全类排除 + 源码逐字 + 干净目录反事实**：Explore 只读扫 57 尺 / 36 json5 / Java，排除 `SpawnRuleSpec` chance/per_chunk_cap、`SkillSpec.java:135` `(int)value`、`MobSpec` 四字段、`AffixPools.java:165,109`、professions curve/grant、`D16` 有意夹取注释；C62 树 icon 四判据齐但显示面继续留池。落消耗品 `use` 四整数：`ConsumableSpec.java:184-190` 的 `integer()` 对数字直接 `getAsInt()` 零 WARN，`:76/:81/:96/:115` 四个调用点，负/越界分支才有 WARN。`check_items.py`/`check_use_args.py`/`check_use_script.py`/`check_item_durability.py` 四把尺在干净目录对「六处整数全改小数」的副本报错集合逐字不变（全绿），默认基线 6 处非空。对账网第 41 例。
+- 接线 `check_all` 57→**58** 全绿；接线前 `check_checkall` 正确报漏接 1 条，接线后归零。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN。裸名纪律第三十三次。
+- 收尾：`docs/ROUND-R115-USEINTS.md`、`PLAN.md` §13 R115 + §13.118、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0109 VERIFIED + T-0110 OPEN + 池 C63）、`docs/CONTRACTS.md` §4.81/§4.82、`tools/check_all.py`、协作板 §3。
+
+### 13.118 R115 的五条口径（解析 helper 一处收口四调用点 / 有 WARN 域外跳过 / 干净目录反事实胜于 grep / 显示面连续留池 / 裸名）+ 下一步（R116）
+
+| 编号 | 口径 | 描述 |
+|---|---|---|
+| R115-a | **同一解析 helper 的多调用点一次收口**：`integer()` 一个零 WARN 出口被 duration/amplifier/restore_food/cooldown_ticks 四处复用，一把尺按具名路径区分，不拆四卡（承接 R111-a「同族同出口一次收口」）。 | 与 R113-a「同字段不同出口拆尺」互补。 |
+| R115-b | **有 WARN 的域外形态必须跳过**：截断后若落进下游 WARN 分支（duration<1 / amplifier<0 / restore_food>20 / cooldown_ticks<0），尺子不报，避免与运行期告警重复；只报截断后仍合法、日志全静的形态。 | 与 R111-c WARN 反证同族。 |
+| R115-c | **反事实跑四把在役尺而非只 grep 一个键**：改副本的六处整数后，`check_items.py` / `check_use_args.py` / `check_use_script.py` / `check_item_durability.py` 四条末行逐字不变；`grep` 只作辅助证据。 | 承接 R112-a。 |
+| R115-d | **显示面候选连续留池**：C62 树 icon 第二轮四判据齐仍不派，数值洞优先；不因 WIP 归零硬凑卡。 | 承接 R113-d / R114-c。 |
+| R115-e | **裸名纪律第三十三次**：派单当轮文档与台账在建脚本只写裸名 `check_use_ints.py`，避免路径检查把未建文件当断链。 | —— |
+
+下一步（R116）：
+
+1. **验 T-0110**（`check_use_ints.py` 基线 7 物品/1 带 use/6 引用 + 六夹具 A~F 逐字 + wc≤200、`def check_ints`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败；域外/WARN 形态边界）；过后 `check_all` 58→59。
+2. C62 树 icon 若转派须单独卡（显示面，不与数值洞合并）；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
