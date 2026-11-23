@@ -2610,3 +2610,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0113**（基线 1 树/1 引用 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_icons`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败；空白串/非字符串/null 边界）；过后 `check_all` 61→62。
 2. C66（三处 `name`）显示面单卡排队；六只默认怪 + lang 仍属 S7 内容面（字段已冻结于 §13.108），不硬凑卡。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R119 · 2026-11-24 03:3x · 验 T-0113 + check_all 61→62 + 派 T-0114（范围伤害 args 静默改写）
+
+- 卡板：T-0113 `check_tree_icons.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 EXIT=0/1/1/1/0/1：基线 `共 1 份技能树图标口径对账表 · 0 条问题` / `-v` 1 树·1 引用 / B 数值 `123`、C 空白串、D `True`+`[]` 按 a/b 升序、E 4 份·3 处、F `None`+`{}`；wc=153、`def check_icons`=1、禁用 grep=0、`py_compile` OK、NO_SUCH 1 条读失败、函数边界 8 坏值 + 4 跳过 + 重复不合并；S8 零偏差不打回，探针已清）。**派 T-0114**（`check_damage_aoe_args.py`：`skills/` + `scripts/` 的 `damage_aoe` args 五形态，常量 `MAX_RADIUS=32.0`/`DEFAULT_FALLOFF=0.5`/`FALLOFF_MAX=1.0`/`DEFAULT_MAX_TARGETS=0` 从 `DamageAoeEffect.java:55,93-95,140-144` 与 `DamageEffect.java:168-170` 冻结，单文件零接线、六夹具、基线 4 技能/2 脚本/1 调用、接口与文案 S7 定死），在制品 **1/3**。
+- **S7 最小一步 = 全类排除 + 反事实 + 数值洞再开**：R118 的「数值洞收口」前提被推翻——`damage_aoe` 的 `radius >32` 静默夹、`falloff:0` 静默回 0.5（与文档「0 = 不衰减」冲突）、`max_targets` 正数小数截断/负数回落 0，全零 WARN。两组干净目录反事实（`radius:40/falloff:1.5/max_targets:6.9` 与 `falloff:0/max_targets:-2`）在 `check_skill_args` / `check_arg_keys` / `check_skills` / `check_script_args` / `check_numeric` 五把尺上逐字全绿（`check_arg_keys` 需两目录都在，首轮自错已修）。排除 amount/damage_type（有 WARN）、radius 非正（D16）、零基线原语、heal/grant_exp（有 WARN）；C68 ANY 同族留池。对账网第 **45** 例。
+- 接线 `check_all` 61→**62** 全绿；七门禁全 0（check_tasks 114 卡在制品 1、check_contracts 89 条、check_docs 135 份/568 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN。裸名纪律第三十七次。
+- 收尾：`docs/ROUND-R119-AOEARGS.md`、PLAN §13 R119 + §13.122、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0113 VERIFIED + T-0114 OPEN + 池 C67 结项/C68）、`docs/CONTRACTS.md` §4.89/§4.90、`tools/check_all.py`、协作板 §3。
+
+### 13.122 R119 的五条口径（前提可推翻 / 文档语义冲突 / 同名 args 不同出口 / 反事实 CLI / 裸名）+ 下一步（R120）
+
+| 编号 | 口径 |
+|---|---|
+| R119-a | **「数值洞收口」是可推翻的前提**：R118 因全类扫描未见数值洞转显示面；R119 把扫描范围扩到原语 effect args 出口后立即发现新洞，按 R118-a 数值优先重派，不算反复。 |
+| R119-b | **文档语义与实现冲突也算真洞**：`falloff:0` 文档明写「不衰减」、实现回落 0.5，不是 D16 异常保护，尺子必须报。 |
+| R119-c | **同名 args 在不同原语出口不同**：`damage.radius` 用 `warnOnce`、`damage_aoe.radius` 静默夹；不因键名相同复用旧尺（R110-b 延伸）。 |
+| R119-d | **反事实 CLI 要对准夹具目录**：`check_arg_keys` 支持 `--skills/--scripts`；首轮只给 skills 目录导致「scripts 目录读取失败」盖过真实结果，按 R65-a 先修探针再判旧尺。 |
+| R119-e | **裸名纪律第三十七次**：派单当轮文档与台账在建脚本只写裸名 `check_damage_aoe_args.py`，避免路径检查把未建文件当断链。 |
+
+下一步（R120）：
+
+1. **验 T-0114**（基线 4 技能/2 脚本/1 调用 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_calls`=1、禁用 grep=0、`py_compile` OK、双目录 NO_SUCH 2 条读失败；七形态函数边界 + 重复不合并）；过后 `check_all` 62→63。
+2. C66 三处 `name` 显示面单卡；C68 `SocketSpec` ANY 同族逐出口取证；六只默认怪 + lang 仍属 S7 内容面，不硬凑。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

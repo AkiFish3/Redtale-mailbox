@@ -1604,3 +1604,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0112 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立夹具写在自建目录（与 S8 卡内 `build/affixlevelfix/` 不冲突）逐字 6/6 EXIT=0/1/1/1/0/1，函数边界直接 import 断言 27 形态；首轮探针自错（1.7 用例 max 也写小数）按 R118-c 修正，S8 零偏差不打回。已接进 `tools/check_all.py`（`共 61 个脚本`，R118 接线）。
 - T-0113 派单证据：`SkillTreeSpec.java:73-74,145-147` 逐字取证；`check_trees.py` / `check_tree_reach.py` / `check_tree_ppl.py` 零读 `icon`；默认基线 1/1/0 非空；六夹具覆盖缺省/数字/空白串/多文件/null/对象，空白串用 Python `repr` 逐字断言。R118 全类扫描确认数值出口已收口、余候选均显示面 —— 连续四轮留池的 C62 按 R117 下一步转派。对账网第 44 例。
+- T-0113 `[VERIFIED]`（R119）：基线 0 问题 / `-v` 1 树·1 引用 / S7 独立六夹具 6/6 逐字 EXIT=0/1/1/1/0/1 / wc=153、`def check_icons`=1、禁用 grep=0、`py_compile` OK、NO_SUCH 1 条读失败 / 函数边界 8 坏值 + 4 跳过 + 重复不合并；已接进 `tools/check_all.py`（`共 62 个脚本`，R119 接线）。
+
+### 4.89 范围伤害原语 args 静默改写对账 `check_damage_aoe_args.py`（T-0114，R119 派，对账网第四十五例）
+
+- 只读扫 `skills/*.json5` 与 `scripts/*.json5` 的 `effects[]` 中 `type == "damage_aoe"` 的 `args`：五形态产具名文案——`radius > MAX_RADIUS(32.0)` 静默夹、`falloff <= 0` 静默回落 `0.5`（文档明写 `0 = 不衰减`）、`falloff > 1` 静默夹、`max_targets` 正数小数被 `(int)` 截断、`max_targets < 0` 静默回落 0（不限）。常量由 S7 从 `DamageAoeEffect.java:55,93-95,140-144` 与 `DamageEffect.java:168-170` 冻结；接口 `_loads` / `read_rows` / `check_calls` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 62 把尺的共同盲区：`check_arg_keys.py` 只核键名，`check_skill_args.py` / `check_script_args.py` 只核 conditions 的 `ratio`/`chance`，`check_skills.py` / `check_numeric.py` 不读 effects args。S7 干净目录两组反事实（`40/1.5/6.9` 与 `0/-2`）在五把尺上末行逐字全绿 EXIT=0（`check_arg_keys` 需两目录都存在）。
+- 只核五形态的静默改写，不核缺键 / `amount` / `damage_type` / `radius` 非正（D16 异常保护） / `max_targets == 0` / 非数字 / bool / 非有限数、不核 conditions args（归 `check_skill_args.py` / `check_script_args.py`）、不核键名（归 `check_arg_keys.py`）、不核原语平衡（内容取舍）；不读源码/存档、不改运行期。派单时未实现、未接线，基线 4 技能 / 2 脚本 / 1 调用 / 3 args / 0 问题（S7 离线核逐字）。
+
+### 4.90 R119 的验收与派单留证
+
+- T-0112 VERIFIED 后接线 `check_all` 61 个脚本（R118）；T-0113 VERIFIED 后接 62（R119），`check_checkall` 清单对账 0 问题。
+- T-0114 派单证据：五处 Java 出口逐字取证；五把旧尺两组反事实逐字全绿；默认基线 4/2/1/3/0 非空；六夹具覆盖缺省/数值/文档语义冲突/跨目录排序/非目标原语/负值回落。C66 三处 `name` 与 C68 ANY 同族留池——R118「数值洞收口」前提被本轮新证据推翻，按 R119-a 数值优先。详见 `docs/ROUND-R119-AOEARGS.md`。
