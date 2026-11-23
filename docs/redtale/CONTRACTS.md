@@ -1628,3 +1628,27 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - T-0113 VERIFIED 后接线 `check_all` 62（R119）；T-0114 VERIFIED 后接 63（R120），`check_checkall` 清单对账 0 问题。
 - T-0114 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录逐字 6/6 EXIT=0/1/1/1/0/1，函数边界 22 形态；S8 卡进度报文案前缀歧义，按 R120-d（R104-a 延伸）接口优先裁定不打回；S7 探针 1 处自错自改。已接 `tools/check_all.py`。
 - T-0115 派单证据：`SocketSpec.java:39,116-120,128-133,156-159` 与 `Socketer.java:192` 逐字取证；两把旧尺三坏值反事实逐字全绿；默认基线 7/1/2/0 非空；六夹具覆盖短补/空白串/互斥失效/合法写法/缺键与非字符串跳过。C68 从留池升级派单（数值面无新洞、玩法面优先于 C66 显示面）。对账网第 46 例。详见 `docs/ROUND-R120-SOCKETFALLBACK.md`。
+
+### 4.93 名称字段静默改写对账 `check_name_coercions.py`（T-0116，R121 派，对账网第四十七例）
+
+- 只读扫 `items/*.json5` 顶层 `name` 与 `skill_trees/*.json5` 顶层 + `nodes[].name` 三落点，非字符串值（数字/bool/`None`/list/dict）全报具名文案：`items.name 非字符串静默改写`（`ItemContent.java:162,240-246` primitive 走 `getAsString()` 静默成串，null/数组/对象回落 id）、`skill_trees.name 非字符串静默 null`（`SkillTreeSpec.java:76,145-147`）、`nodes.<nid>.name 非字符串静默回落 tree.node.<nid>`（`:54-55`）。三路零 WARN（对照 sets name 有 WARN 的同族出口）。接口 `_loads` / `read_items` / `read_trees` / `check_names` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 64 把尺的共同盲区：`check_items.py:126` 的 name 校验在 `check_set()` 内（只管 sets/）、`check_trees.py:45-125` / `check_tree_icons.py` / `check_professions.py:47` 均不覆盖此三处。S7 干净副本三处 name 全改 `123`，四把旧尺末行逐字全绿 EXIT=0。默认基线 7 物品/7 name、1 树/1 顶层+10 节点 name/0 问题（S7 离线核逐字）。
+- 只核三处非字符串静默改写，不核 name 空白串（T-0113 覆盖范围，本卡留池）/ 长度 / 内容 / 重复 / sets·professions·skills 的 name / items 其它字段（归 `check_items.py`）/ 树其它字段（归 `check_trees.py` 等）；不读源码/存档、不改运行期。派单时未实现、未接线，T-0116 VERIFIED 后 R122 接 → 应 `跑成 65`。
+
+### 4.94 R121 的验收与派单留证
+
+- T-0114 VERIFIED 后接线 `check_all` 63（R120）；T-0115 VERIFIED 后接 64（R121），`check_checkall` 清单对账 0 问题。
+- T-0115 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具逐字 6/6 EXIT=0/1/1/1/0/0，函数边界 30 形态，静态全过；S8 零偏差不打回，探针已清。已接 `tools/check_all.py`。
+- T-0116 派单证据：`ItemContent.java:162,240-246` 与 `SkillTreeSpec.java:54-55,76,145-147` 逐字取证；四把旧尺干净副本反事实逐字全绿；默认基线 7/7/1/1/10/0 非空；六夹具覆盖 items 数字/树 bool/节点数字/混合 list·dict·bool/合法与跳过/非 dict。C66 从留池升级派单（显示面单卡，不与 C62 icon 合并）。对账网第 47 例。详见 `docs/ROUND-R121-NAMECOERCION.md`。
+
+### 4.95 孔位整段丢弃静默早退对账 `check_socket_discards.py`（T-0117，R122 派，对账网第四十八例）
+
+- 只读扫 `items/*.json5` 的 `sockets` 段：`sockets` 是 dict、`types` 是非空 list、`count` 缺键或显式整数 0（非 bool）→ 报 `<前缀>: sockets.count=0 但显式写了 <len> 项 types，整段被静默丢弃（Layout.EMPTY，解析零 WARN）`，按文案升序、保稳定、不去重。常量 `EMPTY_COUNT = 0` 由 S7 从 `SocketSpec.java:30,56,80` 冻结；接口 `_loads` / `read_items` / `check_discards` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 65 把尺的共同盲区：`SocketSpec.java:54-57` 在 `types(...)` 之前 `if (count == 0) return Layout.EMPTY;`，显式 `types` 整段被吞；`:78-95` 缺键直接返 0、显式 0 避开两处 WARN 分支；同文件 `:82/:87/:91/:104/:109/:117` 六处 WARN 反证该出口故意静默。玩法后果：无孔位但 `gem` 段仍进 `ContentData.gemStats`，日志无痕。`check_items.py:77-82` 把 0 当合法下界、`check_socket_fallbacks.py:103-105` 判据写死 `0 < count`、`check_gem_types.py:103-112` 收 types 进可达集合后 `continue`；S7 干净副本 `count:2→0` 反事实三把旧尺末行逐字全绿（0 条问题）。
+- 只核「count 为 0/缺键 + 显式 types 非空」这一落点，不核 count 整数范围 / types 元素字符串（归 `check_items.py`）、type 短补与 gem 空白串（归 `check_socket_fallbacks.py`）、types 可达性（归 `check_gem_types.py`）、其它字段或运行期；不读源码/存档。派单时未实现、未接线，默认基线 7 物品 / 1 sockets / 2 项 types / 0 坏形态（S7 离线核逐字）；T-0117 VERIFIED 后 R123 接 → 应 `跑成 66`。
+
+### 4.96 R122 的验收与派单留证
+
+- T-0115 VERIFIED 后接线 `check_all` 64（R121）；T-0116 VERIFIED 后接 65（R122），`check_checkall` 清单对账 0 问题。
+- T-0116 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具逐字 6/6 EXIT=0/1/1/1/1/0，函数边界 24 坏值 + 10 跳过形态 + 重复不合并；静态全过；S7 探针两处自错自改（夹具漏逗号、空白串误列坏值），S8 零偏差不打回。已接 `tools/check_all.py`。
+- T-0117 派单证据：全类只读扫描 142 Java / 约 60 尺 / 36 默认 JSON5 后，`SocketSpec.java:30,54-57,78-95` 逐字取证；三把旧尺在干净副本反事实逐字全绿；默认基线 7/1/2/0 非空；六夹具覆盖显式 0 / 缺键 / 合法 2 / 短补 / 空 types / 多文件排序。与 T-0115 同解析器不同出口，按 R122-a 分卡。对账网第 48 例。详见 `docs/ROUND-R122-SOCKETDISCARD.md`。
