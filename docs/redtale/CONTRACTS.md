@@ -1545,3 +1545,16 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 
 - T-0107 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写在独立目录（与 S8 卡内 fixture 目录不冲突）逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
 - T-0108 派单证据：`ProfessionSpec.java:102,109-116` 与 `ExpCurve.java:8,19,43-45` 逐字取证；旧尺五形态反事实在每形态独立干净目录全绿（首轮共用目录被 id 重复误报盖过，R113-c）；默认基线 2/2/0 非空；六夹具覆盖缺省/零/硬顶/负值/字符串/缺键。对账网第 39 例。详见 `docs/ROUND-R113-PROFBASE.md`。
+- T-0108 `[VERIFIED]`（R114）：基线 0 问题 / `-v` 2 专业·2 引用 / S7 独立六夹具 6/6 逐字 EXIT=0/1/1/0/1/0（S7 首轮夹具漏外层花括号，自改后全过，不算 S8 偏差）/ wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 / 函数边界逐字；已接进 `tools/check_all.py`（`共 57 个脚本`，R114 接线）。
+
+### 4.79 物品耐久 `(int)` 静默截断/夹顶对账 `check_item_durability.py`（T-0109，R114 派，对账网第四十例）
+
+- 只读扫 `items/*.json5` 的 `durability`：缺键跳过（合法缺省 = 基底默认耐久）；bool / 非数字 / 非有限数 / 负值跳过（`ItemContent.java:102-105,257-266` 有 WARN）；显式 `> MAX_DURABILITY` 产 `<文件名>: durability 值 <repr(v)> 超过 Integer.MAX_VALUE=2147483647 静默夹顶（解析零 WARN）`，显式小数产 `<文件名>: durability 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`，按文案升序、保稳定、不去重。`MAX_DURABILITY = 2147483647` 由 S7 从 Java `(int)` 收敛语义冻结；接口 `_loads` / `read_items` / `check_durability` / `main` 逐字定死，S8 不读源码、不推断。
+- 填补全仓 57 把尺的共同盲区：`check_items.py:57-88` 不读该字段，tools 目录 `grep durability` = 0；S7 内存反事实九形态（缺键 / `1200.9` / `200.5` / `2147483648` / `0.0` / `1200` / `-5` / `"1200.9"` / `true`）报错集合逐字相同。根因是 `num()` 对任意数字零告警放行、`:101` 的 `(int)` 在小数处截断、在超 int 处静默夹顶，只有 `:102-105` 的负数分支会告警。
+- 只核显式耐久的小数与超硬顶形态，不核缺键 / 负值 / 非数字 / bool / 非有限数（有 WARN 或合法缺省）、不核 `base`/`rarity`/`stats`/`gem`/`set_id`/`abilities`/`sockets`/`weapon_attributes`/`rev`（归 `check_items.py`）、不核耐久平衡（内容取舍）；不读源码/存档、不改运行期。派单时未实现、未接线，基线 7 物品 / 5 处引用 / 0 问题（S7 离线核逐字）；T-0109 VERIFIED 后 R115 接 → 应 `跑成 58`。
+- 同族留池 C62 `skill_trees[].icon` 四判据齐但落显示面，R114 不派（`SkillTreeSpec.java:73-74,145-147` 零 WARN、`check_trees.py:45-125` 不读、基线 1 处）；不把数值洞与显示洞合进一卡（R113-d）。详见 `docs/ROUND-R114-DURABILITY.md`。
+
+### 4.80 R114 的验收与派单留证
+
+- T-0108 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具写独立目录逐字 6/6，函数边界直接 import 独立断言；S8 零偏差不打回。
+- T-0109 派单证据：`ItemContent.java:101-105,257-266` 逐字取证；旧尺九形态反事实在役尺报错集合逐字相同；默认基线 7/5/0 非空；六夹具覆盖缺省/小数/超顶/负值/字符串/整数。对账网第 40 例。详见 `docs/ROUND-R114-DURABILITY.md`。

@@ -4576,7 +4576,7 @@ fi
 - 2026-11-23 06:57 · 完成 · `tools/check_tree_ppl.py`（新建，164 行；`PPL_DEFAULT` + 自带 `_clean`/`_loads` shim + `read_trees`/`_bad_value`/`check_ppl`/`_verbose`/`main`，零接线） · 构建退出码 N/A（卡明令禁 gradle，未取锁未构建） · 自测 3/3：①基线 `共 1 份技能树点数口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 棵树 · 1 处 points_per_level 引用 · 缺省 1`；②六夹具 A~F 逐字 EXIT=0/1/0/1/1/0（B `1.5`、D `'2'`、E a/b 各 1 条且按 a.1.5 / b.True 升序、F `0`/`-1` 全放行且 `-v` 2/2），每轮从干净目录重来；③wc=164≤200、`def check_ppl`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条 `skill_trees目录读取失败` EXIT=1 不抛栈；函数边界 7/7（`1.5`/`'2'`/`True`/`None`/`nan`/`inf` 各 1 条且重复 `1.5` 不合并，`-1`/`0`/`2.0`/`4`/缺键跳过）。`build/treepplfix/`（含 driver）与自建 pyc 已清。待 S7 验收并接 check_all TOOLS（55→56）。
 - 2026-11-23 07:5x · S7 验收通过 · 三条验收 + S7 独立六夹具 6/6（独立目录，逐字 EXIT=0/1/0/1/1/0）与函数边界 6 形态 + 重复不合并全过、静态与 NO_SUCH 全绿，S8 零偏差不打回；已接 `check_all` TOOLS（55→56，56/56 红 0）。记为 `[VERIFIED]`，台账见 PLAN §13 R113。
 
-### T-0108 · [OPEN] `check_profession_base.py` —— 专业曲线起点 base 静默改写/夹顶对账（M7 / D16，单文件零接线，对账网第三十九例）
+### T-0108 · [VERIFIED] `check_profession_base.py` —— 专业曲线起点 base 静默改写/夹顶对账（M7 / D16，单文件零接线，对账网第三十九例）
 
 - 派单：S7 · 2026-11-23 07:5x（R113）
 - 目标：给 `professions/*.json5` 的 `curve.base` 补一把「解析零 WARN、但下游静默改写/夹顶」的离线尺子。真洞：`ProfessionSpec.java:102` 用 `num(co, "base", 100.0, 0.0, path, w)`，`:114` 的边界判据是 `v < min`（**不是 `<=`**）→ `base: 0` 解析阶段零 WARN、原样返回 `0.0`；`ExpCurve.java:19` 随即 `this.base = base > 0.0 ? base : 100.0;` 静默改回 100.0。大值同样零 WARN（只判 `Double.isFinite`），`ExpCurve.java:43-45` 的 `MAX_STEP_EXP = 1_000_000_000L` 静默夹顶。对照 `ProgressSpec.java:130` 用 `v <= min` → `base: 0` 会 WARN，两者口径差异就是本洞根因。全仓 56 把尺无一读 `professions curve.base`：`check_professions.py:56-72` 的 curve 段只读 `mode`/`growth`/`exponent`，`check_progress.py:137-167` 只扫 `levels/`/`jobs/`，`check_numeric.py:6` 只扫四份数值文件。S7 用干净探针目录逐形态反事实（写歪 `base` 后 `check_professions.py` 报 `共 1 个文件 · 0 条问题` EXIT=0，五种形态报错集合逐字相同）。基线 2 份专业 / 2 处 base（`mining.json5:10` = 60.0、`smelting.json5:9` = 70.0）/ 0 问题（S7 已离线核逐字）。
@@ -4595,6 +4595,29 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_profession_base.py` → 末行 `共 1 份专业起点经验口径对账表 · 0 条问题` EXIT=0；`python tools/check_profession_base.py -v` → 含 `已检查 2 份专业 · 2 处 base 引用 · 缺省 100.0 · 硬顶 1000000000`。
   2. 六组夹具（逐字核对末行计数与报错文案）：A 复制默认 `mining.json5` → 0 条 EXIT=0、`-v` 逐字 1/1；B `one.json5` `base: 0` → 1 条 `one.json5: curve.base 值 0 静默回落 100.0（解析零 WARN）` EXIT=1；C `one.json5` `base: 1000000001` → 1 条 `one.json5: curve.base 值 1000000001 超过 MAX_STEP_EXP=1000000000 静默夹顶（解析零 WARN）` EXIT=1；D `one.json5` `base: -5` → 0 条 EXIT=0；E 两份 `a.json5`（`base: "x"`）+ `b.json5`（`base: 0`）→ 恰好 1 条、报 `b.json5: curve.base 值 0 静默回落 100.0（解析零 WARN）` EXIT=1；F 两份 `a.json5`（无 base）+ `b.json5`（`base: 1.5`）→ 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 份专业 · 1 处 base 引用 · 缺省 100.0 · 硬顶 1000000000`。六组逐字对上。
   3. `wc -l < check_profession_base.py` ≤ 200；`grep -c "def check_base"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_professions|check_progress|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] professions目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_base`：`0` / `1000000001` 各 1 条、`-5` / `"x"` / `True` / `None` / `nan` / `inf` / 缺键 / `1.5` / `1000000000` 全跳过，重复 `0` 两条不合并、下标无关文案可稳定复现；夹具用完即删（`build/profbasefix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-23 08:03 · 完成 · `tools/check_profession_base.py`（新建 127 行） · 构建 N/A（卡明令禁 gradle） · 基线末行 `共 1 份专业起点经验口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 2 份/2 处；六夹具 A~F 逐字全过 EXIT=0/1/1/0/1/0；函数边界 13/13；wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；`build/profbasefix/` 与自建 pyc 已清
+- 2026-11-23 09:1x · S7 验收通过 · 三条验收全跑：基线 `-v` 逐字 2 份/2 处、六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（S7 首轮夹具漏外层花括号自行改正，不算 S8 偏差）、函数边界逐字 0/超顶各 1 条其余跳过且重复不合并；wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败。已接 `check_all` TOOLS（56→57，57/57 红 0）。记为 `[VERIFIED]`，台账见 PLAN §13 R114。
+
+### T-0109 · [OPEN] `check_item_durability.py` —— 物品 durability `(int)` 静默截断/夹顶对账（M1 / D17，单文件零接线，对账网第四十例）
+
+- 派单：S7 · 2026-11-23 09:1x（R114）
+- 目标：给 `items/*.json5` 的 `durability` 补一把「解析零 WARN、但下游 `(int)` 静默改写」的离线尺子。真洞：`ItemContent.java:101` 用 `(int) num(root, "durability", base.defaultDurability(), warnings, source)`，`:257-266` 的 `num()` 对任意数字直接 `return el.getAsDouble()`（仅非数字才 WARN），`:102-105` 只有结果为负才 WARN → 显式 `1200.9` 静默成 1200、`2147483648` 静默夹到 `Integer.MAX_VALUE=2147483647`，日志全静。全仓 57 把尺无一读 `durability`：`check_items.py:57-88` 的 `check_item` 只读 id/base/rarity/stats/gem/set_id/abilities/sockets/weapon_attributes/rev，tools 目录对该键 grep=0。S7 内存反事实（`1200.9` / `200.5` / `2147483648` / `0.0` / `1200` / `-5` / `"1200.9"` / `true` / 缺键）九形态旧尺报错集合逐字相同。基线 7 份物品 / 5 处显式 durability（600 / 1200 / 200 / 0 / 0）/ 0 问题（S7 已离线核逐字）。
+- 独占文件（**唯一可写**）：
+  - `check_item_durability.py`（新建，≤ 200 行）
+  - `build/durfix/` 下可选夹具文件（不入库，用完即删）
+- 禁止：不改任何 `src/`、`docs/`、任何其它 `tools/*.py`（含 `check_all.py`、`check_items.py`、`check_progress.py`）；不改 TOOLS 清单；不 import 其它 check 模块（自带 `_loads`，不依赖 `check_items`）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；不改卡板。
+- 接口（逐字，S7 定死；`MAX_DURABILITY = 2147483647` 从 Java `(int)` 收敛语义冻结，S8 不读源码、不推断）：
+  - 一个模块级常量：`MAX_DURABILITY = 2147483647`。
+  - `_loads(text: str) -> dict | None`：自带 JSON5 shim（`//` 去注释 + 单引号归一 + 裸键加引号 + 去尾逗号 + `json.loads`），解析失败或顶层非 dict 返 `None`。默认配置是裸键，shim 必须能吃。
+  - `read_items(dir_path: str) -> tuple[list[tuple[str, object|None]], bool]`：扫目录下 `*.json5`（文件名升序），返 `(rows, ok)`；目录不可读 → `([], False)` 不抛栈；单文件读/解析失败 → 该项 data 为 `None` 并继续。
+  - `check_durability(rows: list[tuple[str, object|None]]) -> list[str]`：只看 `data` 是 dict 的条目；取顶层 `durability`：键缺失跳过（合法缺省 = 基底默认耐久）；`v` 是 bool、非数字、非有限数、或 `v < 0` 跳过（`ItemContent.java:102-105,257-266` 这些形态有 WARN）；其余显式值：`v > MAX_DURABILITY` → 产 `<文件名>: durability 值 <repr(v)> 超过 Integer.MAX_VALUE=2147483647 静默夹顶（解析零 WARN）`；`v != int(v)` → 产 `<文件名>: durability 值 <repr(v)> 被 (int) 静默截断（解析零 WARN）`；其它值（0 ≤ v ≤ 硬顶的整数）跳过。`<repr(v)>` 用 Python `repr`。结果按文案升序、保稳定、不去重。
+  - `main() -> int`：CLI `--dir <dir>`（默认 `src/main/resources/redtale/defaults/items`）、`-v`。目录不可读 → 打 `[问题] items目录读取失败`、末行 `共 1 份物品耐久口径对账表 · 1 条问题` EXIT=1；否则逐条打 `[问题] <msg>`、末行 `共 1 份物品耐久口径对账表 · <p> 条问题`，0 问题 EXIT=0 否则 1。`-v` 多打一行 `已检查 <n> 份物品 · <k> 处 durability 引用 · 截断 (int) · 硬顶 2147483647`，n = `*.json5` 文件数，k = data 为 dict 且含键 `"durability"` 的个数（不论值是否合法）。
+- 不要做：不核缺键 / 负值 / 非数字 / bool / `nan` / `inf`（已有 WARN 或合法缺省）、不核 `base` / `rarity` / `stats` / `gem` / `set_id` / `abilities` / `sockets` / `weapon_attributes` / `rev`（归 `check_items.py`）、不核耐久平衡（内容取舍）、不读源码/存档、不改运行期、不跨文件改任何东西。
+- 验收（**三条，全部可机器执行**；夹具写到 `build/durfix/`，每次从干净目录重来，顶层花括号 + 裸键 JSON5；夹具只需 `id` 与 `durability` 两键即可，本尺不读其它键）：
+  1. `cd /e/RedtaleProject && python tools/check_item_durability.py` → 末行 `共 1 份物品耐久口径对账表 · 0 条问题` EXIT=0；`python tools/check_item_durability.py -v` → 含 `已检查 7 份物品 · 5 处 durability 引用 · 截断 (int) · 硬顶 2147483647`。
+  2. 六组夹具（逐字核对末行计数与报错文案）：A 复制默认 `demo_longsword.json5` → 0 条 EXIT=0、`-v` 逐字 1/1；B `one.json5` `durability: 1200.9` → 1 条 `one.json5: durability 值 1200.9 被 (int) 静默截断（解析零 WARN）` EXIT=1；C `one.json5` `durability: 2147483648` → 1 条 `one.json5: durability 值 2147483648 超过 Integer.MAX_VALUE=2147483647 静默夹顶（解析零 WARN）` EXIT=1；D `one.json5` `durability: -5` → 0 条 EXIT=0；E 两份 `a.json5`（`durability: "1200.9"`）+ `b.json5`（`durability: 0.5`）→ 恰好 1 条、报 `b.json5: durability 值 0.5 被 (int) 静默截断（解析零 WARN）` EXIT=1；F 两份 `a.json5`（无 durability）+ `b.json5`（`durability: 1200`）→ 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 份物品 · 1 处 durability 引用 · 截断 (int) · 硬顶 2147483647`。六组逐字对上。
+  3. `wc -l < check_item_durability.py` ≤ 200；`grep -c "def check_durability"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_items|check_progress|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] items目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_durability`：`1200.9` / `2147483648` 各 1 条、`0.5` 1 条、`-5` / `"1200.9"` / `True` / `None` / `nan` / `inf` / 缺键 / `1200` / `0` / `2147483647` 全跳过，重复 `1200.9` 两条不合并、下标无关文案可稳定复现；夹具用完即删（`build/durfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4657,7 +4680,8 @@ fi
 | C58 | `drops[].chance` 越界静默夹 `[0,1]` → **R112 反证排除，留池** | `DropSpec.java:94-101` 确有静默夹，但 `check_mobs.py:123-125` 已在役尺核 `[0,1]`；S7 内存反事实 `1.5/-0.2/2/nan/"1.5"/true/缺键` 八形态全部报同一句，R111-d 第③判据不成立。除非决定把引用形态与数值形态拆两把尺，否则不派 | 无 |
 | C59 | ~~`professions curve.base` 静默回落/夹顶 → **T-0108（R113 派）**~~ | `ProfessionSpec.java:102,114` 的 `v < min` 让 0 零 WARN，`ExpCurve.java:19` 静默改回 100，`:43-45` 静默夹 1e9；旧尺五形态反事实全绿、基线 2/2/0；对账网第 39 例 | 无 |
 | C60 | `skill_trees[].icon` 非字符串/空白静默回落 `minecraft:stone` | `SkillTreeSpec.java:73-74,145-147` 零 WARN（`SkillSpec.java:111-113` 的 skills icon 有 WARN 反证）；`check_trees.py:45-125` 不读 icon，基线 1 处；落点仅显示面，优先级低于数值洞 | 无 |
-| C61 | `items/*.json5` 的 `durability` 小数 `(int)` 截断 | `ItemContent.java:101,257-267` 对任意数字直接返回、`(int)` 静默截断，负数才有 WARN；`check_items.py:57-88` 不读该字段，基线 5 处（3 正 2 零）；T-0096 卡面曾明确留白 | 无 |
+| C61 | ~~`items/*.json5` 的 `durability` 小数 `(int)` 截断 → **T-0109（R114 派）**~~ | `ItemContent.java:101,257-266` 对任意数字直接返回、`(int)` 静默截断/超 int 静默夹顶，负数才有 WARN；`check_items.py:57-88` 不读该字段，九形态旧尺反事实全绿，基线 7/5/0 | 无 |
+| C62 | `skill_trees[].icon` 非字符串/空白静默回落 `minecraft:stone` | `SkillTreeSpec.java:73-74,145-147` 零 WARN（`SkillSpec.java:111-113` 的 skills icon 有 WARN 反证）；`check_trees.py:45-125` 不读 icon，基线 1 处；落点仅显示面，优先级低于数值洞，R114 不派 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
