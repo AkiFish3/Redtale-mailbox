@@ -8300,3 +8300,18 @@ dev 问的第 2 问「改名历史」，答案不是"没查到"，而是**结构
 - **2.87.7 `[事实]`** 部署面零变化（本轮只读核验）：正式新服 `E:\server-1.21.1\mods` 仍 **228 jar、0 个 `redtale_project`、仍装 spell_engine-neoforge-1.10.9 + spell_power-neoforge-1.6.0**；`logs/latest.log` 末次 **11-02 12:24:29**；`world/datapacks` 仍仅 `redtale_bountiful_fix`。与第 90~95 批逐字一致 ⇒ **部署端连续第 7 轮冻结**。
 - **2.87.8 `[事实]`** 待拍板面：`list --open` **22 条**、S4 占 **0 条**（S2×9 / S5×2 / S7×11，全 `_待填_`；与第 95 批结构相同）；协作板 §4 Q-001~Q-023 S4 占 0；§5 无 S4 阻塞 → 本轮无 S4 卡点、不登记新收件箱（避与 S7 开放 Q-021/Q-022 重复）。
 - **2.87.9 `[S4建议]`** **进服信号判据补充**：`check_all` 全绿**不得单独**作为「已就绪」信号；进服时间点至少叠加 ①内容面填充动作（默认件从演示规模扩展）②真人验收回执（36 条 A~F 清单 + A8 客户端渲染）。此为规划观察，**不新增决策/行动/需求单、不给 S7 排期**，时间戳依赖仍未触发。
+
+
+### 第 97 批 · 转内容面的 24h 复核：对账网 47→57，默认件仍 36 份（2026-11-23 第 97 轮，证据轮）
+
+> 用途：接第 96 批 2.87.9「进服信号须叠加内容面填充 + 真人验收回执」，本轮只问「R104 说好转内容面，到底动没动」。全部只读：读 `E:\RedtaleProject\PLAN.md` §1、`docs/ROUNDS.md`、`docs/ROUND-R104-ARGKEYS.md` / `R105` / `R114`、`src/main/resources/redtale/defaults`、`docs/REALPLAYER-WINDOW.md`、实跑只读 `tools/check_all.py`，以及正式服/测试服目录。接 B-42 / T61。
+
+- **2.88.1 `[事实]`** 决策面无新增：`PLAN.md` §1 仍 **D1~D33**（无 D34+，与第 96 批一致）。L3 四大能力自研替代判断（D11/D12/D17/D21~D23/D25~D28/D31/D32）不变。
+- **2.88.2 `[事实]`** 设计端 **R103（11-22 08:5x）→ R114（11-23 09:1x）**：git 末提交 `5bb9d3c R114`；`check_all` 接线 **47→57**，对账网第 **31~40 例**依次为消耗品 use.args 具名键、怪物 level 整数、scale 下界、drop rolls 上界、技能 chance 值域、cooldown 整数、drop xp/min/max 边界、tree `points_per_level`、profession `curve.base` 零值、物品 durability `(int)` 截断/夹顶。`docs/ROUND-R104-ARGKEYS.md` / `R105` / `R114` 均自记 `src/` 零 diff、纯 Python、未构建、未启停任何服。
+- **2.88.3 `[事实·新]`** **内容面 0 增长**：`src/main/resources/redtale/defaults` 仍 **36 份 JSON5**，逐目录与 2.87.4 一致（顶层 6；items 7 / skills 4 / affixes 3 / enchantments 2 / jobs 2 / professions 2 / scripts 2 / mobs 2 / affix_pools·drops·levels·sets·skill_trees·spawn_rules 各 1）。R104 原文「内容面覆盖盘点（只盘点，不改配置）」：14 基底只覆盖 7 个 id、8 实体原型只有 `melee` / `caster` 两份默认怪、技能 4 / 脚本 2；R105 冻结 6 只缺失原型怪（`ash_archer` / `grave_caller` / `ember_charger` / `cinder_wisp` / `cinder_warden` / `ember_mote`）的完整字段表，明写「只定字段，不写配置」，并须同步 `gen_entity_lang.py` 产物。R106~R114 九轮继续工具对账 ⇒ **第 96 批的「内容面填充动作」尚未发生**。`[推断]` 冻结字段表把内容设计前置到派卡，缩短的是 S8 的歧义、不是进服时间。
+- **2.88.4 `[事实·口径警告]`** 本轮实跑 `python E:/RedtaleProject/tools/check_all.py`：`check_checkall.py` 报 `[问题] 脚本 check_item_durability.py 未接进 check_all`，末行 `共 57 个脚本 · 跑成 57 · 跳过 0 · 红 1`。S8 09:16 已把该脚本标 `[DONE]`，R114 派卡、R115 接线预期 57→58 ⇒ **这是接线间隙不是质量回归**；引用必须写「57 脚本 · 1 红 = 未接线」，**不得写成「57 全绿」**。
+- **2.88.5 `[事实]`** **功能面冻结第 3 轮**：测试服 `E:\server-test\mods\redtale_project-0.1.0.jar` 仍 **686121 B / 2026-11-20 01:50**，与第 94~96 批逐字相同；`docs/REALPLAYER-WINDOW.md` 仍 **95 行 / 截至 R67**，本轮无勾选变化；A8 客户端渲染仍挂 PLAN R70 口径。
+- **2.88.6 `[事实]`** 部署端零变化（本轮只读核验）：正式新服 `E:\server-1.21.1\mods` 仍 **228 jar、0 个 `redtale_project`、仍装 spell_engine-neoforge-1.10.9 + spell_power-neoforge-1.6.0**；`logs/latest.log` 末次 **11-02 12:24:29**；`world/datapacks` 仍仅 `redtale_bountiful_fix`。与第 90~96 批逐字一致 ⇒ **部署端连续第 8 轮冻结**。测试服 `logs/latest.log` 末次 11-20 01:51:47。
+- **2.88.7 `[事实]`** 待拍板面：`list --open` **22 条**、S4 占 **0 条**（S2×9 / S5×2 / S7×11，全 `_待填_`；与第 96 批结构相同）；协作板 §4 Q-001~Q-023 S4 占 0；§5 无 S4 阻塞。信箱 `digest 8` 最新 11-23 06:09 为 dev 规则包单向推送、无事务诉求 ⇒ 本轮无 S4 卡点、不登记新收件箱（避与 S7 Q-013~023 重复）。
+- **2.88.8 `[S4建议]`** **第 96 批判据的可数化（不设通过线）**：「内容面填充」改用三个只读观察点——① `mobs/` 由 **2→8** 且 `gen_entity_lang.py` 的 zh/en 键同步；② `defaults` 由 **36→>36**；③ jar mtime 由 11-20 01:50 变化（功能面解冻）。三项只用于识别「时间戳依赖是否触发」，**不给 S7 排期、不新增行动/决策/需求单**。**反对自己**：默认件数增长 ≠ 可玩内容增加；6 只怪只是原型覆盖，不能充当内容量验收。
+- **2.88.9 `[待验证]`** 时间戳依赖（维持 2.87.9）：自研 jar 推进正式服 + 进服时 spell_engine/spell_power 是否移除，本轮仍未发生；触发后做 PLAN_NEXT §7 的 L3 表述替换轮。

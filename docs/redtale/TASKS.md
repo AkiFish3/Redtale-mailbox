@@ -4599,7 +4599,7 @@ fi
 - 2026-11-23 08:03 · 完成 · `tools/check_profession_base.py`（新建 127 行） · 构建 N/A（卡明令禁 gradle） · 基线末行 `共 1 份专业起点经验口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 2 份/2 处；六夹具 A~F 逐字全过 EXIT=0/1/1/0/1/0；函数边界 13/13；wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；`build/profbasefix/` 与自建 pyc 已清
 - 2026-11-23 09:1x · S7 验收通过 · 三条验收全跑：基线 `-v` 逐字 2 份/2 处、六夹具 A~F 逐字 EXIT=0/1/1/0/1/0（S7 首轮夹具漏外层花括号自行改正，不算 S8 偏差）、函数边界逐字 0/超顶各 1 条其余跳过且重复不合并；wc=127、`def check_base`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败。已接 `check_all` TOOLS（56→57，57/57 红 0）。记为 `[VERIFIED]`，台账见 PLAN §13 R114。
 
-### T-0109 · [OPEN] `check_item_durability.py` —— 物品 durability `(int)` 静默截断/夹顶对账（M1 / D17，单文件零接线，对账网第四十例）
+### T-0109 · [DONE] `check_item_durability.py` —— 物品 durability `(int)` 静默截断/夹顶对账（M1 / D17，单文件零接线，对账网第四十例）
 
 - 派单：S7 · 2026-11-23 09:1x（R114）
 - 目标：给 `items/*.json5` 的 `durability` 补一把「解析零 WARN、但下游 `(int)` 静默改写」的离线尺子。真洞：`ItemContent.java:101` 用 `(int) num(root, "durability", base.defaultDurability(), warnings, source)`，`:257-266` 的 `num()` 对任意数字直接 `return el.getAsDouble()`（仅非数字才 WARN），`:102-105` 只有结果为负才 WARN → 显式 `1200.9` 静默成 1200、`2147483648` 静默夹到 `Integer.MAX_VALUE=2147483647`，日志全静。全仓 57 把尺无一读 `durability`：`check_items.py:57-88` 的 `check_item` 只读 id/base/rarity/stats/gem/set_id/abilities/sockets/weapon_attributes/rev，tools 目录对该键 grep=0。S7 内存反事实（`1200.9` / `200.5` / `2147483648` / `0.0` / `1200` / `-5` / `"1200.9"` / `true` / 缺键）九形态旧尺报错集合逐字相同。基线 7 份物品 / 5 处显式 durability（600 / 1200 / 200 / 0 / 0）/ 0 问题（S7 已离线核逐字）。
@@ -4619,6 +4619,7 @@ fi
   2. 六组夹具（逐字核对末行计数与报错文案）：A 复制默认 `demo_longsword.json5` → 0 条 EXIT=0、`-v` 逐字 1/1；B `one.json5` `durability: 1200.9` → 1 条 `one.json5: durability 值 1200.9 被 (int) 静默截断（解析零 WARN）` EXIT=1；C `one.json5` `durability: 2147483648` → 1 条 `one.json5: durability 值 2147483648 超过 Integer.MAX_VALUE=2147483647 静默夹顶（解析零 WARN）` EXIT=1；D `one.json5` `durability: -5` → 0 条 EXIT=0；E 两份 `a.json5`（`durability: "1200.9"`）+ `b.json5`（`durability: 0.5`）→ 恰好 1 条、报 `b.json5: durability 值 0.5 被 (int) 静默截断（解析零 WARN）` EXIT=1；F 两份 `a.json5`（无 durability）+ `b.json5`（`durability: 1200`）→ 0 条 EXIT=0 且 `-v` 逐字 `已检查 2 份物品 · 1 处 durability 引用 · 截断 (int) · 硬顶 2147483647`。六组逐字对上。
   3. `wc -l < check_item_durability.py` ≤ 200；`grep -c "def check_durability"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_items|check_progress|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] items目录读取失败`，不抛栈；函数边界直接 import 本模块调用 `check_durability`：`1200.9` / `2147483648` 各 1 条、`0.5` 1 条、`-5` / `"1200.9"` / `True` / `None` / `nan` / `inf` / 缺键 / `1200` / `0` / `2147483647` 全跳过，重复 `1200.9` 两条不合并、下标无关文案可稳定复现；夹具用完即删（`build/durfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-23 09:16 · 完成 · `tools/check_item_durability.py`（新建 128 行） · 构建 N/A（卡明令禁 gradle） · 基线末行 `共 1 份物品耐久口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 7 份/5 处；六夹具 A~F 逐字全过 EXIT=0/1/1/0/1/0；函数边界 13/13；wc=128、`def check_durability`=1、禁用 grep=0、`py_compile` OK、`--dir NO_SUCH` 1 条读失败 EXIT=1；`build/durfix/` 与自建 pyc 已清
 
 ## 6. 派单池（S7 用，S8 不看）
 

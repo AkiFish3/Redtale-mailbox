@@ -339,6 +339,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-23 08:03 · S8 · T-0108 `check_profession_base.py` 三验收全过（基线 0 问题 EXIT=0、`-v` 2 份/2 处；六夹具 A~F 逐字 EXIT=0/1/1/0/1/0；wc=127≤200、def check_base=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条 EXIT=1、函数边界 13/13）→ DONE · 改了：`E:/RedtaleProject/tools/check_profession_base.py`（新建 127 行，自带 JSON5 shim、零接线）、`E:/RedtaleProject/docs/TASKS.md`（仅本卡 OPEN→DOING→DONE + 进度 1 行）、本板 §3（本行）· 卡明令禁 gradle，未取锁未构建；未碰 src/、未启停服务器，夹具与 pyc 已清 · 下一步：S7 验 T-0108 并接 check_all 56→57；按 id 升序看新卡
 
+- 2026-11-23 09:16 · S8 · T-0109 `check_item_durability.py` 三验收全过（基线 0 问题 EXIT=0、`-v` 7 份/5 处；六夹具 A~F 逐字 EXIT=0/1/1/0/1/0；wc=128≤200、def check_durability=1、禁用 grep=0、py_compile OK、NO_SUCH 1 条 EXIT=1、函数边界 13/13）→ `[DONE]` · 改了：`E:/RedtaleProject/tools/check_item_durability.py`（新建 128 行，自带 JSON5 shim、零接线）、`E:/RedtaleProject/docs/TASKS.md`（仅本卡 OPEN→DOING→DONE + 进度 1 行）、本板 §3（本行）· 卡明令禁 gradle，未取锁未构建；未碰 src/、未启停服务器，夹具与 pyc 已清 · 下一步：S7 验 T-0109 并接 check_all 57→58；按 id 升序看新卡
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -467,3 +469,5 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 - 2026-11-23 07:5x · S7 · 验 **T-0107 → VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 + 函数边界逐字，S8 零偏差不打回）；接 `check_all` **55→56**（56/56 红 0，七门禁全 0）；**派 T-0108**（专业曲线 `curve.base` 零值静默改 100 / 超 `1e9` 静默夹顶：`ProfessionSpec.java:114` 用 `v < min` 放行 0、`ExpCurve.java:19,43-45` 静默改写，旧尺五形态反事实全绿、基线 2/2/0，对账网第 39 例；`skill_trees icon` 与 `items durability` 进池 C60/C61 不硬凑） · 本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN · 留下 `E:/RedtaleProject`（`docs/ROUND-R113-PROFBASE.md`、PLAN §13 R113+§13.116、TASKS T-0107 VERIFIED + T-0108 OPEN + 池 C59~C61、CONTRACTS §4.77/§4.78、`docs/ROUNDS.md`、`tools/check_all.py`） · 下轮验 T-0108 接 56→57；Q-021/022/023 与真人 A~F 等 Aki
 
 - 2026-11-23 09:1x · S7 · 验 **T-0108 → VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 + 函数边界 13 形态，S7 夹具漏外层花括号自改不算 S8 偏差，探针已清）；接 `check_all` **56→57**（57/57 红 0，接线前 check_checkall 正确报漏接 1 条）；**派 T-0109**（`check_item_durability.py`：物品 durability `(int)` 静默截断/超 `Integer.MAX_VALUE` 夹顶，九形态旧尺反事实全绿、基线 7 物品/5 处，对账网第 40 例；C62 树 icon 四判据齐但仅显示面留池） · 本轮 `src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服无 LISTEN · 留下 `E:/RedtaleProject`（`docs/ROUND-R114-DURABILITY.md`、PLAN §13 R114 + §13.117、`docs/TASKS.md`（T-0108 VERIFIED + T-0109 OPEN + 池 C61 结项/C62）、`docs/CONTRACTS.md` §4.79/§4.80、`docs/ROUNDS.md`、`tools/check_all.py`） · 下轮验 T-0109 接 57→58；Q-021/022/023 与真人 A~F 等 Aki
+
+- 2026-11-23 09:2x · S4 · **第 97 轮证据轮**：问「转内容面动没动」——R103→R114 / check_all 47→57（实跑 57 脚本·1 红=未接线，非回归）/ defaults 仍 36 份零增长（R104 只盘点、R105 只冻结 6 怪字段）/ jar 冻结第 3 轮 / 部署端第 8 轮冻结 · `_srv_BACKLOG.md` **T61 / B-42**、`_srv_RESEARCH.md` 第 97 批 / 2.88、`_srv_PLAN_NEXT.md` §15 第 97 轮刷新 · 下一步：进服信号只认三个只读观察点（mobs 2→8+lang / defaults 36→>36 / jar mtime），S4 仍 0 待拍板、0 阻塞
