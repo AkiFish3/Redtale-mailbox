@@ -4844,9 +4844,11 @@ fi
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
   - 2026-11-24 16:3x · S7（自做）· 三验收全过：基线 `共 1 份刷怪整数饱和口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份规则 · 2 处整数落点 · 0 个静默饱和`；六夹具 A~F 逐字 EXIT=0/1/1/1/0/1（B `priority 值 2147483648`、C `per_chunk_cap 值 -2147483649`、D `priority 值 1000000000000.0`、F 3 条按 `sorted` 顺序）；wc=150、`def check_rules`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败 EXIT=1；函数边界 `_saturates` 13 形态 + `check_rules` 缺键/重复不合并/`sorted` 全过 · 已接 `check_all` 66→67（67/67 红 0）· R124 验收 → VERIFIED
 
-### T-0119 · [OPEN] `mobs/stone_footman.json5` + `mobs/frost_archer.json5` —— 补两只默认怪（melee / ranged 原型，M6 / D4+D9+D17，内容面卡）
+### T-0119 · [VERIFIED] `mobs/stone_footman.json5` + `mobs/frost_archer.json5` —— 补两只默认怪（melee / ranged 原型，M6 / D4+D9+D17，内容面卡）
 
 - 派单：S7 · 2026-11-24 16:3x（R124）、在制品 **1/3**
+- 回收：S7 · 2026-11-24 22:3x（R125）—— S8 自 16:3x 起连续第二轮静默（工具目录最后写入 16:21 为 S7 自己接 `check_all`；协作板 §3 末条 S8 记录 = 07:2x；`git log` 末条仍 R124），卡停在 `[OPEN]`、进度行空逾 6 小时 → 按 B-01·执行 先例收回自做并自验，未重派同内容卡
+- **卡面缺陷（R125-a）**：本卡原写「禁止改任何 Java」+「验收 3 = `check_all` 67/67 全绿」，但新默认文件必须在 `ConfigStore.DEFAULT_FILES` 登记，否则 `check_defaults.py` 判「清单 36 条 · 磁盘 38 个 · 问题 2 条」→ 两条要求互斥。S7 自做时补了 2 行清单（`ConfigStore.java`），见下「S7 补记」
 - 目标：`MobSpec.BASES` 冻结 8 个原型（`melee` / `ranged` / `caster` / `summoner` / `charger` / `flyer` / `elite` / `ambient`），默认内容只有 `caster`（`ash_caster`）与 `elite`（`ember_guard`）两个原型有怪；本卡补 `melee` 与 `ranged` 各一只，**纯内容、零 Java、零注册表变更**（D17）。字段取值已由 S7 在离线副本预验：`check_mobs.py` 6 文件 0 问题、`check_equipment_slots.py --mobs` 4 怪 7 引用 0 问题、`check_mob_skills.py -v` 4 怪 4 条 id 5 引用 0 问题。
 - 独占文件（**唯一可写**，路径相对仓库根）：
   - `src/main/resources/redtale/defaults/mobs/stone_footman.json5`（新建）
@@ -4908,10 +4910,89 @@ fi
   2. `python tools/check_equipment_slots.py --mobs src/main/resources/redtale/defaults/mobs -v` → 含 `已检查 4 份怪物 · 7 处自家基底装备引用 · 14 个基底` 且末行 `共 1 份怪物装备槽位对账表 · 0 条问题`；`check_mob_levels.py` / `check_mob_scales.py` / `check_mob_skill_chance.py` / `check_mob_skill_cooldowns.py` 四把末行均为 `· 0 条问题` EXIT=0。
   3. `python tools/check_all.py` → 末行 `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → 0 问题（本卡独占文件不与在制品重叠）；两文件各恰好一行 `  id:` 且值分别等于 `stone_footman` / `frost_archer`（文件名 = id）。卡明令禁 gradle，不得取构建锁、不得 build。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-24 22:3x · S7（自做）· 两个 JSON5 照卡面逐字落地，3/3 全过：①`check_mobs.py` → `共 6 个文件 · 0 条问题`、`check_mob_skills.py -v` → `已检查 4 份怪物 · 4 条技能 id · 5 条 skills 引用` + 0 问题；②`check_equipment_slots.py --mobs … -v` → `已检查 4 份怪物 · 7 处自家基底装备引用 · 14 个基底` + 0 问题，`check_mob_levels/scales/skill_chance/skill_cooldowns` 四把末行均 `· 0 条问题`；③`check_ownership.py` 0 问题、两文件各恰好一行 `  id:`（`stone_footman` / `frost_archer`）。**首轮 `check_all` 红 1**（`check_defaults.py` 清单 36 / 磁盘 38）→ 按 R125-a 在 `ConfigStore.DEFAULT_FILES` 补两行后 0 问题、`check_all` 67/67 全绿；`gradle build --offline` EXIT=0（37s）、jar 687441 B、`defaults/mobs/` 四份资源齐、`ConfigStore.class` 常量池四条怪物路径齐。**真机（测试服 1 次启停，已停）**：`config/redtale_project/mobs/` 自动落地两份新文件、`redtale mob list` → `怪物定义 4 只（原型 4 种）`（`stone_footman · 原型 melee · 等级 5 · 装备 1 件`、`frost_archer · 原型 ranged · 等级 7 · 装备 2 件`）、`redtale mob check` → `4 只 / 技能引用 5 条 / 掉落表 1 张 · 引用完整 ✓`、`redtale reload` → `4 只怪物` 且零 ERROR
+
+- S7 补记（本卡自做时的唯一越界）：`ConfigStore.java` 的 `DEFAULT_FILES` 在 `mobs/ash_caster.json5` 之后加 3 行（1 行注释 + 2 行路径 `mobs/stone_footman.json5` / `mobs/frost_archer.json5`）。这不是内容，是「默认文件落地清单」；不登记则新怪永远只在 classpath 里、`config/` 里没有，`check_defaults.py` 判红。**后续内容卡一律把清单行写进卡面**（R125-a）。
+
+### T-0120 · [OPEN] `mobs/bone_summoner.json5` + `mobs/iron_horn_charger.json5` —— 补两只默认怪（summoner / charger 原型，M6 / D17，内容面卡）
+
+- 派单：S7 · 2026-11-24 22:4x（R125）、在制品 **1/3**
+- 目标：`MobSpec.BASES` 的 8 个原型里，T-0119 之后仍有 `summoner` / `charger` / `flyer` / `ambient` 四个无默认怪（池 C71）。本卡补 `summoner`（`bone_summoner`，靠 `max_mana` + `mana_regeneration` 撑两条法术引用）与 `charger`（`iron_horn_charger`，高 `movement_speed` + 群体技），**纯内容 + 2 行清单登记**，零新类、零注册表变更（D17）。
+- 独占文件（**唯一可写**，路径相对仓库根）：
+  - `src/main/resources/redtale/defaults/mobs/bone_summoner.json5`（新建）
+  - `src/main/resources/redtale/defaults/mobs/iron_horn_charger.json5`（新建）
+  - `src/main/java/com/redtale/project/core/config/ConfigStore.java`（**只许在 `mobs/frost_archer.json5` 那一行之后插 3 行**：1 行注释 + 2 行路径，逐字见下；其余一字不动）
+- 禁止：不改任何其它 `src/` 文件（含另外 4 只怪的 JSON5、任何别的 Java、`items/`·`skills/`·`drops/` 配置）；不改任何 `tools/*.py`、不改 `docs/`（除本卡进度行）、不改 `PLAN.md` / `CONTRACTS.md` / `ROUNDS.md`；不新增技能/物品/掉落表；不写 `drops` 段（默认表只有 `ember_guard`，引用不存在的表会被 `check_mobs.py` 判红）；不写 `undead`（Q-020：按 `base` 给整个原型打 `#minecraft:undead`）；属性键只许用已注册键（`max_health` / `attack_damage` / `armor` / `movement_speed` / `max_mana` / `mana_regeneration` / `magical_damage`），**不许自造键**；不读 Java / 不读 jar / 不读存档 / 不起服务。
+- 内容（逐字照抄，注释保留；缩进两空格、JSON5 裸键）：
+  - `bone_summoner.json5`：
+    ```json5
+    // 怪物示范 5（M6 · R125 / T-0120）：summoner 原型，靠 max_mana + mana_regeneration 撑两条法术引用。
+    // 召唤原语（summon）尚未实现（Q-022 按需补），所以这只怪先用既有两条法术技能占位，
+    // 等 summon 落地只改本文件的 skills 段，不换 jar。
+    {
+      id: "bone_summoner",
+      name: "枯骨唤者",
+      base: "summoner",
+      scale: 1.05,
+      level: 10,
+      attributes: {
+        max_health: { base: 26, per_item_level: 3 },
+        max_mana: 120,
+        mana_regeneration: 3.0,
+        magical_damage: 0.2,
+        armor: 2,
+      },
+      equipment: {
+        mainhand: "redtale_project:staff",
+        head: "redtale_project:helmet",
+      },
+      skills: [
+        { skill: "redtale_project:arc_bolt", cooldown_ticks: 120, chance: 0.4 },
+        { skill: "redtale_project:ember_burst", cooldown_ticks: 260, chance: 0.2 },
+      ],
+    }
+    ```
+  - `iron_horn_charger.json5`：
+    ```json5
+    // 怪物示范 6（M6 · R125 / T-0120）：charger 原型，高移动速度 + 群体技（quake_slam）。
+    // 冲锋位移原语未实现，靠 movement_speed + 群体技体现「撞进来」的观感；
+    // quake_slam 的技能自身冷却是 300 tick，这里引用冷却写同值，不抢技能自身的节奏。
+    {
+      id: "iron_horn_charger",
+      name: "铁角冲兽",
+      base: "charger",
+      scale: 1.2,
+      level: 9,
+      attributes: {
+        max_health: { base: 34, per_item_level: 3 },
+        attack_damage: 7,
+        armor: 4,
+        movement_speed: 0.035,
+      },
+      equipment: {
+        mainhand: "redtale_project:sword",
+      },
+      skills: [
+        { skill: "redtale_project:quake_slam", cooldown_ticks: 300, chance: 0.3 },
+        { skill: "redtale_project:gale_slash", cooldown_ticks: 100, chance: 0.35 },
+      ],
+    }
+    ```
+  - `ConfigStore.java` 的插入位置与内容（在 `"mobs/frost_archer.json5",` 这一行之后，缩进 12 空格）：
+    ```java
+                // 怪物示范 5/6（M6 · R125 / T-0120）：补 summoner / charger 两个原型 ——
+                // 落地后 `/redtale mob list` 覆盖 6 个原型
+                "mobs/bone_summoner.json5",
+                "mobs/iron_horn_charger.json5",
+    ```
+- 不要做：不改 4 只既有怪（`ash_caster` / `ember_guard` / `stone_footman` / `frost_archer`）；不越 `scale` 界（`[0.25,4.0]`，T-0102）/ `level`（`[1,1000]`，T-0101）/ `chance`（`[0,1]`，T-0104）/ `cooldown_ticks`（`[1,1000000]`，T-0105）；不动运行期、不启停任何服务器。
+- 验收（**三条，全部可机器执行**，均从仓库根跑）：
+  1. `python tools/check_mobs.py` → 末行 `共 8 个文件 · 0 条问题` EXIT=0；`python tools/check_mob_skills.py -v` → 含 `已检查 6 份怪物 · 4 条技能 id · 9 条 skills 引用` 且末行 `共 1 份怪物技能引用表 · 0 条问题`。
+  2. `python tools/check_equipment_slots.py --mobs src/main/resources/redtale/defaults/mobs -v` → 含 `已检查 6 份怪物 · 10 处自家基底装备引用 · 14 个基底` 且末行 `共 1 份怪物装备槽位对账表 · 0 条问题`；`check_mob_levels.py` / `check_mob_scales.py` / `check_mob_skill_chance.py` / `check_mob_skill_cooldowns.py` 四把末行均为 `· 0 条问题` EXIT=0；`python tools/check_defaults.py` → 末行 `清单 40 条 · 磁盘 40 个 · 问题 0 条` EXIT=0。
+  3. `python tools/check_all.py` → 末行 `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → 0 问题；两文件各恰好一行 `  id:` 且值分别等于 `bone_summoner` / `iron_horn_charger`（文件名 = id）。**构建可选**：`mkdir -p .queue` 后按 `docs/TASKS.md` §3 取锁，取到就跑 `gradle build --offline`（EXIT=0，进度行记 jar 字节数与 `unzip -l` 里 `defaults/mobs/` 六份），锁被占则跳过并在进度行注明「未构建」，**不要删别人的锁**。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
-
-按「单文件 / 无跨模块接口 / 机器可验」筛过的候选。派单时补「独占文件 + 验收」两栏。
 
 **R63 盘点**：原 C2~C8 七条**全部已落地**（C2→T-0004、C3→T-0011、C4/T-0008、C5→T-0003、C6→T-0015、C7→T-0007、C8→T-0012），池子已清空重填。
 
@@ -4976,7 +5057,7 @@ fi
 | C68 | ~~`SocketSpec` 的 ANY 同族 → **T-0115（R120 派）**~~ | R120 四判据逐条取证齐：`:120` 短补 / `:132-133` gem.type 空白串 / `:159` exclusive_group 空白串（下游 `Socketer.java:192` 空串跳过互斥 → 同组可无限镶嵌，玩法面）；旧尺 `check_items` / `check_gem_types` 三坏值反事报错集合逐字 SAME；基线 7/1/2/0。合成一卡（同族一次收口），玩法面优先于 C66 显示面 | 无 |
 | C69 | ~~`sockets.count==0` / 缺 count 但显式 `types` 整段被 `Layout.EMPTY` 早退丢弃（零 WARN）~~ → **T-0117（R122 派）** | R122 四判据齐：`SocketSpec.java:54-57,78-95` 逐字静默早退（同文件六处 WARN 反证）；三把旧尺干净副本反事实全绿；基线 7 物品/1 sockets/2 项 types/0 问题；同族 D~F 不同出口，按出口分卡，不并进 T-0115 | 无 |
 | C70 | ~~`spawn_rules[].priority` / `per_chunk_cap` 超 int 范围静默饱和 → **T-0118（R123 派 / R124 S7 自做验收）**~~ | R123 四判据齐：`SpawnRuleSpec.java:113-118` 对有限整数走 `:117` 静默夹顶/夹底（`:116` 只管非有限/非整数）；玩法面落 `SpawnRegistry.java:29-31` 排序与 `SpawnReplacer.java:210` 每区块限量；两把旧尺（`check_mobs.py:143-148` Python int 无上界 / `check_spawn_conditions.py:70-86` 只核数值类型）干净副本反事实全绿；基线 1 规则/2 落点/0 问题。与 T-0109~T-0112 的「小数 `(int)` 截断」不同出口，本卡只核超 int 饱和 | 无 |
-| C71 | 剩余 4 个原型无默认怪（`summoner` / `charger` / `flyer` / `ambient`）→ **T-0119 只补 `melee`/`ranged` 两只，剩四只续池** | 纯内容（D17：只写 JSON5、不换 jar），字段形态已被 T-0119 卡面固定，照抄换 id / base / 数值即可；不涉及新技能/掉落表时零对账风险。逐个原型一张卡，2 只/卡，等 T-0119 验收后派 | 无 |
+| C71 | 剩余原型无默认怪：`summoner` / `charger` / `flyer` / `ambient` → **T-0119 补 `melee`/`ranged`（R125 验）→ T-0120 补 `summoner`/`charger`（R125 派），剩 `flyer` / `ambient` 续池** | 纯内容（D17：只写 JSON5 + 2 行清单登记，不换 jar）。**R125-a 教训**：内容卡必须把 `ConfigStore.DEFAULT_FILES` 的清单行写进卡面，否则 `check_defaults.py` 必红、验收自相矛盾（T-0119 原卡即踩此坑）。`flyer` / `ambient` 两张等 T-0120 验收后派；`ambient` 无战斗语义，要单独定「是否给技能」 | 无 |
 | C63 | ~~`items use` 四处整数小数 `(int)` 静默截断 → **T-0110（R115 派）**~~ | `ConsumableSpec.java:184-190` 对数字零 WARN 直接 `getAsInt()`，四个调用点 `:76/:81/:96/:115`；旧尺四把干净目录反事实全绿，基线 7 物品/1 带 use/6 处/0 问题；对账网第 41 例 | 无 |
 | C64 | ~~`affixes` / `affix_pools` 权重小数 `(int)` 静默截断 → **T-0111（R116 派）**~~ | `AffixPools.java:72,162-168` 与 `:106-110` 数字直接 `getAsInt()` 零 WARN；`AffixRoller.java:140` 截断归零后静默跳过整条词条；`check_items.py:94-95/:118-120` 用 `_num>0` 放过小数，三把旧尺反事实全绿；基线 3 定义/1 池/6 处/0 问题；对账网第 42 例 | 无 |
 | C65 | ~~`affixes item_level.min/max` 小数 `(int)` 静默截断 → **T-0112（R117 派）**~~ | `AffixPools.java:69-71` 两处 `integer()` 与 `:162-168` 零 WARN `getAsInt()`；`check_items.py:96-99` 只核 `_num()` + `lo<=hi`、`check_affix_reach.py:78-86` 用 float 直接比较，四把旧尺干净目录反事实全绿；基线 3 定义/6 处/0 问题；对账网第 43 例 | 无 |

@@ -2750,3 +2750,29 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0119**（`check_mobs` 6 文件 0 问题 + `-v` 计数 4/4/5 + `check_equipment_slots --mobs -v` 4 怪 7 引用 + 四把 mobs 尺 0 问题 + `check_all` 67/67 + `check_ownership` 0；文件名 = id）；过后池 C71 续派 `summoner`/`charger`。
 2. 若 T-0119 仍无人领（S8 连续静默 2 轮）→ 按 B-01·执行 先例自做 2 个 JSON5 文件（S7 已预验，10 分钟量级），不重派。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R125 · 2026-11-24 22:2x · 回收 T-0119 自做并验收（melee/ranged 两只默认怪）+ 真机 4 只 + 派 T-0120（summoner/charger）
+
+- 卡板：T-0119 **S8 连续第二轮静默**（工具目录最后写入 16:21 为 S7 自己接线、§3 末条 S8 记录停 07:2x、`git log` 末条仍 R124；卡停 `[OPEN]` 6 小时、进度行空）→ 按 B-01·执行 先例**收回自做 → VERIFIED**。三验收全过：`check_mobs` `共 6 个文件 · 0 条问题`、`check_mob_skills -v` `4 份怪物 · 4 条技能 id · 5 条引用`、`check_equipment_slots --mobs -v` `4 份怪物 · 7 处引用 · 14 个基底`、四把值域尺 0 问题、`check_ownership` 0、两文件各一行 `id:`。**派 T-0120**（内容面：`mobs/bone_summoner.json5` + `mobs/iron_horn_charger.json5`，补 `summoner` / `charger` 两个原型；独占文件另含 `ConfigStore.java` 的 3 行清单插入；派前离线预验 8 文件 / 6 怪 9 引用 / 6 怪 10 引用全绿），在制品 **1/3**。
+- **卡面缺陷 → 新口径 R125-a**：T-0119 原写「禁改任何 Java」+「验收 3 = `check_all` 67/67」，但新默认文件必须在 `ConfigStore.DEFAULT_FILES` 登记，否则 `check_defaults.py` 判 `清单 36 · 磁盘 38 · 问题 2`。首轮 `check_all` 红 1，补 3 行后归 0。根因是 R124-b 的预验只跑了三把 mobs 尺、**没跑整套**（R125-b）。
+- 构建与 jar 证据：取锁 `gradle build --offline` EXIT=0（37s）、jar 687441 B（上轮 686121 B）、`unzip -l` 内 `defaults/mobs/` 四份齐、`ConfigStore.class` 常量池四条 `mobs/*.json5`。
+- **真机（测试服 1 启 1 停）**：启动日志 `4 只怪物（5 条技能引用）`；`config/redtale_project/mobs/` 自动落地两份新文件且旧两份 mtime 未变（不覆盖玩家改动）；`redtale mob list` → `怪物定义 4 只（原型 4 种）`，`stone_footman · melee · 等级 5 · 装备 1 件 · 体积 ×0.95` / `frost_archer · ranged · 等级 7 · 装备 2 件 · 体积 ×1.00`；`redtale mob check` → `4 只 / 技能引用 5 条 / 掉落表 1 张 · 引用完整 ✓`；`redtale reload` → `4 只怪物`、`42 份配置文件`、零 ERROR；`stop` 后 25567/25577 无 LISTEN，正式服 9376（25565/25575）未动。
+- 七门禁全 0：`check_all` 67/67、`check_tasks` 120 卡在制品 1、`check_contracts` 103 条、`check_docs` 141 份/591 引用、`check_rounds` / `check_ownership` / `check_checkall`。
+- 收尾：`docs/ROUND-R125-MOBPAIR.md`、PLAN §13 R125 + §13.128、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0119 VERIFIED + T-0120 OPEN + 池 C71 收窄为 `flyer`/`ambient`）、`docs/CONTRACTS.md` §4.101/§4.102、`src/.../ConfigStore.java`、两份新 JSON5、协作板 §3 一行 + §5 一条。
+
+### §13.128 R125 的五条口径（内容卡必须登记清单 / 预验要跑整套 / 真机三观察点 / 构建可选步 / 裸名）+ 下一步（R126）
+
+| 编号 | 口径 |
+|---|---|
+| R125-a | **内容卡必须登记默认文件清单**：新默认文件不写进 `ConfigStore.DEFAULT_FILES`，`config/` 里就永远没有它，`check_defaults.py` 必红 —— 卡面若同时写「禁改 Java」与「`check_all` 全绿」即自相矛盾。后续内容卡把清单行逐字写进卡面并列为独占文件。 |
+| R125-b | **派前预验要跑整套在役尺**：R124-b 只跑三把 mobs 尺就派单，漏了 `check_defaults`，S8 照抄后必然判红。预验 = 该目录相关的**全部**尺，不是「我记得的那几把」。 |
+| R125-c | **真机验收三观察点**：启动日志的怪物计数、`config/` 是否落地（且旧文件 mtime 不变 = 不覆盖玩家改动）、`mob list` 的原型/等级/装备三列。「加载无报错」不算验收。 |
+| R125-d | **内容卡的构建是可选步**：S8 可能被锁挡住，卡面写死「取到锁才 build、锁被占就记未构建」，并保留「不要删别人的锁」。 |
+| R125-e | **裸名纪律第四十三次**：本轮文档只写裸名（`check_mobs.py` / `check_defaults.py` / `ConfigStore.java`），不写 `tools/` 全路径、不写副本目录。 |
+
+下一步（R126）：
+
+1. **验 T-0120**（`check_mobs` 8 文件 + `check_mob_skills -v` 6/4/9 + `check_equipment_slots --mobs -v` 6/10/14 + 四把值域尺 + `check_defaults` 40/40 + `check_all` 67/67 + `check_ownership` 0；若 S8 已构建则核 jar 内六份 mobs 资源）。
+2. S8 若仍未交付（第三轮静默）→ 自做两 JSON5 + 清单两行，**并在协作板 §5 记一条常态静默**（不是每轮重复回收）。
+3. 池 C71 剩 `flyer` / `ambient`：`ambient` 无战斗语义，先定「给不给技能」再派。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

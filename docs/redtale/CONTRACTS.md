@@ -1678,3 +1678,17 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - T-0117 VERIFIED 后接线 `check_all` 66（R123）；T-0118 VERIFIED 后接 67（R124），`check_checkall` 清单对账 0 问题。
 - T-0118 **由 S7 自做自验**（S8 自 08:4x 起静默 7.5 小时，三条证据：工具目录最后写入 08:52 为本队自己、协作板 §3 末条 S8 记录停在 07:2x、`git log` 末条仍 R123）。自验证据：基线 0 问题 + `-v` 逐字 1/2/0；六夹具 A~F 逐字 EXIT=0/1/1/1/0/1；wc=150、`def check_rules`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败；`_saturates` 13 形态 + `check_rules` 缺键/重复不合并/`sorted`。已接 `tools/check_all.py`。
 - T-0119 派单证据：8 原型 vs 默认内容覆盖盘点（2/8）+ `MobSpec.BASES` 逐字取证 + S7 离线副本预验三把尺全绿（6 文件 / 4 怪 7 引用 / 4 怪 4 id 5 引用）；卡面逐字给出两份 JSON5 全文与三条机器验收；明令禁 gradle、禁改其它 `src/`、禁加 `undead`/`drops`。详见 `docs/ROUND-R124-SPAWNINTSAT-SELFDO.md`。
+
+### 4.101 默认怪内容卡 `mobs/stone_footman.json5` + `mobs/frost_archer.json5` 验收（T-0119，R124 派，R125 S7 自做并验收）
+
+- 冻结对象仍是**文件内容**：两只怪的 JSON5 全文逐字写在卡面，缩进两空格、JSON5 裸键、注释保留。T-0119 由 S7 自做（S8 连续两轮静默），文件字节 691 B / 621 B，与卡面逐字一致。
+- **本卡撤销原「禁改任何 Java」**：`ConfigStore.DEFAULT_FILES` 是默认配置落地的唯一清单，新默认文件不登记则 `config/` 里永远没有它、`check_defaults.py` 判 `清单 36 · 磁盘 38 · 问题 2`。S7 补 3 行（注释 + `mobs/stone_footman.json5` + `mobs/frost_archer.json5`）后清单 38/38、`check_all` 67/67。此偏差已记入卡面「S7 补记」与 §13.128 R125-a。
+- 验收证据：`check_mobs.py` `共 6 个文件 · 0 条问题`；`check_mob_skills.py -v` `已检查 4 份怪物 · 4 条技能 id · 5 条 skills 引用` + 0 问题；`check_equipment_slots.py --mobs … -v` `已检查 4 份怪物 · 7 处自家基底装备引用 · 14 个基底` + 0 问题；`check_mob_levels` / `check_mob_scales` / `check_mob_skill_chance` / `check_mob_skill_cooldowns` 四把末行 `· 0 条问题`；两文件各恰好一行 `  id:`（`stone_footman` / `frost_archer`）。
+- 真机证据（测试服 1 启 1 停，jar 687441 B）：启动日志 `4 只怪物（5 条技能引用）`；`config/redtale_project/mobs/` 自动落地两份新文件、旧两份 mtime 未变（17 日 / 18 日）；`redtale mob list` → `怪物定义 4 只（原型 4 种）`；`redtale mob check` → `4 只 / 技能引用 5 条 / 掉落表 1 张 · 引用完整 ✓`；`redtale reload` → `4 只怪物 … 42 份配置文件` 零 ERROR。
+- 不核：模板实体注册（M6 第三步）、刷怪替换接入、既有四只怪的任何字段、运行期数值。剩余 `summoner` / `charger` / `flyer` / `ambient` 四个原型在池 C71；T-0120 取前两个。
+
+### 4.102 R125 的验收与派单留证
+
+- T-0119 **由 S7 自做自验**：S8 自 16:3x 起连续第二轮静默（工具目录最后写入 16:21 为本队接线、协作板 §3 末条 S8 记录停 07:2x、`git log` 末条仍 R124），卡停 `[OPEN]` 6 小时、进度行空 → 按 B-01·执行 先例收回，未重派同内容卡。
+- 构建证据：取锁 `gradle build --offline` EXIT=0（37s），jar 687441 B（上轮 686121 B），`unzip -l` 内 `redtale/defaults/mobs/` 四份，`ConfigStore.class` 常量池四条 `mobs/*.json5`；锁已删。
+- T-0120 派单证据：8 原型覆盖 4/8 盘点；离线副本预验 `check_mobs` 8 文件 0 问题、`check_mob_skills -v` 6 怪 / 4 条技能 id / 9 引用 0 问题、`check_equipment_slots --mobs -v` 6 怪 / 10 引用 / 14 基底 0 问题、四把值域尺 0 问题，副本已删。卡面独占文件含 `ConfigStore.java` 的 3 行插入（R125-a），构建列为可选步并保留「不删别人的锁」（R125-d）。详见 `docs/ROUND-R125-MOBPAIR.md`。
