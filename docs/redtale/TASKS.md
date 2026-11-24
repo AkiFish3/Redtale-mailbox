@@ -4820,9 +4820,10 @@ fi
 - 2026-11-24 08:4x · **S7 验收 → VERIFIED**：3/3 全过 —— 基线末行 `共 1 份孔位丢弃口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 7 份物品 · 1 处 sockets 段 · 0 个静默丢弃落点`；S7 独立六夹具逐字 6/6 EXIT=0/1/1/0/0/1（B/C 同文案、F 两条按 `sorted`），函数边界 12 形态 + 重复两条不合并 + `sorted`；wc=143、`def check_discards`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败 EXIT=1。S7 探针两处自错自改（`--dir` 传成 items 子目录、函数边界期望误写 `[False]`），不打回 S8；探针已清。接线 `check_all` 65→**66**。
 
 
-### T-0118 · [OPEN] `check_spawn_int_saturation.py` —— 刷怪规则大整数静默饱和对账（M6 / D16，单文件零接线，对账网第四十九例）
+### T-0118 · [VERIFIED] `check_spawn_int_saturation.py` —— 刷怪规则大整数静默饱和对账（M6 / D16，单文件零接线，对账网第四十九例）
 
 - 派单：S7 · 2026-11-24 08:4x（R123）
+- 回收：S7 · 2026-11-24 16:2x（R124）—— S8 自 08:4x 起静默约 7.5 小时（工具目录最后写入 08:52 为 S7 自己接线），本卡始终 `[OPEN]` 无人领，按 B-01·执行 先例收回自做并自验
 - 目标：给 `spawn_rules/*.json5` 补一把「显式写了合法大整数，但超 Java `int` 范围被静默夹到边界、解析零 WARN」的离线尺子。真洞逐字取证（`SpawnRuleSpec.java`）：`:113-118` `integer()` 的 `:116` 只对「非有限 / 非整数」告警，有限整数走 `:117` `return (int) Math.max(Integer.MIN_VALUE, Math.min(Integer.MAX_VALUE, v));` —— 超界时零 WARN 静默饱和；`:47` `priority` 与 `:48` `per_chunk_cap` 都走这个 helper（`per_chunk_cap` 再 `Math.max(0, ...)`）。玩法后果：`priority` 饱和后 `SpawnRegistry.java:29-31` 的优先级排序退化；`per_chunk_cap` 饱和成 2147483647 后 `SpawnReplacer.java:210` 的 `countInChunk(...) >= perChunkCap` 永不成立，每区块限量形同虚设。常量由 S7 从源码冻结：`INT_MIN = -2147483648`、`INT_MAX = 2147483647`。基线：`spawn_rules/` 1 份规则，`priority: 100` / `per_chunk_cap: 1` 共 2 处整数落点，坏形态 0 条。
 - 独占文件（**唯一可写**）：
   - `check_spawn_int_saturation.py`（新建，≤ 200 行）
@@ -4840,6 +4841,72 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_spawn_int_saturation.py` → 末行 `共 1 份刷怪整数饱和口径对账表 · 0 条问题` EXIT=0；`python tools/check_spawn_int_saturation.py -v` → 含 `已检查 1 份规则 · 2 处整数落点 · 0 个静默饱和`。
   2. 六组夹具（每次 `spawn_rules/` 目录都要存在，空目录也算可读；逐字核对末行计数与报错文案，默认副本指 `overworld_night_elite.json5`）：A 复制默认 `spawn_rules/` → 0 条 EXIT=0、`-v` 逐字 1/2/0；B 默认副本把 `priority: 100` 改 `2147483648` → 1 条 `[问题] spawn_rules/overworld_night_elite.json5: priority 值 2147483648 超 int 范围，运行期静默饱和（解析零 WARN）` EXIT=1；C 默认副本把 `per_chunk_cap: 1` 改 `-2147483649` → 1 条同模板（`per_chunk_cap` / `-2147483649`）EXIT=1；D 默认副本把 `priority: 100` 改 `1e12`（JSON5 科学计数，解析成 float）→ 1 条 `[问题] spawn_rules/overworld_night_elite.json5: priority 值 1000000000000.0 超 int 范围，运行期静默饱和（解析零 WARN）` EXIT=1；E 合法与跳过：默认副本把 `priority: 100` 改 `2147483647`、`per_chunk_cap: 1` 改 `1.6` → 0 条 EXIT=0、`-v` 1/2/0；F 默认副本做 B 再加 `spawn_rules/zz.json5`（`{ id: "redtale_project:zz", match: ["*"], mob: "x", priority: -2147483649, per_chunk_cap: 1e12 }`）→ 3 条按 `sorted`（`overworld_night_elite.json5` 的 `priority` 先，再 `zz.json5` 的 `per_chunk_cap`、最后 `priority`）EXIT=1。六组逐字对上。
   3. `wc -l < check_spawn_int_saturation.py` ≤ 200；`grep -c "def check_rules"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_mobs|check_spawn_conditions|check_spawn|path_of|split\(":"\)'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] spawn_rules 目录读取失败`、末行 `共 1 份刷怪整数饱和口径对账表 · 1 条问题`，不抛栈；函数边界直接 import 本模块调 `_saturates`：`2147483648` / `-2147483649` / `1e12` → True，`2147483647` / `-2147483648` / `0` / `1.6` / `True` / `False` / `"2147483648"` / `None` / `float("nan")` / `float("inf")` → False；`check_rules` 对显式越界与缺键形态逐条断言、重复两条不合并、输出 `sorted`；夹具用完即删（`build/spawnintsatfix/`）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-24 16:3x · S7（自做）· 三验收全过：基线 `共 1 份刷怪整数饱和口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 1 份规则 · 2 处整数落点 · 0 个静默饱和`；六夹具 A~F 逐字 EXIT=0/1/1/1/0/1（B `priority 值 2147483648`、C `per_chunk_cap 值 -2147483649`、D `priority 值 1000000000000.0`、F 3 条按 `sorted` 顺序）；wc=150、`def check_rules`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败 EXIT=1；函数边界 `_saturates` 13 形态 + `check_rules` 缺键/重复不合并/`sorted` 全过 · 已接 `check_all` 66→67（67/67 红 0）· R124 验收 → VERIFIED
+
+### T-0119 · [OPEN] `mobs/stone_footman.json5` + `mobs/frost_archer.json5` —— 补两只默认怪（melee / ranged 原型，M6 / D4+D9+D17，内容面卡）
+
+- 派单：S7 · 2026-11-24 16:3x（R124）、在制品 **1/3**
+- 目标：`MobSpec.BASES` 冻结 8 个原型（`melee` / `ranged` / `caster` / `summoner` / `charger` / `flyer` / `elite` / `ambient`），默认内容只有 `caster`（`ash_caster`）与 `elite`（`ember_guard`）两个原型有怪；本卡补 `melee` 与 `ranged` 各一只，**纯内容、零 Java、零注册表变更**（D17）。字段取值已由 S7 在离线副本预验：`check_mobs.py` 6 文件 0 问题、`check_equipment_slots.py --mobs` 4 怪 7 引用 0 问题、`check_mob_skills.py -v` 4 怪 4 条 id 5 引用 0 问题。
+- 独占文件（**唯一可写**，路径相对仓库根）：
+  - `src/main/resources/redtale/defaults/mobs/stone_footman.json5`（新建）
+  - `src/main/resources/redtale/defaults/mobs/frost_archer.json5`（新建）
+- 禁止：不改任何其它 `src/` 文件（含另外两只怪的 JSON5、任何 Java、任何 `items/`·`skills/`·`drops/` 配置）；不改任何 `tools/*.py`、不改 `docs/`（除本卡进度行）、不改 `PLAN.md` / `CONTRACTS.md` / `ROUNDS.md`；不新增技能/物品/掉落表；不写 `drops` 段（默认表只有 `ember_guard`，新怪先走原版掉落）；不读 Java / 不读 jar / 不读存档 / 不起服务 / 不执行 gradle；属性键只许用 `AttributeSpecs` 已注册的自建键（`max_health` / `attack_damage` / `armor` / `movement_speed` / `projectile_damage`），**不许自造键**。
+- 内容（逐字照抄，注释保留；缩进两空格、JSON5 裸键）：
+  - `stone_footman.json5`：
+    ```json5
+    // 怪物示范 3（M6 · R124 / T-0119）：melee 原型，最基础的前排杂兵。
+    // 只喂 MobSpec/MobRegistry 两层（解析 + 快照），不是真 EntityType（等 M6 第三步模板实体）。
+    // 技能引用走完整字符串 id；写裸 id 会取不到（T-0094 对账网第二十五例）。
+    {
+      id: "stone_footman",
+      name: "灰岩步卒",
+      base: "melee",
+      scale: 0.95,
+      level: 5,
+      attributes: {
+        max_health: { base: 20, per_item_level: 2 },
+        attack_damage: 5,
+        armor: 3,
+        movement_speed: 0.01,
+      },
+      equipment: {
+        mainhand: "redtale_project:sword",
+      },
+      skills: [
+        { skill: "redtale_project:gale_slash", cooldown_ticks: 160, chance: 0.25 },
+      ],
+    }
+    ```
+  - `frost_archer.json5`：
+    ```json5
+    // 怪物示范 4（M6 · R124 / T-0119）：ranged 原型，靠 projectile_damage 吃远程加成。
+    // 主手用 bow 基底（14 基底之一），胸甲给 chestplate 基底；两件都是自家注册 id。
+    {
+      id: "frost_archer",
+      name: "霜羽弓手",
+      base: "ranged",
+      scale: 1.0,
+      level: 7,
+      attributes: {
+        max_health: { base: 18, per_item_level: 2 },
+        projectile_damage: 0.2,
+        movement_speed: 0.015,
+      },
+      equipment: {
+        mainhand: "redtale_project:bow",
+        chest: "redtale_project:chestplate",
+      },
+      skills: [
+        { skill: "redtale_project:arc_bolt", cooldown_ticks: 100, chance: 0.3 },
+      ],
+    }
+    ```
+- 不要做：不改两只既有怪（`ash_caster` / `ember_guard`）；不加 `undead`（Q-020 按原型打 tag，`melee`/`ranged` 暂无亡灵语义，加了会污染整个原型）；不加 `drops`（表不存在会被 `check_mobs` 判红）；不越 `scale` 界（`[0.25,4.0]`，T-0102）；不越 `cooldown_ticks`（`[1,1000000]`，T-0105）/ `chance`（`[0,1]`，T-0104）/ `level`（`[1,1000]`，T-0101）；不动运行期、不启停服务器。
+- 验收（**三条，全部可机器执行**，均从仓库根跑）：
+  1. `python tools/check_mobs.py` → 末行 `共 6 个文件 · 0 条问题` EXIT=0；`python tools/check_mob_skills.py -v` → 含 `已检查 4 份怪物 · 4 条技能 id · 5 条 skills 引用` 且末行 `共 1 份怪物技能引用表 · 0 条问题`。
+  2. `python tools/check_equipment_slots.py --mobs src/main/resources/redtale/defaults/mobs -v` → 含 `已检查 4 份怪物 · 7 处自家基底装备引用 · 14 个基底` 且末行 `共 1 份怪物装备槽位对账表 · 0 条问题`；`check_mob_levels.py` / `check_mob_scales.py` / `check_mob_skill_chance.py` / `check_mob_skill_cooldowns.py` 四把末行均为 `· 0 条问题` EXIT=0。
+  3. `python tools/check_all.py` → 末行 `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → 0 问题（本卡独占文件不与在制品重叠）；两文件各恰好一行 `  id:` 且值分别等于 `stone_footman` / `frost_archer`（文件名 = id）。卡明令禁 gradle，不得取构建锁、不得 build。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -4908,7 +4975,8 @@ fi
 | C67 | ~~`damage_aoe` 的 `args.radius` / `falloff` / `max_targets` 静默改写 → **T-0114（R119 派）**~~ | `DamageAoeEffect.java:55,93-95,140-144` 具名常量 + 零 WARN；旧尺五把（skill_args / arg_keys / skills / script_args / numeric）对 `radius:40, falloff:1.5, max_targets:6.9` 与 `falloff:0, max_targets:-2` 两组反事实逐字全绿；基线 4 技能 / 2 脚本 / 1 调用 / 3 args；对账网第 45 例。R118「数值洞收口」前提被本轮新证据推翻，按 R118-a 数值优先 | 无 |
 | C68 | ~~`SocketSpec` 的 ANY 同族 → **T-0115（R120 派）**~~ | R120 四判据逐条取证齐：`:120` 短补 / `:132-133` gem.type 空白串 / `:159` exclusive_group 空白串（下游 `Socketer.java:192` 空串跳过互斥 → 同组可无限镶嵌，玩法面）；旧尺 `check_items` / `check_gem_types` 三坏值反事报错集合逐字 SAME；基线 7/1/2/0。合成一卡（同族一次收口），玩法面优先于 C66 显示面 | 无 |
 | C69 | ~~`sockets.count==0` / 缺 count 但显式 `types` 整段被 `Layout.EMPTY` 早退丢弃（零 WARN）~~ → **T-0117（R122 派）** | R122 四判据齐：`SocketSpec.java:54-57,78-95` 逐字静默早退（同文件六处 WARN 反证）；三把旧尺干净副本反事实全绿；基线 7 物品/1 sockets/2 项 types/0 问题；同族 D~F 不同出口，按出口分卡，不并进 T-0115 | 无 |
-| C70 | `spawn_rules[].priority` / `per_chunk_cap` 超 int 范围静默饱和 → **T-0118（R123 派）** | R123 四判据齐：`SpawnRuleSpec.java:113-118` 对有限整数走 `:117` 静默夹顶/夹底（`:116` 只管非有限/非整数）；玩法面落 `SpawnRegistry.java:29-31` 排序与 `SpawnReplacer.java:210` 每区块限量；两把旧尺（`check_mobs.py:143-148` Python int 无上界 / `check_spawn_conditions.py:70-86` 只核数值类型）干净副本反事实全绿；基线 1 规则/2 落点/0 问题。与 T-0109~T-0112 的「小数 `(int)` 截断」不同出口，本卡只核超 int 饱和 | 无 |
+| C70 | ~~`spawn_rules[].priority` / `per_chunk_cap` 超 int 范围静默饱和 → **T-0118（R123 派 / R124 S7 自做验收）**~~ | R123 四判据齐：`SpawnRuleSpec.java:113-118` 对有限整数走 `:117` 静默夹顶/夹底（`:116` 只管非有限/非整数）；玩法面落 `SpawnRegistry.java:29-31` 排序与 `SpawnReplacer.java:210` 每区块限量；两把旧尺（`check_mobs.py:143-148` Python int 无上界 / `check_spawn_conditions.py:70-86` 只核数值类型）干净副本反事实全绿；基线 1 规则/2 落点/0 问题。与 T-0109~T-0112 的「小数 `(int)` 截断」不同出口，本卡只核超 int 饱和 | 无 |
+| C71 | 剩余 4 个原型无默认怪（`summoner` / `charger` / `flyer` / `ambient`）→ **T-0119 只补 `melee`/`ranged` 两只，剩四只续池** | 纯内容（D17：只写 JSON5、不换 jar），字段形态已被 T-0119 卡面固定，照抄换 id / base / 数值即可；不涉及新技能/掉落表时零对账风险。逐个原型一张卡，2 只/卡，等 T-0119 验收后派 | 无 |
 | C63 | ~~`items use` 四处整数小数 `(int)` 静默截断 → **T-0110（R115 派）**~~ | `ConsumableSpec.java:184-190` 对数字零 WARN 直接 `getAsInt()`，四个调用点 `:76/:81/:96/:115`；旧尺四把干净目录反事实全绿，基线 7 物品/1 带 use/6 处/0 问题；对账网第 41 例 | 无 |
 | C64 | ~~`affixes` / `affix_pools` 权重小数 `(int)` 静默截断 → **T-0111（R116 派）**~~ | `AffixPools.java:72,162-168` 与 `:106-110` 数字直接 `getAsInt()` 零 WARN；`AffixRoller.java:140` 截断归零后静默跳过整条词条；`check_items.py:94-95/:118-120` 用 `_num>0` 放过小数，三把旧尺反事实全绿；基线 3 定义/1 池/6 处/0 问题；对账网第 42 例 | 无 |
 | C65 | ~~`affixes item_level.min/max` 小数 `(int)` 静默截断 → **T-0112（R117 派）**~~ | `AffixPools.java:69-71` 两处 `integer()` 与 `:162-168` 零 WARN `getAsInt()`；`check_items.py:96-99` 只核 `_num()` + `lo<=hi`、`check_affix_reach.py:78-86` 用 float 直接比较，四把旧尺干净目录反事实全绿；基线 3 定义/6 处/0 问题；对账网第 43 例 | 无 |

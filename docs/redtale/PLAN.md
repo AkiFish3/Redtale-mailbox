@@ -2725,3 +2725,28 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0118**（基线 1/2/0 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_rules`=1、禁用 grep=0、`py_compile` OK、NO_SUCH 1 条读失败；`_saturates` 13 形态 + 重复不合并 + `sorted`）；过后 `check_all` 66→67。
 2. 无新真洞按 R99-b 转内容面：六只默认怪 + lang（字段已冻结于 §13.108），不硬凑卡。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R124 · 2026-11-24 16:2x · 回收 T-0118 自做并验收 + check_all 66→67 + 派 T-0119（两只默认怪内容面）
+
+- 卡板：T-0118 `check_spawn_int_saturation.py` `[OPEN]` 自 08:4x 起无人领 → **按 B-01·执行 先例收回自做 → VERIFIED**（3/3 + S7 六夹具 A~F 逐字 EXIT=0/1/1/1/0/1 + 函数边界 13 形态 + `check_rules` 缺键/重复不合并/`sorted`；基线 `共 1 份刷怪整数饱和口径对账表 · 0 条问题`、`-v` 逐字 `已检查 1 份规则 · 2 处整数落点 · 0 个静默饱和`、wc=150、`def check_rules`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败 EXIT=1）。**派 T-0119**（内容面：`mobs/stone_footman.json5` + `mobs/frost_archer.json5`，补 `melee` / `ranged` 两个原型的默认怪，字段值 S7 离线副本预验绿，纯 JSON5 零 Java），在制品 **1/3**。
+- **S8 静默取证**：工具目录最后写入 08:52（本队 S7 自己接 `check_all`），此后 7.5 小时零新增；协作板 §3 末条 S8 记录 = 07:2x T-0117 交付；`git log` 末条仍为 R123。T-0118 卡 8 小时停在 `[OPEN]`、进度行空 —— 与 B-01（T-0019/T-0020 连挂两轮）同形态，按先例回收，**未重派同内容卡**（重派会让 S8 回来改 S7 刚写完的文件，见 §13.30 R27-d）。
+- 接线 `check_all` 66→**67** 全绿（`共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0`）；七门禁全 0（check_tasks 119 卡在制品 1、check_contracts 100 条、check_docs 140 份/594 引用等）。
+- **S7 最小一步 = 内容面接续（T-0119 派前预验）**：`MobSpec.BASES` 冻结 8 原型，默认内容只覆盖 `caster`/`elite`；本轮选定 `melee`（前排杂兵）与 `ranged`（远程弓手）两只，在离线副本先跑 `check_mobs`（6 文件 0 问题）、`check_equipment_slots --mobs -v`（4 怪 / 7 引用 / 14 基底 0 问题）、`check_mob_skills -v`（4 怪 / 4 条 id / 5 引用 0 问题），全绿后才写进卡面，副本已清。属性键只用 `AttributeSpecs` 已注册键，`drops` 段留空（默认表只有 `ember_guard`，写不存在的表会被 `check_mobs` 判红）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服 9376 未动、测试服 25567/25577 无 LISTEN。裸名纪律第四十二次。
+- 收尾：`docs/ROUND-R124-SPAWNINTSAT-SELFDO.md`、PLAN §13 R124 + §13.127、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0118 VERIFIED + T-0119 OPEN + 池 C70 结项/C71）、`docs/CONTRACTS.md` §4.99/§4.100、`tools/check_all.py`、协作板 §3。
+
+### §13.127 R124 的五条口径（静默回收看板证据 / 内容卡也要预验 / 内容卡禁 gradle / 原型 tag 不能顺手加 / 裸名）+ 下一步（R125）
+
+| 编号 | 口径 |
+|---|---|
+| R124-a | **静默回收看板证据**：判「S8 静默」不看单卡进度行，要看三条独立证据 —— 工具目录最后写入时间、协作板 §3 末条 S8 记录、`git log` 末条；三处一致才回收，避免把「S8 正在写但没提交」误判成静默。 |
+| R124-b | **内容卡也要派前预验**：JSON5 内容卡不像 Python 卡能靠「接口逐字」防错，唯一可靠办法是 S7 先在离线副本把整套在役尺跑绿，再逐字写进卡面；否则 S8 照抄后判红，卡面反而成了错误源。 |
+| R124-c | **内容卡明令禁 gradle**：纯 JSON5 改动不进编译路径，S8 取构建锁只会挡住 S7 的真构建；卡面写死「不得取锁、不得 build」。 |
+| R124-d | **原型 tag 不能顺手加**：`undead: true` 按 `base` 打 `#minecraft:undead`，同原型所有怪一起变亡灵（Q-020）；新怪默认不写该字段，别当装饰抄。 |
+| R124-e | **裸名纪律第四十二次**：本轮文档只写裸名 `check_spawn_int_saturation.py` / `check_mobs.py`，不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R125）：
+
+1. **验 T-0119**（`check_mobs` 6 文件 0 问题 + `-v` 计数 4/4/5 + `check_equipment_slots --mobs -v` 4 怪 7 引用 + 四把 mobs 尺 0 问题 + `check_all` 67/67 + `check_ownership` 0；文件名 = id）；过后池 C71 续派 `summoner`/`charger`。
+2. 若 T-0119 仍无人领（S8 连续静默 2 轮）→ 按 B-01·执行 先例自做 2 个 JSON5 文件（S7 已预验，10 分钟量级），不重派。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

@@ -1664,3 +1664,17 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - T-0116 VERIFIED 后接线 `check_all` 65（R122）；T-0117 VERIFIED 后接 66（R123），`check_checkall` 清单对账 0 问题。
 - T-0117 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具逐字 6/6 EXIT=0/1/1/0/0/1，函数边界 12 形态 + 重复不合并 + `sorted`，静态全过；S7 探针两处自错自改（`--dir` 传成 items 子目录、期望值误写 `[False]`），S8 零偏差不打回。已接 `tools/check_all.py`。
 - T-0118 派单证据：全类只读扫 13 个 `*Spec.java` / 65 把尺 / 36 份默认 JSON5，逐条排除有 WARN、已覆盖、空基线、S7 独占；`SpawnRuleSpec.java:113-118,47-48` 逐字取证；两把旧尺干净副本反事实逐字全绿；默认基线 1/2/0 非空；六夹具覆盖上界/下界/科学计数/边界合法/小数跳过/多文件排序。对账网第 49 例。详见 `docs/ROUND-R123-SPAWNINTSAT.md`。
+
+### 4.99 默认怪内容卡 `mobs/stone_footman.json5` + `mobs/frost_archer.json5`（T-0119，R124 派，内容面）
+
+- 本卡没有 Java 接口，冻结的是**文件内容**：两只怪的 JSON5 全文逐字写进卡面，S8 只许照抄（缩进两空格、JSON5 裸键、注释保留），不许改造字段。独占文件仅这两个路径，零 Java、零注册表变更（D17：内容更新只写配置）。
+- 取值依据：`MobSpec.BASES` = `melee` / `ranged` / `caster` / `summoner` / `charger` / `flyer` / `elite` / `ambient`，默认内容此前只覆盖 `caster`（`ash_caster`）与 `elite`（`ember_guard`）；本卡补 `melee`（`stone_footman`，前排杂兵，`sword` 基底 + `gale_slash`）与 `ranged`（`frost_archer`，远程，`bow` + `chestplate` 基底 + `arc_bolt`，靠 `projectile_damage` 吃远程加成）。
+- 属性键白名单（`AttributeSpecs` 已注册，写歪会被 `MobSpec` 整条跳过）：`max_health` / `attack_damage` / `armor` / `movement_speed` / `projectile_damage`；不写 `undead`（Q-020：`undead: true` 会按 `base` 给整个原型的 `EntityType` 打 `#minecraft:undead`），不写 `drops`（默认掉落表只有 `ember_guard`，引用不存在的表会被 `check_mobs` 判红）。
+- 派前预验（离线副本，跑完即删）：`check_mobs.py` → `共 6 个文件 · 0 条问题`；`check_equipment_slots.py --mobs … -v` → `已检查 4 份怪物 · 7 处自家基底装备引用 · 14 个基底` + 0 问题；`check_mob_skills.py -v` → `已检查 4 份怪物 · 4 条技能 id · 5 条 skills 引用` + 0 问题。值域边界（`scale [0.25,4.0]` / `level [1,1000]` / `chance [0,1]` / `cooldown_ticks [1,1000000]`）全部落在界内。
+- 只核这两个文件的内容与计数；不核模板实体注册（M6 第三步）、不核刷怪替换接入、不改既有两只怪、不动运行期。T-0119 VERIFIED 后剩余 4 个原型（`summoner` / `charger` / `flyer` / `ambient`）续在池 C71。
+
+### 4.100 R124 的验收与派单留证
+
+- T-0117 VERIFIED 后接线 `check_all` 66（R123）；T-0118 VERIFIED 后接 67（R124），`check_checkall` 清单对账 0 问题。
+- T-0118 **由 S7 自做自验**（S8 自 08:4x 起静默 7.5 小时，三条证据：工具目录最后写入 08:52 为本队自己、协作板 §3 末条 S8 记录停在 07:2x、`git log` 末条仍 R123）。自验证据：基线 0 问题 + `-v` 逐字 1/2/0；六夹具 A~F 逐字 EXIT=0/1/1/1/0/1；wc=150、`def check_rules`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败；`_saturates` 13 形态 + `check_rules` 缺键/重复不合并/`sorted`。已接 `tools/check_all.py`。
+- T-0119 派单证据：8 原型 vs 默认内容覆盖盘点（2/8）+ `MobSpec.BASES` 逐字取证 + S7 离线副本预验三把尺全绿（6 文件 / 4 怪 7 引用 / 4 怪 4 id 5 引用）；卡面逐字给出两份 JSON5 全文与三条机器验收；明令禁 gradle、禁改其它 `src/`、禁加 `undead`/`drops`。详见 `docs/ROUND-R124-SPAWNINTSAT-SELFDO.md`。
