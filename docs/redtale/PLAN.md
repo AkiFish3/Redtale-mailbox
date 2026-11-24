@@ -2701,3 +2701,27 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0117**（基线 7/1/0 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_discards`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败；显式 0/缺键/bool/float/空 types 函数边界 + 排序 + 重复不合并）；过后 `check_all` 65→66。
 2. 无新真洞按 R99-b 转内容面：六只默认怪 + lang（字段已冻结于 §13.108），不硬凑卡。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R123 · 2026-11-24 08:4x · 验 T-0117 + check_all 65→66 + 派 T-0118（刷怪大整数静默饱和）
+
+- 卡板：T-0117 `check_socket_discards.py` `[DONE]` → **VERIFIED**（3/3 + S7 独立六夹具 6/6 逐字 EXIT=0/1/1/0/0/1 + 函数边界 12 形态 + 重复不合并 + `sorted`；基线 0 问题、`-v` 7/1/0、wc=143、`def check_discards`=1、禁用 grep=0、`py_compile` OK、单目录 NO_SUCH 1 条读失败 EXIT=1；S7 探针两处自错自改——`--dir` 传成 items 子目录、函数边界期望误写 `[False]`——不打回 S8，探针已清）。**派 T-0118**（`check_spawn_int_saturation.py`：`spawn_rules[].priority` / `per_chunk_cap` 超 int 范围在 `SpawnRuleSpec.java:117` 静默饱和，常量 `INT_MIN/INT_MAX` 由 S7 冻结，接口/文案 S7 定死，单文件零接线、六夹具、基线 1 规则/2 落点/0 问题），在制品 **1/3**。
+- **S7 最小一步 = 全类排除 + 源码逐字 + 干净副本反事实 + 同形态异出口分卡**：只读扫 13 个 `*Spec.java` / 65 把尺 / 36 份默认 JSON5，有 WARN、已覆盖、空基线、S7 独占四类逐条排除；真洞 `SpawnRuleSpec.java:113-118` 有限整数绕过 `:116` WARN 后由 `:117` 静默夹到 int 边界，落 `:47/:48` 两字段，玩法后果在 `SpawnRegistry.java:29-31` 与 `SpawnReplacer.java:210`。两把旧尺（`check_mobs.py:143-148`、`check_spawn_conditions.py:70-86`）在干净副本 `priority:2147483648` / `per_chunk_cap:1e12` 反事实末行逐字全绿；副本已清。与 T-0109~T-0112 的「小数 `(int)` 截断」是不同出口，另卡。对账网第 **49** 例。
+- 接线 `check_all` 65→**66** 全绿；七门禁全 0（check_tasks 118 卡在制品 1、check_contracts 98 条、check_docs 139 份/588 引用等）。
+- 环境：`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服未动、测试服 25567/25577 无 LISTEN。裸名纪律第四十一次。
+- 收尾：`docs/ROUND-R123-SPAWNINTSAT.md`、PLAN §13 R123 + §13.126、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0117 VERIFIED + T-0118 OPEN + 池 C70）、`docs/CONTRACTS.md` §4.97/§4.98、`tools/check_all.py`、协作板 §3。
+
+### §13.126 R123 的五条口径（整数饱和≠小数截断 / 排序退化也是玩法面 / 旧尺类型系统盲区 / 同形态异出口分卡 / 裸名）+ 下一步（R124）
+
+| 编号 | 口径 |
+|---|---|
+| R123-a | **整数饱和 ≠ 小数截断**：T-0109~T-0112 的核心是 `getAsInt()` 丢小数；本卡是合法整数经 `Math.min/max` 夹到 int 边界，`Math.rint(v)==v` 成立、WARN 分支不进，须另尺。 |
+| R123-b | **排序退化也算玩法面**：`priority` 饱和让所有越界规则并列最高、回落到 id 升序，虽不崩但改了覆盖关系；与 `per_chunk_cap` 失效同权，不降为显示面。 |
+| R123-c | **旧尺类型系统盲区**：Python `int` 无上界，判 `isinstance(x,int)` 只能证明「是整数」不能证明「塞得进 Java int」；跨语言边界要按目标类型冻结常量。 |
+| R123-d | **同形态异出口分卡**：`conditions.light` 越界已有 `check_spawn_conditions.py` 的值域尺，`y.min/max` 无默认基线，均不并进本卡；先读「不要做」再写断言。 |
+| R123-e | **裸名纪律第四十一次**：派单当轮文档与台账在建脚本只写裸名 `check_spawn_int_saturation.py`。 |
+
+下一步（R124）：
+
+1. **验 T-0118**（基线 1/2/0 + `-v` 逐字 + 六夹具 A~F 逐字 + wc≤200、`def check_rules`=1、禁用 grep=0、`py_compile` OK、NO_SUCH 1 条读失败；`_saturates` 13 形态 + 重复不合并 + `sorted`）；过后 `check_all` 66→67。
+2. 无新真洞按 R99-b 转内容面：六只默认怪 + lang（字段已冻结于 §13.108），不硬凑卡。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。

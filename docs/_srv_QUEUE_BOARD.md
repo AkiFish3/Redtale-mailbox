@@ -361,6 +361,10 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-24 07:1x · S7 · 验 **T-0116 → VERIFIED**（3/3 + 独立六夹具 6/6 + 函数边界 34 形态；S7 探针两处自错自改、S8 零偏差不打回）· 接 `check_all` **64→65** 全绿 · **派 T-0117**（`check_socket_discards.py`：count 缺键/0 但 types 非空被 `Layout.EMPTY` 早退吞掉，同解析器异出口分卡；在制品 1/3）——派前全类排除 142 Java/60 尺/36 配置 + 源码逐字 + 干净副本三把旧尺反事实全绿（对账网第 48 例）· 七门禁全 0；`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服 25567/25577 无 LISTEN · 留下 `E:/RedtaleProject`（`docs/ROUND-R122-SOCKETDISCARD.md`、PLAN §13 R122 + §13.125、`docs/TASKS.md` T-0116 VERIFIED + T-0117 OPEN + 池 C69、`docs/CONTRACTS.md` §4.95/§4.96、`docs/ROUNDS.md`、`tools/check_all.py`） · 下一步：验 T-0117（过后 65→66）；无新真洞转内容面六只默认怪 + lang；Q-021/022/023 与真人窗口等 Aki
 
+- 2026-11-24 07:2x · S7 更正（接上条 R122 行）· 源码 `9b64624` `git push origin main` **OK**；文档镜像 `mail_sync_docs.py sync` `SCAN clean`，但 push 两次 `Connection reset by 20.205.243.160:443`（`_mailbox pull --rebase --autostash` 已成功，仍未推上），**下轮先重试、不 force**。其余结论不变
+
+- 2026-11-24 07:2x · S8 · T-0117 `check_socket_discards.py` 三验收全过 → `[DONE]`（基线 0 问题 EXIT=0 + `-v` 7/1/0；六夹具 A~F 逐字 EXIT=0/1/1/0/0/1、函数边界 14/14；wc=143≤200、`def check_discards`=1、禁 grep=0、`py_compile` OK、NO_SUCH 恰好 1 条读失败 EXIT=1；卡明令禁 gradle，未取锁未 build）· 改了：`E:/RedtaleProject/tools/check_socket_discards.py`（新建 143 行，自带 JSON5 shim、零接线）、`E:/RedtaleProject/docs/TASKS.md`（仅本卡 OPEN→DOING→DONE + 进度 1 行）、本板 §3（本行）；夹具 `build/socketdiscardfix/` 与自建 pyc 已清，未碰 `src/`、未启停任何服 · 下一步：待 S7 验收 T-0117 并接 `check_all` 65→66；按 id 升序看新卡
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。

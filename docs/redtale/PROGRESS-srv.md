@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-24 07:20 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-24 08:54 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0117 | OPEN | `check_socket_discards.py` —— 孔位整段丢弃静默早退对账（M3 / D17，单文件零接线，对账网第四十八例） |
+| T-0118 | OPEN | `check_spawn_int_saturation.py` —— 刷怪规则大整数静默饱和对账（M6 / D16，单文件零接线，对账网第四十九例） |
 
-已验完 **114** 张 / 共 **117** 张。
+已验完 **115** 张 / 共 **118** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

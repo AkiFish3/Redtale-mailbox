@@ -1652,3 +1652,15 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - T-0115 VERIFIED 后接线 `check_all` 64（R121）；T-0116 VERIFIED 后接 65（R122），`check_checkall` 清单对账 0 问题。
 - T-0116 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具逐字 6/6 EXIT=0/1/1/1/1/0，函数边界 24 坏值 + 10 跳过形态 + 重复不合并；静态全过；S7 探针两处自错自改（夹具漏逗号、空白串误列坏值），S8 零偏差不打回。已接 `tools/check_all.py`。
 - T-0117 派单证据：全类只读扫描 142 Java / 约 60 尺 / 36 默认 JSON5 后，`SocketSpec.java:30,54-57,78-95` 逐字取证；三把旧尺在干净副本反事实逐字全绿；默认基线 7/1/2/0 非空；六夹具覆盖显式 0 / 缺键 / 合法 2 / 短补 / 空 types / 多文件排序。与 T-0115 同解析器不同出口，按 R122-a 分卡。对账网第 48 例。详见 `docs/ROUND-R122-SOCKETDISCARD.md`。
+
+### 4.97 刷怪规则整数超界静默饱和对账 `check_spawn_int_saturation.py`（T-0118，R123 派，对账网第四十九例）
+
+- 只读扫 `spawn_rules/*.json5` 的 `priority` 与 `per_chunk_cap`：值为有限整数（含科学计数法解析出的 float）但超出 Java `int` 范围时产具名文案 `<前缀>: <字段> 值 <v> 超 int 范围，运行期静默饱和（解析零 WARN）`，按文案 `sorted`、保稳定、不去重。常量 `INT_MIN=-2147483648` / `INT_MAX=2147483647` 由 S7 从 `SpawnRuleSpec.java` 冻结；接口 `_loads` / `read_rules` / `_saturates` / `check_rules` / `main` 逐字定死，S8 不读源码、不推断。
+- 与 T-0109~T-0112 的「小数 `getAsInt()` 截断」是不同出口：`SpawnRuleSpec.java:116` 只对非有限/非整数告警，合法大整数走 `:117` `(int) Math.max(MIN, Math.min(MAX, v))` 静默饱和；落 `:47 priority`、`:48 per_chunk_cap`。玩法后果：`SpawnRegistry.java:29-31` 优先级排序退化、`SpawnReplacer.java:210` 每区块限量永不触发。两把旧尺盲区：`check_mobs.py:143-148` 用 Python int 无上界判据，`check_spawn_conditions.py:70-86` 只核数值类型；S7 干净副本 `priority:2147483648` / `per_chunk_cap:1e12` 反事实末行逐字全绿（4 文件/0 问题、1 条件表/0 问题），副本已清。
+- 只核两字段的超 int 饱和，不核 `conditions.light/y.min/y.max`（light 已有值域尺、y 无默认基线）/ 非整数 / bool / 字符串 / 非有限数（源码已有 WARN）/ 负数界内归零（D16）/ `chance`·`match`·`mob`·`id`·`action`（归 `check_mobs.py`）/ `spawn.json5` 的 `per_tick_cap`（归 `check_spawn.py`）；不读源码/存档、不改运行期。派单时未实现、未接线，默认基线 1 规则 / 2 落点 / 0 坏形态（S7 离线核逐字）；T-0118 VERIFIED 后 R124 接 → 应 `跑成 67`。
+
+### 4.98 R123 的验收与派单留证
+
+- T-0116 VERIFIED 后接线 `check_all` 65（R122）；T-0117 VERIFIED 后接 66（R123），`check_checkall` 清单对账 0 问题。
+- T-0117 VERIFIED 证据：从仓库根跑基线 + `-v`，S7 独立六夹具逐字 6/6 EXIT=0/1/1/0/0/1，函数边界 12 形态 + 重复不合并 + `sorted`，静态全过；S7 探针两处自错自改（`--dir` 传成 items 子目录、期望值误写 `[False]`），S8 零偏差不打回。已接 `tools/check_all.py`。
+- T-0118 派单证据：全类只读扫 13 个 `*Spec.java` / 65 把尺 / 36 份默认 JSON5，逐条排除有 WARN、已覆盖、空基线、S7 独占；`SpawnRuleSpec.java:113-118,47-48` 逐字取证；两把旧尺干净副本反事实逐字全绿；默认基线 1/2/0 非空；六夹具覆盖上界/下界/科学计数/边界合法/小数跳过/多文件排序。对账网第 49 例。详见 `docs/ROUND-R123-SPAWNINTSAT.md`。
