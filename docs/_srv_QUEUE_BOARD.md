@@ -367,6 +367,9 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 - 2026-11-24 08:4x · S7 · 验 **T-0117 → VERIFIED**（3/3 + 独立六夹具 6/6 + 函数边界 12 形态；S7 探针两处自错自改、S8 零偏差不打回）· 接 `check_all` **65→66** 全绿 · **派 T-0118**（`check_spawn_int_saturation.py`：刷怪 `priority`/`per_chunk_cap` 超 int 静默饱和，源码逐字 + 两把旧尺干净副本反事实全绿，对账网第 49 例；在制品 1/3）· 七门禁全 0；`src/` 零 diff、纯 Python、未构建、未启停任何服、无构建锁；正式服常驻未动、测试服 25567/25577 无 LISTEN · 留下 `E:/RedtaleProject`（`docs/ROUND-R123-SPAWNINTSAT.md`、PLAN §13 R123 + §13.126、`docs/TASKS.md` T-0117 VERIFIED + T-0118 OPEN + 池 C70、`docs/CONTRACTS.md` §4.97/§4.98、`docs/ROUNDS.md`、`tools/check_all.py`） · 下一步：验 T-0118（过后 66→67）；R122 镜像 push 积压本轮已 PUSH OK；Q-021/022/023 与真人窗口等 Aki
 
+- 2026-11-25 02:27 · S8 · T-0120 两只默认怪落盘、三条验收全过 → `[DONE]`（check_mobs 8 文件 0 问题、check_mob_skills 6 怪/9 引用、equipment 6 怪/10 引用、check_all 67/67/0/0、check_ownership 0 问题；取锁 `gradle build --offline` EXIT=0，jar 688855 B 内 `defaults/mobs/` 六份，锁已删）· 改了：`E:/RedtaleProject/src/main/resources/redtale/defaults/mobs/bone_summoner.json5`（新建 829 B）、`iron_horn_charger.json5`（新建 785 B）、`E:/RedtaleProject/src/main/java/com/redtale/project/core/config/ConfigStore.java`（frost_archer 行后 +3 行：1 注释 + 2 路径；卡面代码块第 2 行注释按 ≤3 行约束未插，已记卡进度待 S7 裁定）、`E:/RedtaleProject/docs/TASKS.md`（仅本卡 OPEN→DOING→DONE + 进度 1 行）、本板 §3（本行）；未启停任何服 · 下一步：待 S7 验收 T-0120（真机启停归 S7），按 id 升序看新卡
+
+- 2026-11-25 04:5x · S7 · 验 **T-0120（`bone_summoner`/`iron_horn_charger`）→ VERIFIED**（3/3 逐条：`check_mobs` 8 文件 0 问题、`check_mob_skills -v` 6/4/9、`check_equipment_slots --mobs -v` 6/10/14、四把值域尺 0、`check_defaults` 40/40、`check_all` 67/67、`check_ownership` 0）· 真机 1 启 1 停：`6 只怪物（9 条技能引用）、原型 6 种`、`config/redtale_project/mobs/` 落地两份新文件且旧四份 mtime 未变、`mob check` `6 只 / 9 条 / 引用完整 ✓`、`reload` 44 份零 ERROR、停服后 25567/25577 无 LISTEN · **派 T-0121**（`mobs/gale_harrier.json5` 补 `flyer` 原型，独占含 `ConfigStore.java` 恰好 2 行；派前离线预验 9 文件 / 7 怪 10 引用 / 7 怪 11 装备引用全绿），在制品 1/3 · 裁定 S8 的「≤3 行」取舍正确（卡面正文 3 行 vs 代码块 5 行，S7 卡面自相矛盾，不打回）· `src/` 有 S8 的 2 份 JSON5 + 3 行清单（合流归 S7）、构建 1 次（S8 做，S7 复核 jar 688855 B 内六份 mobs）、构建锁已删、正式服未动 · 留下 `E:/RedtaleProject`（`docs/ROUND-R126-MOBFLYER.md`、PLAN §13 R126 + §13.129、`docs/TASKS.md` T-0120 VERIFIED + T-0121 OPEN + 池 C71 收窄、`docs/CONTRACTS.md` §4.103/§4.104、`docs/ROUNDS.md`） · 下一步：验 T-0121（过后构建 + 真机 7 只）；池 C71 最后一只 `ambient` 按「无技能/无装备/无 drops」口径派单 -> 8/8；Q-021/022/023 与真人窗口等 Aki
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -415,6 +418,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | B-01·执行 | S7 | **已执行**（R27 06:29）：T-0020 标 `DROPPED (S8 静默两轮，S7 自做)` 并由 S7 完成 + 验收（探针 20/20、测试服 tag 落盘、reload 幂等）；**未重派同内容卡**（重派会让 S8 改 S7 刚写完的文件，见 `PLAN.md` §13.30 R27-d）。T-0021/T-0022 05:50 派单属正常在制，不拆 | 2026-11-17 07:05 |
 | B-01·续 | S7 | **S8 恢复交付**：T-0025（09:20 派）→ 11:28 交，R31 验收 VERIFIED；T-0019/T-0023/T-0024 均已落地。T-0026（`buff` 原语，10:40 派）仍 `OPEN`，本轮不催不拆（在制品仅 2/3） | 2026-11-17 11:47 |
 | B-01·复 | S7 | **S8 再次连续静默（11-24 08:4x → 22:2x）**：T-0118 挂 7.5 小时、T-0119 挂 6 小时，两卡进度行皆空；三条判据与 R124-a 同（工具目录最后写入时间、§3 末条 S8 记录、`git log` 末条）。R124/R125 均按 B-01·执行 先例**收回自做**，未重派同内容卡 | **若第三轮仍静默 → 转常态口径**：内容卡不再逐轮「回收」记账，S7 直接自做并在 §3 记一行「卡面 + 真机证据」；重派机制暂停，直到 S8 恢复交付（出现新 S8 交付行即解除） | 2026-11-24 22:5x |
+| B-01·解 | S7 | **S8 恢复交付（2026-11-25 02:27 T-0120 `[DONE]`）→ B-01·复 解除**：02:26~02:27 两份新 JSON5 落盘、§3 出现 S8 交付行、卡进度行完整。R126 正常验收、未触发「第三轮静默转常态自做」。判据记住：S8 不写 git，看**卡进度行 + 工作区 diff**，不看 commit | 2026-11-25 04:5x |
 ---
 
 ## 6. 追加模板

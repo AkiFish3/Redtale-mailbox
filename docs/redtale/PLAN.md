@@ -2776,3 +2776,32 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. S8 若仍未交付（第三轮静默）→ 自做两 JSON5 + 清单两行，**并在协作板 §5 记一条常态静默**（不是每轮重复回收）。
 3. 池 C71 剩 `flyer` / `ambient`：`ambient` 无战斗语义，先定「给不给技能」再派。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R126 · 2026-11-25 04:3x~04:5x · 验 T-0120 + 真机 6 只 + 派 T-0121（flyer 原型）
+
+- 卡板：T-0120 `[DONE]` → **VERIFIED**（3/3 逐条跑过：`check_mobs.py` `共 8 个文件 · 0 条问题`、`check_mob_skills.py -v` `6 份怪物 · 4 条技能 id · 9 条引用`、`check_equipment_slots.py --mobs … -v` `6 份怪物 · 10 处引用 · 14 个基底`、四把值域尺 0 问题、`check_defaults.py` `40/40/0`、`check_all.py` `67/67/0/0`、`check_ownership.py` 0 问题、两文件各一行 `  id:`）。**派 T-0121**（内容面：`mobs/gale_harrier.json5` 补 `flyer` 原型，`bow` + `projectile_damage`；独占文件另含 `ConfigStore.java` 的 **2 行**清单插入；派前离线预验 9 文件 / 7 怪 10 引用 / 7 怪 11 装备引用全绿），在制品 **1/3**。
+- **S8 恢复交付**：T-0120 于 02:27 交付（工具目录最后写入 02:27、§3 出现 S8 行、`git log` 之后无新提交但工作区有实质 diff）。B-01·复 的「第三轮仍静默则转常态自做」条件**未成立**，本轮不回收、照常验收。
+- **卡面缺陷 → 新口径 R126-a**：T-0120 正文写「只许插 3 行：1 注释 + 2 路径」，代码块却给了 5 行 —— S8 按正文字数执行（实际插 3 行）并主动在进度行标注「待 S7 裁定」。裁定：S8 正确、卡面自相矛盾、不打回。后续卡面的代码块行数必须与正文字数**逐字一致**。
+- 构建与 jar 证据：S8 已取锁构建（EXIT=0，锁已删），S7 复核 jar `688855 B`（上轮 687441 B）+ `unzip -l` 内 `redtale/defaults/mobs/` **六份**（`ash_caster` / `bone_summoner` / `ember_guard` / `frost_archer` / `iron_horn_charger` / `stone_footman`）。
+- **真机（测试服 1 启 1 停）**：启动 `Done (2.363s)`、`6 只怪物（9 条技能引用）、原型 6 种`；`config/redtale_project/mobs/` 落地两份新文件（04:41）且旧四份 mtime 未变（17 日 / 18 日 / 24 日 22:32）；`redtale mob list` → `怪物定义 6 只（原型 6 种）`，新增 `枯骨唤者 bone_summoner · summoner · 等级 10 · 装备 2 件 · 技能 2 条 · ×1.05` 与 `铁角冲兽 iron_horn_charger · charger · 等级 9 · 装备 1 件 · 技能 2 条 · ×1.20`；`redtale mob check` → `6 只 / 技能引用 9 条 / 掉落表 1 张 · 引用完整 ✓`；`redtale reload` → `6 只怪物 … 44 份配置文件`、零 ERROR；`stop` → `All dimensions are saved` / `RCON Listener stopped`，25567 / 25577 无 LISTEN。正式服全程未触碰。
+- 七门禁全 0：`check_all` 67/67、`check_tasks` 121 卡在制品 1、`check_contracts`、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 本轮有 S8 的 2 份新 JSON5 + `ConfigStore` 3 行（合流归 S7）；构建 1 次（S8 做）；测试服 1 启 1 停；构建锁已删。
+- 收尾：`docs/ROUND-R126-MOBFLYER.md`、PLAN §13 R126 + §13.129、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0120 VERIFIED + T-0121 OPEN + 池 C71 收窄/`ambient` 口径）、`docs/CONTRACTS.md` §4.103/§4.104、协作板 §3 一行。
+
+### §13.129 R126 的五条口径（卡面行数一致 / 恢复交付即解除静默 / 真机看数值不看「无报错」/ 内容卡禁构建 / 裸名）+ 下一步（R127）
+
+| 编号 | 口径 |
+|---|---|
+| R126-a | **卡面正文与代码块必须逐字一致**：T-0120 正文「3 行」、代码块 5 行，S8 只能二选一。此类矛盾由 S7 承担，S8 按正文字数执行不算偏差；后续卡面给插入代码块时**先数行再写正文**。 |
+| R126-b | **恢复交付即解除静默**：B-01·复 的「第三轮静默」判据以**是否出现新 S8 交付**为准，不以「有没有 commit」为准（S8 不写 git，工作区 diff + 卡进度行才是证据）。本轮 S8 02:27 交付 → 回收机制不触发。 |
+| R126-c | **真机验收看数值不看「无报错」**：`mob list` 的等级/装备件数/体积三列必须与卡面 JSON5 对得上（`bone_summoner` 10 / 2 件 / ×1.05、`iron_horn_charger` 9 / 1 件 / ×1.20），只喊「启动成功」不算。 |
+| R126-d | **内容卡明令禁构建**：T-0121 卡面写死「不取锁、不 build」—— 内容 JSON5 不进编译路径，S8 构建只会与 S7 抢锁；构建由 S7 在验收后一次性做。 |
+| R126-e | **裸名纪律第四十四次**：本轮文档只写裸名（`check_mobs.py` / `ConfigStore.java` / `gale_harrier.json5`），不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R127）：
+
+1. **验 T-0121**（`check_mobs` 9 文件 + `check_mob_skills -v` 7/4/10 + `check_equipment_slots --mobs -v` 7/11/14 + 四把值域尺 + `check_defaults` 41/41 + `check_all` 67/67 + `check_ownership` 0），过后构建 + 真机 7 只（`flyer` 落地）。
+2. 池 C71 最后一只 `ambient` 按 R126 自定口径派单（无技能 / 无装备 / 无 drops，纯氛围样本）；派完 8 原型覆盖 8/8。
+3. 8 原型齐了之后 M6 内容面收口 → 转 M7 专业/技能树的真机验证或 lang 覆盖（`check_lang` 现有 14 键面）。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+

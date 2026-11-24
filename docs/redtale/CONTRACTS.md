@@ -1692,3 +1692,19 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - T-0119 **由 S7 自做自验**：S8 自 16:3x 起连续第二轮静默（工具目录最后写入 16:21 为本队接线、协作板 §3 末条 S8 记录停 07:2x、`git log` 末条仍 R124），卡停 `[OPEN]` 6 小时、进度行空 → 按 B-01·执行 先例收回，未重派同内容卡。
 - 构建证据：取锁 `gradle build --offline` EXIT=0（37s），jar 687441 B（上轮 686121 B），`unzip -l` 内 `redtale/defaults/mobs/` 四份，`ConfigStore.class` 常量池四条 `mobs/*.json5`；锁已删。
 - T-0120 派单证据：8 原型覆盖 4/8 盘点；离线副本预验 `check_mobs` 8 文件 0 问题、`check_mob_skills -v` 6 怪 / 4 条技能 id / 9 引用 0 问题、`check_equipment_slots --mobs -v` 6 怪 / 10 引用 / 14 基底 0 问题、四把值域尺 0 问题，副本已删。卡面独占文件含 `ConfigStore.java` 的 3 行插入（R125-a），构建列为可选步并保留「不删别人的锁」（R125-d）。详见 `docs/ROUND-R125-MOBPAIR.md`。
+
+### 4.103 默认怪内容卡 `mobs/bone_summoner.json5` + `mobs/iron_horn_charger.json5` 验收（T-0120，R125 派，R126 S7 验收）
+
+- 冻结对象是**文件内容**：两只怪 JSON5 全文逐字写在卡面（缩进两空格、裸键、注释保留），S8 交付字节 829 B / 785 B，与卡面逐字一致。
+- **卡面自相矛盾已裁定（R126-a）**：正文写「插 3 行（1 注释 + 2 路径）」，代码块给了 5 行；S8 按正文执行并主动标注，S7 判其正确、不打回。后续卡面代码块行数必须与正文一致。
+- 验收证据：`check_mobs.py` `共 8 个文件 · 0 条问题`；`check_mob_skills.py -v` `已检查 6 份怪物 · 4 条技能 id · 9 条 skills 引用` + 0 问题；`check_equipment_slots.py --mobs … -v` `已检查 6 份怪物 · 10 处自家基底装备引用 · 14 个基底` + 0 问题；四把值域尺 0 问题；`check_defaults.py` `清单 40 条 · 磁盘 40 个 · 问题 0 条`；`check_all.py` `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0`；`check_ownership.py` 0 问题。
+- 真机证据（测试服 1 启 1 停，jar 688855 B，`unzip -l` 内 `defaults/mobs/` 六份）：启动 `6 只怪物（9 条技能引用）、原型 6 种`；`config/redtale_project/mobs/` 落地两份新文件且旧四份 mtime 未变；`redtale mob list` → `6 只（原型 6 种）`，`bone_summoner · summoner · 等级 10 · 装备 2 件 · ×1.05` / `iron_horn_charger · charger · 等级 9 · 装备 1 件 · ×1.20`；`redtale mob check` → `6 只 / 技能引用 9 条 / 掉落表 1 张 · 引用完整 ✓`；`redtale reload` → `44 份配置文件` 零 ERROR。
+- 不核：模板实体注册（M6 第三步）、刷怪替换接入、既有四只怪的任何字段、运行期数值。剩余 `flyer` / `ambient` 在池 C71，T-0121 取 `flyer`。
+
+### 4.104 默认怪内容卡 `mobs/gale_harrier.json5`（T-0121，R126 派，内容面）
+
+- 冻结对象仍是**文件内容**：JSON5 全文逐字入卡面；独占文件 = 新文件 + `ConfigStore.java` 的 **恰好 2 行**（1 注释 + 1 路径，插在 `"mobs/iron_horn_charger.json5",` 之后）。R126-a 后新增自检：卡面正文行数与代码块行数必须相等。
+- 取值依据：`flyer` 是 8 原型最后一个战斗向原型（`ambient` 无战斗语义另定）；`bow` 主手 + `projectile_damage: 0.25` 让远程加成真正有落点，`movement_speed: 0.025` 体现「掠袭」而非站桩；技能只用既有 `arc_bolt`（`cooldown_ticks: 110` / `chance: 0.35`），不新增技能、不写 `drops`（默认表只有 `ember_guard`）、不写 `undead`（Q-020）。
+- 属性键白名单：`max_health` / `projectile_damage` / `movement_speed`（均在 `AttributeSpecs` 已注册）；`scale 1.0` ∈ `[0.25,4.0]`、`level 6` ∈ `[1,1000]`、`chance 0.35` ∈ `[0,1]`、`cooldown_ticks 110` ∈ `[1,1000000]`。
+- 派前预验（离线副本，跑完即删）：`check_mobs` `共 9 个文件 · 0 条问题`；`check_mob_skills -v` `已检查 7 份怪物 · 4 条技能 id · 10 条 skills 引用` + 0 问题；`check_equipment_slots --mobs … -v` `已检查 7 份怪物 · 11 处自家基底装备引用 · 14 个基底` + 0 问题；四把值域尺 0 问题。
+- 明令**不取构建锁、不 build**（R126-d）：内容 JSON5 不进编译路径，构建由 S7 验收后一次做。只核该文件内容与计数；不核模板实体注册、不核飞行行为（Q-022 未实现）、不动运行期。VERIFIED 后 8 原型覆盖 7/8，`ambient` 为最后一格。
