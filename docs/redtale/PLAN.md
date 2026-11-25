@@ -2858,3 +2858,29 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. M6 内容面已 8/8，代码面剩「模板实体注册 / 自然刷怪替换」两块（S7 独占，跨文件）；M7 代码面已实现，缺的是真机验证（升级 / 加点 / 洗点），需 Aki 在线。
 3. 派单候选按 R128-c 过滤：优先「显式值与源码常量直接对比」的单字段卡，不派需要复算运行期数学、或需要原版注册表离线真值的卡。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R129 · 2026-11-25 23:2x~23:4x · 验 T-0123（进度曲线 `curve.base` 超硬顶）+ 接线 `check_all` 67→68 + 派 T-0124（附魔定义整数字段透传）
+
+- 卡板：T-0123 `check_progress_base.py` `[DONE]` → **VERIFIED**（3/3 逐条跑过：①基线 `共 1 份进度曲线起点经验口径对账表 · 0 条问题` EXIT=0、`-v` `已检查 3 份进度曲线 · 3 处 base 引用 · 缺省 100.0 · 硬顶 1000000000`；②六夹具 A~F 干净副本逐字 EXIT=0/1/1/0/0/1 —— B `levels/main.json5`/`1000000001`、C `jobs/warrior.json5`/`2000000000`、D `base: 0` 静默、E 恰好等于硬顶 0 条、F 三条按 `jobs/warrior.json5` → `jobs/zz.json5` → `levels/main.json5` 排序；③`wc=191`、`def check_base`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 2 条（`levels` 在前 `jobs` 在后）EXIT=1、函数边界 `1000000001`/`2000000000`/`1e12` 各 1 条 + 9 形态 0 条 + `repr(1e12)`=`1000000000000.0` + 重复不合并 + `sorted`；夹具已删）。**S8 零偏差不打回**。**派 T-0124**（`check_enchant_definition_ints.py`：`enchantments/` 的 `weight` / `anvil_cost` 非整数形态被 `EnchantmentGenerator.java:151,155` 原样透传进 datapack，同族三键里只有 `max_level` 有尺；接口/文案 S7 定死、单文件零接线、六夹具、基线 2 文件 / 4 处 / 0 问题），在制品 **1/3**。
+- **派前预验（对账网第五十一例）**：干净副本把 `soul_reap` `weight: 2`→`2.5`、`super_sharpness` `anvil_cost: 2`→`3.0` 后，`check_enchants.py` `共 2 个文件 · 没有发现问题 ✓`、`check_numeric.py` `4 文件 · 0 条问题`、`check_all.py --only enchant` `3 脚本 · 红 0` —— 三把旧尺全绿，洞成立；基线计数离线核过 = 2 文件 / 4 处。
+- 接线 `check_all` 67→**68** 全绿（`68 个脚本 · 跑成 68 · 跳过 0 · 红 0`）。
+- 七门禁全 0：`check_all` 68/68、`check_tasks` 124 卡在制品 1、`check_contracts`、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 零 diff（本轮纯 Python + 卡板）、未构建、未启停任何服、无构建锁；正式服未触碰、测试服无 LISTEN。裸名纪律第四十七次。
+- 收尾：`docs/ROUND-R129-ENCHANTINTS.md`、PLAN §13 R129 + §13.132、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0123 VERIFIED + T-0124 OPEN + 池 C72 复评留池）、`docs/CONTRACTS.md` §4.107、`tools/check_all.py`、协作板 §3 一行。
+
+### §13.132 R129 的五条口径（透传型生成器也算洞 / 形态判据与值域判据分卡 / 推定后果不进验收 / 派前预验要跑「最可能抓到它的旧尺」/ 裸名）+ 下一步（R130）
+
+| 编号 | 口径 |
+|---|---|
+| R129-a | **「我们不改写」也是洞，只是出口在别人的 codec**：`EnchantmentGenerator` 对 `weight` / `anvil_cost` 只判「是数字」就原样写进 datapack，配置写 `2.5` 时本模组零 WARN、旧尺全绿，失败点落在原版 `EnchantmentDefinition` 的 int 字段上。**判据不能只看「我们有没有静默夹取」，还要看「我们有没有静默放行」**——放行非法形态与夹取合法值同属「配置者看不到提示」。 |
+| R129-b | **形态判据与值域判据分开出卡**：`weight` / `anvil_cost` 本卡只冻结「必须整数形态」（离线可判、无需原版真值），上下界交原版 codec；`min_cost` / `max_cost` 是 `Cost` 对象（`{base, per_level_above_first}`），形态另议、不进本卡。把值域塞进来会让卡面依赖无法离线验证的原版常量。 |
+| R129-c | **不可离线验证的运行期后果标「推定」，不进验收项**：「非整数会让整条附魔不生成」写进卡面但明标推定，验收只核离线可判的形态输出。**卡面不把推定当判据，S8 就不会为一个未证事实改码**（R128-c 同源：不派需要第二份真相的卡）。 |
+| R129-d | **派前预验要跑「最可能抓到它的那把旧尺」**：除 `check_enchants` 外还跑了 `check_numeric` 与 `check_all --only enchant`（3 脚本），确认整族都不读 `weight` / `anvil_cost`；只跑一把尺得出的「盲区」结论不足以支撑派单。 |
+| R129-e | **裸名纪律第四十七次**：本轮文档只写裸名（`check_progress_base.py` / `EnchantmentGenerator.java` / `soul_reap.json5`），不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R130）：
+
+1. **验 T-0124**（基线 `共 1 份附魔定义整数字段口径对账表 · 0 条问题` + `-v` `已检查 2 份附魔 · 4 处整数字段引用` + 六夹具 A~F + `--dir NO_SUCH` 恰 1 条读失败），过后接线 `check_all` 68→**69**。
+2. M6 内容面 8/8 已收口；代码面剩「模板实体注册 / 自然刷怪替换」两块（S7 独占，跨文件，不进 S8 卡）。M7 代码面已实现，缺真机验证（升级 / 加点 / 洗点），需 Aki 在线。
+3. 下一轮若 T-0124 顺利，按 R129-a 的「静默放行」思路继续扫：`CommandSpec` / 命令参数解析、`SkillSpec.conditions` 数值透传两处是候选（未取证，不下结论）。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
