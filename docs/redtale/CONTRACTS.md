@@ -1717,3 +1717,12 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 零引用条数冻结（R127-d）：验收写死 `10 条 skills 引用` 与 `11 处装备引用` **不变** —— S8 若顺手给氛围怪加技能/装备，即使 `check_all` 全绿也算越界。
 - 派前预验（完整 `defaults/` 副本，跑完即删）：`check_mobs` `共 10 个文件 · 0 条问题`；`check_mob_skills -v` `已检查 8 份怪物 · 4 条技能 id · 10 条 skills 引用` + 0 问题；`check_equipment_slots --mobs … -v` `已检查 8 份怪物 · 11 处自家基底装备引用 · 14 个基底` + 0 问题；四把值域尺 0 问题。
 - 明令**不取构建锁、不 build**（R126-d）。只核该文件内容与计数；不核模板实体注册、不核刷怪接入、不动运行期。VERIFIED 后 8 原型覆盖 **8/8**，M6 内容面收口。
+
+### 4.106 默认怪 `mobs/gloom_moth.json5` 验收（T-0122，R127 派，R128 验）+ 进度曲线 `curve.base` 尺接口冻结（T-0123）
+
+- **T-0122 → VERIFIED（3/3）**：`check_mobs.py` `共 10 个文件 · 0 条问题`；`check_mob_skills.py -v` `已检查 8 份怪物 · 4 条技能 id · 10 条 skills 引用` + 0 问题（零技能：条数冻结 10 未变）；`check_equipment_slots.py --mobs … -v` `8 份 · 11 处 · 14 个基底` + 0 问题（11 未变）；四把值域尺 0 问题；`check_defaults.py` `42/42/0`；`check_all.py` `67/67/0/0`；`check_ownership.py` 0 问题；`grep '^  id:'` 恰 1 行 = `gloom_moth`。逐字 diff：`ConfigStore.java` 恰 `+2` 行、JSON5 508 B。
+- **卡面缺陷已裁定（R128-a）**：代码块缩进 16 空格 vs 正文「12 空格」，S8 照代码块执行不算偏差；S7 合流时按正文改回 12 空格。**后续内容卡代码块改为「从邻居行复制粘贴改值」，不再手打缩进。**
+- **真机（jar 690121 B，`unzip -l` 内 `defaults/mobs/` 8 份）**：启动 `8 只怪物（10 条技能引用，原型 8 种）`；`gloom_moth.json5` 508 B @ 17:11 落地、旧七份 mtime 未变；`mob list` `8 只（原型 8 种）`，新增 `gloom_moth · ambient · 等级 2 · 装备 0 件 · 技能 0 条 · ×0.50`；`mob check` `8 只 / 10 条 / 1 张 · 引用完整 ✓`；`reload` `46 份配置` 零 ERROR；`stop` 后 25567/25577 无 LISTEN。M6 内容面 8/8 收口。
+- **T-0123 接口冻结（新，S7 定死，S8 不推断）**：新文件 `check_progress_base.py`；常量 `BASE_DEFAULT = 100.0`、`MAX_STEP_EXP = 1000000000`、`SUBDIRS = ("levels", "jobs")`；函数 `_loads(text) -> dict|None` / `read_files(root, subdir) -> (rows, ok)`（行前缀 `<subdir>/<文件名>`）/ `check_base(rows) -> list[str]`（只收 `0 < v` 且 `v > MAX_STEP_EXP` 的显式数字，`repr(v)` 入文案）/ `main() -> int`（`--dir` 默认 `src/main/resources/redtale/defaults`、`-v`；多子目录读失败逐目录各计 1 条）。文案 `<前缀>: curve.base 值 <v> 超过 MAX_STEP_EXP=1000000000 静默夹顶（解析零 WARN）`；末行 `共 1 份进度曲线起点经验口径对账表 · N 条问题`；`-v` `已检查 <n> 份进度曲线 · <k> 处 base 引用 · 缺省 100.0 · 硬顶 1000000000`。
+- **判据边界（R128-b）**：`curve.base` 在 `professions/` 与在 `levels/`+`jobs/` 是两个洞 —— 前者 `v < min` 放行 0（T-0108 收），后者 `v <= min` 已 WARN、只有 `> 1e9` 静默（T-0123 收）。**同一字段名不得跨解析器套用已排除结论。**
+- **不派（R128-c）**：`curve.growth` / `exponent` 的超硬顶形态需离线复算运行期曲线数学 → 留池 C72。不核 `professions/`（归 `check_profession_base.py`）、不核 `max_level` 缺键回落与 `> 1000`（前者有意默认、后者有 WARN）。

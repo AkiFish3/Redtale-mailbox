@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-25 11:07 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-25 17:22 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0122 | OPEN | `mobs/gloom_moth.json5` —— 补 `ambient` 原型默认怪（M6 / D17 / D4+D9，内容面卡） |
+| T-0123 | OPEN | `check_progress_base.py` —— 进度曲线 `curve.base` 超硬顶静默夹顶对账（M7 / D17，单文件零接线，对账网第五十例） |
 
-已验完 **119** 张 / 共 **122** 张。
+已验完 **120** 张 / 共 **123** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

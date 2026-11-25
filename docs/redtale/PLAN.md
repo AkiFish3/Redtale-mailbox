@@ -2830,3 +2830,31 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0122**（`check_mobs` 10 文件 + `check_mob_skills -v` 8/4/10 + `check_equipment_slots --mobs -v` 8/11/14 + 四把值域尺 + `check_defaults` 42/42 + `check_all` 67/67 + `check_ownership` 0），过后构建 + 真机 8 只 8 原型。
 2. M6 内容面「8 原型 8 怪」收口后转 M7：专业 / 技能树真机验证，或 lang 覆盖缺口（`check_lang` 现 14 键面）。
 3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+
+## R128 · 2026-11-25 17:0x~17:2x · 验 T-0122（`ambient` 原型）+ 真机 8 只 8 原型 + M6 内容面收口 + 派 T-0123（进度曲线 `curve.base` 超硬顶）
+
+- 卡板：T-0122 `gloom_moth.json5` `[DONE]` → **VERIFIED**（3/3 逐条跑过：`check_mobs.py` `共 10 个文件 · 0 条问题`、`check_mob_skills.py -v` `8 份怪物 · 4 条技能 id · 10 条引用` + 0 问题、`check_equipment_slots.py --mobs … -v` `8 份 · 11 处 · 14 个基底` + 0 问题、四把值域尺 0 问题、`check_defaults.py` `42/42/0`、`check_all.py` `67/67/0/0`、`check_ownership.py` 0 问题、id 行恰好 1 条 = `gloom_moth`）。改动逐字核对：`ConfigStore.java` diff 恰 `+2` 行、JSON5 508 B。S8 零偏差不打回；**卡面第三次自相矛盾**（代码块缩进 16 空格 vs 正文「12 空格」），S7 合流时按正文改回 12 空格（R128-a）。**派 T-0123**（`check_progress_base.py`：`levels/` + `jobs/` 的 `curve.base > MAX_STEP_EXP` 静默夹顶，常量 `100.0` / `1000000000` 从 `ProgressSpec.java:66,74,130` 与 `ExpCurve.java:8,43-45` 冻结，接口/文案 S7 定死，单文件零接线、六夹具、基线 3 文件 / 3 处 / 0 问题），在制品 **1/3**。
+- 构建与 jar 证据：S7 取锁 `gradle build --offline` `BUILD SUCCESSFUL in 23s`（锁已删）、jar **690121 B**（上轮 689534 B）、`unzip -l` 内 `redtale/defaults/mobs/` **8 份**（`gloom_moth.json5` 508 B）。
+- **真机（测试服 1 启 1 停，正式服未触碰）**：`Done` 后零 ERROR；启动日志 `8 只怪物（10 条技能引用，原型 8 种）`；`redtale mob list` → `怪物定义 8 只（原型 8 种）`，新增行 `幽尘蛾 gloom_moth · 原型 ambient · 等级 2 · 装备 0 件 · 技能 0 条 · 体积 ×0.50`（与卡面 JSON5 三列一致）；`redtale mob check` → `8 只 / 技能引用 10 条 / 掉落表 1 张 · 引用完整 ✓`（零技能零装备：条数冻结未变）；`redtale reload` → `46 份配置文件`（45→46）；`gloom_moth.json5` 508 B @ 17:11 落地、旧七份 mtime 未变；`stop` 后 25567/25577 无 LISTEN、正式服 PID 9376 仍占 25565/25575。
+- **M6 内容面收口**：8 原型（melee / ranged / caster / summoner / charger / flyer / elite / ambient）各有 1 只默认怪。M6 剩下的不是内容而是「模板实体注册 + 自然刷怪替换」两块代码面。
+- 七门禁全 0：`check_all` 67/67、`check_tasks` 123 卡在制品 1、`check_contracts`、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 合流 1 份新 JSON5 + `ConfigStore.java` 2 行（归 S7，含缩进修正）；构建 1 次；测试服 1 启 1 停；构建锁已删。
+- 收尾：`docs/ROUND-R128-PROGRESSBASE.md`、PLAN §13 R128 + §13.131、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0122 VERIFIED + T-0123 OPEN + 池 C71 结项/C72）、`docs/CONTRACTS.md` §4.106、协作板 §3 一行。
+
+### §13.131 R128 的五条口径（卡面第三次自相矛盾 / 同字段不同解析器不能共用尺 / 不派要复算运行期数学的卡 / 多子目录读失败逐目录计 / 裸名）+ 下一步（R129）
+
+| 编号 | 口径 |
+|---|---|
+| R128-a | **同一张卡正文与代码块矛盾时，以「周围代码的真实形态」为准，不看谁写的字多**：T-0122 代码块给 16 空格、正文说 12 空格，邻居全是 12 空格。S8 照代码块执行不算偏差（它无法自判），但这是**第三次**同类卡面矛盾（R126-a 行数、本轮缩进）——后续内容卡**代码块直接从邻居行复制粘贴改值**，不再手打缩进。合流时 S7 修正并记台账，不属「回头改已 VERIFIED 文件」的违规。 |
+| R128-b | **同一字段名在不同解析器里可以是不同的洞**：`curve.base` 在 `professions/`（`ProfessionSpec` 的 `v < min`）放行 0 → 静默回落 100（T-0108 收）；在 `levels/`+`jobs/`（`ProgressSpec` 的 `v <= min`）0 已有 WARN，只有 `> 1e9` 是静默的（T-0123 收）。**判据必须逐解析器读源码，不能按字段名套用上一张卡的排除结论。** |
+| R128-c | **不派「需要把运行期数学抄第二遍」的卡**：`curve.growth` / `exponent` 的超硬顶形态要离线复算 `base * growth^(level-1)` 并随 `max_level` 变化，等于在 Python 里维护第二份 `ExpCurve`；两份数学必然漂移，尺子自己变成不可靠真相。此类留池（C72），除非出现真实内容证据。 |
+| R128-d | **多子目录的检查脚本，读失败逐目录计**：`check_progress_base.py` 覆盖 `levels/` 与 `jobs/` 两个目录，`--dir NO_SUCH` 必须出 **2 条** `[问题]`（`levels` 在前、`jobs` 在后），不能合并成 1 条——合并会掩盖「只坏了一个目录」。 |
+| R128-e | **裸名纪律第四十六次**：本轮文档只写裸名（`check_mobs.py` / `ProgressSpec.java` / `gloom_moth.json5`），不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R129）：
+
+1. **验 T-0123**（`check_progress_base.py`：基线 `共 1 份进度曲线起点经验口径对账表 · 0 条问题` + `-v` 3/3 + 六夹具 A~F + `--dir NO_SUCH` 2 条读失败），过后接线 `check_all` 67→**68**。
+2. M6 内容面已 8/8，代码面剩「模板实体注册 / 自然刷怪替换」两块（S7 独占，跨文件）；M7 代码面已实现，缺的是真机验证（升级 / 加点 / 洗点），需 Aki 在线。
+3. 派单候选按 R128-c 过滤：优先「显式值与源码常量直接对比」的单字段卡，不派需要复算运行期数学、或需要原版注册表离线真值的卡。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
