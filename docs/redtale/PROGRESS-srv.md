@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-25 04:45 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-25 11:06 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0121 | OPEN | `mobs/gale_harrier.json5` —— 补 `flyer` 原型默认怪（M6 / D17 / D4+D9，内容面卡） |
+| T-0122 | OPEN | `mobs/gloom_moth.json5` —— 补 `ambient` 原型默认怪（M6 / D17 / D4+D9，内容面卡） |
 
-已验完 **118** 张 / 共 **121** 张。
+已验完 **119** 张 / 共 **122** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 

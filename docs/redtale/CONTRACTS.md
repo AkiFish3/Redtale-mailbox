@@ -1708,3 +1708,12 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - 属性键白名单：`max_health` / `projectile_damage` / `movement_speed`（均在 `AttributeSpecs` 已注册）；`scale 1.0` ∈ `[0.25,4.0]`、`level 6` ∈ `[1,1000]`、`chance 0.35` ∈ `[0,1]`、`cooldown_ticks 110` ∈ `[1,1000000]`。
 - 派前预验（离线副本，跑完即删）：`check_mobs` `共 9 个文件 · 0 条问题`；`check_mob_skills -v` `已检查 7 份怪物 · 4 条技能 id · 10 条 skills 引用` + 0 问题；`check_equipment_slots --mobs … -v` `已检查 7 份怪物 · 11 处自家基底装备引用 · 14 个基底` + 0 问题；四把值域尺 0 问题。
 - 明令**不取构建锁、不 build**（R126-d）：内容 JSON5 不进编译路径，构建由 S7 验收后一次做。只核该文件内容与计数；不核模板实体注册、不核飞行行为（Q-022 未实现）、不动运行期。VERIFIED 后 8 原型覆盖 7/8，`ambient` 为最后一格。
+
+### 4.105 默认怪内容卡 `mobs/gloom_moth.json5`（T-0122，R127 派，内容面）
+
+- 冻结对象仍是**文件内容**：JSON5 全文逐字入卡面；独占文件 = 新文件 + `ConfigStore.java` 的 **恰好 2 行**（1 注释 + 1 路径，插在 `"mobs/gale_harrier.json5",` 之后）。R126-a 自检照做：正文行数 = 代码块行数 = 2。
+- 取值依据：`ambient` 是 8 原型最后一个（R126 自定口径：纯氛围生物，无战斗语义）—— 零 `skills`、零 `equipment`、零 `drops`、零 `undead`；`max_health { base: 6, per_item_level: 1 }` + `movement_speed: 0.02` 只保证「活着且会飘」，不参与战斗数值。
+- 属性键白名单：`max_health` / `movement_speed`（均在 `AttributeSpecs` 已注册）；`scale 0.5` ∈ `[0.25,4.0]`、`level 2` ∈ `[1,1000]`。无 `chance` / `cooldown_ticks` 字段可越界。
+- 零引用条数冻结（R127-d）：验收写死 `10 条 skills 引用` 与 `11 处装备引用` **不变** —— S8 若顺手给氛围怪加技能/装备，即使 `check_all` 全绿也算越界。
+- 派前预验（完整 `defaults/` 副本，跑完即删）：`check_mobs` `共 10 个文件 · 0 条问题`；`check_mob_skills -v` `已检查 8 份怪物 · 4 条技能 id · 10 条 skills 引用` + 0 问题；`check_equipment_slots --mobs … -v` `已检查 8 份怪物 · 11 处自家基底装备引用 · 14 个基底` + 0 问题；四把值域尺 0 问题。
+- 明令**不取构建锁、不 build**（R126-d）。只核该文件内容与计数；不核模板实体注册、不核刷怪接入、不动运行期。VERIFIED 后 8 原型覆盖 **8/8**，M6 内容面收口。

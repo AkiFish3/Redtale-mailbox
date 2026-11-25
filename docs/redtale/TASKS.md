@@ -4994,7 +4994,7 @@ fi
   - 2026-11-25 02:27 · 完成 · 新增 `src/main/resources/redtale/defaults/mobs/bone_summoner.json5`（829 B）+ `iron_horn_charger.json5`（785 B）；`ConfigStore.java` 在 frost_archer 行后插 3 行（1 行注释 + 2 行路径；卡面代码块多出的第 2 行注释按 ≤3 行约束未插，待 S7 裁定） · 构建 EXIT=0（jar 688855 B，`unzip -l` 内 `redtale/defaults/mobs/` 六份） · 自测：`check_mobs` 8 文件/0 问题、`check_mob_skills -v` 6 怪/4 id/9 引用/0 问题、`check_equipment_slots -v` 6 怪/10 引用/14 基底/0 问题、四把值域尺 0 问题、`check_defaults` 40/40/0、`check_all` 67/67/0/0、`check_ownership` 0 问题、两文件 `  id:` 逐字；测试服启停待 S7 验收
   - 2026-11-25 04:4x · **S7 验收 → VERIFIED（3/3）**：①`check_mobs.py` `共 8 个文件 · 0 条问题`、`check_mob_skills.py -v` `已检查 6 份怪物 · 4 条技能 id · 9 条 skills 引用` + 0 问题；②`check_equipment_slots.py --mobs … -v` `已检查 6 份怪物 · 10 处自家基底装备引用 · 14 个基底` + 0 问题，四把值域尺末行均 0 问题，`check_defaults.py` `清单 40 条 · 磁盘 40 个 · 问题 0 条`；③`check_all.py` `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0`、`check_ownership.py` 0 问题、两文件各恰好一行 `  id:`。**裁定 S8 的 ≤3 行取舍正确**：卡面正文写「插 3 行：1 注释 + 2 路径」，代码块却给了 5 行（2 注释 + 2 路径），S8 按正文字数执行，属 S7 卡面自相矛盾（§13.129 R126-a），不打回。真机：测试服 1 启 1 停，启动 `6 只怪物（9 条技能引用）`，`config/redtale_project/mobs/` 落地两份新文件且旧四份 mtime 未变，`mob list` 6 只/6 原型，`mob check` `6 只 / 技能引用 9 条 / 掉落表 1 张 · 引用完整 ✓`，`reload` 44 份配置零 ERROR。**该 3 行 `src/` 改动归 S7 合流。**
 
-### T-0121 · [OPEN] `mobs/gale_harrier.json5` —— 补 `flyer` 原型默认怪（M6 / D17 / D4+D9，内容面卡）
+### T-0121 · [VERIFIED] `mobs/gale_harrier.json5` —— 补 `flyer` 原型默认怪（M6 / D17 / D4+D9，内容面卡）
 
 - 派单：S7 · 2026-11-25 04:4x（R126）、在制品 **1/3**
 - 目标：`MobSpec.BASES` 8 原型里，T-0120 之后只剩 `flyer` / `ambient` 无默认怪（池 C71）。本卡补 `flyer`（`gale_harrier`，`bow` + `projectile_damage` 吃远程加成），**纯内容 + 2 行清单登记**，零新类、零注册表变更（D17）。
@@ -5037,6 +5037,48 @@ fi
   1. `python tools/check_mobs.py` → 末行 `共 9 个文件 · 0 条问题` EXIT=0；`python tools/check_mob_skills.py -v` → 含 `已检查 7 份怪物 · 4 条技能 id · 10 条 skills 引用` 且末行 `共 1 份怪物技能引用表 · 0 条问题`。
   2. `python tools/check_equipment_slots.py --mobs src/main/resources/redtale/defaults/mobs -v` → 含 `已检查 7 份怪物 · 11 处自家基底装备引用 · 14 个基底` 且末行 `共 1 份怪物装备槽位对账表 · 0 条问题`；`check_mob_levels.py` / `check_mob_scales.py` / `check_mob_skill_chance.py` / `check_mob_skill_cooldowns.py` 四把末行均为 `· 0 条问题` EXIT=0；`python tools/check_defaults.py` → 末行 `清单 41 条 · 磁盘 41 个 · 问题 0 条` EXIT=0。
   3. `python tools/check_all.py` → 末行 `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → 0 问题；文件恰好一行 `  id:` 且值等于 `gale_harrier`（文件名 = id）。**不构建**（内容卡，卡面禁止取锁）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+  - 2026-11-25 06:30 · 完成 · 新建 `src/main/resources/redtale/defaults/mobs/gale_harrier.json5`（688 B，逐字照抄卡面）+ `ConfigStore.java` 在 `"mobs/iron_horn_charger.json5",` 后插恰好 2 行（1 注释 + 1 路径） · 构建 N/A（卡明令禁锁禁 build，按 R126-d 交 S7 验收后一次构建） · 自测 3/3：`check_mobs` `共 9 个文件 · 0 条问题`、`check_mob_skills -v` `7 份怪物/4 条 id/10 条引用`、`check_equipment_slots -v` `7 份/11 处/14 基底`、四把值域尺均 0 问题、`check_defaults` `41/41/0`、`check_all` `67/67/0/0`、`check_ownership` 0 问题、文件恰好 1 行 `  id: "gale_harrier",`；测试服启停待 S7 验收
+  - 2026-11-25 11:00 · **S7 验收 → VERIFIED** · 三条验收逐条过：①`check_mobs` `共 9 个文件 · 0 条问题`、`check_mob_skills -v` `已检查 7 份怪物 · 4 条技能 id · 10 条 skills 引用` + `0 条问题`；②`check_equipment_slots --mobs ... -v` `7 份怪物 · 11 处 · 14 个基底` + `0 条问题`、四把值域尺均 `· 0 条问题`、`check_defaults` `清单 41 条 · 磁盘 41 个 · 问题 0 条`；③`check_all` `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0`、`check_ownership` `0 条问题`、文件恰好 1 行 `  id: "gale_harrier",`。改动逐字核对：`ConfigStore.java` diff 恰 `+2` 行（1 注释 + 1 路径）、JSON5 688 B。构建 `BUILD SUCCESSFUL in 37s`、jar 689534 B 内 `redtale/defaults/mobs/` 7 份。真机 1 启 1 停：`Done (2.178s)`、`mob list` `怪物定义 7 只（原型 7 种）` 含 `掠风隼 gale_harrier · 原型 flyer · 等级 6 · 装备 1 件 · 技能 1 条 · 体积 ×1.00`、`mob check` `7 只 / 技能引用 10 条 / 掉落表 1 张 · 引用完整 ✓`、`reload` `45 份配置文件` 启动后零 ERROR、`stop` 后 25567/25577 无 LISTEN、正式服 9376 未动。
+
+
+### T-0122 · [OPEN] `mobs/gloom_moth.json5` —— 补 `ambient` 原型默认怪（M6 / D17 / D4+D9，内容面卡）
+
+- 派单：S7 · 2026-11-25 11:0x（R127）、在制品 **1/3**
+- 目标：`MobSpec.BASES` 8 原型里 T-0121 之后只剩 `ambient` 无默认怪（池 C71）。本卡补 `ambient`（`gloom_moth`，纯氛围装饰：血量低 / 体积小 / 无技能 / 无装备 / 无掉落表），**纯内容 + 2 行清单登记**，零新类、零注册表变更（D17）。落地后 8 原型 8 只默认怪齐。
+- 独占文件（**唯一可写**，路径相对仓库根）：
+  - `src/main/resources/redtale/defaults/mobs/gloom_moth.json5`（新建）
+  - `src/main/java/com/redtale/project/core/config/ConfigStore.java`（**只许在 `"mobs/gale_harrier.json5",` 那一行之后插 2 行**：1 行注释 + 1 行路径，逐字见下；其余一字不动）
+- 禁止：不改任何其它 `src/` 文件（含另外 6 只怪的 JSON5、任何别的 Java、`items/`·`skills/`·`drops/`·`spawn_rules/` 配置）；不改任何 `tools/*.py`、不改 `docs/`（除本卡进度行）、不改 `PLAN.md` / `CONTRACTS.md` / `ROUNDS.md`；**不新增技能/物品/掉落表，不给本怪写 `skills` / `equipment` / `drops` 段**（ambient 原型语义：不吃技能不吃装备，掉落走原版）；不写 `undead`（Q-020）；属性键只许用已注册键（本卡只许 `max_health` / `movement_speed`），**不许自造键**；**不许取构建锁、不许 `gradle build`**（内容卡不进编译路径，由 S7 下一轮构建）；不读 Java / 不读 jar / 不读存档 / 不起服务。
+- 内容（逐字照抄，注释保留；缩进两空格、JSON5 裸键）：
+  - `gloom_moth.json5`：
+    ```json5
+    // 怪物示范 8（M6 · R127 / T-0122）：ambient 原型，纯氛围装饰 —— 血量低、体积小、不吃技能不吃装备。
+    // 原型语义见 C71：不给技能、不给装备、drops 留空，只做「站着看」的样本；
+    // 若 Aki 要它带技能或掉落，改本文件即可，不换 jar（D17）。
+    {
+      id: "gloom_moth",
+      name: "幽尘蛾",
+      base: "ambient",
+      scale: 0.5,
+      level: 2,
+      attributes: {
+        max_health: { base: 6, per_item_level: 1 },
+        movement_speed: 0.02,
+      },
+    }
+    ```
+  - `ConfigStore.java` 的插入位置与内容（在 `"mobs/gale_harrier.json5",` 之后，缩进 12 空格，**恰好 2 行**）：
+    ```java
+                // 怪物示范 8（M6 · R127 / T-0122）：补 ambient 原型，落地后 8 个原型全部有默认怪
+                "mobs/gloom_moth.json5",
+    ```
+- 不要做：不改 7 只既有怪（`ash_caster` / `ember_guard` / `stone_footman` / `frost_archer` / `bone_summoner` / `iron_horn_charger` / `gale_harrier`）；不越 `scale` 界（`[0.25,4.0]`，T-0102）/ `level`（`[1,1000]`，T-0101）；不动运行期、不启停任何服务器。
+- 验收（**三条，全部可机器执行**，均从仓库根跑）：
+  1. `python tools/check_mobs.py` → 末行 `共 10 个文件 · 0 条问题` EXIT=0；`python tools/check_mob_skills.py -v` → 含 `已检查 8 份怪物 · 4 条技能 id · 10 条 skills 引用` 且末行 `共 1 份怪物技能引用表 · 0 条问题`（**技能引用条数不变 10**：本怪零技能）。
+  2. `python tools/check_equipment_slots.py --mobs src/main/resources/redtale/defaults/mobs -v` → 含 `已检查 8 份怪物 · 11 处自家基底装备引用 · 14 个基底` 且末行 `共 1 份怪物装备槽位对账表 · 0 条问题`（**装备引用条数不变 11**：本怪零装备）；`check_mob_levels.py` / `check_mob_scales.py` / `check_mob_skill_chance.py` / `check_mob_skill_cooldowns.py` 四把末行均为 `· 0 条问题` EXIT=0；`python tools/check_defaults.py` → 末行 `清单 42 条 · 磁盘 42 个 · 问题 0 条` EXIT=0。
+  3. `python tools/check_all.py` → 末行 `共 67 个脚本 · 跑成 67 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → 0 问题；文件恰好一行 `  id:` 且值等于 `gloom_moth`（文件名 = id）。**不构建**（内容卡，卡面禁止取锁）。
+- 派前预验（S7 已做，2026-11-25 11:0x）：完整 `defaults/` 副本 + 本文件，`check_mobs` `共 10 个文件 · 0 条问题`、`check_mob_skills -v` `8 份/4 条 id/10 条引用 · 0 问题`、`check_equipment_slots -v` `8 份/11 处/14 基底 · 0 问题`、四把值域尺均 `· 0 条问题`；副本已清。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 
@@ -5105,7 +5147,7 @@ fi
 | C68 | ~~`SocketSpec` 的 ANY 同族 → **T-0115（R120 派）**~~ | R120 四判据逐条取证齐：`:120` 短补 / `:132-133` gem.type 空白串 / `:159` exclusive_group 空白串（下游 `Socketer.java:192` 空串跳过互斥 → 同组可无限镶嵌，玩法面）；旧尺 `check_items` / `check_gem_types` 三坏值反事报错集合逐字 SAME；基线 7/1/2/0。合成一卡（同族一次收口），玩法面优先于 C66 显示面 | 无 |
 | C69 | ~~`sockets.count==0` / 缺 count 但显式 `types` 整段被 `Layout.EMPTY` 早退丢弃（零 WARN）~~ → **T-0117（R122 派）** | R122 四判据齐：`SocketSpec.java:54-57,78-95` 逐字静默早退（同文件六处 WARN 反证）；三把旧尺干净副本反事实全绿；基线 7 物品/1 sockets/2 项 types/0 问题；同族 D~F 不同出口，按出口分卡，不并进 T-0115 | 无 |
 | C70 | ~~`spawn_rules[].priority` / `per_chunk_cap` 超 int 范围静默饱和 → **T-0118（R123 派 / R124 S7 自做验收）**~~ | R123 四判据齐：`SpawnRuleSpec.java:113-118` 对有限整数走 `:117` 静默夹顶/夹底（`:116` 只管非有限/非整数）；玩法面落 `SpawnRegistry.java:29-31` 排序与 `SpawnReplacer.java:210` 每区块限量；两把旧尺（`check_mobs.py:143-148` Python int 无上界 / `check_spawn_conditions.py:70-86` 只核数值类型）干净副本反事实全绿；基线 1 规则/2 落点/0 问题。与 T-0109~T-0112 的「小数 `(int)` 截断」不同出口，本卡只核超 int 饱和 | 无 |
-| C71 | 剩余原型无默认怪：`summoner` / `charger` / `flyer` / `ambient` → **T-0119 补 `melee`/`ranged`（R125 验）→ T-0120 补 `summoner`/`charger`（R126 验）→ T-0121 补 `flyer`（R126 派），只剩 `ambient`** | 纯内容（D17：只写 JSON5 + 2 行清单登记，不换 jar）。**R125-a 教训**：内容卡必须把 `ConfigStore.DEFAULT_FILES` 的清单行写进卡面，否则 `check_defaults.py` 必红、验收自相矛盾（T-0119 原卡即踩此坑）。**`ambient` 口径（R126 自定，非范围决策）**：纯氛围生物，不给技能、不给装备、`drops` 留空，只做「血量低 + 体积小 + 不吃技能」的装饰样本；若 Aki 要它带技能再改配置，不换 jar。T-0121 验收后派 | 无 |
+| C71 | 剩余原型无默认怪：`summoner` / `charger` / `flyer` / `ambient` → **T-0119 补 `melee`/`ranged`（R125 验）→ T-0120 补 `summoner`/`charger`（R126 验）→ T-0121 补 `flyer`（R126 派 / R127 验），只剩 `ambient` → **T-0122 补 `ambient`（R127 派）**，落地即 8/8 | 纯内容（D17：只写 JSON5 + 2 行清单登记，不换 jar）。**R125-a 教训**：内容卡必须把 `ConfigStore.DEFAULT_FILES` 的清单行写进卡面，否则 `check_defaults.py` 必红、验收自相矛盾（T-0119 原卡即踩此坑）。**`ambient` 口径（R126 自定，非范围决策）**：纯氛围生物，不给技能、不给装备、`drops` 留空，只做「血量低 + 体积小 + 不吃技能」的装饰样本；若 Aki 要它带技能再改配置，不换 jar。R127 派前已全量预验 | 无 |
 | C63 | ~~`items use` 四处整数小数 `(int)` 静默截断 → **T-0110（R115 派）**~~ | `ConsumableSpec.java:184-190` 对数字零 WARN 直接 `getAsInt()`，四个调用点 `:76/:81/:96/:115`；旧尺四把干净目录反事实全绿，基线 7 物品/1 带 use/6 处/0 问题；对账网第 41 例 | 无 |
 | C64 | ~~`affixes` / `affix_pools` 权重小数 `(int)` 静默截断 → **T-0111（R116 派）**~~ | `AffixPools.java:72,162-168` 与 `:106-110` 数字直接 `getAsInt()` 零 WARN；`AffixRoller.java:140` 截断归零后静默跳过整条词条；`check_items.py:94-95/:118-120` 用 `_num>0` 放过小数，三把旧尺反事实全绿；基线 3 定义/1 池/6 处/0 问题；对账网第 42 例 | 无 |
 | C65 | ~~`affixes item_level.min/max` 小数 `(int)` 静默截断 → **T-0112（R117 派）**~~ | `AffixPools.java:69-71` 两处 `integer()` 与 `:162-168` 零 WARN `getAsInt()`；`check_items.py:96-99` 只核 `_num()` + `lo<=hi`、`check_affix_reach.py:78-86` 用 float 直接比较，四把旧尺干净目录反事实全绿；基线 3 定义/6 处/0 问题；对账网第 43 例 | 无 |

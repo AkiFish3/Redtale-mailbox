@@ -2805,3 +2805,28 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. 8 原型齐了之后 M6 内容面收口 → 转 M7 专业/技能树的真机验证或 lang 覆盖（`check_lang` 现有 14 键面）。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
 
+
+## R127 · 2026-11-25 11:0x~11:1x · 验 T-0121（`flyer` 原型）+ 真机 7 只 7 原型 + 派 T-0122（`ambient`）
+
+- 卡板：T-0121 `gale_harrier.json5` `[DONE]` → **VERIFIED**（3/3 逐条跑过：`check_mobs.py` `共 9 个文件 · 0 条问题`、`check_mob_skills.py -v` `7 份怪物 · 4 条技能 id · 10 条引用` + 0 问题、`check_equipment_slots.py --mobs … -v` `7 份 · 11 处 · 14 个基底` + 0 问题、四把值域尺 0 问题、`check_defaults.py` `41/41/0`、`check_all.py` `67/67/0/0`、`check_ownership.py` 0 问题、id 行恰好 1 条 = `gale_harrier`）。改动逐字核对：`ConfigStore.java` diff 恰 `+2` 行、JSON5 688 B。S8 零偏差不打回。**派 T-0122**（内容面：`mobs/gloom_moth.json5` 补 `ambient` 原型，零技能 / 零装备 / 零 drops，独占文件含 `ConfigStore.java` **恰好 2 行**；派前完整 `defaults/` 副本预验 10 文件 / 8 怪 10 引用 / 8 怪 11 装备引用全绿），在制品 **1/3**。
+- 构建与 jar 证据：S7 取锁 `gradle build --offline` `BUILD SUCCESSFUL in 37s`（锁已删）、jar **689534 B**（上轮 688855 B）、`unzip -l` 内 `redtale/defaults/mobs/` **7 份**。
+- **真机（测试服 1 启 1 停，正式服未触碰）**：`Done (2.178s)`；`config/redtale_project/mobs/gale_harrier.json5` 688 B @ 11:01 落地、旧六份 mtime 未变；`mob list` → `怪物定义 7 只（原型 7 种）`，新增 `掠风隼 gale_harrier · flyer · 等级 6 · 装备 1 件 · 技能 1 条 · ×1.00`；`mob check` → `7 只 / 技能引用 10 条 / 掉落表 1 张 · 引用完整 ✓`；`reload` → `45 份配置文件`（44→45）；启动前 4 条 ERROR 为他模 recipe 噪声（与 R126 逐字相同），`Done` 后零 ERROR；`stop` 后 25567/25577 无 LISTEN、正式服 PID 9376 仍占 25565/25575。
+- 七门禁全 0：`check_all` 67/67、`check_tasks` 122 卡在制品 1、`check_contracts`、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 合流 1 份新 JSON5 + `ConfigStore.java` 2 行（归 S7）；构建 1 次；测试服 1 启 1 停；构建锁已删。
+- 收尾：`docs/ROUND-R127-MOBAMBIENT.md`、PLAN §13 R127 + §13.130、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0121 VERIFIED + T-0122 OPEN + 池 C71）、`docs/CONTRACTS.md` §4.105、协作板 §3 一行。
+
+### §13.130 R127 的五条口径（逐字 diff / 真机看新增行 / mtime 第二证据 / 零引用条数冻结 / 裸名）+ 下一步（R128）
+
+| 编号 | 口径 |
+|---|---|
+| R127-a | **内容卡验收 = 三条命令 + 逐字 diff 双证**：命令全绿只证明「配置能解析」，`ConfigStore.java` 的 `+2` 行与 JSON5 字节数必须与卡面逐字对账，否则 S8 多改一行而检查仍绿。 |
+| R127-b | **真机看「新增那条」不看总数**：`mob list` 总数不构成证据，必须核新增行三列（等级 / 装备件数 / 体积）与卡面 JSON5 一致（R126-c 延伸）。 |
+| R127-c | **旧 mtime 未变是配置落地的第二证据**：新文件出现 + 旧文件 mtime 不动，才能排除「默认配置覆盖了玩家改过的配置」。 |
+| R127-d | **零技能 / 零装备卡要冻结「引用条数不变」**：`ambient` 验收写死 `10 条 skills 引用` / `11 处装备引用` 不变，避免顺手给氛围怪加技能却仍全绿。 |
+| R127-e | **裸名纪律第四十五次**：本轮文档只写裸名（`check_mobs.py` / `ConfigStore.java` / `gloom_moth.json5`），不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R128）：
+
+1. **验 T-0122**（`check_mobs` 10 文件 + `check_mob_skills -v` 8/4/10 + `check_equipment_slots --mobs -v` 8/11/14 + 四把值域尺 + `check_defaults` 42/42 + `check_all` 67/67 + `check_ownership` 0），过后构建 + 真机 8 只 8 原型。
+2. M6 内容面「8 原型 8 怪」收口后转 M7：专业 / 技能树真机验证，或 lang 覆盖缺口（`check_lang` 现 14 键面）。
+3. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
