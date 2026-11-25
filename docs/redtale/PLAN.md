@@ -2884,3 +2884,29 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. M6 内容面 8/8 已收口；代码面剩「模板实体注册 / 自然刷怪替换」两块（S7 独占，跨文件，不进 S8 卡）。M7 代码面已实现，缺真机验证（升级 / 加点 / 洗点），需 Aki 在线。
 3. 下一轮若 T-0124 顺利，按 R129-a 的「静默放行」思路继续扫：`CommandSpec` / 命令参数解析、`SkillSpec.conditions` 数值透传两处是候选（未取证，不下结论）。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R130 · 2026-11-26 05:3x~05:5x · 验 T-0124（附魔定义整数字段透传）+ 接线 `check_all` 68→69 + 派 T-0125（附魔代价字段形态）
+
+- 卡板：T-0124 `check_enchant_definition_ints.py` `[DONE]` → **VERIFIED**（3/3 逐条跑过：①基线 `共 1 份附魔定义整数字段口径对账表 · 0 条问题` EXIT=0、`-v` `已检查 2 份附魔 · 4 处整数字段引用 · 字段 weight/anvil_cost · 非整数形态 float 计`；②六夹具 A~F 干净 `enchantments/` 副本逐字 EXIT=0/1/1/0/0/1 —— B `soul_reap`/`2.5`、C `super_sharpness`/`3.0`、D `weight: "2"` 静默、E `zz`/`weight: true` 静默、F 三条按 `soul_reap` → `super_sharpness` → `zz` 排序；③`wc=177`、`def check_ints`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条 `enchantments 目录读取失败` EXIT=1、函数边界 `2.5`/`3.0`/`1e3` 各 1 条 + `2`/`True`/`"2"`/`None`/`[]`/缺键/非 dict 全 0 条 + `repr(1e3)`=`1000.0` + 双键 sorted + 重复不合并；夹具已删）。**S8 零偏差不打回**。**派 T-0125**（`check_enchant_cost_forms.py`：`min_cost` / `max_cost` 经 `EnchantmentGenerator.java:39-40` 原样透传、`:151/:160-163` 校验不覆盖，`ENCHANT-API.md:114` 定义形状 `{base, per_level_above_first}`；接口/文案 S7 定死、单文件零接线、六夹具、基线 2 文件 / 4 处 / 0 问题），在制品 **1/3**。
+- **派前取证（对账网第五十二例）**：`grep "min_cost\|max_cost" tools/*.py` 零命中（69 把尺全盲）；`check_enchants` 只核 `max_level` 与引用；整份 defaults 副本反事实（`min_cost: 8` + `max_cost.base: 25.5`）下五把 enchant 系尺（`check_enchants` / `check_numeric` / `check_enchant_definition_ints` / `check_enchant_exclusive` / `check_enchant_args_sync`）逐字全绿、`0 条问题`、EXIT=0 —— 洞成立；基线离线核过 2 文件 / 4 处。副本已删。
+- 接线 `check_all` 68→**69** 全绿（`69 个脚本 · 跑成 69 · 跳过 0 · 红 0`）。
+- 七门禁全 0：`check_all` 69/69、`check_tasks` 125 卡在制品 1、`check_contracts` 108 条、`check_docs` 145 份 / 602 引用、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 零 diff（本轮纯 Python + 卡板 + 文档）、未构建、未启停任何服、无构建锁；正式服 9376 未触碰、测试服 25567/25577 无 LISTEN。裸名纪律第四十八次。
+- 收尾：`docs/ROUND-R130-ENCHANTCOST.md`、PLAN §13 R130 + §13.133、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0124 VERIFIED + T-0125 OPEN + 池 C73）、`docs/CONTRACTS.md` §4.108、`tools/check_all.py`、协作板 §3 一行。
+
+### §13.133 R130 的五条口径（另议格子优先收口 / 项目自定形状可单独成尺 / 缺字段判据须标口径来源 / 派前预验覆盖整族 / 裸名）+ 下一步（R131）
+
+| 编号 | 口径 |
+|---|---|
+| R130-a | **上一轮卡面显式写「另议」的格子，下一轮优先收口**：`min_cost` / `max_cost` 是 T-0124 自己排除的，验收人对上下文已有完整掌握、取证成本最低，也避免「另议」无限期悬空。 |
+| R130-b | **「违反项目自己声明的形状」可以单独成尺，不必等原版真值**：`ENCHANT-API.md:114` 是项目内的契约，配置写成裸数字违反它——与上游 codec 是否严格无关。这类判据离线可判，天然适合 S8。 |
+| R130-c | **缺字段这类「可能被上游宽容」的判据必须标口径来源**：卡面写清「缺 `per_level_above_first` 判红是本项目口径，原版是否放宽标未验证」，S8 才不会把内部约定当外部事实。真机翻车时能立刻分清是尺错还是码错。 |
+| R130-d | **派前预验要覆盖整族**：本轮跑五把 enchant 系尺而非「最像的那一把」，才敢说「整族零提示」；单尺全绿只能证明那把尺盲（R129-d 加强版）。 |
+| R130-e | **裸名纪律第四十八次**：文档只写裸名（`check_enchant_cost_forms.py` / `EnchantmentGenerator.java` / `soul_reap.json5`），不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R131）：
+
+1. **验 T-0125**（基线 `共 1 份附魔代价字段口径对账表 · 0 条问题` + `-v` `已检查 2 份附魔 · 4 处代价字段引用` + 六夹具 A~F + `--dir NO_SUCH` 恰 1 条读失败），过后接线 `check_all` 69→**70**。
+2. M6 内容面 8/8 已收口；代码面剩「模板实体注册 / 自然刷怪替换」两块（S7 独占，跨文件，不进 S8 卡）。M7 代码面已实现，缺真机验证（升级 / 加点 / 洗点），需 Aki 在线。
+3. 池内可派候选已空（C72 按 R128-c 留池、C14 为观察项）。按 R129-a「静默放行」继续扫：`slots` / `supported_items` 形态、`CommandSpec` 参数解析是候选（未取证，不下结论）。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
