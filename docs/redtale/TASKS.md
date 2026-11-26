@@ -5320,7 +5320,7 @@ fi
 - 2026-11-26 23:12 · 完成 · `src/main/resources/redtale/defaults/items/demo_dagger.json5`（新建，逐字）、`src/main/resources/redtale/defaults/items/demo_warhammer.json5`（新建，逐字）、`src/main/java/com/redtale/project/core/config/ConfigStore.java`（`items/gem_sapphire.json5` 后 +3 行：1 注释 + 2 清单，缩进 12 空格） · 构建 N/A（卡禁 gradle / 禁锁 / 禁读 jar，未取锁未构建；未启停任何服） · 自测 3/3：① `check_items` `共 14 个文件 · 0 条问题` EXIT=0；② `check_defaults` `清单 44 条 · 磁盘 44 个 · 问题 0 条` EXIT=0、`check_numeric` `共 4 个文件 · 0 条问题` EXIT=0、`git diff --numstat ConfigStore.java`=`3 0`（`3 insertions(+)`、`-0`）；③ `check_all` `共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0` EXIT=0、`check_ownership` `共 1 份卡板 · 0 条问题`、`check_tasks` 129 卡/在制品 1（仅 T-0129 OPEN）/问题 0；两份 JSON5 经 `clean_json5` 严格解析全字段逐字相等（各 9 键，无 `set_id`/`abilities`/`gem`）；卡外零改动。运行期 `reload` / `item list` / D15 动作差异取样待 S7 测试服验收
   - 2026-11-27 00:0x · **S7 验收 → VERIFIED**（三条 + 真机）：①`check_items` `共 14 个文件 · 0 条问题` EXIT=0；②`check_defaults` `清单 44 条 · 磁盘 44 个 · 问题 0 条`、`check_numeric` `共 4 个文件 · 0 条问题`、`git diff --numstat ConfigStore.java` = **3 0**；③`check_all` `共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0`、`check_ownership` `0 条问题`、`check_tasks` 129 卡/在制品 1；两份 JSON5 `clean_json5` 解析后 9 键逐字等于卡面（`demo_dagger` dagger / bettercombat:dagger / 3.5 / 2.4 + 暴击 0.2/0.3；`demo_warhammer` hammer / bettercombat:hammer / 10.0 / 0.9）。**真机（测试服 1 启 1 停，`Done (2.410s)`）**：`redtale items` → `12 件装备内容 · 基底 14 个`，`demo_dagger` 行 `4 条属性 · 耐久 700 · bettercombat:dagger · 孔位 1`、`demo_warhammer` 行 `2 条属性 · 孔位 2`；`redtale content list` → `内容 12 件 · 带 weapon_attributes 4 件`；`redtale tooltip demo_dagger` → `攻速 8.333 tick · 2.4 次/秒`、`动作 bettercombat:dagger`；`demo_warhammer` → `攻速 22.222 tick · 0.9 次/秒`、`动作 bettercombat:hammer`（D20 双档位 + D15 第三个动作取样成立）；`redtale reload` → `48 份配置文件`（44→48，零 ERROR）；`config/redtale_project/items/` 两份新文件 00:08 落地；`stop` 后 25567/25577 无 LISTEN。
 
-### T-0129 · [OPEN] `tools/check_item_models.py` —— 基底 ↔ 模型 ↔ 原版贴图三方对账（资源面首尺，对账网第五十五例）
+### T-0129 · [VERIFIED] `tools/check_item_models.py` —— 基底 ↔ 模型 ↔ 原版贴图三方对账（资源面首尺，对账网第五十五例）
 
 - 派单：S7 · 2026-11-26 17:5x（R134）、在制品 **3/3**
 - 目标：R132 的 14 条 `Unable to load model` 与 R134 的 1 条 `Missing textures` 暴露同一类洞 —— **`assets/` 面 71 把尺一把都不读**（`grep -l "assets/redtale_project" tools/*.py` 零命中）。本卡建这条网的第一个网眼：14 个 `ItemBase` 枚举 ↔ `models/item/*.json` ↔ 每份模型的 `layer0` 是否真是原版 jar 里存在的贴图。R134 的 shield 事故正是「模型文件写了、`layer0` 指向不存在的贴图」——文件级检查（T-0127 验收 1~3）全绿也抓不到，只有贴图表能抓到。
@@ -5362,6 +5362,8 @@ fi
   3. `wc -l tools/check_item_models.py` ≤ **200**；`python -m py_compile tools/check_item_models.py` 无输出；`python tools/check_item_models.py --jar NO_SUCH.jar` → 恰 1 条 `原版 jar 读取失败` 且 EXIT=1 不抛栈；`python tools/check_item_models.py --root NO_SUCH` → 恰 2 条读失败；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" tools/check_item_models.py | wc -l` → **0**。**不要**把本脚本写进 `check_all.py` 的 `TOOLS` 清单（卡禁接线；`check_checkall` 此时红 1 条属设计内红，接线由 S7 验收后做）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 - **2026-11-27 00:1x · S7 记账（不拆卡）**：本卡 17:5x 派出，至本轮 `00:1x` **6.5 小时零交付**（`check_item_models.py` 不存在、进度行空）；同期 S8 交付了 T-0128（23:12）与 T-0127 修正（19:1x），说明执行队列在线，只是先做了号更小的卡。按「DOING 连续 3 轮无新增代码才拆」口径，本卡仍是**第 1 轮空转**，保持 `[OPEN]` 不拆不回收。若下轮仍无交付，按 §2 三振口径拆成「基底解析 + 模型结构」与「jar 贴图表」两张。
+- 2026-11-27 03:17 · 完成 · `tools/check_item_models.py`（新建，127 行） · 构建 N/A（卡禁 gradle / 禁锁 / 禁改 jar，未启停任何服） · 自测 3/3：① 基线 `共 14 份基底物品模型 · 0 条问题` EXIT=0，`-v` `已检查 14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`；② 六夹具 A~F 干净副本逐字 EXIT=1/问题各 1（另补测判据③非法 JSON / ④顶层键多 extra，文案逐字）；③ `wc`=127≤200、`py_compile` 无输出、`--jar NO_SUCH.jar` 恰 1 条读失败、`--root NO_SUCH` 恰 2 条读失败（均 EXIT=1 不抛栈）、禁词 grep=0、五函数签名 grep 齐。`check_all` 红 1（`check_item_models.py` 未接线，卡禁接线，属设计内红，71→72 待 S7）、`check_ownership` 0 问题；卡外零改动。
+- 2026-11-27 06:2x · S7 验收 **VERIFIED**（3/3 逐字，零偏差不打回）：① 基线 `共 14 份基底物品模型 · 0 条问题` EXIT=0、`-v` `已检查 14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`；② 六夹具（`build/modelcheck_s7/` 干净副本 + `--root`）A~F 逐字 `基底 'ring' 缺少模型 models/item/ring.json` / `模型 zz.json 没有对应基底（多余文件）` / `parent 应为 … 实际 'minecraft:item/handheld'` / `textures 应恰有一个键 layer0，实际 ['layer0', 'layer1']` / `layer0 命名空间应为 minecraft，实际 'redtale_project'` / `hammer.json layer0 'minecraft:item/nonexistent' 在原版贴图里不存在`，全部 EXIT=1；③ `wc=127`、`def` 五签名 `5`、禁词 `0`、`py_compile` 无输出、`--jar NO_SUCH.jar` 恰 1 条 `原版 jar 读取失败` EXIT=1、`--root NO_SUCH` 恰 2 条读失败 EXIT=1。**已接线 `check_all` 71→72**（72/72 红 0）。夹具副本已删。
 
 ### T-0130 · [OPEN] `tools/check_weapon_attr_ref.py` —— `weapon_attributes` 外部引用 ↔ BetterCombat 内置动作对账（引用型，对账网第五十六例）
 
@@ -5408,6 +5410,100 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_weapon_attr_ref.py` → 末行 `共 9 份物品内容 · 3 处 weapon_attributes 引用 · 0 条问题` EXIT=0；`-v` → `已检查 9 份物品 · 3 处引用（bettercombat 3 / redtale_project 0 / 外部 0） · BetterCombat 内置动作 33 个`。
   2. 六夹具（干净副本 `build/waref_s8/`：把 `defaults/items/` 整份拷进去当 `--dir` 副本根，用 `--dir` 指向它）：**A** `demo_dagger` 的 `bettercombat:dagger` 改 `bettercombat:greatsword` → 恰 1 条判据 4；**B** `demo_warhammer` 改 `"bettercombat"`（无冒号）→ 恰 1 条判据 3；**C** `demo_longsword` 改 `redtale_project:nope` → 恰 1 条判据 5；**D** `demo_longsword` 改 `simplyswords:katana` → **0 条**且 `-v` 显示 `外部 1`；**E** 删掉 `demo_warhammer` 的 `weapon_attributes` 键 → **0 条**；**F** A+B+C 同时成立 → **3 条**且按 `id` 字典序（`demo_dagger` → `demo_longsword` → `demo_warhammer`）。用完全删。
   3. `wc -l tools/check_weapon_attr_ref.py` ≤ **200**；`python -m py_compile tools/check_weapon_attr_ref.py` 无输出；`python tools/check_weapon_attr_ref.py --dir NO_SUCH` → 恰 1 条 `物品目录读取失败`、EXIT=1 不抛栈；`python tools/check_weapon_attr_ref.py --jar-dir NO_SUCH` → 恰 1 条 `BetterCombat jar 未找到`、EXIT=1 不抛栈；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" tools/check_weapon_attr_ref.py | wc -l` → **0**。**不要**把本脚本写进 `check_all.py` 的 `TOOLS` 清单（卡禁接线；`check_checkall` 此时红 1 条属设计内红，接线由 S7 验收后做 71→72）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+
+### T-0131 · [OPEN] 护甲三件套内容：`demo_helmet` / `demo_greaves` / `demo_boots` + 套装 `ashen_vow`（D1 装备线 / M3 套装线，内容面卡）
+
+- 派单：S7 · 2026-11-27 06:2x（R136）、在制品 **2/3**（T-0130 + 本卡）
+- 目标：D1 装备线目前**只有 5 个基底有内容**（`chestplate` ×2 / `amulet` ×4 / `dagger` / `sword` / `hammer`），`helmet` / `leggings` / `boots` **零内容**；套装线也只有一套 2 件（`emberforged`，且两件都挤在 CHEST + MAINHAND），**三档套装从未被验证过**（`check_set_reach` 现有 5 个档位全 ≤2 件）。本卡补一套 3 件、跨 HEAD/LEGS/FEET 三槽的护甲套装，一次补齐三个基底覆盖 + 套装 3 档可达性。纯内容：只写 4 份 JSON5 + 4 行清单，**不换 jar**（D17）。
+- 独占文件（**唯一可写**）：
+  - `src/main/resources/redtale/defaults/items/demo_helmet.json5`（新建）
+  - `src/main/resources/redtale/defaults/items/demo_greaves.json5`（新建）
+  - `src/main/resources/redtale/defaults/items/demo_boots.json5`（新建）
+  - `src/main/resources/redtale/defaults/sets/ashen_vow.json5`（新建）
+  - `src/main/java/com/redtale/project/core/config/ConfigStore.java`（**恰 +4 行**：3 行 items + 1 行 sets，见下）
+  - （卡板文件只许追加本卡进度行与状态行，按 §2 通用授权，**不列入独占清单**）
+- 禁止：不改任何其它 `src/**`、不改 `tools/*.py`（含 `check_all.py`）、不改其它 `docs/`、不改已有 9 份 `items/*.json5` / `sets/emberforged.json5`、不执行 gradle / 不取构建锁 / 不起服务 / 不启停任何服 / 不读存档。
+- **内容逐字（照抄，不要自己改数值、不要加字段）**：
+
+  `items/demo_helmet.json5`
+  ```json5
+  {
+    // 套装验收件（M3 · D1 装备线）：灰烬誓约三件套之一，HEAD 槽。
+    id: "demo_helmet",
+    base: "helmet",
+    name: "灰烬头盔",
+    durability: 400,
+    rarity: "rare",
+    rev: 1,
+    set_id: "ashen_vow",
+    stats: {
+      armor: 6,
+      max_health: 2,
+    },
+  }
+  ```
+
+  `items/demo_greaves.json5`
+  ```json5
+  {
+    // 套装验收件（M3 · D1 装备线）：灰烬誓约三件套之一，LEGS 槽。
+    id: "demo_greaves",
+    base: "leggings",
+    name: "灰烬胫甲",
+    durability: 500,
+    rarity: "rare",
+    rev: 1,
+    set_id: "ashen_vow",
+    stats: {
+      armor: 8,
+      armor_toughness: 1,
+    },
+  }
+  ```
+
+  `items/demo_boots.json5`
+  ```json5
+  {
+    // 套装验收件（M3 · D1 装备线）：灰烬誓约三件套之一，FEET 槽。
+    id: "demo_boots",
+    base: "boots",
+    name: "灰烬战靴",
+    durability: 350,
+    rarity: "rare",
+    rev: 1,
+    set_id: "ashen_vow",
+    stats: {
+      armor: 5,
+      movement_speed: 0.02,
+    },
+  }
+  ```
+
+  `sets/ashen_vow.json5`
+  ```json5
+  {
+    // 套装默认配置 2（M3 · D1）：三件套 = 三格护甲，count 3 可达。
+    // 生效规则同 emberforged：所有 count <= 当前件数 的档全部生效（不是只取最高档）。
+    id: "ashen_vow",
+    name: "灰烬誓约",
+    pieces: ["demo_helmet", "demo_greaves", "demo_boots"],
+    bonuses: [
+      { count: 1, stats: { max_health: 2 } },
+      { count: 2, stats: { armor: 2, movement_speed: 0.02 } },
+      { count: 3, stats: { max_health: 6, armor: 3 }, name: "灰烬誓约·全" },
+    ],
+  }
+  ```
+
+- **`ConfigStore.java` 清单插入点（各 1 行，共 +4 行，不加注释）**：
+  - 在 `"items/demo_warhammer.json5",` 这一行之后，依次插入 `"items/demo_helmet.json5",` / `"items/demo_greaves.json5",` / `"items/demo_boots.json5",`
+  - 在 `"sets/emberforged.json5",` 这一行之后插入 `"sets/ashen_vow.json5",`
+- 派前预验（S7 已做，整份 `defaults/` 副本 `--dir` 跑）：`check_items` 18 文件 0 问题 / `check_set_reach -v` `已检查 2 份套装 · 5 件引用 · 5 个档位 · 5 个可达装备槽` 0 问题 / `check_numeric` 0 / `check_affix_reach` 0 / `check_name_coercions` 0。**注意 `rev` 必须 ≥1**（首版写 0 被 `check_items` 判红，已改 1）。
+- 验收（**三条，全部可机器执行，不需要起服**）：
+  1. `cd /e/RedtaleProject && python tools/check_items.py` → 末行 `共 18 个文件 · 0 条问题` EXIT=0；`python tools/check_set_reach.py` → 末行 `共 2 份套装档位可达性表 · 0 条问题` EXIT=0，`-v` → `已检查 2 份套装 · 5 件引用 · 5 个档位 · 5 个可达装备槽`。
+  2. `python tools/check_defaults.py` → 末行 `清单 48 条 · 磁盘 48 个 · 问题 0 条` EXIT=0；`python tools/check_numeric.py` → EXIT=0；`python tools/check_all.py` → `共 72 个脚本 · 跑成 72 · 跳过 0 · 红 0`；`python tools/check_ownership.py` → 0 问题。
+  3. 静态：`git status --porcelain` 恰好 5 个路径（4 新建 + `ConfigStore.java`）；`git diff --numstat -- src/main/java/com/redtale/project/core/config/ConfigStore.java` 的增删为 **`4 0`**；三份物品的 `id` / `base` / `rev` / `set_id` 逐字对上卡面；`ashen_vow` 的 `pieces` 恰 3 项且与三份物品 `id` 逐字一致。**不要构建**（卡禁 gradle；内容面卡构建由 S7 在验收时统一做）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -5486,6 +5582,8 @@ fi
 | C63 | ~~`items use` 四处整数小数 `(int)` 静默截断 → **T-0110（R115 派）**~~ | `ConsumableSpec.java:184-190` 对数字零 WARN 直接 `getAsInt()`，四个调用点 `:76/:81/:96/:115`；旧尺四把干净目录反事实全绿，基线 7 物品/1 带 use/6 处/0 问题；对账网第 41 例 | 无 |
 | C64 | ~~`affixes` / `affix_pools` 权重小数 `(int)` 静默截断 → **T-0111（R116 派）**~~ | `AffixPools.java:72,162-168` 与 `:106-110` 数字直接 `getAsInt()` 零 WARN；`AffixRoller.java:140` 截断归零后静默跳过整条词条；`check_items.py:94-95/:118-120` 用 `_num>0` 放过小数，三把旧尺反事实全绿；基线 3 定义/1 池/6 处/0 问题；对账网第 42 例 | 无 |
 | C65 | ~~`affixes item_level.min/max` 小数 `(int)` 静默截断 → **T-0112（R117 派）**~~ | `AffixPools.java:69-71` 两处 `integer()` 与 `:162-168` 零 WARN `getAsInt()`；`check_items.py:96-99` 只核 `_num()` + `lo<=hi`、`check_affix_reach.py:78-86` 用 float 直接比较，四把旧尺干净目录反事实全绿；基线 3 定义/6 处/0 问题；对账网第 43 例 | 无 |
+
+| C79 | ~~护甲 3 基底零内容 + 套装线只有 1 套 2 件~~ → **T-0131（R136 派）** | D1 装备线实测覆盖 `chestplate`×2 / `amulet`×4 / `dagger` / `sword` / `hammer` 共 5 个基底，`helmet` / `leggings` / `boots` 零内容；套装只有 `emberforged`（2 件、2 档、两件挤在 CHEST+MAINHAND），**三档套装从未被验证**。补 `ashen_vow` 三件套（HEAD/LEGS/FEET），一次补齐 3 基底 + 3 档可达性；纯 JSON5 + `ConfigStore` 恰 +4 行。派前整份 `defaults/` 副本预验：`check_items` 18/0、`check_set_reach -v` 2 套/5 件/5 档/5 槽、`check_numeric` 0、`check_affix_reach` 0、`check_name_coercions` 0 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

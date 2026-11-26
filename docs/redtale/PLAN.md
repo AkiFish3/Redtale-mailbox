@@ -3048,3 +3048,31 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **欠账 D-01**：桌面可用时补跑客户端（`Unable to load model` 0 且 `Missing textures` 0）后销账。
 4. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服（`rt-test` 客户端已能跑到主菜单，进服走「多人游戏 → 直接连接 → 127.0.0.1:25567」）。
 5. Q-024（正式服事故口径）等 Aki 定；Q-021 / Q-022 / Q-023 无答复继续按默认走。
+
+## R136 · 2026-11-27 06:1x~06:5x · 验 T-0129（资源面首尺，`assets/` 首次进全量门禁）+ 接线 71→72 + 派 T-0131（护甲三件套内容）+ **D-01 销账**（客户端真机）
+
+- **卡板**：T-0129 `[DONE]` → **`[VERIFIED]`**，`tools/check_item_models.py` 已合流。三条逐字过（基线 `共 14 份基底物品模型 · 0 条问题` + `-v` `14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`；六夹具 A~F 干净副本 `--root` 各 1 条、文案逐字、EXIT=1；`wc=127`、五函数签名齐、禁词 0、`py_compile` 空、`--jar NO_SUCH.jar` 恰 1 条 / `--root NO_SUCH` 恰 2 条读失败均 EXIT=1 不抛栈）。**接线 `check_all` 71→72**（72/72 红 0）。夹具副本已删。
+- **派 T-0131**（护甲三件套 `demo_helmet` / `demo_greaves` / `demo_boots` + 套装 `ashen_vow` + `ConfigStore` 恰 +4 行），在制品 **2/3**（T-0130 + T-0131）。派前取证：`items/` 9 份只覆盖 **5 个基底**（`chestplate`×2 / `amulet`×4 / `dagger` / `sword` / `hammer`），`helmet` / `leggings` / `boots` 零内容；套装只有 `emberforged`（2 件 2 档），**三档套装从未被验证可达**。整份 `defaults/` 副本 `--dir` 预验：`check_items` 18/0、`check_set_reach -v` 2 套/5 件/5 档/5 槽、`check_numeric` 0、`check_affix_reach` 0、`check_name_coercions` 0。首版 `rev: 0` 被 `check_items` 判红 → 卡面改 `rev: 1`（预验挡在派单前，R136-b）。
+- **尺子候选三条全证伪**（记录以免重挖）：`en_us`↔`zh_cn` 对称（`check_lang.py:95-114` 已核，差集均空）/ 技能树 `unlock_skill` 引用（`check_trees.py:97-101` 已报 `skill 未命中`）/ 词条 `per_item_level` 非数字（`AffixPools.number()` 自述告警，按 R133-d 不算洞）。
+- **欠账 D-01 销账**：`rt-test` 客户端本轮能起（`quser` = `rdp-tcp#1 运行中`、WMI 1 显示器、12.81 GB 空闲、无 java 进程），`launch.py ""` + `-Xmx3G` 跑到图集完成：**`Unable to load model` 0 / `Missing textures in model redtale_project:` 0 / `FileNotFoundException.*redtale_project` 0 / `ERROR` 0**（R132 的 14 条与 R134 的 shield 那条现在是 0/0）。按 PID 16560 关闭，`taskkill /IM` 未用，无残留。**仍未进服**（要 GUI 点连接，无 computer-use；`--quickPlayMultiplayer` R132 已证被忽略）。
+- **台账纠偏**：R128~R135 一直写的「M6 代码面剩模板实体注册 / 刷怪替换（S7 独占）」**是过期表述**。实证：`RedtaleEntities.java:40-52` 注册 8 个 `EntityType` + `RedtaleProject.java:34/35`（`register(modBus)` / `addListener(RedtaleEntities::onAttributes)`）+ `SpawnReplacer` 挂 `MobSpawnEvent.PositionCheck`（`GameHooks.java:52` `install()` / `:126` `tick`）。M6 不再有 S7 独占代码活，只剩「自然刷怪替换要真人在线」这条真机挂账。
+- 七门禁全 0：`check_all` **72/72** 红 0、`check_tasks` 131 卡 · 在制品 2 · 问题 0、`check_contracts`、`check_docs` 151 份 / 622 引用、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 零 diff、未构建、无构建锁、未启停测试服、正式服未触碰（25565 无监听，等 Aki 手动拉）；客户端 1 启 1 停（按 PID）。
+- 收尾：`docs/ROUND-R136-ITEMMODELS-VERIFY.md`、PLAN §13 R136 + §13.139、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0129 VERIFIED + T-0131 OPEN + 池 C79）、`docs/CONTRACTS.md` §4.114、`tools/check_all.py`、协作板 §3。
+
+### §13.139 R136 的五条口径（候选先证伪 / 内容卡预验 / 方法引用 / 过期表述 / 裸名）+ 下一步（R137）
+
+| 编号 | 口径 |
+|---|---|
+| R136-a | **尺子候选要先证伪再换方向**：三个「静默放行」候选全被旧尺或旧 WARN 覆盖，结论写进台账而不是硬派一张重复卡。证伪本身是产出。 |
+| R136-b | **内容卡派前必须整份副本预验，并把 `rev >= 1` 这类硬约束写进卡面**：`rev: 0` 是 S7 首版写错，预验把它挡在派单之前，没落到 S8 头上（对照 R125-a 的 `DEFAULT_FILES` 坑）。 |
+| R136-c | **方法引用（`X::method`）式监听器搜不到不等于没挂**：`modBus.addListener(RedtaleEntities::onAttributes)` 按 `RedtaleEntities.attributes` 搜零命中，差点误判成「属性事件没挂、怪物一生成就崩」。查接线看**入口类**（`RedtaleProject` / `GameHooks`），别在实现类里搜。 |
+| R136-d | **过期表述在台账里改掉，不要每轮抄**：「M6 代码面剩模板实体注册 / 刷怪替换」抄了 8 轮，实际 R37 / R48 就落地了。下一步清单必须带证据（类名 + 行号），带不出来就别写。 |
+| R136-e | **裸名纪律第五十四次**：只写裸名，不写 `tools/` 全路径（`check_docs` 按路径存在性判红）。 |
+
+下一步（R137）：
+
+1. **验 T-0131**（三件套 + `ashen_vow`）：`check_items` 18/0、`check_set_reach` 2 套 / 5 档、`check_defaults` 48·48·0；过后构建 + 测试服验 `set list` 2 套、三件 `tooltip`、`set probe` 三档逐级生效（1→2→3 件）。
+2. **验 T-0130**（`weapon_attributes` 外部引用尺），过后接线 **72→73**。
+3. **M7 真机**：`rt-test` 进服走「多人游戏 → 直接连接 → `127.0.0.1:25567`」，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试。
+4. Q-024（正式服事故口径）等 Aki；Q-021 / Q-022 / Q-023 无答复继续按默认走。

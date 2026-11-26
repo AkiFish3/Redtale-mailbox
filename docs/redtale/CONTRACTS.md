@@ -1789,3 +1789,12 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **基线**：9 份物品 / 3 处引用 / BetterCombat 2.4.0 **33** 个内置动作 / 0 问题；2.4.0 内**无** `greatsword`（反事实用它）。
 - **不核**：动作 JSON 的 schema 与数值（原样转发，`WeaponAttributesGenerator` 也不校验）、外部命名空间 id 的真实性、生成产物内容、运行期是否真播放动画。
 - **卡禁接线**：本卡不得写进 `check_all.py` 的 `TOOLS`；接线 71→72 由 S7 验收后做（届时依 T-0129/T-0130 完成顺序顺延）。
+
+### 4.114 资源面首尺收口（T-0129 VERIFIED，R136）+ 护甲三件套内容接口冻结（T-0131，R136 派）+ 欠账 D-01 销账
+
+- **T-0129 → VERIFIED（`check_item_models.py` 已合流、已接线）**：基线 `共 14 份基底物品模型 · 0 条问题`、`-v` `已检查 14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`；六夹具 A~F 逐字（缺模型 / 多余文件 / parent / textures 键集 / 命名空间 / 贴图不存在）；`--jar NO_SUCH.jar` 1 条、`--root NO_SUCH` 2 条读失败。`check_all` **71→72**。这是 `assets/` 面第一次进全量门禁：**「文件在不在」之外还要核「引用的东西在不在」**（R134 的 shield 死贴图即此类）。
+- **欠账 D-01 已销**：`E:/client/rt-test` 客户端真机资源重载路径上 `Unable to load model` **0**、`Missing textures in model redtale_project:` **0**、`FileNotFoundException.*redtale_project` **0**、`ERROR` **0**（日志 `E:/client/rt-test/logs/client_r136.log`）。R134 的离线等价判据被真机证实，判据本身保留为「桌面不可用时的降级口径」。
+- **T-0131 内容接口冻结（新，S8 不自行改数值）**：四份 JSON5 逐字写在卡面（`items/demo_helmet` / `demo_greaves` / `demo_boots` + `sets/ashen_vow`），`ConfigStore.DEFAULT_FILES` **恰 +4 行**（3 行 items 插在 `items/demo_warhammer.json5` 之后、1 行 sets 插在 `sets/emberforged.json5` 之后，**不加注释**，以便 `git diff --numstat` 断言 `4 0`）。
+- **套装口径（沿用 `emberforged`，非新决策）**：`pieces` 写**内容 id**（不是物品注册 id）；`count <= 当前件数` 的档**全部**生效、同档多项相加；件数按内容 id 去重。`ashen_vow` 三件跨 HEAD / LEGS / FEET —— 三档可达性由 `check_set_reach` 的槽位表（`helmet→HEAD` / `leggings→LEGS` / `boots→FEET`）保证。
+- **物品硬约束（本轮踩到并写入卡面）**：`rev` 必须 **≥1 的整数**（`check_items` 判红文案 `rev 必须是 >=1 的整数`）；`durability` / `rarity` / `set_id` 与已在役 9 份同形。
+- **M6 代码面完成度（台账纠偏）**：8 个 `EntityType` 注册 + 每类型属性表 + 自然刷怪替换**均已落地**（`RedtaleEntities.java:40-52`、`RedtaleProject.java:34-35`、`GameHooks.java:52/126`）。**「M6 代码面剩模板实体注册 / 刷怪替换」一句作废**，M6 仅剩「自然刷怪需真人在线」这条真机挂账。
