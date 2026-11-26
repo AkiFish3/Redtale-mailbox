@@ -2990,3 +2990,32 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **验 T-0128** → 构建 + 测试服 `item list` / `reload` 两把新武器进内容表、`weapon_attributes` 文件进生成目录。
 3. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走。
+
+## R134 · 2026-11-26 17:4x~18:1x · 验 T-0127（14 基底模型，打回 1 处死贴图引用）+ 派 T-0129（`assets/` 面首尺）+ **误杀正式服事故与恢复**
+
+- **卡板**：T-0127 `models/item/` 14 份 `[DONE]` → **`[BOUNCED]`**（1 处）：验收 1~3 全过（14 文件、14 组 `(id, layer0)` 逐字、自引用 0），验收 4（S7 客户端复核，R134 新增）不过 —— 构建 jar 693900 B 进 `E:/client/rt-test` 后 `Unable to load model` **14→0**（主目标达成）、`FileNotFoundException` **0**，但 `Missing textures in model redtale_project:shield#inventory` **1 条**（`minecraft:item/shield`）。证伪：原版 1.21.1 jar 的 `textures/item/` 共 **605** 张，**无 `shield.png`**；其余 13 份 `layer0` 全部存在。**根因是卡面表格常量错（S7 责任），S8 零偏差不打回**；修法只改 `shield.json` 一行 → `minecraft:item/turtle_scute`。**派 T-0129**（`check_item_models.py`：基底 ↔ 模型 ↔ 原版贴图三方对账，八判据、六夹具、基线 14/14/14/605/0；`--root` / `--jar` / `-v`，函数名 S7 定死），在制品 **3/3**。
+- **事故（硬约束违反，完整记账）**：17:46 为关测试客户端执行 `taskkill //IM java.exe //F`，**按映像名杀掉全部 java**，其中含正式服 `E:/server`（Fabric 1.20.1，12G，25565/25575，原 PID **9376**）。17:52 误判目录为 `E:/server-1.21.1`（25566/25576）并误起一个实例；17:53 比对 `server.properties` 全盘后确认正式服是 `E:/server`，RCON 优雅 `stop` 掉误起实例；17:55 按 `E:/server/run.bat` 同一条命令行原样拉起 → **新 PID 27448**、`Done (5.419s)`、`Preparing level "world"`、25565/25575 LISTEN、`corrupt|region file|chunk error` **0 条**。误起实例写的是**另一个 world 目录**，未污染正式服存档。
+- **验收/复核证据**：`unzip -l build/libs/redtale_project-0.1.0.jar | grep models/item` = **15 条**（14 份 + 1 目录）；客户端日志 `Reloading ResourceManager: vanilla, mod_resources, mod/redtale_project, mod/neoforge`；`Missing sound for event` 两条属原版山羊角噪声。
+- **口径 §13.137 R134-a~f**：①杀进程只按 PID、`taskkill /IM` 永久禁用、正式服不进任何杀单；②「文件在」≠「引用的东西在」；③卡面常量要 `unzip -l` 现查；④卡面缺陷打回要写清责任归属；⑤基线前置依赖写进卡面；⑥裸名纪律第五十二次。
+- 七门禁：`check_tasks` **129 卡 · 在制品 3 · 问题 0**；`check_all` 待跑（本轮无新脚本，不进清单）。
+- 环境：`src/` 1 个目录新增（14 份模型，未合流）、构建 **1 次**（EXIT=0，锁已删）、测试客户端 1 启 1 停、测试服未启、**正式服被我误杀后已恢复**（PID 27448）。
+- 收尾：`docs/ROUND-R134-PRODMODEL.md`、PLAN §13 R134 + §13.137、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0127 BOUNCED + T-0129 OPEN + 池 C77）、`docs/CONTRACTS.md` §4.112、协作板 §3 + §4 Q-024、wiki 收件箱 Q-024。
+
+### §13.137 R134 的六条口径（杀进程只按 PID / 文件在不等于引用在 / 卡面常量现查 / 卡面缺陷责任归属 / 基线依赖写进卡面 / 裸名）+ 下一步（R135）
+
+| 编号 | 口径 |
+|---|---|
+| R134-a | **杀进程只按 PID，且杀单必须显式排除正式服**：本机同时有正式服（`E:/server`，Fabric 1.20.1，25565/25575）、测试服（`E:/server-test`，25567/25577）、测试客户端（`E:/client/rt-test`）三类 java，**映像名完全一样** → `taskkill /IM java.exe` 永久禁用。关客户端用启动时记下的 PID。正式服任何情况下不由本队列启停；本轮已因误杀触发一次 9 分钟停机（17:46→17:55），恢复后世界零损坏。 |
+| R134-b | **「文件在」≠「引用的东西在」**：T-0127 验收 1~3 是纯文件级判据（数量 / 结构 / 命名空间），三条全绿仍可紫黑格。资源面判据必须多一层「被引对象存在性」，且真值只能从原版 jar 取（`unzip -l`），不能从卡面表格抄。 |
+| R134-c | **卡面常量现查**：`shield → minecraft:item/shield` 是想当然（原版有 shield 物品 ≠ 有同名 item 贴图）。凡写 `layer0` / 贴图 / 音效 / 结构 id，写卡前先对 jar；对不上就换占位，不留给 S8 试错。 |
+| R134-d | **卡面缺陷打回要写清责任归属**：T-0127 标 `[BOUNCED]` 同时正文写「根因是卡面常量错（S7 责任），S8 零偏差」——打回是让那行被改掉，不是给 S8 记过。与 R126-a / R128-a 同族：先裁谁错，再裁怎么改。 |
+| R134-e | **基线有前置依赖时把依赖写进卡面**：T-0129 基线 `0 条问题` 依赖 shield 修正先落地，卡面直写「若你先跑会看到恰好 1 条，那是 T-0127 未修，不是本卡错」，否则 S8 会把别人的红当自己的 bug 去改脚本。 |
+| R134-f | **裸名纪律第五十二次**：只写裸名（`check_item_models.py` / `ItemBase.java` / `shield.json`），不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R135）：
+
+1. **验 T-0127（修完的 shield 一行）**：客户端复跑要求 `Unable to load model` **0** 且 `Missing textures in model redtale_project:` **0**，过后 T-0127 → `[VERIFIED]` 并**合流 14 份模型进 git 提交**。
+2. **验 T-0128**（两把武器）：构建 + 测试服 `Done` 后 `redtale item list` 出现 `demo_dagger` / `demo_warhammer`、`reload` 份数 46→48 零 ERROR；跑完**必须停服**（停服用 RCON 或 `stop` 命令，**绝不 `taskkill /IM java.exe`**）。
+3. **验 T-0129**（模型三方尺）：基线 `0 条问题` → 接线 `check_all` **71→72**。
+4. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服（客户端已跑通到主菜单，进服用「多人游戏 → 直接连接 → 127.0.0.1:25567」）。
+5. Q-024（正式服事故口径）等 Aki 定；Q-021 / Q-022 / Q-023 无答复继续按默认走。

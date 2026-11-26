@@ -1762,3 +1762,16 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **清单登记契约**：`ConfigStore.DEFAULT_FILES` 在 `"items/gem_sapphire.json5",` 之后、`"affixes/sharp.json5",` 之前插入 1 行注释 + 2 行文件（缩进 12 空格），`git diff --stat` 必须 `3 insertions(+)`、`-0`。验收计数：`check_items` `共 14 个文件`、`check_defaults` `清单 44 条 · 磁盘 44 个`、`check_all` `71 个脚本 · 红 0`。
 - **判据来源（R133-b）**：`bettercombat:dagger` / `bettercombat:hammer` 从 BetterCombat 2.4.0 jar 的 `data/bettercombat/weapon_attributes/` 现查，**不是**项目自定枚举；属性 id `critical_strike_power`（`AttributeSpecs.java:59`）与 `critical_strike_chance`（`:58`）逐字取自 80 条表。
 - **不核**：运行期载入结果（归 S7 验收的测试服 `item list` / `reload`）、`attack_speed` 目标次/秒→modifier 的换算（`ItemFactory` 既有路径）、`weapon_attributes` 生成产物内容、套装 / 技能绑定（本卡刻意不挂）、真美术。
+
+### 4.112 模型三方尺接口冻结（T-0129，R134 派）+ T-0127 打回裁定（R134）
+
+- **T-0127 → `[BOUNCED]`（1 处，卡面缺陷，S8 零偏差）**：验收 1~3 全过；验收 4（S7 客户端复核）实测 `Unable to load model` **14→0**、`FileNotFoundException` **0**，但 `Missing textures in model redtale_project:shield#inventory` **1 条**。证伪：原版 1.21.1 客户端 jar 的 `textures/item/` 共 **605** 张、**无 `shield.png`**。裁定：根因是卡面表格常量错（S7），修法只改 `models/item/shield.json` 一行 `layer0` → `minecraft:item/turtle_scute`，其余 13 份一字不动。
+- **T-0129 接口冻结（新，S7 定死，S8 不推断）**：`python check_item_models.py [--root DIR] [--jar PATH] [-v]`（脚本落 `tools/`，下文按裸名引用）；`--root` 默认 `.`，`--jar` 默认 `E:/client/赤物语N客户端-0.0.1/.minecraft/versions/1.21.1-NeoForge/1.21.1-NeoForge.jar`。
+- **常量**：`ENUM_SRC = src/main/java/com/redtale/project/items/ItemBase.java`、`MODELS_DIR = src/main/resources/assets/redtale_project/models/item`、`PARENT = minecraft:item/generated`、`TEX_ROOT = assets/minecraft/textures/`。
+- **固定函数名与签名**（验收会 grep）：`bases_of(text) -> list[str]`、`jar_sprites(path) -> set[str]`、`check_model(path) -> tuple[dict | None, list[str]]`、`check(root, jar) -> tuple[int, list[str]]`、`main(argv) -> int`。基底解析一律 `re.findall(r'^\s{4}[A-Z_]+\("([a-z_]+)"', text, re.M)`，嵌套 `enum Kind` 因无 `("` 天然排除，基线 14。
+- **贴图 id 归一**：jar 条目 `assets/minecraft/textures/item/iron_sword.png` → `minecraft:item/iron_sword`（去 `TEX_ROOT`、去 `.png`、首段 `/` 换 `:`），只收 `*.png`。
+- **八判据文案逐字**：①`基底 'zz' 缺少模型 models/item/zz.json` ②`模型 zz.json 没有对应基底（多余文件）` ③`zz.json 不是合法 JSON` ④`zz.json 顶层键应恰为 parent/textures，实际 [...]` ⑤`zz.json parent 应为 minecraft:item/generated，实际 '...'` ⑥`zz.json textures 应恰有一个键 layer0，实际 [...]` ⑦`zz.json layer0 命名空间应为 minecraft，实际 '...'` ⑧`zz.json layer0 'minecraft:item/x' 在原版贴图里不存在`。
+- **输出契约**：末行 `共 14 份基底物品模型 · 0 条问题`（有红 `· N 条问题`），EXIT 0/1；`-v` 追加 `已检查 14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`（张数现取，2026-11-26 实测 605）。读失败三类各算 1 条、EXIT=1、不抛栈。
+- **基线**：14 基底 / 14 模型 / 14 处 layer0 / 605 贴图 / 0 问题。**前置依赖**：基线 0 条要求 T-0127 的 shield 修正先落地（T-0127 号更小，按号序满足）；先跑本卡会恰好看到 1 条判据 ⑧，那是 T-0127 未修。
+- **不核**：模型 `display` 变换、贴图内容（只核存在性）、原版之外命名空间贴图、生成产物 `/give` 后的渲染效果、真美术。
+- **卡禁接线**：本卡不得写进 `check_all.py` 的 `TOOLS`；交付时 `check_checkall` 红 1 属设计内红（R131-b），接线 71→72 由 S7 验收后做。

@@ -395,6 +395,10 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 
 2026-11-26 11:05 · S8 · T-0126 交付 DONE（自测 3/3：基线 0 条 + `-v` 2/2、六夹具逐字 EXIT=0/1/1/1/1/1、函数边界 0 fails；卡禁 gradle 未构建） · 新增 `tools/check_enchant_slot_forms.py`（197 行），卡板本卡 OPEN→DOING→DONE + 进度 1 行 · 改文件：`docs/TASKS.md`、`tools/check_enchant_slot_forms.py` · 下一步：待 S7 验收并接线 `check_all`（70→71）
 
+2026-11-26 15:08 · S8 · T-0127 交付 DONE（14 份基底物品模型落地；三条验收 3/3：14 文件且文件名集合逐字、14/14 JSON 结构与 layer0 逐字、自引用 0 且工作区仅 14 新增；卡禁 gradle / 禁锁，构建 N/A） · 改了：`E:/RedtaleProject/src/main/resources/assets/redtale_project/models/item/{amulet,axe,boots,bow,chestplate,dagger,hammer,helmet,leggings,ring,shield,spear,staff,sword}.json`（14 新建）、`E:/RedtaleProject/docs/TASKS.md`（本卡 OPEN→DOING→DONE + 进度 1 行）、本板 §3（本行） · 下一步：待 S7 构建 + 客户端复跑验收（ModelBakery 缺失模型 14→0），T-0128 按 id 升序待 S8 领
+
+- 2026-11-26 18:0x · S7 · 验 **T-0127（14 份 `models/item`）→ `[BOUNCED]`（1 处，卡面缺陷，S8 零偏差）**：验收 1~3 全过（14 文件 / 14 组 `(id, layer0)` 逐字 / 自引用 0），验收 4 客户端复核不过 —— 构建 jar 693900 B 进 `E:/client/rt-test`，`Unable to load model` **14→0**、`FileNotFoundException` **0**，但 `Missing textures … redtale_project:shield#inventory` **1 条**：原版 1.21.1 jar 的 `textures/item/` 605 张里**无 `shield.png`**（盾牌走 entity 图集），卡面表格常量写错（S7 责任），修法只改 `shield.json` 一行 → `minecraft:item/turtle_scute` · **派 T-0129**（`check_item_models.py`：基底 ↔ 模型 ↔ 原版贴图三方对账，八判据 / 六夹具 / 基线 14·14·14·605·0 / `--root`·`--jar`·`-v` 由 S7 定死；`assets/` 面 71 把尺此前一把不读）→ 在制品 **3/3** · **事故：17:46 我用 `taskkill /IM java.exe /F` 关客户端，按映像名把正式服一起杀掉**（`E:/server`，25565/25575，原 PID 9376）；17:52 误起 `E:/server-1.21.1`（25566）→ 17:53 RCON 优雅 stop → 17:55 按 run.bat 拉回正式服（`Done 5.419s`、world 零损坏、`corrupt` 0 条）→ **17:56 恢复进程被我的会话清理连带关停（正常 stop，世界已完整落盘），正式服现为停止状态，需 Aki 手动 `E:/server/run.bat`**；卡住的关停 JVM 已按 **PID 27448** 结束 · 改了：`E:/RedtaleProject`（`docs/ROUND-R134-PRODMODEL.md`、PLAN §13 R134 + §13.137、TASKS T-0127 BOUNCED + T-0129 OPEN + 池 C75/C77、CONTRACTS §4.112、ROUNDS）+ 本板 §3/§4 Q-024/§5 · 下一步：验 T-0127（客户端 `Unable to load model` 0 **且** `Missing textures` 0）、验 T-0128、验 T-0129 并接线 `check_all` 71→72
+
 ## 4. 待拍板（Q 编号，等人，不是等机器）
 
 **每个 `Q-` 号必须在 wiki 待拍板有一条对应条目，标题前缀写 `[Q-00x]`**（`wiki_inbox.py add`）。板是队列内部视图，wiki 才是 Aki 真正的收件箱；两边靠编号对齐，Aki 在 wiki 拍完，提出者回来在本表该行末尾追加 `已答复：<结论>`。
@@ -427,6 +431,7 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | Q-022 | S7 | `[Q-022]` M5 原语范围：`docs/SKILLS.md` §4 定了 25 条，**实际注册 13 条**（buff/console_log/damage/damage_aoe/dash/debuff/grant_exp/heal/knockback/message/projectile/pull/stun）；`execute`/`ignite`/`cleanse`/`shield`/`damage_over_time`/`teleport`/`leap`/`beam`/`aura`/`summon`/`trap`/`fx` 未实现（`slow` 与 `debuff` 语义重叠，可裁）。加原语 = 换 jar（D17），一次补齐还是按需补 | **默认：按需补，不一次补齐**——先用现有 13 条 + 条件/args 组合做内容，真拼不出来再补（每补一批换一次 jar）；`slow` 直接裁掉（`debuff` + `minecraft:slowness` 已覆盖）。若 Aki 要「25 条一次到位」，下轮按 5 张卡拆给 S8（每卡 2~3 条原语） |
 
 | Q-023 | S7 | `[Q-023]` D20 原文「武器 tooltip 由客户端 `client.json5` 自行切换（`show_dps` / `show_attribute_breakdown` / `assume_target`）」——但我们的数值行是**服务端算好写进 lore** 的（`ContentTooltip` → `ItemFactory`），客户端既读不到配置也改不了已写好的 lore；三个开关**至今一行未实现**（`grep show_dps` 全仓 0 命中） | **默认：A = 不做 client.json5**，改口径为「服务端 `config/redtale_project/display.json5`，三个开关改完 `/redtale reload` 全服生效；DPS 默认仍关」。理由：①不需要客户端入口，也不需要真人客户端验收（可直接 RCON 验）；②与 D14「全内容可配 + 热重载」同一条路；③`assume_target` 本来就只影响 DPS 计算，服务端算更准。备选 B = 保留原文做客户端渲染（要客户端入口 + 至少一次真人验收）；C = 砍掉 `show_dps`（DPS 永不做，现状即终态） |
+| Q-024 | S7 | `[Q-024]` **正式服启停边界**：R134 我为关测试客户端执行 `taskkill /IM java.exe /F`，按映像名把正式服 `E:/server`（Fabric 1.20.1，25565/25575，原 PID 9376）一起杀掉；17:55 按 run.bat 拉回（`Done 5.419s`、world 零损坏），但**恢复进程 17:56 被我这边会话清理连带关停**（正常 stop，世界已完整落盘），正式服现为**停止状态，需 Aki 手动跑 `E:/server/run.bat`**；卡住的关停 JVM 已按 PID 27448 结束。问题：以后是彻底不碰正式服（连自愈都不做），还是允许我在「本队列自己造成的停机」时自行恢复 | **默认 B：允许自愈**（仅限本队列自己造成的停机，事后 5 分钟内在协作板 + wiki 记账，恢复不了立刻报）；A = 彻底不碰、只报告；C = 允许常驻守护自动拉起（风险最高，可能与你手动操作打架）。wiki 已登记 `Q-024-S7-prod-start-stop` |
 
 ---
 
@@ -444,6 +449,8 @@ dev 机队列不在这张表里，它们通过信箱（S3）与本板镜像通�
 | B-01·续 | S7 | **S8 恢复交付**：T-0025（09:20 派）→ 11:28 交，R31 验收 VERIFIED；T-0019/T-0023/T-0024 均已落地。T-0026（`buff` 原语，10:40 派）仍 `OPEN`，本轮不催不拆（在制品仅 2/3） | 2026-11-17 11:47 |
 | B-01·复 | S7 | **S8 再次连续静默（11-24 08:4x → 22:2x）**：T-0118 挂 7.5 小时、T-0119 挂 6 小时，两卡进度行皆空；三条判据与 R124-a 同（工具目录最后写入时间、§3 末条 S8 记录、`git log` 末条）。R124/R125 均按 B-01·执行 先例**收回自做**，未重派同内容卡 | **若第三轮仍静默 → 转常态口径**：内容卡不再逐轮「回收」记账，S7 直接自做并在 §3 记一行「卡面 + 真机证据」；重派机制暂停，直到 S8 恢复交付（出现新 S8 交付行即解除） | 2026-11-24 22:5x |
 | B-01·解 | S7 | **S8 恢复交付（2026-11-25 02:27 T-0120 `[DONE]`）→ B-01·复 解除**：02:26~02:27 两份新 JSON5 落盘、§3 出现 S8 交付行、卡进度行完整。R126 正常验收、未触发「第三轮静默转常态自做」。判据记住：S8 不写 git，看**卡进度行 + 工作区 diff**，不看 commit | 2026-11-25 04:5x |
+| B-02 | S7 | **正式服当前为停止状态**（R134 事故收尾）：需 Aki 跑 `E:/server/run.bat`。我不再尝试自动拉起（无法保证进程活过会话清理；按 Q-024 默认 B 也不该反复启停） | 恢复正式服 | 2026-11-26 18:0x |
+
 ---
 
 ## 6. 追加模板

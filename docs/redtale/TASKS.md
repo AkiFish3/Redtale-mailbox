@@ -5186,7 +5186,7 @@ fi
 - 2026-11-26 11:05 · 完成 · `tools/check_enchant_slot_forms.py`（新建 197 行） · 构建 N/A（卡禁 gradle / 禁锁，未取锁未构建） · 自测 3/3：基线 `共 1 份附魔槽位字段口径对账表 · 0 条问题` EXIT=0、`-v` `已检查 2 份附魔 · 2 处 slots 引用 · 形态 非空数组 + 元素非空字符串`；六夹具 A~F 逐字 EXIT=0/1/1/1/1/1（B 字符串非数组、C 空数组、D 第 2 项 1、E 第 1 项 '  '、F 三条 sorted）全过；wc=197≤200、`def check_slots`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条读失败 EXIT=1 不抛栈；函数边界驱动 0 fails（非数组三形态 / None 跳过 / 空数组 / 合法 / 坏元素 1 起序号 / 嵌套 / 缺键 / 非 dict / 重复不合并 / sorted / shim 单引号+嵌套注释+尾逗号）；夹具 `build/enchslotfix/` 与自建 pyc 已删；`check_ownership` 0 问题、`check_tasks` 127 卡/在制品 2/问题 0；新脚本未进 TOOLS 清单，接线 70→71 待 S7 验收后做（卡禁改清单/接线）
   - 2026-11-26 11:3x · **S7 验收 → VERIFIED**：三条逐条过 —— ①基线 `共 1 份附魔槽位字段口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份附魔 · 2 处 slots 引用 · 形态 非空数组 + 元素非空字符串`；②六夹具 A~F 干净 `enchantments/` 副本逐字 EXIT=0/1/1/1/1/1 —— B `slots 值 'mainhand' 不是数组`、C `slots 是空数组`、D `第 2 项 值 1`、E `第 1 项 值 '  '`、F 三条 sorted（`soul_reap` → `super_sharpness` → `zz`）；③`wc=197`≤200、`def check_slots`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条 `[问题] enchantments 目录读取失败` + 末行 `1 条问题` EXIT=1 不抛栈；函数边界 14 组全过（非数组 `"mainhand"`/`1`/`True` 各 1 条、`None` 跳过、`[]` 1 条、合法 0 条、坏元素 1 起序号、`[1,2]` 2 条、嵌套 1 条、缺键/非 dict 0 条、重复不合并、sorted；shim 单引号+嵌套注释+尾逗号解析正确、顶层数组返 `None`）。夹具与 pyc 已删。**S8 零偏差不打回**。接线 `check_all` 70→**71**（`共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0`）。
 
-### T-0127 · [OPEN] `models/item/` 14 份基底物品模型 —— 客户端紫黑格修复（M1 / D10+D20，资源面卡，对账网第五十四例）
+### T-0127 · [BOUNCED] `models/item/` 14 份基底物品模型 —— 客户端紫黑格修复（M1 / D10+D20，资源面卡，对账网第五十四例）
 
 - 派单：S7 · 2026-11-26 08:5x（R132）、在制品 **2/3**
 - 目标：补 `assets/redtale_project/models/item/` 的 14 份基底物品模型。**真机取证（R132）**：测试客户端（NeoForge 21.1.257 + 本模组）启动时 `ModelBakery` 连报 **14 条** `Unable to load model: 'redtale_project:item/<base>' … FileNotFoundException: redtale_project:models/item/<base>.json`，14 个 id 与 `ItemBase.java:17-46` 的枚举逐字一致（`sword`/`dagger`/`axe`/`hammer`/`spear`/`staff`/`bow`/`shield`/`helmet`/`chestplate`/`leggings`/`boots`/`ring`/`amulet`）。根因：`src/main/resources/assets/redtale_project/` 下**只有 `lang/`**，`models/` 与 `textures/` 全不存在（`find src/main/resources/assets -path "*models/item*" -name "*.json" | wc -l` = **0`）—— 物品注册成功、`/give` 能拿到，但客户端渲染成紫黑缺失模型。全 70 把尺没有一把读 `assets/`（对账网首次遇到「资源缺失」类洞，此前全是配置字段形态）。
@@ -5225,7 +5225,7 @@ fi
   | `spear.json` | `minecraft:item/trident` |
   | `staff.json` | `minecraft:item/blaze_rod` |
   | `bow.json` | `minecraft:item/bow` |
-  | `shield.json` | `minecraft:item/shield` |
+  | `shield.json` | `minecraft:item/turtle_scute` |
   | `helmet.json` | `minecraft:item/iron_helmet` |
   | `chestplate.json` | `minecraft:item/iron_chestplate` |
   | `leggings.json` | `minecraft:item/iron_leggings` |
@@ -5236,7 +5236,10 @@ fi
   1. `cd /e/RedtaleProject && ls src/main/resources/assets/redtale_project/models/item/*.json | wc -l` → **14**；`ls src/main/resources/assets/redtale_project/models/item/` 的文件名集合逐字等于 `amulet axe boots bow chestplate dagger hammer helmet leggings ring shield spear staff sword`（14 个，无多余文件）。
   2. 逐份 `python -c` 校验 JSON 合法且**只有** `parent` / `textures` 两个顶层键、`parent == "minecraft:item/generated"`、`textures` 恰好一个键 `layer0`、值逐字等于上表（14 份全对）。命令示例：`python -c "import json,glob;print(sorted((f.split('/')[-1][:-5], json.load(open(f,encoding='utf-8'))['textures']['layer0']) for f in glob.glob('src/main/resources/assets/redtale_project/models/item/*.json')))"` → 输出 14 组 `(id, layer0)` 与上表逐字一致。
   3. `grep -rl "redtale_project:item/" src/main/resources/assets/redtale_project/models/item/ | wc -l` → **0**（`layer0` 必须全指向原版，不得自引用未存在的贴图）；`git status --porcelain` 只出现这 14 个新文件（无 M 条目）。
+  4. **（S7 客户端复核，R134 新增）** 构建后把 jar 放进 `E:/client/rt-test/mods`，跑 `launch.py`，`grep -c "Unable to load model" logs/latest.log` → **0**（原 14 条）**且** `grep -c "Missing textures in model redtale_project:" logs/latest.log` → **0**（R134 实测停在 **1** 条：`redtale_project:shield#inventory: minecraft:textures/atlas/blocks.png:minecraft:item/shield`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- **2026-11-26 17:4x · S7 验收 → `[BOUNCED]`（1 处）**：验收 1~3 逐条过（14 文件、14 组 `(id, layer0)` 逐字、自引用 0、`git status` 恰 14 个 `??`）；验收 4（客户端复核）**不过** —— 构建 jar 693900 B 进 `rt-test` 后 `Unable to load model` **14→0**（主目标达成），但 `Missing textures in model redtale_project:shield#inventory` **1 条**：原版 1.21.1 客户端 jar 里**根本没有** `assets/minecraft/textures/item/shield.png`（`unzip -l | grep textures/item/` 605 张里无 `shield`；盾牌在原版靠 entity 图集渲染）。**根因是卡面表格常量错（S7 责任），S8 实现零偏差、不打回**。修法：只改 `models/item/shield.json` 一行 `layer0` 为 `minecraft:item/turtle_scute`（卡面表格已同步改），其余 13 份一字不动；改完把本卡标回 `[DONE]`，客户端复核仍归 S7。
+- 2026-11-26 15:08 · 完成 · 新建 14 份 `src/main/resources/assets/redtale_project/models/item/<base>.json`（amulet/axe/boots/bow/chestplate/dagger/hammer/helmet/leggings/ring/shield/spear/staff/sword） · 构建 N/A（卡禁 gradle / 禁锁，未取锁未构建） · 自测 3/3：① `ls .../models/item/*.json | wc -l`=14 且文件名集合逐字等于卡面 14 个无多余；② 严格 JSON 校验 14/14（`parent`/`textures` 仅两顶层键、`parent == "minecraft:item/generated"`、`textures` 仅 `layer0`、14 组 `(id, layer0)` 与卡表逐字一致，EXIT=0；Windows 下用 `os.path.basename` 避开示例 `split('/')` 的反斜杠偏差）；③ `grep -rl "redtale_project:item/" .../models/item/ | wc -l`=0，`git status --porcelain -uall` 恰 14 个新增 `??` 模型文件，另有 ` M docs/TASKS.md`（S8 卡面记账，非源码改动，无其它 M）；未启停服务器、未读 jar、未新建 PNG。客户端紫黑格复核与真机验收归 S7
 
 ### T-0128 · [OPEN] `items/demo_dagger.json5` + `items/demo_warhammer.json5` —— D1 武器线补档（内容面卡，无新代码）
 
@@ -5312,6 +5315,48 @@ fi
   3. `python tools/check_all.py` → 末行 `共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → `0 条问题`；`python tools/check_tasks.py` → `在制品 1`（本卡自身）。再逐字核两份 JSON5：`python -c "import json,sys;sys.path.insert(0,'tools');from check_progress import clean_json5;..."` 之等价做法 —— 只需断言 `id` / `base` / `weapon_attributes` / `stats` 五键与上表一致（`demo_dagger`: `dagger` / `bettercombat:dagger` / `attack_damage 3.5` / `attack_speed 2.4`；`demo_warhammer`: `hammer` / `bettercombat:hammer` / `attack_damage 10.0` / `attack_speed 0.9`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
+### T-0129 · [OPEN] `tools/check_item_models.py` —— 基底 ↔ 模型 ↔ 原版贴图三方对账（资源面首尺，对账网第五十五例）
+
+- 派单：S7 · 2026-11-26 17:5x（R134）、在制品 **3/3**
+- 目标：R132 的 14 条 `Unable to load model` 与 R134 的 1 条 `Missing textures` 暴露同一类洞 —— **`assets/` 面 71 把尺一把都不读**（`grep -l "assets/redtale_project" tools/*.py` 零命中）。本卡建这条网的第一个网眼：14 个 `ItemBase` 枚举 ↔ `models/item/*.json` ↔ 每份模型的 `layer0` 是否真是原版 jar 里存在的贴图。R134 的 shield 事故正是「模型文件写了、`layer0` 指向不存在的贴图」——文件级检查（T-0127 验收 1~3）全绿也抓不到，只有贴图表能抓到。
+- 独占文件（**唯一可写**）：
+  - `tools/check_item_models.py`（新建，≤200 行）
+  - `docs/TASKS.md`（仅本卡状态行 + 进度行）
+- 禁止：不改任何 `src/**`（含 `assets/`）、不改其它 `tools/*.py`（含 `check_all.py`）、不改其它 `docs/`、不新建/修改任何 `.json` / `.png`、不执行 gradle / 不取构建锁 / 不起服务 / 不启停任何服。
+- **接口（S7 定死，逐字照此实现，不许自行设计参数名或函数名）**：
+
+  ```
+  python tools/check_item_models.py [--root DIR] [--jar PATH] [-v]
+  ```
+
+  | 常量 | 值 |
+  |---|---|
+  | `ENUM_SRC` | `src/main/java/com/redtale/project/items/ItemBase.java` |
+  | `MODELS_DIR` | `src/main/resources/assets/redtale_project/models/item` |
+  | `PARENT` | `minecraft:item/generated` |
+  | `TEX_ROOT` | `assets/minecraft/textures/` |
+
+  - `--root` 默认 `.`（仓库根），所有相对路径都拼在 `--root` 下；`--jar` 默认 `E:/client/赤物语N客户端-0.0.1/.minecraft/versions/1.21.1-NeoForge/1.21.1-NeoForge.jar`。
+  - 固定函数名与签名（验收会 grep）：`bases_of(text) -> list[str]`、`jar_sprites(path) -> set[str]`、`check_model(path) -> tuple[dict | None, list[str]]`、`check(root, jar) -> tuple[int, list[str]]`、`main(argv) -> int`。
+  - 基底解析一律 `re.findall(r'^\s{4}[A-Z_]+\("([a-z_]+)"', text, re.M)` —— 嵌套的 `enum Kind { WEAPON, ARMOR, ACCESSORY }` 没有 `("`，天然排除；基线必须得 **14**。
+  - 贴图 id：jar 条目 `assets/minecraft/textures/item/iron_sword.png` → `minecraft:item/iron_sword`（去 `TEX_ROOT` 前缀、去 `.png`、把第一段 `/` 换成 `:`）。只收 `*.png`。
+- 判据（八种形态，文案逐字；顺序按「基底集合 → 模型文件 → 顶层键 → parent → textures 键 → 命名空间 → 贴图存在性」，同一文件内按此序）：
+  1. `基底 'zz' 缺少模型 models/item/zz.json`
+  2. `模型 zz.json 没有对应基底（多余文件）`
+  3. `zz.json 不是合法 JSON`
+  4. `zz.json 顶层键应恰为 parent/textures，实际 [...]`
+  5. `zz.json parent 应为 minecraft:item/generated，实际 '...'`
+  6. `zz.json textures 应恰有一个键 layer0，实际 [...]`
+  7. `zz.json layer0 命名空间应为 minecraft，实际 '...'`
+  8. `zz.json layer0 'minecraft:item/x' 在原版贴图里不存在`
+- 输出：末行 `共 14 份基底物品模型 · 0 条问题`（有红则 `· N 条问题`），EXIT 0/1；`-v` 多打一行 `已检查 14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 <张数> 张`（张数从 jar 现取，2026-11-26 实测 **605**）。读失败走 `基底源码读取失败：<路径>` / `模型目录读取失败：<路径>` / `原版 jar 读取失败：<路径>`，各算 1 条问题、EXIT=1、**不抛栈**。
+- **依赖说明（务必先读）**：本卡基线 `0 条问题` 的前提是 T-0127 的 shield 修正已落地（`shield.json` 的 `layer0` 改成 `minecraft:item/turtle_scute`）。T-0127 号更小，按号序先做；若你先跑本卡会看到**恰好 1 条** `shield.json layer0 'minecraft:item/shield' 在原版贴图里不存在` —— 那是 T-0127 未修，**不是本卡实现错**，继续做本卡即可，最终基线由 S7 在 T-0127 修完后跑。
+- 验收（**三条，全部可机器执行**）：
+  1. `cd /e/RedtaleProject && python tools/check_item_models.py` → 末行 `共 14 份基底物品模型 · 0 条问题` EXIT=0；`-v` → `已检查 14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`。
+  2. 六夹具（干净副本 `build/modelcheck_s8/`，把 `ItemBase.java` + `models/item/` 整体拷进去，用 `--root` 指向副本）：**A** 删 `ring.json` → 1 条判据 1；**B** 加一份同构 `zz.json` → 1 条判据 2；**C** `sword.json` 的 `parent` 改 `minecraft:item/handheld` → 1 条判据 5；**D** `axe.json` 的 `textures` 加 `layer1` → 1 条判据 6；**E** `bow.json` 的 `layer0` 改 `redtale_project:item/bow` → 1 条判据 7；**F** `hammer.json` 的 `layer0` 改 `minecraft:item/nonexistent` → 1 条判据 8。六个各 `EXIT=1` 且文案逐字；夹具用完删掉。
+  3. `wc -l tools/check_item_models.py` ≤ **200**；`python -m py_compile tools/check_item_models.py` 无输出；`python tools/check_item_models.py --jar NO_SUCH.jar` → 恰 1 条 `原版 jar 读取失败` 且 EXIT=1 不抛栈；`python tools/check_item_models.py --root NO_SUCH` → 恰 2 条读失败；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" tools/check_item_models.py | wc -l` → **0**。**不要**把本脚本写进 `check_all.py` 的 `TOOLS` 清单（卡禁接线；`check_checkall` 此时红 1 条属设计内红，接线由 S7 验收后做）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+
 ## 6. 派单池（S7 用，S8 不看）
 
 **R63 盘点**：原 C2~C8 七条**全部已落地**（C2→T-0004、C3→T-0011、C4/T-0008、C5→T-0003、C6→T-0015、C7→T-0007、C8→T-0012），池子已清空重填。
@@ -5378,7 +5423,8 @@ fi
 | C69 | ~~`sockets.count==0` / 缺 count 但显式 `types` 整段被 `Layout.EMPTY` 早退丢弃（零 WARN）~~ → **T-0117（R122 派）** | R122 四判据齐：`SocketSpec.java:54-57,78-95` 逐字静默早退（同文件六处 WARN 反证）；三把旧尺干净副本反事实全绿；基线 7 物品/1 sockets/2 项 types/0 问题；同族 D~F 不同出口，按出口分卡，不并进 T-0115 | 无 |
 | C70 | ~~`spawn_rules[].priority` / `per_chunk_cap` 超 int 范围静默饱和 → **T-0118（R123 派 / R124 S7 自做验收）**~~ | R123 四判据齐：`SpawnRuleSpec.java:113-118` 对有限整数走 `:117` 静默夹顶/夹底（`:116` 只管非有限/非整数）；玩法面落 `SpawnRegistry.java:29-31` 排序与 `SpawnReplacer.java:210` 每区块限量；两把旧尺（`check_mobs.py:143-148` Python int 无上界 / `check_spawn_conditions.py:70-86` 只核数值类型）干净副本反事实全绿；基线 1 规则/2 落点/0 问题。与 T-0109~T-0112 的「小数 `(int)` 截断」不同出口，本卡只核超 int 饱和 | 无 |
 | C71 | ~~剩余原型无默认怪：`summoner` / `charger` / `flyer` / `ambient`~~ → **T-0119 补 `melee`/`ranged`（R125 验）→ T-0120 补 `summoner`/`charger`（R126 验）→ T-0121 补 `flyer`（R127 验）→ T-0122 补 `ambient`（R128 验）**，8/8 结项 | 纯内容（D17：只写 JSON5 + 2 行清单登记，不换 jar）。**R125-a 教训**：内容卡必须把 `ConfigStore.DEFAULT_FILES` 的清单行写进卡面，否则 `check_defaults.py` 必红、验收自相矛盾（T-0119 原卡即踩此坑）。**`ambient` 口径（R126 自定，非范围决策）**：纯氛围生物，不给技能、不给装备、`drops` 留空，只做「血量低 + 体积小 + 不吃技能」的装饰样本；若 Aki 要它带技能再改配置，不换 jar | —— |
-| C75 | ~~`assets/redtale_project/models/item/` 14 份基底模型缺失~~ → **T-0127（R132 派）** | R132 真机取证：客户端 14 条 `FileNotFoundException: redtale_project:models/item/<base>.json`，14 id 与 `ItemBase.java:17-46` 逐字一致；`assets/` 下只有 `lang/`，`models/` 与 `textures/` 全无；70 把尺零读 `assets/`（对账网第五十四例，首次「资源缺失」类）。占位贴图引用原版，真美术另开工单 | 无 |
+| C75 | ~~`assets/redtale_project/models/item/` 14 份基底模型缺失~~ → **T-0127（R132 派 / R134 打回 1 处）** | R132 真机取证：客户端 14 条 `FileNotFoundException: redtale_project:models/item/<base>.json`，14 id 与 `ItemBase.java:17-46` 逐字一致；`assets/` 下只有 `lang/`，`models/` 与 `textures/` 全无；70 把尺零读 `assets/`（对账网第五十四例，首次「资源缺失」类）。占位贴图引用原版，真美术另开工单。**R134 打回 1 处**：`shield.json` 的 `layer0` 写了 `minecraft:item/shield`，而原版 1.21.1 jar 无 `textures/item/shield.png`（605 张 item 贴图里没有），客户端复跑 `Unable to load model` 14→0 但 `Missing textures` 1 条；根因是卡面表格常量错（S7），已改 `minecraft:item/turtle_scute` | 无 |
+| C77 | ~~`assets/` 面零对账（71 把尺一把不读 `assets/`）~~ → **T-0129（R134 派）** | 基底 ↔ 模型 ↔ 原版贴图三方对账；R132（14 条缺模型）与 R134（1 条死贴图引用）同一族，都是「文件在不在」之外还有「引用的东西在不在」。判据离线可判（读原版 jar 的 `textures/**` 条目），不需要起服/起客户端；基线 14 基底 / 14 模型 / 14 layer0 / 605 贴图 / 0 问题。**依赖**：基线 0 条要求 T-0127 的 shield 修正在先（T-0127 号更小，按号序自然满足） | 无 |
 | C76 | ~~D1 武器线内容补档（`dagger` / `hammer` 零内容）~~ → **T-0128（R133 派）** | `items/` 7 份内容只有一把 `sword` 武器；D15 动作只取样过 `claymore`、D20 攻速只有一档、D19 攻速表无「快武器」对照。补匕首（快/低伤）+ 战锤（慢/高伤），`bettercombat:dagger` / `bettercombat:hammer` 已从 2.4.0 jar 现查证实存在 | 无 |
 | C74 | ~~`enchantments` 的 `slots` 形态静默透传~~ → **T-0126（R131 派）** | `EnchantmentGenerator.java:39-40` 原样透传、`:151/:160-163` 不覆盖 `slots`；`ENCHANT-API.md:112` 定义形状为槽位名数组；六把旧尺零覆盖（`check_enchants.py:116-118` 只核 `supported_items` / `description` / `max_level`）；基线 2 文件 / 2 处 / 0 问题；派前反事实（`slots: "mainhand"` + `slots: []`）六把尺逐字全绿（对账网第五十三例）。**不核枚举名**（`EquipmentSlotGroup` 全表项目文档未冻结） | 无 |
 | C73 | ~~`enchantments` 的 `min_cost` / `max_cost` 形态静默透传~~ → **T-0125（R130 派）** | T-0124 明确排除的「`Cost` 对象，形态另议」，本轮收口。`EnchantmentGenerator.java:39-40` 原样透传、`:151/:160-163` 的校验不覆盖这两个键；`ENCHANT-API.md:114` 定义形状 `{base, per_level_above_first}`；全 69 把尺零读（`grep` 无命中）；基线 2 文件 / 4 处 / 0 问题；派前五把旧尺（`check_enchants` / `check_numeric` / `check_enchant_definition_ints` / `check_enchant_exclusive` / `check_enchant_args_sync`）在整份 defaults 副本反事实逐字全绿（对账网第五十二例） | 无 |
