@@ -5159,7 +5159,7 @@ fi
 - 2026-11-26 07:00 · 完成 · `tools/check_enchant_cost_forms.py`（新建 157 行） · 构建 N/A（卡禁 gradle / 禁锁，未取锁未构建） · 自测 3/3：基线 `0 条问题` EXIT=0、`-v` `2 份/4 处`；六夹具 A~F 逐字 EXIT=0/1/1/1/1/1 全过（B 非对象 8、C 字段 25.5、D 缺 per_level_above_first、E 字段 '5'、F 四条 sorted）；wc=157≤200、`def check_costs`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条读失败 EXIT=1；函数边界 39/39 驱动检查全过；夹具 `build/enchcostfix/` 与自建 pyc 已删；`check_tasks` 125 卡/在制品 0/问题 0、`check_ownership` 0 问题；`check_all` 69 脚本红 1 = `check_checkall` 报新脚本未进清单（卡禁改清单/接线，待 S7 验后接 69→70）
   - 2026-11-26 08:4x · **S7 验收 → VERIFIED**：三条逐条过 —— ①基线 `共 1 份附魔代价字段口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份附魔 · 4 处代价字段引用 · 字段 min_cost/max_cost · 形态 base/per_level_above_first 整数`；②六夹具 A~F 干净 `enchantments/` 副本逐字 EXIT=0/1/1/1/1/1 —— B `min_cost: 8` 非对象、C `max_cost.base 25.5`、D 缺 `per_level_above_first`、E `base: "5"`（`repr` 带引号）、F 四条 sorted（`soul_reap` → `super_sharpness` → `zz` 的 `min_cost.base` → `min_cost.per_level_above_first`）；③`wc=157`、`def check_costs`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条 `enchantments 目录读取失败` + 末行 `1 条问题` EXIT=1 不抛栈；函数边界 15 组全过（非对象 `8`/`2.5`/`"x"`/`[]`/`True` 各 1 条、`{base,per}` 完整 0 条、缺字段 1 条、`per 10.0` 1 条、`base True` 1 条、`per 1e3` 1 条且 `repr`=`1000.0`、缺键/非 dict 0 条、两键都坏 2 条、重复不合并、sorted）；夹具与 pyc 已删。**S8 零偏差不打回**。接线 `check_all` 69→**70**（`共 70 个脚本 · 跑成 70 · 跳过 0 · 红 0`）。
 
-### T-0126 · [OPEN] `check_enchant_slot_forms.py` —— 附魔 `slots` 形态静默透传对账（M4 / D32，单文件零接线，对账网第五十三例）
+### T-0126 · [VERIFIED] `check_enchant_slot_forms.py` —— 附魔 `slots` 形态静默透传对账（M4 / D32，单文件零接线，对账网第五十三例）
 
 - 派单：S7 · 2026-11-26 08:4x（R131）、在制品 **1/3**
 - 目标：给 `enchantments/*.json5` 的 `slots` 补一把离线尺子。真洞逐字取证（`EnchantmentGenerator.java`）：`:39-40` 的 `PASS_THROUGH` 把 `slots` 原样列入；`:146-156` 循环体只有 `numericKey(key)` 一条校验，而 `:160-163` 的 `numericKey` 只认 `max_level` / `weight` / `anvil_cost` 三键 —— **`slots` 既不做类型检查也不做元素检查，整棵子树原样写进 datapack**。项目口径（`ENCHANT-API.md:112`）定义 `slots` 为 `EquipmentSlotGroup` 名数组（示例 `["mainhand"]`）；写成字符串、空数组、混入数字/空白串时，本模组**零 WARN**。旧尺作用域逐把核过：`check_enchants.py:116-118` 只核 `supported_items` 与 `description` / `max_level`，**不读 `slots`**；`check_numeric.py` 不读 `enchantments/`；三把附魔尺（`check_enchant_definition_ints` / `check_enchant_cost_forms` / `check_enchant_exclusive` / `check_enchant_args_sync`）分别只读 `weight`+`anvil_cost` / 两个 `cost` / `exclusive_set` / `scripted.args`。**运行期后果（整条附魔被 codec 丢弃）标「推定」**，本卡只冻结离线可判的形态判据。基线：`enchantments/` 2 份各 1 处 `slots` = **2 文件 / 2 处 / 0 条问题**（两份都是 `slots: ["mainhand"],`）。
@@ -5183,6 +5183,8 @@ fi
   2. 六组夹具（默认副本 = 把 `src/main/resources/redtale/defaults/enchantments/` 整份拷到 `build/enchslotfix/A|B|C|D|E|F/enchantments/` 下）：A 默认副本 `--dir build/enchslotfix/A` → 0 条 EXIT=0、`-v` 逐字 2/2；B 副本把 `enchantments/soul_reap.json5` 的 `slots: ["mainhand"],` 改 `slots: "mainhand",` → 1 条 `[问题] enchantments/soul_reap.json5: slots 值 'mainhand' 不是数组（解析零 WARN 原样透传）` EXIT=1；C 副本把 `enchantments/super_sharpness.json5` 的 `slots: ["mainhand"],` 改 `slots: [],` → 1 条 `[问题] enchantments/super_sharpness.json5: slots 是空数组（解析零 WARN 原样透传）` EXIT=1；D 副本把 `enchantments/soul_reap.json5` 的 `slots` 改 `slots: ["mainhand", 1],` → 1 条 `[问题] enchantments/soul_reap.json5: slots 第 2 项 值 1 不是非空字符串（解析零 WARN 原样透传）` EXIT=1；E 副本把 `enchantments/super_sharpness.json5` 的 `slots` 改 `slots: ["  "],` → 1 条 `[问题] enchantments/super_sharpness.json5: slots 第 1 项 值 '  ' 不是非空字符串（解析零 WARN 原样透传）` EXIT=1；F 副本做 B + C 再新增 `enchantments/zz.json5`（`{ id: "redtale_project:zz", supported_items: "#minecraft:swords", max_level: 1, weight: 1, slots: ["mainhand", ""], }`）→ 3 条按 `sorted`（`enchantments/soul_reap.json5` → `enchantments/super_sharpness.json5` → `enchantments/zz.json5`）EXIT=1。六组逐字对上。
   3. `wc -l < tools/check_enchant_slot_forms.py` ≤ 200；`grep -c "def check_slots"`=1；`grep -cE 'check_all|net\.minecraft|subprocess|exec\(|\.java|import check_|check_enchant|check_numeric|path_of'`=0；`py_compile` OK；`--dir NO_SUCH` → EXIT=1 且恰好 1 条 `[问题] enchantments 目录读取失败`、末行 `共 1 份附魔槽位字段口径对账表 · 1 条问题`，不抛栈；函数边界直接 import 本模块调 `check_slots`：非数组 `"mainhand"` / `1` / `True` / `None` 里前三者各 1 条（`None` 跳过 0 条）；`[]` 1 条；`["mainhand"]` 0 条；`["mainhand", 1]` 1 条且文案含 `第 2 项`；`[""]` / `["   "]` 各 1 条；`[1, 2]` 2 条；`[["x"]]` 1 条；缺键 / data 非 dict 全 0 条；重复两条不合并；输出 `sorted`；夹具用完即删（`build/enchslotfix/`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-26 11:05 · 完成 · `tools/check_enchant_slot_forms.py`（新建 197 行） · 构建 N/A（卡禁 gradle / 禁锁，未取锁未构建） · 自测 3/3：基线 `共 1 份附魔槽位字段口径对账表 · 0 条问题` EXIT=0、`-v` `已检查 2 份附魔 · 2 处 slots 引用 · 形态 非空数组 + 元素非空字符串`；六夹具 A~F 逐字 EXIT=0/1/1/1/1/1（B 字符串非数组、C 空数组、D 第 2 项 1、E 第 1 项 '  '、F 三条 sorted）全过；wc=197≤200、`def check_slots`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条读失败 EXIT=1 不抛栈；函数边界驱动 0 fails（非数组三形态 / None 跳过 / 空数组 / 合法 / 坏元素 1 起序号 / 嵌套 / 缺键 / 非 dict / 重复不合并 / sorted / shim 单引号+嵌套注释+尾逗号）；夹具 `build/enchslotfix/` 与自建 pyc 已删；`check_ownership` 0 问题、`check_tasks` 127 卡/在制品 2/问题 0；新脚本未进 TOOLS 清单，接线 70→71 待 S7 验收后做（卡禁改清单/接线）
+  - 2026-11-26 11:3x · **S7 验收 → VERIFIED**：三条逐条过 —— ①基线 `共 1 份附魔槽位字段口径对账表 · 0 条问题` EXIT=0、`-v` 逐字 `已检查 2 份附魔 · 2 处 slots 引用 · 形态 非空数组 + 元素非空字符串`；②六夹具 A~F 干净 `enchantments/` 副本逐字 EXIT=0/1/1/1/1/1 —— B `slots 值 'mainhand' 不是数组`、C `slots 是空数组`、D `第 2 项 值 1`、E `第 1 项 值 '  '`、F 三条 sorted（`soul_reap` → `super_sharpness` → `zz`）；③`wc=197`≤200、`def check_slots`=1、禁词 grep=0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条 `[问题] enchantments 目录读取失败` + 末行 `1 条问题` EXIT=1 不抛栈；函数边界 14 组全过（非数组 `"mainhand"`/`1`/`True` 各 1 条、`None` 跳过、`[]` 1 条、合法 0 条、坏元素 1 起序号、`[1,2]` 2 条、嵌套 1 条、缺键/非 dict 0 条、重复不合并、sorted；shim 单引号+嵌套注释+尾逗号解析正确、顶层数组返 `None`）。夹具与 pyc 已删。**S8 零偏差不打回**。接线 `check_all` 70→**71**（`共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0`）。
 
 ### T-0127 · [OPEN] `models/item/` 14 份基底物品模型 —— 客户端紫黑格修复（M1 / D10+D20，资源面卡，对账网第五十四例）
 
@@ -5234,6 +5236,80 @@ fi
   1. `cd /e/RedtaleProject && ls src/main/resources/assets/redtale_project/models/item/*.json | wc -l` → **14**；`ls src/main/resources/assets/redtale_project/models/item/` 的文件名集合逐字等于 `amulet axe boots bow chestplate dagger hammer helmet leggings ring shield spear staff sword`（14 个，无多余文件）。
   2. 逐份 `python -c` 校验 JSON 合法且**只有** `parent` / `textures` 两个顶层键、`parent == "minecraft:item/generated"`、`textures` 恰好一个键 `layer0`、值逐字等于上表（14 份全对）。命令示例：`python -c "import json,glob;print(sorted((f.split('/')[-1][:-5], json.load(open(f,encoding='utf-8'))['textures']['layer0']) for f in glob.glob('src/main/resources/assets/redtale_project/models/item/*.json')))"` → 输出 14 组 `(id, layer0)` 与上表逐字一致。
   3. `grep -rl "redtale_project:item/" src/main/resources/assets/redtale_project/models/item/ | wc -l` → **0**（`layer0` 必须全指向原版，不得自引用未存在的贴图）；`git status --porcelain` 只出现这 14 个新文件（无 M 条目）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+
+### T-0128 · [OPEN] `items/demo_dagger.json5` + `items/demo_warhammer.json5` —— D1 武器线补档（内容面卡，无新代码）
+
+- 派单：S7 · 2026-11-26 11:3x（R133）、在制品 **1/3**
+- 目标：`items/` 现有 7 份内容里**只有一把武器**（`demo_longsword`，基底 `sword`），14 个基底里 `dagger` / `hammer` 零内容。这导致三件事无法真机验证：D15 的 `weapon_attributes` 只取样过 `bettercombat:claymore` 一个动作、D20 tooltip 的攻速档位只有一个点、D19 攻速来源表在「快武器」上无对照。本卡补两把武器，取**速度两端**：匕首（快 / 低伤 / 暴击高）与战锤（慢 / 高伤 / 无暴击加成）。纯内容 + 2 行清单，**不写 Java 逻辑**。
+- 取证：BetterCombat 2.4.0 jar 内 `data/bettercombat/weapon_attributes/` 实有 `dagger.json` / `hammer.json`（`unzip -l` 逐字可见，R133 现查），故 `bettercombat:dagger` / `bettercombat:hammer` 是真实 id，不是猜的。
+- 独占文件（**唯一可写**）：
+  - `src/main/resources/redtale/defaults/items/demo_dagger.json5`（新建）
+  - `src/main/resources/redtale/defaults/items/demo_warhammer.json5`（新建）
+  - `src/main/java/com/redtale/project/core/config/ConfigStore.java`（**只许 +2 行清单 +1 行注释**，位置见下，其余一字不动）
+- 禁止：不改任何其它 `src/**/*.java`、不改 `docs/`、不改任何 `tools/*.py`（含 `check_all.py`）、不改 `lang/`、不改 `models/`、不新建贴图、不改已有 7 份默认物品、不改 `sets/emberforged.json5`（新武器**不进套装**）、不执行 gradle / 不取构建锁 / 不起服务 / 不读 jar / 不读存档。
+- 文件内容（**逐字**，两份都是 JSON5：裸键 + `//` 注释 + 尾逗号）：
+  - `items/demo_dagger.json5`
+    ```json5
+    {
+      // 示范匕首（D1 武器线补档；D15 武器动作差异取样：快、低伤、暴击高）。
+      id: "demo_dagger",
+      base: "dagger",
+      name: "示范匕首",
+      durability: 700,
+      rarity: "uncommon",
+      rev: 1,
+
+      sockets: {
+        count: 1,
+        types: ["offensive"],
+      },
+
+      weapon_attributes: "bettercombat:dagger",
+
+      stats: {
+        attack_damage: 3.5,
+        attack_speed: 2.4,
+        critical_strike_chance: 0.2,
+        critical_strike_power: 0.3,
+      },
+    }
+    ```
+  - `items/demo_warhammer.json5`
+    ```json5
+    {
+      // 示范战锤（D1 武器线补档；D15 武器动作差异取样：慢、高伤、无暴击加成）。
+      id: "demo_warhammer",
+      base: "hammer",
+      name: "示范战锤",
+      durability: 1600,
+      rarity: "rare",
+      rev: 1,
+
+      sockets: {
+        count: 2,
+        types: ["offensive", "any"],
+      },
+
+      weapon_attributes: "bettercombat:hammer",
+
+      stats: {
+        attack_damage: 10.0,
+        attack_speed: 0.9,
+      },
+    }
+    ```
+- 清单登记（**R125-a 教训：新默认文件不登记 `ConfigStore.DEFAULT_FILES` → `check_defaults` 必红**）。在 `ConfigStore.java` 的 `"items/gem_sapphire.json5",` 这一行**之后**、`"affixes/sharp.json5",` **之前**插入恰好三行（1 行注释 + 2 行文件），缩进与邻居**同为 12 空格**（从 `"items/gem_sapphire.json5",` 行整行复制再改内容，不要手敲空格）：
+  ```java
+              // D1 武器线补档：匕首（快/低伤）与战锤（慢/高伤），D15 动作差异取样
+              "items/demo_dagger.json5",
+              "items/demo_warhammer.json5",
+  ```
+  `git diff src/main/java/com/redtale/project/core/config/ConfigStore.java` 必须是 **+3 行、-0 行**，`git diff --stat` 显示 `3 insertions(+)`（注释行也算）。多一行少一行都不行。
+- 验收（**三条，全部可机器执行，不需要起服/起客户端**）：
+  1. `cd /e/RedtaleProject && python tools/check_items.py` → 末行 `共 14 个文件 · 0 条问题` EXIT=0（7 旧物品 + 2 新物品 + 3 词条 + 1 词条池 + 1 套装 = 14）。
+  2. `python tools/check_defaults.py` → 末行 `清单 44 条 · 磁盘 44 个 · 问题 0 条` EXIT=0；`python tools/check_numeric.py` → `0 条问题` EXIT=0；`git diff --stat src/main/java/com/redtale/project/core/config/ConfigStore.java` → `3 insertions(+)` 且 `-0`。
+  3. `python tools/check_all.py` → 末行 `共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0` EXIT=0；`python tools/check_ownership.py` → `0 条问题`；`python tools/check_tasks.py` → `在制品 1`（本卡自身）。再逐字核两份 JSON5：`python -c "import json,sys;sys.path.insert(0,'tools');from check_progress import clean_json5;..."` 之等价做法 —— 只需断言 `id` / `base` / `weapon_attributes` / `stats` 五键与上表一致（`demo_dagger`: `dagger` / `bettercombat:dagger` / `attack_damage 3.5` / `attack_speed 2.4`；`demo_warhammer`: `hammer` / `bettercombat:hammer` / `attack_damage 10.0` / `attack_speed 0.9`）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
@@ -5303,6 +5379,7 @@ fi
 | C70 | ~~`spawn_rules[].priority` / `per_chunk_cap` 超 int 范围静默饱和 → **T-0118（R123 派 / R124 S7 自做验收）**~~ | R123 四判据齐：`SpawnRuleSpec.java:113-118` 对有限整数走 `:117` 静默夹顶/夹底（`:116` 只管非有限/非整数）；玩法面落 `SpawnRegistry.java:29-31` 排序与 `SpawnReplacer.java:210` 每区块限量；两把旧尺（`check_mobs.py:143-148` Python int 无上界 / `check_spawn_conditions.py:70-86` 只核数值类型）干净副本反事实全绿；基线 1 规则/2 落点/0 问题。与 T-0109~T-0112 的「小数 `(int)` 截断」不同出口，本卡只核超 int 饱和 | 无 |
 | C71 | ~~剩余原型无默认怪：`summoner` / `charger` / `flyer` / `ambient`~~ → **T-0119 补 `melee`/`ranged`（R125 验）→ T-0120 补 `summoner`/`charger`（R126 验）→ T-0121 补 `flyer`（R127 验）→ T-0122 补 `ambient`（R128 验）**，8/8 结项 | 纯内容（D17：只写 JSON5 + 2 行清单登记，不换 jar）。**R125-a 教训**：内容卡必须把 `ConfigStore.DEFAULT_FILES` 的清单行写进卡面，否则 `check_defaults.py` 必红、验收自相矛盾（T-0119 原卡即踩此坑）。**`ambient` 口径（R126 自定，非范围决策）**：纯氛围生物，不给技能、不给装备、`drops` 留空，只做「血量低 + 体积小 + 不吃技能」的装饰样本；若 Aki 要它带技能再改配置，不换 jar | —— |
 | C75 | ~~`assets/redtale_project/models/item/` 14 份基底模型缺失~~ → **T-0127（R132 派）** | R132 真机取证：客户端 14 条 `FileNotFoundException: redtale_project:models/item/<base>.json`，14 id 与 `ItemBase.java:17-46` 逐字一致；`assets/` 下只有 `lang/`，`models/` 与 `textures/` 全无；70 把尺零读 `assets/`（对账网第五十四例，首次「资源缺失」类）。占位贴图引用原版，真美术另开工单 | 无 |
+| C76 | ~~D1 武器线内容补档（`dagger` / `hammer` 零内容）~~ → **T-0128（R133 派）** | `items/` 7 份内容只有一把 `sword` 武器；D15 动作只取样过 `claymore`、D20 攻速只有一档、D19 攻速表无「快武器」对照。补匕首（快/低伤）+ 战锤（慢/高伤），`bettercombat:dagger` / `bettercombat:hammer` 已从 2.4.0 jar 现查证实存在 | 无 |
 | C74 | ~~`enchantments` 的 `slots` 形态静默透传~~ → **T-0126（R131 派）** | `EnchantmentGenerator.java:39-40` 原样透传、`:151/:160-163` 不覆盖 `slots`；`ENCHANT-API.md:112` 定义形状为槽位名数组；六把旧尺零覆盖（`check_enchants.py:116-118` 只核 `supported_items` / `description` / `max_level`）；基线 2 文件 / 2 处 / 0 问题；派前反事实（`slots: "mainhand"` + `slots: []`）六把尺逐字全绿（对账网第五十三例）。**不核枚举名**（`EquipmentSlotGroup` 全表项目文档未冻结） | 无 |
 | C73 | ~~`enchantments` 的 `min_cost` / `max_cost` 形态静默透传~~ → **T-0125（R130 派）** | T-0124 明确排除的「`Cost` 对象，形态另议」，本轮收口。`EnchantmentGenerator.java:39-40` 原样透传、`:151/:160-163` 的校验不覆盖这两个键；`ENCHANT-API.md:114` 定义形状 `{base, per_level_above_first}`；全 69 把尺零读（`grep` 无命中）；基线 2 文件 / 4 处 / 0 问题；派前五把旧尺（`check_enchants` / `check_numeric` / `check_enchant_definition_ints` / `check_enchant_exclusive` / `check_enchant_args_sync`）在整份 defaults 副本反事实逐字全绿（对账网第五十二例） | 无 |
 | C72 | `levels/` / `jobs/` / `professions/` 的 `curve.growth` / `curve.exponent` **计算后**单级经验超 `MAX_STEP_EXP` 被静默夹顶 → 留池（R128 新增） | 同一出口、同一常量（`ExpCurve.java:43-45`），但判据要离线复算 `base * growth^(level-1)` 与 `base * level^exponent` 并随 `max_level` 变化，等价于把 Java 曲线数学抄第二遍（R128-c 判据：不派需要复制运行期数学的卡）；且 `T-0123` 已收「base 本身超硬顶」这一显式形态。等出现第二份证据（例如默认内容真的把 growth 写大）再评估 | 无 |

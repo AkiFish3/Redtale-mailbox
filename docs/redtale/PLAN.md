@@ -2964,3 +2964,29 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. M7 真机：等 Aki 解锁桌面，或用 `rt-test` 手动「多人游戏 → 直接连接 → 127.0.0.1:25567」；进服后 M7 验收命令全部由 S7 走 RCON，客户端只当「提供真人玩家实体」用。
 3. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走。
+
+## R133 · 2026-11-26 11:3x~11:5x · 验收 T-0126（附魔 `slots` 形态）+ 接线 `check_all` 70→71 + 派 T-0128（D1 武器线补档）
+
+- **卡板**：T-0126 `check_enchant_slot_forms.py` `[DONE]` → **VERIFIED**（3/3 逐字：基线 `0 条问题` + `-v` `2 份/2 处`；六夹具 A~F EXIT=0/1/1/1/1/1；`wc=197`、`def check_slots`=1、禁词 0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条；函数边界 14 组 0 fails + shim 裸键/单引号/嵌套注释/尾逗号）。**S8 零偏差不打回**。**派 T-0128**（`items/demo_dagger.json5` + `items/demo_warhammer.json5` + `ConfigStore.java` 恰 +3 行；派前整份 defaults 副本预验 `check_items` 14 文件 0 问题），在制品 **2/3**。
+- **死路记录**：按 R132 的「下一步」先探 `skills/` 的 `cooldown_ticks` / `mana_cost` 静默透传 —— `SkillSpec.java:119-157` 两键**已有四条 WARN + 夹取**（非数字 / 负数 / 非有限 / 超硬顶），无洞，弃；改走内容面（R133-d）。
+- **内容缺口取证**：`defaults/items/` 7 份里仅 `demo_longsword` 一件武器（基底 `sword`），`dagger` / `hammer` 零内容 → D15 动作只取样 `bettercombat:claymore`、D20 攻速仅一档、D19 无「快武器」对照。`weapon_attributes` 的 id 从 BetterCombat 2.4.0 jar 的 `data/bettercombat/weapon_attributes/` 现查（`dagger.json` / `hammer.json` 均在册）。
+- 接线 `check_all` 70→**71**（`共 71 个脚本 · 跑成 71 · 跳过 0 · 红 0`）；七门禁全 0（`check_tasks` 128 卡在制品 2、`check_contracts` 112 条、`check_docs` 149 份）。
+- 环境：`src/` 零 diff、纯 Python + 文档、未构建、未启停任何服、无构建锁；正式服 9376 未触碰、测试服 25567/25577 无 LISTEN。
+- 收尾：`docs/ROUND-R133-SLOTFORM-VERIFY.md`、PLAN §13 R133 + §13.136、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0126 VERIFIED + T-0128 OPEN + 池 C76）、`docs/CONTRACTS.md` §4.111、`tools/check_all.py`、协作板 §3 一行。
+
+### §13.136 R133 的五条口径（内容缺口先数再补 / 引用 id 现查上游 jar / 补内容必补清单 / 有 WARN 不算洞 / 裸名）+ 下一步（R134）
+
+| 编号 | 口径 |
+|---|---|
+| R133-a | **内容卡也要先证「内容真的缺」**：先数 `defaults/` 各子目录条数（`items` 7 / `sets` 1 / `skills` 4 / `mobs` 8 / `enchantments` 2），再谈补哪一格；不凭印象补。 |
+| R133-b | **引用型内容必须先查被引对象的真实 id**：`weapon_attributes` 的 id 从上游 jar 的 `data/*/weapon_attributes/*.json` 现查，不从文档或记忆里拿。 |
+| R133-c | **补内容必须同时补清单**：`ConfigStore.DEFAULT_FILES` 是 `check_defaults` 唯一真相源；卡面写死插入行数（+3 含注释）与 `git diff --stat` 断言，避免「磁盘 44 · 清单 42」必红（R125-a 同源）。 |
+| R133-d | **「有 WARN 的解析器」不算洞**：`SkillSpec` 的 `cooldown_ticks` / `mana_cost` 已有四条 WARN + 夹取，属 D16 允许的异常保护；对账网只收「零 WARN 静默」。 |
+| R133-e | **裸名纪律第五十一次**：文档只写裸名，不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R134）：
+
+1. **验 T-0127**（14 份 `models/item`）→ 构建 + `rt-test` 客户端复跑，`Unable to load model` 应从 14 条降到 **0**（这是 M1 资源面首次收口）。
+2. **验 T-0128** → 构建 + 测试服 `item list` / `reload` 两把新武器进内容表、`weapon_attributes` 文件进生成目录。
+3. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走。

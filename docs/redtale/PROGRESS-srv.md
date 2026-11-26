@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-26 08:54 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-26 11:42 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,10 +12,10 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0126 | OPEN | `check_enchant_slot_forms.py` —— 附魔 `slots` 形态静默透传对账（M4 / D32，单文件零接线，对账网第五十三例） |
 | T-0127 | OPEN | `models/item/` 14 份基底物品模型 —— 客户端紫黑格修复（M1 / D10+D20，资源面卡，对账网第五十四例） |
+| T-0128 | OPEN | `items/demo_dagger.json5` + `items/demo_warhammer.json5` —— D1 武器线补档（内容面卡，无新代码） |
 
-已验完 **123** 张 / 共 **127** 张。
+已验完 **124** 张 / 共 **128** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
