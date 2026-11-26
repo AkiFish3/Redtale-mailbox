@@ -1775,3 +1775,17 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **基线**：14 基底 / 14 模型 / 14 处 layer0 / 605 贴图 / 0 问题。**前置依赖**：基线 0 条要求 T-0127 的 shield 修正先落地（T-0127 号更小，按号序满足）；先跑本卡会恰好看到 1 条判据 ⑧，那是 T-0127 未修。
 - **不核**：模型 `display` 变换、贴图内容（只核存在性）、原版之外命名空间贴图、生成产物 `/give` 后的渲染效果、真美术。
 - **卡禁接线**：本卡不得写进 `check_all.py` 的 `TOOLS`；交付时 `check_checkall` 红 1 属设计内红（R131-b），接线 71→72 由 S7 验收后做。
+
+### 4.113 模型卡收口（T-0127 / T-0128 均 VERIFIED，R135）+ `weapon_attributes` 外部引用尺接口冻结（T-0130，R135 派）
+
+- **T-0127 → VERIFIED（14 份模型已合流）**：验收 1~3 逐条过（14 文件 / 14 组 `(id, layer0)` 逐字 / 自引用 0）；验收 4 因**桌面无显示器**（`Failed to find a primary monitor` / `glfwGetPrimaryMonitor failed`）不可执行，改用**离线等价判据**：原版 jar `textures/**` 3070 张、`item/` **605** 张，14 个 `layer0` **全部命中**（`MISSING layer0: []`）。构建 jar 694888 B、`models/item/` 15 条。**欠账 D-01**：桌面可用时补跑客户端，`Unable to load model` 0 且 `Missing textures in model redtale_project:` 0 才销账（R135-a）。
+- **T-0128 → VERIFIED（真机）**：三条机器验收逐字过；测试服 `Done (2.410s)` 后 `redtale items` = `12 件装备内容 · 基底 14 个`（`demo_dagger · dagger · 4 条属性 · 耐久 700 · bettercombat:dagger · 孔位 1`、`demo_warhammer · hammer · 2 条属性 · 孔位 2`）；`redtale content list` = `内容 12 件 · 带 weapon_attributes 4 件`；`redtale tooltip` 逐字 `攻速 8.333 tick · 2.4 次/秒`（dagger）与 `22.222 tick · 0.9 次/秒`（warhammer），`动作 bettercombat:dagger` / `bettercombat:hammer`；`reload` 44→**48** 份零 ERROR；停服后 25567/25577 无 LISTEN。
+- **T-0130 接口冻结（新，S7 定死，S8 不推断）**：`python check_weapon_attr_ref.py [--dir DIR] [--jar-dir DIR] [-v]`（脚本落 `tools/`，下文按裸名引用）。
+- **常量**：`DEFAULT_DIR = src/main/resources/redtale/defaults`、`ITEMS_SUB = items`、`OWN_NS = redtale_project`、`OWN_SUB = weapon_attributes`、`BC_NS = bettercombat`、`BC_PATH = data/bettercombat/weapon_attributes/`、`DEFAULT_JAR_DIR = E:/server-test/mods`、`JAR_GLOB = *bettercombat*.jar`。**卡面不写死带中文方括号的 jar 文件名**，用通配；命中多个取字典序第一个并在 `-v` 打出文件名。
+- **固定函数名与签名**（验收会 grep）：`refs_of(dir_path) -> list[tuple[str, str]]`、`bc_actions(jar_path) -> set[str]`、`check(dir_path, jar_dir) -> tuple[int, list[str]]`、`main(argv) -> int`。JSON5 解析必须复用 `from check_progress import clean_json5`（与其它尺同源）。
+- **五判据文案逐字**：①`物品目录读取失败：<path>` ②`BetterCombat jar 未找到：<path>` ③`<id>: weapon_attributes 不是 namespace:path 形式（<raw>）` ④`<id>: bettercombat:<path> 在 BetterCombat 内置动作里不存在` ⑤`<id>: redtale_project:<path> 缺配置 weapon_attributes/<path>.json5`。
+- **命名空间三分口径**：`bettercombat:` 对 jar 内置动作表核存在性；`redtale_project:` 对 `<--dir>/weapon_attributes/<path>.json5` 核定义文件（与运行期 `ValidateCommand` 同判据）；**其它命名空间只计数不报问题**（镜像 `ValidateCommand` 的 `external++`）。
+- **输出契约**：末行 `共 9 份物品内容 · 3 处 weapon_attributes 引用 · 0 条问题`，EXIT 0/1；`-v` 追加 `已检查 9 份物品 · 3 处引用（bettercombat 3 / redtale_project 0 / 外部 0） · BetterCombat 内置动作 33 个 · jar <文件名>`。
+- **基线**：9 份物品 / 3 处引用 / BetterCombat 2.4.0 **33** 个内置动作 / 0 问题；2.4.0 内**无** `greatsword`（反事实用它）。
+- **不核**：动作 JSON 的 schema 与数值（原样转发，`WeaponAttributesGenerator` 也不校验）、外部命名空间 id 的真实性、生成产物内容、运行期是否真播放动画。
+- **卡禁接线**：本卡不得写进 `check_all.py` 的 `TOOLS`；接线 71→72 由 S7 验收后做（届时依 T-0129/T-0130 完成顺序顺延）。

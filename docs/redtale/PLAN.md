@@ -3019,3 +3019,32 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 3. **验 T-0129**（模型三方尺）：基线 `0 条问题` → 接线 `check_all` **71→72**。
 4. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服（客户端已跑通到主菜单，进服用「多人游戏 → 直接连接 → 127.0.0.1:25567」）。
 5. Q-024（正式服事故口径）等 Aki 定；Q-021 / Q-022 / Q-023 无答复继续按默认走。
+
+## R135 · 2026-11-27 00:0x~00:3x · 验 T-0127（14 基底模型，离线等价判据）+ 验 T-0128（两把武器，真机 12 件 / 48 份）+ 派 T-0130（`weapon_attributes` 外部引用尺）
+
+- **卡板**：T-0127 `[DONE]` → **`[VERIFIED]`**，14 份模型**已合流**。验收 1~3 逐字过（14 文件 / `rows 14 BAD []` / 自引用 0）；验收 4（客户端日志）**本轮不可执行** —— 桌面无显示器，`fmlearlywindow` 死在 `glfwGetPrimaryMonitor`（`Failed to find a primary monitor`），ModLauncher 本体已跑到 103 类库。改用**离线等价判据**：原版 `1.21.1-NeoForge.jar` 的 `textures/**` **3070** 张、`item/` **605** 张，14 个 `layer0` **全部命中**（`MISSING layer0: []`），shield = `minecraft:item/turtle_scute`；构建 jar **694888 B**、`models/item/` **15 条**。客户端那句 `Missing textures` 记**欠账 D-01**（销账条件：0 且 0）。
+- **卡板**：T-0128 `[DONE]` → **`[VERIFIED]`**。三条机器验收逐字过（`check_items` 14 文件 0 问题 / `check_defaults` 44·44·0 / `check_numeric` 0 / `ConfigStore.java` `3 0` / `check_all` 71·71·0·0 / `check_ownership` 0 / `check_tasks` 129 卡在制品 1）。**真机 1 启 1 停**：`Done (2.410s)`；`redtale items` → `12 件装备内容 · 基底 14 个`（dagger `4 条属性 · 耐久 700 · bettercombat:dagger · 孔位 1`、warhammer `2 条属性 · 孔位 2`）；`redtale content list` → `带 weapon_attributes 4 件`；`tooltip` → `8.333 tick · 2.4 次/秒` / `22.222 tick · 0.9 次/秒`（D20 双档位、D15 第三动作取样成立）；`reload` **44→48** 份零 ERROR；停服后端口无 LISTEN；正式服 9376 未触碰。
+- **派 T-0130**（`check_weapon_attr_ref.py`：`items` 的 `weapon_attributes` 外部引用 ↔ BetterCombat 内置动作，五判据、六夹具、基线 9 物品 / 3 处 / 33 动作 / 0 问题），在制品 **2/3**（T-0129 + T-0130）。派前四判据取证：`check_items.py:83-85` 只核含 `:`、`ValidateCommand.java:66-85` 对外部命名空间 `external++` 跳过且源码自述「别人 jar 里的内置项我们无法校验」、71 把尺 `grep bettercombat` 零命中、干净副本把 `bettercombat:dagger` 改 `bettercombat:greatsword`（2.4.0 无此动作）后三把旧尺逐字全绿（对账网第五十六例）。
+- **T-0129 第 1 轮空转**：17:5x 派，`00:1x` 仍无文件、无进度行；同期 S8 交付 T-0127 修正（19:1x）与 T-0128（23:12）→ 队列在线、只是排序不同，按 R135-d 记第 1 轮，不拆不回收。
+- **杀进程**：关测试客户端只按 PID（`3956`，命令行含 `-Xmx3G`），Gradle Daemon（`38944`）留在原地；`taskkill /IM` 未使用（R134-a 延续）。
+- 七门禁：`check_all` 71/71 红 0、`check_tasks` 130 卡 · 在制品 2 · 问题 0、`check_ownership` 0、`check_contracts` / `check_docs` / `check_rounds` / `check_checkall` 全 0。
+- 环境：`src/` 合流 14 份模型 + 2 份 JSON5 + 3 行清单；构建 **1 次**（EXIT=0，锁已删）；测试服 **1 启 1 停**；测试客户端 **1 启 0 成**（无显示器）；正式服未触碰；无锁残留。
+- 收尾：`docs/ROUND-R135-MODELVERIFY.md`、PLAN §13 R135 + §13.138、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0127/T-0128 VERIFIED + T-0130 OPEN + 池 C78）、`docs/CONTRACTS.md` §4.113、协作板 §3。
+
+### §13.138 R135 的五条口径（等价判据 / 起不来分层 / 杀进程二次确认 / 空转计轮 / 裸名）+ 下一步（R136）
+
+| 编号 | 口径 |
+|---|---|
+| R135-a | **环境缺失时用「确定性等价判据」并记账，不冒充跑过**：客户端起不来（无显示器）不等于验收可跳过。R134 打回的那条判据本质是「被引用对象存在性」，可直接从 jar 取值复核 → 用它替代，把运行时那句话记成欠账 D-01 并写清销账条件。替代判据必须**与被替代判据同因**，不能换个弱判据充数。 |
+| R135-b | **"起不来"要看清是哪一层**：本轮客户端 `ModLauncher` 已在跑（args / 21.1.257 / 103 类库都对），死在 `fmlearlywindow` 的 `glfwGetPrimaryMonitor` —— 是显示层，不是模组层。`Failed to find a primary monitor` 是判据入口，别错记成「客户端跑不通」。 |
+| R135-c | **杀进程二次确认纪律**：关客户端前从 `Win32_Process` 的 `CommandLine` 里挑出带 `-Xmx3G` 的那条 PID 再杀，Gradle Daemon 不动；`taskkill /IM java.exe` 永不再用（R134 事故）。 |
+| R135-d | **空转计轮看文件与进度行，不看「它做了什么别的」**：T-0129 派了 6.5 小时零交付，但同期交付了别的卡 —— 队列在线、排序不同。按**第 1 轮空转**记，三振才拆（§2）。 |
+| R135-e | **裸名纪律第五十三次**：只写裸名，不写 `tools/` 全路径；卡面不写带中文方括号的 jar 文件名，改 `--jar-dir` + `*bettercombat*.jar` 通配。 |
+
+下一步（R136）：
+
+1. **验 T-0129**（模型三方尺）：基线 `0 条问题` → 接线 `check_all` **71→72**；若第三轮仍无交付 → 按 §2 拆卡或按 T-0118/T-0119 先例回收自做。
+2. **验 T-0130**（`weapon_attributes` 外部引用尺），过后接线 **72→73**。
+3. **欠账 D-01**：桌面可用时补跑客户端（`Unable to load model` 0 且 `Missing textures` 0）后销账。
+4. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服（`rt-test` 客户端已能跑到主菜单，进服走「多人游戏 → 直接连接 → 127.0.0.1:25567」）。
+5. Q-024（正式服事故口径）等 Aki 定；Q-021 / Q-022 / Q-023 无答复继续按默认走。

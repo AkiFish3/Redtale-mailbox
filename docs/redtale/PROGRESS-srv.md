@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-26 18:03 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-27 00:14 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,11 +12,10 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0127 | BOUNCED | `models/item/` 14 份基底物品模型 —— 客户端紫黑格修复（M1 / D10+D20，资源面卡，对账网第五十四例） |
-| T-0128 | OPEN | `items/demo_dagger.json5` + `items/demo_warhammer.json5` —— D1 武器线补档（内容面卡，无新代码） |
 | T-0129 | OPEN | `tools/check_item_models.py` —— 基底 ↔ 模型 ↔ 原版贴图三方对账（资源面首尺，对账网第五十五例） |
+| T-0130 | OPEN | `tools/check_weapon_attr_ref.py` —— `weapon_attributes` 外部引用 ↔ BetterCombat 内置动作对账（引用型，对账网第五十六例） |
 
-已验完 **124** 张 / 共 **129** 张。
+已验完 **126** 张 / 共 **130** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
