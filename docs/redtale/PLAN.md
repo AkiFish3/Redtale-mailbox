@@ -2910,3 +2910,30 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. M6 内容面 8/8 已收口；代码面剩「模板实体注册 / 自然刷怪替换」两块（S7 独占，跨文件，不进 S8 卡）。M7 代码面已实现，缺真机验证（升级 / 加点 / 洗点），需 Aki 在线。
 3. 池内可派候选已空（C72 按 R128-c 留池、C14 为观察项）。按 R129-a「静默放行」继续扫：`slots` / `supported_items` 形态、`CommandSpec` 参数解析是候选（未取证，不下结论）。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R131 · 2026-11-26 08:3x~08:5x · 验 T-0125（附魔代价字段形态）+ 接线 `check_all` 69→70 + 派 T-0126（附魔 `slots` 形态）
+
+- 卡板：T-0125 `check_enchant_cost_forms.py` `[DONE]` → **VERIFIED**（3/3：①基线 `共 1 份附魔代价字段口径对账表 · 0 条问题` EXIT=0、`-v` `已检查 2 份附魔 · 4 处代价字段引用 · 字段 min_cost/max_cost · 形态 base/per_level_above_first 整数`；②六夹具 A~F 干净 `enchantments/` 副本逐字 EXIT=0/1/1/1/1/1 —— B `min_cost: 8` 非对象、C `max_cost.base 25.5`、D 缺 `per_level_above_first`、E `base: "5"`、F 四条 sorted；③`wc=157`、`def check_costs`=1、禁词 0、`py_compile` OK、`--dir NO_SUCH` 恰 1 条 EXIT=1；函数边界 15 组全过（非对象五形态 / 缺字段 / `per 10.0` / `base True` / `per 1e3`→`1000.0` / 两键都坏 / 重复不合并 / sorted）；夹具已删）。**S8 零偏差不打回**。**派 T-0126**（`check_enchant_slot_forms.py`：`slots` 经 `EnchantmentGenerator.java:39-40` 原样透传、`:151/:160-163` 不覆盖；`ENCHANT-API.md:112` 定义形状为槽位名数组；三形态「非数组 / 空数组 / 元素非非空字符串」；**不核枚举名**；单文件零接线、六夹具、基线 2 文件/2 处/0 问题），在制品 **1/3**。
+- **夹具自错与纠正（R131-a）**：C/F 首轮不出，根因是两份默认文件里 `max_cost` 为单行内联 `max_cost: { base: 25, per_level_above_first: 12 },`，我按多行块替换未命中 → C 出 0 条、F 出 3 条；改整行内联替换后逐字对上。**S7 夹具错，S8 无偏差**。
+- **派前取证（对账网第五十三例）**：`slots` 在 `check_enchants.py:116-118` 零读取（该尺只核 `supported_items` / `description` / `max_level`），`check_numeric` 不读 `enchantments/`，四把附魔尺分别只读 `weight`+`anvil_cost` / 两个 `cost` / `exclusive_set` / `scripted.args` —— **六把尺零覆盖**；整份 defaults 副本反事实（`slots: "mainhand"` + `slots: []`）下六把尺逐字全绿 EXIT=0；基线离线核过 2 文件 / 2 处。副本已删。
+- 接线 `check_all` 69→**70** 全绿（`70 个脚本 · 跑成 70 · 跳过 0 · 红 0`）。S8 交付时 `check_all` 红 1 = `check_checkall` 报新脚本未进清单，属卡面「禁止接线」的**设计内红**，验收后接线归零（R131-b）。
+- 七门禁全 0：`check_all` 70/70、`check_tasks` 126 卡在制品 1、`check_contracts` 109 条、`check_docs` 147 份、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 零 diff（本轮纯 Python + 卡板 + 文档）、未构建、未启停任何服、无构建锁；正式服 9376 未触碰、测试服 25567/25577 无 LISTEN。裸名纪律第四十九次。
+- 收尾：`docs/ROUND-R131-SLOTFORM.md`、PLAN §13 R131 + §13.134、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0125 VERIFIED + T-0126 OPEN + 池 C74）、`docs/CONTRACTS.md` §4.109、`tools/check_all.py`、协作板 §3 一行。
+
+### §13.134 R131 的五条口径（夹具错先怀疑自己 / 设计内的红不算打回 / 枚举名不硬编码 / PASS_THROUGH 剩余点按零基线过滤 / 裸名）+ 下一步（R132）
+
+| 编号 | 口径 |
+|---|---|
+| R131-a | **夹具错先怀疑自己**：凡「S8 自测 3/3 全过、S7 复跑某组不出」的场合，先逐字比对默认文件原形态（本轮 `max_cost` 是单行内联，我按多行块替换未命中），再怀疑实现。与 R128-a「卡面矛盾以邻居真实形态为准」同源。 |
+| R131-b | **设计内的红不算打回**：卡面禁止接线 → `check_all` 必红 1（`check_checkall` 报新脚本未进清单）。这是卡面约束的必然副产物，验收时由 S7 接线归零，不构成 S8 不通过。 |
+| R131-c | **枚举名不硬编码**：`slots` / `damage_type` 这类上游枚举，项目文档没冻结全表时，尺只判形态。硬编码半张表会让尺变成第二份真相。 |
+| R131-d | **`PASS_THROUGH` 是一族，按「有基线 + 零覆盖」过滤**：`min_cost`/`max_cost`（T-0125）、`slots`（T-0126）连收两格后，`primary_items` 零基线不派、`supported_items` 有尺但只认字符串（旧尺过严，另议）、`exclusive_set` 与 `effects.args` 已有尺。剩余需新挖。 |
+| R131-e | **裸名纪律第四十九次**：文档只写裸名，不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R132）：
+
+1. **验 T-0126**（基线 `共 1 份附魔槽位字段口径对账表 · 0 条问题` + `-v` `已检查 2 份附魔 · 2 处 slots 引用` + 六夹具 A~F + `--dir NO_SUCH` 恰 1 条读失败），过后接线 `check_all` 70→**71**。
+2. 池内需新挖候选（附魔 `PASS_THROUGH` 十键已基本收口）：`skills/` 的 `cooldown` / `mana_cost` 透传、`CommandSpec` 参数解析（**均未取证，不下结论**）。
+3. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件，不进 S8 卡）。M7 真机需真人客户端：`.minecraft/versions` 与 `mods` 实测 **0 项**，当前无可用客户端；控制台侧验收（启停测试服 + RCON + 日志）已由 bash + RCON 全覆盖，不需要图形界面。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
