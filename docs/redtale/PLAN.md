@@ -2937,3 +2937,30 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. 池内需新挖候选（附魔 `PASS_THROUGH` 十键已基本收口）：`skills/` 的 `cooldown` / `mana_cost` 透传、`CommandSpec` 参数解析（**均未取证，不下结论**）。
 3. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件，不进 S8 卡）。M7 真机需真人客户端：`.minecraft/versions` 与 `mods` 实测 **0 项**，当前无可用客户端；控制台侧验收（启停测试服 + RCON + 日志）已由 bash + RCON 全覆盖，不需要图形界面。
 4. Q-021 / Q-022 / Q-023 无答复继续按默认走；真人窗口 A~F 等 Aki。
+
+## R132 · 2026-11-26 08:44~08:55 · 客户端真机尝试（`rt-test` gameDir）+ 发现 14 基底零模型 + 派 T-0127
+
+- **客户端盘点**：`E:/client/赤物语N客户端-0.0.1` = HMCL 3.15.1 + `.minecraft`（`versions/1.21.1-NeoForge` 单版本、NeoForge **21.1.257** 与测试服逐字相同、mods **234**、D11 白名单 9 前置全在册、HMCL `maxMemory 8192`、LittleSkin 登录）。机器物理 31.9G / 可用 1.90G，提交上限 51.91G / 已提交 46.31G（余 5.60G），正式服占 ~12G → **不直接跑 234 mod 配置**。
+- **做法**：新建独立 gameDir `E:/client/rt-test`，Junction 复用 `libraries`/`assets`/`versions`（零拷贝），`mods/` 只放本模组 jar，实测 854 KB；自写 `launch.py`（等价 HMCL：按 `rules` 过滤 133 libraries → 107 项、替换占位符、`-Xms1G -Xmx3G`、`BootstrapLauncher --launchTarget forgeclient`）。
+- **结果：客户端跑通**。`ModLauncher 11.0.5 starting` → 图集创建 → 主菜单到位（窗口 `Minecraft NeoForge* 1.21.1`），**无 mixin / 注册表冲突** —— M0~M7 首次客户端侧证据。**未进服**：`--quickPlayMultiplayer` 两次实验（裸参 / 补 `quickPlayPath`）MC 均未采纳，服务端零握手。
+- **GUI 自动化不可用**：本会话无 computer-use 工具；兜底 GDI `BitBlt` 截屏（纯 ctypes + zlib，绕开被拦的 `Add-Type` 与未装的 PIL）得到**全黑** 2560×1440 → 当前会话看不到桌面（RDP 断开或锁屏），键鼠注入同样不可信。M7 真机仍需 Aki 解锁桌面或自行开客户端。
+- **真发现（对账网第五十四例）**：客户端 `ModelBakery` 连报 **14 条** `FileNotFoundException: redtale_project:models/item/<base>.json`，id 与 `ItemBase.java:17-46` 逐字一致；`assets/redtale_project/` 下**只有 `lang/`**（`models` 与 `textures` 全无，`find … | wc -l` = **0**）；70 把尺零读 `assets/`。后果：物品注册成功、`/give` 拿得到、属性生效，但客户端渲染紫黑格。**首次「资源缺失」类洞**（此前全是配置字段形态/值域）。**派 T-0127**（补 14 份 `models/item/*.json`，`layer0` 占位引用原版贴图，不画新美术；独占 14 个新文件、三条机器验收），在制品 **2/3**。
+- 环境：`src/` 零 diff（本轮未改 Java）、未构建、测试服 **1 启 1 停**（`Done (2.274s)` → `Stopping the server` → 25567/25577 无 LISTEN）、正式服 9376 **未触碰**（25565 监听、0 条 ESTABLISHED）、无构建锁。
+- 收尾：`docs/ROUND-R132-CLIENT.md`、PLAN §13 R132 + §13.135、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0127 OPEN + 池 C75）、`docs/CONTRACTS.md` §4.110、协作板 §3 一行。
+
+### §13.135 R132 的五条口径（客户端不复制整份 mods / assets 缺失只看客户端日志 / GUI 验收先证看得见 / quickPlay 不可依赖 / 裸名）+ 下一步（R133）
+
+| 编号 | 口径 |
+|---|---|
+| R132-a | **验收客户端不复制整份 mods**：Junction 复用 `libraries`/`assets`/`versions`、只放被测模组，854 KB 就能起一个干净客户端。省内存省磁盘，也避免 234 mod 的噪声掩盖自家问题。 |
+| R132-b | **离线尺覆盖不到 `assets/` 时，客户端日志是唯一真相源**：14 条 `FileNotFoundException` 是「模型缺失」唯一可见出口，服务端零提示。凡新增资源面（模型 / 贴图 / 音效 / lang）都要过一遍客户端启动日志。 |
+| R132-c | **GUI 验收先证「看得见」再谈「点得动」**：先截一张图，全黑就说明没有可交互桌面，之后所有点击都是猜。截图走纯 ctypes + zlib，绕开被安全策略拦的 `Add-Type` 与未安装的 PIL。 |
+| R132-d | **quickPlay 不是可靠入口**：两次实验都未触发连接，NeoForge 21.1.257 的 `forgeclient` 路径下不可依赖。自动进服暂按「需人工点一次」记账。 |
+| R132-e | **裸名纪律第五十次**：文档只写裸名，不写 `tools/` 全路径、不写探针目录。 |
+
+下一步（R133）：
+
+1. **验 T-0126**（`slots` 形态尺）→ `check_all` 70→**71**；**验 T-0127**（14 份模型）→ 构建 + `rt-test` 客户端复跑，`Unable to load model` 应从 14 条降到 **0**。
+2. M7 真机：等 Aki 解锁桌面，或用 `rt-test` 手动「多人游戏 → 直接连接 → 127.0.0.1:25567」；进服后 M7 验收命令全部由 S7 走 RCON，客户端只当「提供真人玩家实体」用。
+3. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）。
+4. Q-021 / Q-022 / Q-023 无答复继续按默认走。
