@@ -1798,3 +1798,13 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **套装口径（沿用 `emberforged`，非新决策）**：`pieces` 写**内容 id**（不是物品注册 id）；`count <= 当前件数` 的档**全部**生效、同档多项相加；件数按内容 id 去重。`ashen_vow` 三件跨 HEAD / LEGS / FEET —— 三档可达性由 `check_set_reach` 的槽位表（`helmet→HEAD` / `leggings→LEGS` / `boots→FEET`）保证。
 - **物品硬约束（本轮踩到并写入卡面）**：`rev` 必须 **≥1 的整数**（`check_items` 判红文案 `rev 必须是 >=1 的整数`）；`durability` / `rarity` / `set_id` 与已在役 9 份同形。
 - **M6 代码面完成度（台账纠偏）**：8 个 `EntityType` 注册 + 每类型属性表 + 自然刷怪替换**均已落地**（`RedtaleEntities.java:40-52`、`RedtaleProject.java:34-35`、`GameHooks.java:52/126`）。**「M6 代码面剩模板实体注册 / 刷怪替换」一句作废**，M6 仅剩「自然刷怪需真人在线」这条真机挂账。
+
+### 4.115 引用面收口（T-0130 VERIFIED，R137）+ 三档套装首证（T-0131 VERIFIED）+ `set probe` 判据重写 + 成员归属尺冻结（T-0132，R137 派）
+
+- **T-0130 → VERIFIED（`check_weapon_attr_ref.py` 已合流、已接线 72→73）**：基线计数由 `9` 变为 **12**（T-0131 同批交付 3 件护甲），引用数仍 **3** 处、BetterCombat 2.4.0 **33** 个内置动作、**0 条问题**。**计数随内容增长，不要把「9」写死进任何文档断言**；判据只看「引用 ↔ 动作表」与「自家命名空间 ↔ 定义文件」。
+- **T-0131 → VERIFIED**：三档套装**首次真机可达性证据** —— `redtale set probe ashen_vow` 逐档 `✓ 0/1/2/3 件`（在档 `[1]` → `[1,2]` → `[1,2,3]`，最大生命 20.0 → 22.0 → 22.0 → **28.0**，即 tier1 `max_health 2` 与 tier3 `max_health 6` 叠加生效），`✓ 脱回 1 件`、`✓ clear`，**pass 6 / fail 0**；`emberforged` 回归 **pass 5 / fail 0**。
+- **`set probe` 判据重写（S7 独占文件 `core/command/SetCommand.java`，R137 改）**：原实现把「第 2 件 = 最高档」与「最高档必给 `attack_damage`」两件事写死，**对任何 3 档以上套装必然假红**（`ashen_vow` 首次探测即 1 fail）。新判据：按 `SetSpec.Bonus.stats()` 的**声明键**现解析 `AttributeSpec`，逐档核「`count <= 件数` 的档全在位、更高的档全不在位」（`tierMismatches()`），档位循环上界取 `min(档位数, 件数)`。**今后新增套装无论几档都直接可验，不需要再改命令。**
+- **`check_set_reach.py` 末行改实际份数**：原硬编码 `共 1 份套装档位可达性表`（R96 单套装时代的遗留），`ashen_vow` 落地后与实际「2 份」冲突；已改为 `%d` 取 `len(sets)`，现输出 `共 2 份套装档位可达性表 · 0 条问题`。**这是卡面与产物不同步的根治，不是口径变更。**
+- **T-0132 接口冻结（新）**：`check_set_pieces_sync.py`，三判据 ①套装目录/物品目录读取失败 ②`<set>: <piece> 没有 set_id` ③`<set>: <piece> 的 set_id 是 <other>（不是 <set>）`；`pieces` 引用不存在的物品**跳过只计数**（存在性归 `check_items`）；**反方向不报**（物品有 `set_id` 但 `pieces` 未收录是 `demo_robe` 的设计现状）。基线 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题`。
+- **计件口径再确认（D 层不变）**：件数**只**由 `ContentData.setId()` 决定（`SetBonus.counts()` 不读 `pieces`）；`pieces` 只服务「槽位可达性」与「`set probe` 真穿真脱」。任何「pieces 是权威名单」的假设都是错的。
+- **观察项（未派卡，记此备查）**：护甲类物品 `redtale tooltip` 目前**不打印属性行**（`demo_chestplate` 与三件新护甲同形，只显示 `套装 X 0/N`），D20 只规定武器 tooltip 口径；是否需要给非武器补属性行属**显示面待定项**，等 Aki 或 M7 真机看到实际观感再定。

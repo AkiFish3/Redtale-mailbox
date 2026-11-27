@@ -3049,6 +3049,37 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 4. M6 代码面剩「模板实体注册 / 自然刷怪替换」（S7 独占、跨文件）；M7 真机需 Aki 在线或手动进服（`rt-test` 客户端已能跑到主菜单，进服走「多人游戏 → 直接连接 → 127.0.0.1:25567」）。
 5. Q-024（正式服事故口径）等 Aki 定；Q-021 / Q-022 / Q-023 无答复继续按默认走。
 
+## R137 · 2026-11-27 12:2x~12:5x · 验 T-0130（引用面尺）+ 验 T-0131（三档套装首证）+ **修 `set probe` 假红** + 派 T-0132（成员归属尺）
+
+- **卡板**：T-0130 `[DONE]` → **`[VERIFIED]`**（3/3 逐字，S8 零偏差）。唯一偏差是基线物品数 9 → **12**（T-0131 同批交付 3 件护甲），引用 3 处 / 内置动作 33 个 / 0 问题不变 —— 记「并发计数漂移」，不判打回（R137-a）。**接线 `check_all` 72→73**（73/73 红 0）。六夹具 A~F 逐字：判据 4 / 判据 3 / 判据 5 / 0 条且 `外部 1` / 0 条降到 2 处 / 3 条按 id 字典序，EXIT 1/1/1/0/0/1。
+- **T-0131 `[DONE]` → `[VERIFIED]`**（S8 实现零偏差；两处卡面文案归 S7）：`check_items` 18/0、`check_set_reach` `共 2 份套装档位可达性表 · 0 条问题` + `-v` 2 套/5 件/5 档/5 槽、`check_defaults` 48·48·0、`check_numeric` 4/0、`check_all` 73/73、`check_ownership` 0；`ConfigStore` `numstat` = `4 0`；四份 JSON5 逐字。**真机**：jar 697063 B、`Done (2.4s)`、`set list` `ashen_vow · 3 件 · 档位 1/2/3`、`items` 15 件（12 文件 + 3 脚本件）、三件 tooltip `套装 灰烬誓约 0/3`、`reload` 52 份 / 90 区块、日志 4 条 ERROR 全为他模组配方、本模组 0 条。
+- **三档可达性首证**：`redtale set probe ashen_vow` → `✓ 0/1/2/3 件`（在档 `[1]`→`[1,2]`→`[1,2,3]`，最大生命 20.0→22.0→22.0→**28.0**，即 tier1 `+2` 与 tier3 `+6` 叠加）+ `✓ 脱回 1 件` + `✓ clear`，**pass 6 / fail 0**；`emberforged` 回归 **pass 5 / fail 0**。
+- **修 `set probe` 假红（S7 独占，`core/command/SetCommand.java`）**：首跑即 `✗ 2 件 · 档位值 0.0` —— 原判据把「第 2 件 = 最高档」和「最高档必给 `attack_damage`」写死，`emberforged`（恰 2 件 2 档、2 档带 `attack_damage`）能过纯属巧合，**任何形状不同的套装必然假红**，这个探测器从 R96 起只能验一套。改为按 `SetSpec.Bonus.stats()` 的**声明键**现解析属性、逐档核「`count <= 件数` 全在位 / 更高档全不在位」（新增 `tierMismatches()` / `inPlay()`），上界取 `min(档位数, 件数)`。今后几档都不必再改命令（R137-b）。
+- **`check_set_reach.py:168` 末行硬编码 `共 1 份` 改 `%d`**：R96 单套装时代遗留，`ashen_vow` 落地后与实际 2 份冲突（卡面写 2、产物写 1）。现在 `共 2 份套装档位可达性表 · 0 条问题`，卡面与产物同时成立（R137-c）。
+- **派 T-0132**（`tools/check_set_pieces_sync.py`：套装 `pieces` 成员 ↔ 物品 `set_id` 归属一致性，对账网第五十七例），在制品 **1/3**。取证：`grep -rn "set_id" tools/check_*.py` 只有 `check_items.py:69,70` 两行纯存在性；`SetBonus.counts()`（`items/SetBonus.java:95-117`）计件**只**认 `ContentData.setId()`、**完全不读 `pieces`**；`pieces` 只被 `check_set_reach`（槽覆盖）与 `SetCommand.probe`（真穿真脱）消费 → `pieces` 塞一件 `set_id` 指向别处的物品：穿满不计数、probe 报 ✗、`check_set_reach` 仍判可达，**全绿**。基线 2 套 / 5 处引用 / 12 物品 / 0 问题；`demo_robe` 的单向差异属设计（同槽互斥），故只核 `pieces → set_id` 单向。
+- **三条候选证伪**（记录以免重挖）：`stats` 键 ↔ 80 条表已被 `check_items.py:51-55 _stats()` 覆盖（含 `sets.bonuses[].stats`，`check_items` 扫 4 子目录 = 18 文件）；套装槽覆盖已被 `check_set_reach` 覆盖；附魔剩余 PASS_THROUGH 键无「有基线 + 零覆盖」证据（R129~R131 已收五键）。
+- **观察项（未派卡）**：护甲类 `redtale tooltip` 不打印属性行（三件新护甲与存量 `demo_chestplate` 同形，只显示 `套装 X 0/N`；武器完整）。D20 只规定武器口径，非武器属性行属显示面待定项。
+- 七门禁全 0：`check_all` **73/73** 红 0、`check_tasks` 132 卡 · 在制品 1 · 问题 0、`check_contracts` 116 条、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 5 新建配置 + `ConfigStore.java` +4 行 + `SetCommand.java`（probe 重写）；构建 2 次（改 probe 前后）均成功、无锁残留；测试服 2 启 2 停（`Done (2.4s)` → 端口无 LISTEN）；**正式服未触碰**（25565 全程无监听，等 Aki 手动拉）。
+- 收尾：`docs/ROUND-R137-SETPROBE.md`、PLAN §13 R137 + §13.140、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0130/T-0131 VERIFIED + T-0132 OPEN + 池 C79 收口 + C80）、`docs/CONTRACTS.md` §4.115、`tools/check_all.py`、`tools/check_set_reach.py`、协作板 §3。
+
+### §13.140 R137 的五条口径（并发计数漂移 / 探测器自身假红 / 硬编码总量 / 卡面不可满足项 / 裸名）+ 下一步（R138）
+
+| 编号 | 口径 |
+|---|---|
+| R137-a | **基线数字是时点快照，不是常量**：T-0130 卡面写「9 份物品」，T-0131 同轮把 `items/` 推到 12，验收时数字必漂。卡面断言只该写**结构量**（引用数 3、动作 33、问题 0），数量降级为 `-v` 参考；真要让数量进判据，就得让尺自己算而不是人写死。 |
+| R137-b | **探测器自身也会假红，而且更难发现**：`set probe` 把「第 2 件 = 最高档」「最高档给攻击伤害」写死，验 `emberforged` 永远绿、验任何别的形状必红。判据必须从**配置声明**推导（`Bonus.stats()` 的键），不能从**某一份样本的形状**推导。凡是「为某一份内容专门写的验收器」，换一份内容就要重验它本身。 |
+| R137-c | **把总量写进字符串常量 = 造第二份真相**：`check_set_reach.py:168` 的 `共 1 份` 在只有一套套装时永远正确，第二套落地当天就变成假话，而且没人会去改它（它长得像成功信息）。任何「共 N 份」都取 `len()`，包括看起来永远不变的。 |
+| R137-d | **卡面不可满足项要事后修卡面，不要记在 S8 账上**：T-0131 验收 3 要求 `git status --porcelain` 恰 5 路径，但 S8 必须改卡板状态行、上一张卡的产物也还在树里 —— 这条在并发轮次天然不成立。派卡时就要按「源码面路径数」写，或干脆只断言 `numstat`。 |
+| R137-e | **裸名纪律第五十五次**：只写裸名，不写 `tools/` 全路径（`check_docs` 按路径存在性判红）。 |
+
+下一步（R138）：
+
+1. **验 T-0132**（`pieces` ↔ `set_id` 归属尺）：基线 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题`、六夹具 A~F、`--dir NO_SUCH` 恰 2 条；过后接线 **73→74**。
+2. **M7 真机进服**：`rt-test` 走「多人游戏 → 直接连接 → `127.0.0.1:25567`」，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
+3. **护甲 tooltip 属性行**（观察项）：三件新护甲与 `demo_chestplate` 同形，只显示套装箱数；是否补非武器属性行等 Aki 定（D20 只冻结武器口径）。
+4. Q-024（正式服事故口径）等 Aki；Q-021 / Q-022 / Q-023 无答复继续按默认走。
+
 ## R136 · 2026-11-27 06:1x~06:5x · 验 T-0129（资源面首尺，`assets/` 首次进全量门禁）+ 接线 71→72 + 派 T-0131（护甲三件套内容）+ **D-01 销账**（客户端真机）
 
 - **卡板**：T-0129 `[DONE]` → **`[VERIFIED]`**，`tools/check_item_models.py` 已合流。三条逐字过（基线 `共 14 份基底物品模型 · 0 条问题` + `-v` `14 个基底 · 14 份模型 · 14 处 layer0 · 原版贴图 605 张`；六夹具 A~F 干净副本 `--root` 各 1 条、文案逐字、EXIT=1；`wc=127`、五函数签名齐、禁词 0、`py_compile` 空、`--jar NO_SUCH.jar` 恰 1 条 / `--root NO_SUCH` 恰 2 条读失败均 EXIT=1 不抛栈）。**接线 `check_all` 71→72**（72/72 红 0）。夹具副本已删。
