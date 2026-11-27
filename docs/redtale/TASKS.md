@@ -5512,7 +5512,7 @@ fi
 
 - 2026-11-27 12:3x · S7 验收 **VERIFIED**（3/3；卡面两处文案偏差归 S7 写卡不严，S8 实现零偏差不打回）：① `check_items` `共 18 个文件 · 0 条问题` EXIT=0；`check_set_reach` `共 2 份套装档位可达性表 · 0 条问题` EXIT=0（卡面写的「共 2 份」原本与脚本 `check_set_reach.py:168` 硬编码的 `共 1 份` 冲突，本轮已把该行改成 `%d` 取实际份数，卡面文案与产物同时成立）；`-v` `已检查 2 份套装 · 5 件引用 · 5 个档位 · 5 个可达装备槽`；② `check_defaults` `清单 48 条 · 磁盘 48 个 · 问题 0 条`、`check_numeric` `共 4 个文件 · 0 条问题`、`check_all` `73/73 红 0`、`check_ownership` 0 问题；③ 源码面 `git status --porcelain` 恰 4 新建 + `ConfigStore.java`（`git diff --numstat` = `4 0`），三件 `id`/`base`/`rev=1`/`set_id` 与卡面逐字、`ashen_vow.pieces` 恰 3 项且与三件 id 一致。**真机**（构建 jar 696635 B，4 份新配置在 `redtale/defaults/{items,sets}/` 内；`Done (2.4s)`）：`redtale set list` → `ashen_vow · 灰烬誓约 · 3 件 · 档位 1/2/3`；`redtale items` 15 件（12 份文件 + 3 件脚本注册）；三件 tooltip → `套装 灰烬誓约 0/3`；`reload` → `52 份配置文件 … 全量刷新已排程 90 个区块`；日志 4 条 `ERROR` 全为他模组配方解析（`simplyswords` ×2 / `brewinandchewing` / `minecraft:red_dye`），本模组 0 条。**三档可达性首证**：`redtale set probe ashen_vow` → `✓ 0 件` / `✓ 1 件（在档 [1]，最大生命 20.0 → 22.0）` / `✓ 2 件（在档 [1,2]，22.0 → 22.0）` / `✓ 3 件（在档 [1,2,3]，22.0 → 28.0，即 tier1 +2 与 tier3 +6 叠加）` / `✓ 脱回 1 件` / `✓ clear`，**pass 6 / fail 0**；`emberforged` 回归 **pass 5 / fail 0**。**过程中修了 `core/command/SetCommand.java` 的 `set probe`**（原判据硬编码「2 件 = 最高档 + 攻击伤害」，对 3 档套装必抛假红；改为按各档**声明的属性**逐档核在位/不在位，见 R137-b）。
 
-### T-0132 · [OPEN] `tools/check_set_pieces_sync.py` —— 套装 `pieces` 成员 ↔ 物品 `set_id` 归属一致性对账（对账网第五十七例）
+### T-0132 · [VERIFIED] `tools/check_set_pieces_sync.py` —— 套装 `pieces` 成员 ↔ 物品 `set_id` 归属一致性对账（对账网第五十七例）
 
 - 派单：S7 · 2026-11-27 12:4x（R137）、在制品 **1/3**（本卡）
 - 目标：`sets/*.json5` 的 `pieces` 与 `items/*.json5` 的 `set_id` 是**两份独立声明**，而**计件只认后者**：
@@ -5551,6 +5551,124 @@ fi
   1. `cd /e/RedtaleProject && python tools/check_set_pieces_sync.py` → 末行 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题` EXIT=0；`-v` → `已检查 2 份套装 · 5 处 pieces 引用 · 12 份物品 · 跳过 0 处（物品不存在）`。
   2. 六夹具（干净副本 `build/setpieces_s8/`：把 `defaults/items/` 与 `defaults/sets/` 整份拷进去当 `--dir` 副本根）：**A** `ashen_vow.pieces` 的 `demo_boots` 改成 `demo_robe` → 恰 1 条判据 3（`ashen_vow: demo_robe 的 set_id 是 emberforged（不是 ashen_vow）`）；**B** `ashen_vow.pieces` 追加 `demo_stew`（存在、无 `set_id`）→ 恰 1 条判据 2（`ashen_vow: demo_stew 没有 set_id`）；**C** `ashen_vow.pieces` 追加 `nope_item`（不存在）→ **0 条**且 `-v` 显示 `跳过 1 处`；**D** 原样副本 → **0 条**；**E** `demo_helmet.set_id` 改 `nope_set` → **0 条**（存在性归 `check_items`，本尺不管）；**F** A+B 同时成立 → **2 条**且顺序为 `demo_robe` → `demo_stew`（按 piece 字典序）。用完全删。
   3. `wc -l tools/check_set_pieces_sync.py` ≤ **200**；`python -m py_compile tools/check_set_pieces_sync.py` 无输出；`python tools/check_set_pieces_sync.py --dir NO_SUCH` → 恰 **2** 条读失败（先 `套装目录读取失败`、后 `物品目录读取失败`）、EXIT=1 不抛栈；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" tools/check_set_pieces_sync.py | wc -l` → **0**。**不要**把本脚本写进 `check_all.py` 的 `TOOLS` 清单（卡禁接线；`check_checkall` 此时红 1 条属设计内红，接线由 S7 验收后做 73→74）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-27 15:27 · 完成 · `tools/check_set_pieces_sync.py`（91 行）· 构建=未执行（卡禁 gradle/锁）· 自测：基线 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题` EXIT=0；-v `已检查 2 份套装 · 5 处 pieces 引用 · 12 份物品 · 跳过 0 处（物品不存在）`；六夹具 A~F 全过（A/B/F 判据 3/2/2 条、C 跳过 1、D/E 0 条）；wc=91≤200、py_compile 空、NO_SUCH 恰 2 条读失败、禁词 0、set_pieces/check 直调通过；check_all 红 1 属设计内红（未接线，S7 验后 73→74）· 口径：物品 set_id 指向不存在套装（夹具 E）按卡面跳过、存在性归 check_items；反方向不报。
+- 2026-11-27 18:4x · S7 验收 **VERIFIED**（3/3，S8 零偏差）：① 基线 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题` EXIT=0、`-v` `已检查 2 份套装 · 5 处 pieces 引用 · 12 份物品 · 跳过 0 处（物品不存在）` 逐字；② 六夹具（`build/setpieces_s7/` 干净副本，A~F）全部逐字过：A 恰 1 条判据 3、B 恰 1 条判据 2、C 0 条且 `跳过 1 处`、D 0 条、E 0 条、F 2 条且顺序 `demo_robe` → `demo_stew`，EXIT 与卡面一致；③ `wc=91`≤200、`py_compile` 空、`--dir NO_SUCH` 恰 2 条（先套装后物品）EXIT=1 不抛栈、禁词 0、三函数签名齐。**接线 `check_all` 73→74**（74/74 红 0）；夹具副本已删（`build/setpieces_s8` / `build/setpieces_s7`）。
+
+### T-0133 · [OPEN] 词条扩充 5 条（`keen` / `executioner` / `of_the_hunt` / `of_ruin` / `runed`）+ 词条池首开 `core` 段
+
+- 派单：S7 · 2026-11-27 18:4x（R138）、在制品 **1/3**（本卡）
+- 目标：随机词条（D22 / M2 出口）内容面只有 3 条，`sword_common` 的 `slots` 是 `prefix 1 / suffix 1 / core 0` —— 一件武器最多摇出 **2 条**，且 **`core` 段自 M2 落地以来从未有过内容**（`AffixRoller.java:102` 的 `{prefix, suffix, core}` 三元循环里 `core` 一直是 `slots=0` 的死分支）。本卡把词条做到 **8 条**，并把 `core` 段开到 1 条，让三分支第一次全通。
+- 取证（R138 现查）：`defaults/affixes/` **3** 份（`sharp` / `heavy` / `of_the_bear`）、`affix_pools/` **1** 份、`core` 引用零命中；`check_affix_reach -v` 基线 `已检查 3 份词条定义 · 1 个词条池 · 2 个有效槽位段 · 物品等级 1`。候选副本（`build/affixs7/`，本卡内容整份写入）预验：`check_affix_reach -v` → `8 份词条定义 · 1 个词条池 · 3 个有效槽位段`、`check_affix_pool_refs -v` → `8 条词条定义 · 8 条词条引用`，两尺 0 问题；`check_affix_weights` / `check_affix_levels` / `check_numeric` / `check_items` 各 0 问题（R136-b：内容卡派前整份副本预验）。
+- 选条口径：**只写被结算真读到的属性**。`percent_attributes` 池只认 `physical_damage`（`damage.json5`），条件乘区只认 `pvp_damage` / `pve_damage` / `undead_damage`，暴击走 `CritRules`（`critical_strike_chance` / `critical_strike_power`）。`lifesteal` / `armor_penetration` / `dodge_rating` / `damage_reduction` / `skill_damage` 在 `AttributeSpecs` 之外**零引用**（本卡现查 `grep -rn` 空），写进词条只会让 tooltip 说谎，**本卡不碰**。
+- 独占文件（**唯一可写**）：
+  - `src/main/resources/redtale/defaults/affixes/keen.json5`（新建）
+  - `src/main/resources/redtale/defaults/affixes/executioner.json5`（新建）
+  - `src/main/resources/redtale/defaults/affixes/of_the_hunt.json5`（新建）
+  - `src/main/resources/redtale/defaults/affixes/of_ruin.json5`（新建）
+  - `src/main/resources/redtale/defaults/affixes/runed.json5`（新建）
+  - `src/main/resources/redtale/defaults/affix_pools/sword_common.json5`（改）
+  - `src/main/java/com/redtale/project/core/config/ConfigStore.java`（**恰 +5 行**）
+  - （卡板文件只许追加本卡进度行与状态行，按 §2 通用授权，**不列入独占清单**）
+- 禁止：不改任何 `src/**` 里除 `ConfigStore.java` 之外的文件（**含 `AffixPools.java` / `AffixRoller.java`** —— 本卡是纯内容，引擎代码零改动）、不改其它 `tools/*.py`、不改其它 `docs/`、不新建别的配置、不执行 gradle / 不取构建锁 / 不启停任何服。**不要**把新词条写进 `sets/` 或 `items/` 的 `stats`。
+- **接口（S7 定死，五份新文件逐字照抄，不许改 id / weight / exclusive_group / 数值）**：
+
+  `affixes/keen.json5`
+  ```
+  {
+    // 暴击组（R138）：只加暴击率与暴击倍率，不动平伤 —— 与 sharp/heavy 的 damage 组分属两组，
+    // 一件武器最多在「平伤」与「暴击」之间各出一条。
+    id: "keen",
+    kind: "prefix",
+    weight: 70,
+    item_level: { min: 1, max: 60 },
+    exclusive_group: "crit",
+    stats: {
+      critical_strike_chance: { base: 0.02, per_item_level: 0.0008 },
+      critical_strike_power: { base: 0.03, per_item_level: 0.0015 },
+    },
+  }
+  ```
+
+  `affixes/executioner.json5`
+  ```
+  {
+    // 猎杀组（R138）：只对生物生效（pve 条件乘区），PvP 不加。
+    id: "executioner",
+    kind: "prefix",
+    weight: 60,
+    item_level: { min: 1, max: 60 },
+    exclusive_group: "slay",
+    stats: {
+      pve_damage: { base: 0.04, per_item_level: 0.0012 },
+    },
+  }
+  ```
+
+  `affixes/of_the_hunt.json5`
+  ```
+  {
+    // 亡灵特攻（R138）：走 undead 条件乘区，与 pve 同池相加（D12），不是相乘。
+    id: "of_the_hunt",
+    kind: "suffix",
+    weight: 55,
+    item_level: { min: 1, max: 60 },
+    exclusive_group: "hunt",
+    stats: {
+      undead_damage: { base: 0.05, per_item_level: 0.0015 },
+    },
+  }
+  ```
+
+  `affixes/of_ruin.json5`
+  ```
+  {
+    // 对玩家特攻（R138）：走 pvp 条件乘区。
+    id: "of_ruin",
+    kind: "suffix",
+    weight: 45,
+    item_level: { min: 1, max: 60 },
+    exclusive_group: "ruin",
+    stats: {
+      pvp_damage: { base: 0.04, per_item_level: 0.0012 },
+    },
+  }
+  ```
+
+  `affixes/runed.json5`
+  ```
+  {
+    // 核心段首条（R138）：core 段此前 slots=0、从未有内容，这条是 core 通道的首个内容实证。
+    id: "runed",
+    kind: "core",
+    weight: 40,
+    item_level: { min: 1, max: 60 },
+    exclusive_group: "core",
+    stats: {
+      physical_damage: { base: 0.06, per_item_level: 0.002 },
+    },
+  }
+  ```
+
+  `affix_pools/sword_common.json5` 改后（除 `slots` 与三段词条表外**其它行逐字保留**，包括注释）：
+  ```
+  {
+    // 词条池（D22）：决定「这件装备会摇出哪些词条、几条」。
+    // slots 是**投放层**的条数上限，不做全局钳制（D16）。
+    id: "sword_common",
+    applies_to: ["redtale_project:sword", "redtale_project:axe", "redtale_project:dagger"],
+    slots: { prefix: 1, suffix: 1, core: 1 },
+    prefix: { sharp: 100, heavy: 80, keen: 70, executioner: 60 },
+    suffix: { of_the_bear: 60, of_the_hunt: 55, of_ruin: 45 },
+    core: { runed: 40 },
+  }
+  ```
+
+  `ConfigStore.java`：在 `"affixes/of_the_bear.json5",` 之后按 `keen` → `executioner` → `of_the_hunt` → `of_ruin` → `runed` 顺序插入 5 行（每行形如 `            "affixes/keen.json5",`，缩进与相邻行一致），**不写注释、不改其它行**。
+- 验收（**三条，全部可机器执行，不需要起服**）：
+  1. `cd /e/RedtaleProject && python tools/check_affix_reach.py -v` → 首行 `已检查 8 份词条定义 · 1 个词条池 · 3 个有效槽位段 · 物品等级 1`、末行 `共 1 份词条等级可达性表 · 0 条问题`；`python tools/check_affix_pool_refs.py -v` → `已检查 1 份词条池 · 8 条词条定义 · 8 条词条引用` + `共 1 份词条池引用表 · 0 条问题`；`python tools/check_affix_weights.py` 与 `python tools/check_affix_levels.py` 各 `0 条问题`。
+  2. `python tools/check_defaults.py` → `清单 53 条 · 磁盘 53 个 · 问题 0 条`；`python tools/check_numeric.py` → `0 条问题`；`python tools/check_items.py` → `共 23 个文件 · 0 条问题`（本卡不动 `items/`，该尺按目录内全部 `.json5` 计总数，基线 18 + 本卡 5 = 23）；`python tools/check_all.py` → `共 74 个脚本 · 跑成 74 · 跳过 0 · 红 0`。
+  3. `wc -l src/main/resources/redtale/defaults/affixes/{keen,executioner,of_the_hunt,of_ruin,runed}.json5` 各 ≤ 20 行；`git status --porcelain src/` → 恰 **5** 条 `??` 新建、**2** 条 ` M`（`affix_pools/sword_common.json5`、`ConfigStore.java`）；`git diff --numstat src/main/java/com/redtale/project/core/config/ConfigStore.java` → `5	0`；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" src/main/resources/redtale/defaults/affixes src/main/resources/redtale/defaults/affix_pools | wc -l` → **0**。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）

@@ -3107,3 +3107,30 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 2. **验 T-0130**（`weapon_attributes` 外部引用尺），过后接线 **72→73**。
 3. **M7 真机**：`rt-test` 进服走「多人游戏 → 直接连接 → `127.0.0.1:25567`」，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试。
 4. Q-024（正式服事故口径）等 Aki；Q-021 / Q-022 / Q-023 无答复继续按默认走。
+
+## R138 · 2026-11-27 18:3x~19:0x · 验 T-0132（`pieces` ↔ `set_id` 归属尺，接线 73→74）+ 派 T-0133（词条 3→8 条 + `core` 段首开）
+
+- **卡板**：T-0132 `tools/check_set_pieces_sync.py` `[DONE]` → **`[VERIFIED]`**（3/3，S8 零偏差不打回）：① 基线 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题` EXIT=0、`-v` `已检查 2 份套装 · 5 处 pieces 引用 · 12 份物品 · 跳过 0 处（物品不存在）` 逐字；② 六夹具（S7 自造 `build/setpieces_s7/`，不复用 S8 的 `build/setpieces_s8/`）A 判据 3 一条 / B 判据 2 一条 / C 0 条且 `跳过 1 处` / D 0 条 / E 0 条 / F 2 条且顺序 `demo_robe` → `demo_stew`，EXIT 1,1,0,0,0,1 全对；③ `wc=91`≤200、`py_compile` 空、`--dir NO_SUCH` 恰 2 条（先套装后物品）EXIT=1 不抛栈、禁词 0、三签名齐。读码核对判据 3 的收紧条件（`_scan():67` 的 `path_of(raw) in known`）与卡面「set_id 指向不存在套装不报」一致。**接线 `check_all` 73→74**（74/74 红 0）。
+- **派 T-0133**（词条扩充 5 条 + 池开 `core` 段 + `ConfigStore` 恰 +5 行），在制品 **1/3**。取证：`defaults/affixes/` 只有 3 份、`sword_common.slots` 是 `prefix 1 / suffix 1 / core 0` —— 一件武器最多 2 条词条，`AffixRoller.java:102` 的 `{prefix, suffix, core}` 循环里 `core` 是 `slots=0` 的**死分支（18 轮从未走过）**；`AffixRoller.roll()` 三类槽位同一循环、`pick()` 只按 `def.kind()` 过滤 → 引擎零改动，纯内容即可通电。
+- **取值口径**：只写被结算真读的属性。现查（`grep` 排除 `AttributeSpecs`/`StatFormat`）：`physical_damage` / `pvp_damage` / `pve_damage` / `undead_damage` / `critical_strike_chance` / `critical_strike_power` / `magical_damage` 有消费者；**`lifesteal` / `armor_penetration` / `damage_reduction` / `magic_resistance` / `skill_damage` / `dodge_rating` 零引用**（写进词条就是 tooltip 说谎）→ 本卡不碰。
+- **派前整份副本预验**（`build/affixs7/` 写入本卡全部内容）：`check_affix_reach -v` `3 份词条定义 · 1 个词条池 · 2 个有效槽位段` → `8 份 · 1 个 · 3 个有效槽位段`；`check_affix_pool_refs -v` `3 条 → 8 条`；`check_affix_weights` / `check_affix_levels` / `check_numeric` 各 0；`check_items` `18 个文件 0 条` → `23 个文件 0 条`（该尺按目录内全部 `.json5` 计总数 —— 顺手纠掉我原本写错的「与基线同数」）。
+- **Q-025 新开**（wiki 收件箱 `S7-20261127-184242`）：非武器装备 tooltip 要不要打自身属性行。现状 `demo_helmet` 的 `armor 6 / max_health 2` 完全不可见（`ContentTooltip.java:93-103` 对非武器跳过两行），只有「套装 灰烬誓约 0/3」。默认 A（加一行「本件属性」，取 `forEachModifier` 组件实挂量，与 `/redtale attr` 同源）。
+- 七门禁全 0：`check_all` **74/74**、`check_tasks` 133 卡 · 在制品 1 · 问题 0、`check_contracts` 116、`check_docs` 153 份/626 引用、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：`src/` 零 diff、未构建（纯 Python/文档，无编译面）、无构建锁、未启停测试服（25567/25577 无 LISTEN）、**正式服未触碰**（25565 无监听，等 Aki 手动拉）。夹具副本 `build/setpieces_s7` / `build/affixs7` 用后已删。
+- 收尾：`docs/ROUND-R138-PIECESSYNC.md`、PLAN §13 R138 + §13.141、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0132 VERIFIED + T-0133 OPEN）、`tools/check_all.py`、协作板 §3。
+
+### §13.141 R138 的五条口径（死分支 / 属性消费者 / 独立夹具 / 数字先跑 / 裸名）+ 下一步（R139）
+
+| 编号 | 口径 |
+|---|---|
+| R138-a | **「没内容的分支」等于「没验证的分支」**：`core` 段代码写了 18 轮、`slots` 恒 0，从未被一次摇号走到。补内容不只是「多两条词条」，是把一条死分支点亮；派内容卡时顺手问「这条路上有没有从没被走过的一段」。 |
+| R138-b | **词条只写结算真读的属性**：80 条属性注册齐全 ≠ 80 条都有消费者。`lifesteal` / `armor_penetration` 这类在注册表里躺着、`grep` 零引用的属性写进装备，就是「tooltip +30% 实际 0」的静默谎言，比缺内容更坏。派内容卡前先 `grep` 消费者。 |
+| R138-c | **夹具副本自己造，别复用 S8 的目录**：S8 用 `build/setpieces_s8/`、我用 `build/setpieces_s7/`。同一目录会被「我以为的干净副本」污染，独立副本是零成本隔离。 |
+| R138-d | **验收断言里的总数先自己跑一遍再写进卡**：`check_items` 计的是「目录内全部 `.json5`」而不是「items 数」，我按语义想当然写成「同数」。卡面里写死的数字，必须是 S7 亲手跑出来的。 |
+| R138-e | **裸名纪律第五十六次**：只写裸名，不写全路径（`check_docs` 按路径存在性判红）。 |
+
+下一步（R139）：
+
+1. **验 T-0133**：静态三验收 + 构建 + 测试服真机摇一件武器看 **3 条词条**（prefix + suffix + **core 首证**），`tooltip` 行数应从 2 变 3；`reload` 份数 52 → **57**。
+2. **M7 真机进服**：`rt-test` 走「多人游戏 → 直接连接 → `127.0.0.1:25567`」，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
+3. **Q-025 等 Aki**（护甲 tooltip 属性行，默认 A）；Q-021 / Q-022 / Q-023 / Q-024 无答复继续按默认走。
