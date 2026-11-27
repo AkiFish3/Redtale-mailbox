@@ -3161,3 +3161,28 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0134**（护甲词条池）：静态三条 + 构建 + 测试服 `reload` **57 → 62 份**、`tooltip demo_chestplate` 出现「词条 2：…」（护甲首个词条实证）；穿着时属性实挂留真机。
 2. **M7 真机进服**：`rt-test` → 多人游戏 → 直接连接 `127.0.0.1:25567`，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
 3. Q-021 ~ Q-025 等 Aki；Q-025（护甲 tooltip 自身属性行）是显示面，与 T-0134 的数值面不冲突。
+
+## R140 · 2026-11-28 06:5x~07:1x · 验 T-0134（护甲词条池，四基底各 2 条词条真机首证）+ 派 T-0135（池段名 ↔ `kind` 一致性尺）
+
+- **卡板**：T-0134 `[DONE]` → **`[VERIFIED]`**（3/3，S8 零偏差不打回）。① 静态三条逐字：`check_affix_reach -v` `12 份 / 2 池 / 5 个有效槽位段 / 物品等级 1` + `0 条问题`、`check_affix_pool_refs -v` `2 池 / 12 定义 / 12 引用` + 0、weights / levels 各 0；`check_defaults` 58·58·0、`check_items` 28·0、`check_numeric` 0、`check_all` 74/74/红 0；`wc` 11/11/11/11/9、`git status` 恰 5 `??` + 1 ` M`、numstat `5 0`、禁词 0。② 构建 EXIT=0（jar **701476 B**）→ 测试服 `Done (2.371s)` → `reload` **57 → 62 份** → `validate` `15 件内容 / 2 个词条池 / 12 条词条定义 / 2 个套装 · 问题 0`。③ 停服后 25567/25577 无 LISTEN。
+- **四基底真机首证**：`tooltip demo_chestplate` 连摇 8 次 **8/8 两条词条**（prefix 1 + suffix 1，四种新词条全部出现过）；`demo_helmet` / `demo_greaves` / `demo_boots` 各一次也都是 2 条 → `armor_common.applies_to` 四个 id 全部通电。武器池零回归（`demo_longsword` 仍 3 条含 `core` 段 `runed`、`≈ 10.096 /次`、`12.5 tick · 1.6 次/秒`）。本轮属 **「只新增文件」类内容卡**（R139-b）：5 份全由 `ensureDefaults` 自动补种，不需要手工同步 live。
+- **派 T-0135**（`check_affix_kind_sync.py`：池段名 ↔ 词条 `kind` 一致性，单文件零接线），在制品 **1/3**。**真发现（对账网第五十八例）**：`AffixRoller.java:102-109,140` 把段名当**过滤条件** —— `def.kind().equals(kind)` 不等就 `continue`，**零 WARN、不计数**，整段候选空后 `break`、槽位默默留空（只有「引用未定义词条」才进 `deadEntries` 打日志）。六把已有尺零覆盖（`check_affix_pool_refs` 只看 id 在不在定义集、`check_affix_reach` 只看段数与等级可达）。**派前反事实**：`armor_common` 的 `prefix` / `suffix` 段名互换（JSON 结构合法、`kind` 全错）→ 六把尺逐字全绿 EXIT=0。基线 2 池 / 12 定义 / 12 引用 / 0 问题；六夹具 A 0 / B 1 / C 1 / D 1 / E 2（有序）/ F 0。
+- 七门禁全 0：`check_all` **74/74**、`check_tasks` 135 卡 · 在制品 1 · 问题 0、`check_contracts` 117、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：构建 1 次（锁取删）、测试服 **1 启 1 停**、**正式服未触碰**（25565 无监听）、夹具 `build/affixkind_s7/` 已删、无锁残留。
+- 收尾：`docs/ROUND-R140-AFFIXARMOR.md`、PLAN §13 R140 + §13.143、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0134 VERIFIED + T-0135 OPEN + 池 C83）、`docs/CONTRACTS.md` §4.117、协作板 §3。
+
+### §13.143 R140 的五条口径（段名是过滤条件 / 每基底都验 / 新增类内容卡 / 反事实选语义错 / 裸名）+ 下一步（R141）
+
+| 编号 | 口径 |
+|---|---|
+| R140-a | **池段名是过滤条件不是标签**：`prefix` / `suffix` / `core` 段里放错 `kind` 的条目被 `AffixRoller.java:140` 静默 `continue`，表现为「少一条词条」而非报错。写池 = 段名必须等于词条 `kind`。 |
+| R140-b | **验收要看「每个基底」**：`applies_to` 列了 4 个 id，只摇一件只能证明一个 id 通；四个基底各跑一次 `tooltip` 才是全覆盖，成本 4 条 RCON。 |
+| R140-c | **「只新增文件」类内容卡不必手工同步 live**：全新建 → `ensureDefaults` 自动补种，`reload` 份数即证明进内存；与 R139「改已有文件」必须手工同步形成对照，派卡时写明属于哪类。 |
+| R140-d | **反事实优先选「语义错但形态对」**：段名互换（结构合法、字段名在枚举里）比写非法字符串更能证明旧尺真的没核这件事。 |
+| R140-e | **裸名纪律第五十八次**：只写裸名，不写 `tools/` 全路径。 |
+
+下一步（R141）：
+
+1. **验 T-0135**（词条段名 ↔ `kind` 尺）→ 通过后接 `check_all` **74 → 75**。
+2. **M7 真机进服**：`rt-test` → 多人游戏 → 直接连接 `127.0.0.1:25567`，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
+3. Q-021 ~ Q-025 等 Aki；Q-025（护甲 tooltip 自身属性行）是显示面，与词条数值面不冲突。

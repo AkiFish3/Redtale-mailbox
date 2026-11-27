@@ -5673,7 +5673,7 @@ fi
 - 2026-11-27 19:31 · 完成 · 新建 `defaults/affixes/{keen,executioner,of_the_hunt,of_ruin,runed}.json5`，改 `defaults/affix_pools/sword_common.json5`（slots core 0→1 + 三段词条表）、`core/config/ConfigStore.java`（+5 行，numstat `5 0`） · 构建 EXIT=N/A（卡禁 gradle / 禁锁，未取锁未启停任何服） · 自测 3/3 全过：`check_affix_reach -v` 8 定义/1 池/3 段/等级 1·0 问题，`check_affix_pool_refs -v` 8 引用·0 问题，weights/levels 各 0；`check_defaults` 53/53/0、`check_numeric` 0、`check_items` 23/0、`check_all` 74/74/红 0、`check_tasks` 133 卡/在制品 1/0、`check_ownership` 0；wc 13/11/11/11/11、git status 恰 5 个 `??` + 2 个 ` M`、禁词 0、8 份 JSON5 严格解析通过
 - **2026-11-28 00:5x · S7 验收 → `[VERIFIED]`（3/3，S8 零偏差）**：① 静态三条逐字过（`check_affix_reach -v` `8 份 / 1 池 / 3 个有效槽位段 / 等级 1` + `0 条问题`、`check_affix_pool_refs -v` `1 池 / 8 定义 / 8 引用`、weights / levels 各 0；`check_defaults` 53·53·0、`check_numeric` 0、`check_items` 23·0、`check_all` 74/74/红 0；wc 13/11/11/11/11、`git status` 恰 5 `??` + 2 ` M`、numstat `5 0`、禁词 0）。② 五份新定义与池逐字对比卡面表格，id / kind / weight / item_level / exclusive_group / 数值 / 注释全同。③ 构建 + 测试服真机：jar 内 `redtale/defaults/affixes/` 五份齐全，`reload` **52 → 57 份**，`validate` `8 条词条定义 · 问题 0`，`tooltip demo_longsword` 连摇 15 次 **全部 3 条词条**且 `core` 段 15/15 命中 `runed`（`sharp/heavy/keen/executioner` × `of_the_bear/of_the_hunt/of_ruin` 全组合出现）——**18 轮未走过的 `core` 死分支首证**。④ **验证程序坑（R139-a）**：`ConfigStore.ensureDefaults():148` 是 `Files.exists → continue`（只补缺不覆盖），所以改过的默认文件不会推到已有服的 `config/`；本轮首摇 12 次全是 2 条旧词条，同步 live 池后才通。卡本身只加文件，不踩这个坑。
 
-### T-0134 · [OPEN] 护甲词条池 `armor_common` + 4 条护甲词条（`plated` / `sturdy` / `vital` / `of_the_bulwark`）
+### T-0134 · [VERIFIED] 护甲词条池 `armor_common` + 4 条护甲词条（`plated` / `sturdy` / `vital` / `of_the_bulwark`）
 
 - 派单：S7 · 2026-11-28 00:5x（R139）、在制品 **1/3**（本卡）
 - 目标：随机词条（D22）的**投放面只有一把武器**。`defaults/affix_pools/` 只有 `sword_common`，`applies_to` 是 `sword/axe/dagger`；四件防具基底（`helmet` / `chestplate` / `leggings` / `boots`）**摇不出任何词条** —— 本轮验收 T-0133 时实测：`demo_chestplate` 的 tooltip 只有套装行、零词条行。本卡补一个护甲池 + 4 条只写「结算真读」属性的护甲词条，让 D22 的覆盖面从武器走到防具。
@@ -5768,6 +5768,42 @@ fi
   2. `python tools/check_defaults.py` → `清单 58 条 · 磁盘 58 个 · 问题 0 条`；`python tools/check_items.py` → `共 28 个文件 · 0 条问题`；`python tools/check_numeric.py` → `0 条问题`；`python tools/check_all.py` → `共 74 个脚本 · 跑成 74 · 跳过 0 · 红 0`。
   3. `wc -l src/main/resources/redtale/defaults/affixes/{plated,sturdy,vital,of_the_bulwark}.json5 src/main/resources/redtale/defaults/affix_pools/armor_common.json5` 各 ≤ 20 行；`git status --porcelain src/` → 恰 **5** 条 `??` 新建、**1** 条 ` M`（仅 `ConfigStore.java`）；`git diff --numstat src/main/java/com/redtale/project/core/config/ConfigStore.java` → `5	0`；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" src/main/resources/redtale/defaults/affixes src/main/resources/redtale/defaults/affix_pools | wc -l` → **0**。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+2026-11-28 03:35 · 完成 · 新建 `defaults/affixes/{plated,sturdy,vital,of_the_bulwark}.json5` + `defaults/affix_pools/armor_common.json5`；`ConfigStore.java` +5 行 · 构建退出码 N/A（卡禁 gradle/锁，未构建） · 自测 3/3：① `check_affix_reach -v` 12 定义/2 池/5 有效槽位段/物品等级 1/0 问题、`check_affix_pool_refs -v` 2 池/12 定义/12 引用/0 问题、weights/levels 各 0；② `check_defaults` 58/58/0、`check_items` 28/0、`check_numeric` 0、`check_all` 74/74/红 0；③ wc 11/11/11/11/9 ≤20、`git status src` 恰 5 `??` + 1 ` M`、numstat `5 0`、禁词 0、五份 JSON5 严格解析逐字段一致 5/5；待 S7 测试服 `reload` 验四件防具真摇出词条
+2026-11-28 07:05 · S7 验收 → VERIFIED（3/3，S8 零偏差不打回） · ①静态三条逐字过（见卡面；`check_all` 74/74 红 0）②构建 EXIT=0（jar 701476 B）→ 测试服 `Done (2.371s)`、`reload` **57→62 份**、`validate` 15 件内容/2 池/12 定义/2 套装/0 问题 ③四个防具基底真机各摇出 **2 条**词条（`demo_chestplate` 连摇 8 次 8/8 两条，`plated`/`sturdy`/`vital`/`of_the_bulwark` 全部出现过；`demo_helmet`/`demo_greaves`/`demo_boots` 同证），武器 `demo_longsword` 3 条词条（含 `core` 段 `runed`）零回归；停服后 25567/25577 无 LISTEN
+
+### T-0135 · [OPEN] `tools/check_affix_kind_sync.py` —— 词条池段名 ↔ 词条 `kind` 一致性对账（M3 / D22，单文件零接线，对账网第五十八例）
+
+- 派单：S7 · 2026-11-28 07:0x（R140）、在制品 **1/3**（本卡）
+- 目标：`AffixRoller` 按 `slots` 三段（`prefix` / `suffix` / `core`）分别抽签，但抽签时会**按段名过滤词条 `kind`**——段名与 `kind` 不一致的条目被静默丢掉。写错一个段名，整段候选为空、该段槽位默默留空，**零 WARN、六把已有尺全绿**，只在真机上表现为「这件装备少一条词条」。
+- 取证（R140 现查）：
+  - `src/main/java/com/redtale/project/items/AffixRoller.java:102-109` 三段循环 + `break`（「这类摇不出候选了，剩下的槽位空着，不降级」）；`:140` `if (!def.kind().equals(kind) || entry.weight() <= 0) { continue; }` —— **kind 不一致直接 `continue`，不计数、不打日志**；只有「引用了未定义词条」才进 `deadEntries` 并在 `:119-121` 打日志。
+  - 六把已有尺零覆盖：`check_affix_pool_refs.py:69-83` 只核「段内 id 在不在定义集里」（**不看 kind**）、`check_affix_reach.py` 只核「槽位段数 + 等级区间可达」、`check_items` / `check_numeric` / `check_affix_weights` / `check_affix_levels` 均不读「段名 vs `kind`」。
+  - **派前反事实**（`build/affixkind_s7/`，整份 `defaults/` 副本）：把 `affix_pools/armor_common.json5` 改成 `prefix: { vital: 60, sturdy: 80 }` + `suffix: { plated: 100, of_the_bulwark: 50 }`（两个段名互换、`kind` 全错），上面六把尺**逐字全绿 EXIT=0**。副本已删。
+- 独占文件（**唯一可写**）：`tools/check_affix_kind_sync.py`（新建）
+- 禁止：不改任何 `src/**`；不改其它 `tools/**`（含 `check_progress.py` / `check_affix_pool_refs.py`）；不改 `docs/**`；**不写进 `check_all.py` 的 `TOOLS`**（接线由 S7 下轮做）；不取构建锁、不执行 gradle、不启停任何服。
+- **接口（S7 定死，逐字照做，不许换名 / 换返回形态）**：
+  - `from check_progress import clean_json5`（**恰 1 行导入**，不自己写 JSON5 清洗）
+  - `_load(path)` → `dict | None`：`clean_json5` + `json.loads`；`OSError` / `ValueError` / `TypeError` 或非 dict 一律返 `None`
+  - `_files(root, sub)` → `(directory, names) | None`：`os.listdir` 里 `.json5` 且是文件，`sorted`；目录不可读返 `None`
+  - `read_def_kinds(root)` → `dict[str, str] | None`：`affixes/*.json5` 的 `id` → `kind`；**只收 `kind` ∈ `("prefix","suffix","core")` 的条目**（`kind` 非法 / 缺 `id` 的跳过，归 `AffixPools.java:65-66` 的既有 WARN）；目录不可读返 `None`
+  - `read_pools(root)` → `[(rel, data)] | None`：`affix_pools/*.json5`，`data["id"]` 非字符串跳过；`rel` 形如 `affix_pools/armor_common.json5`
+  - `mismatches(pools, def_kinds)` → `list[str]`：**按文案升序 `sorted` 后返回**
+  - `main()` → `int`，参数 `--dir`（默认 `src/main/resources/redtale/defaults`）、`-v`
+- **判据（只核一条）**：池里 `prefix` / `suffix` / `core` 段出现的词条 id，若在 `def_kinds` 里且 `def_kinds[id] != 段名`，报一行：
+  `词条池 <pool_id> 的 <段名> 段放了 <def_kinds[id]> 类词条 <词条 id>`
+- **不核**（各有归属，重复报会造第二份真相）：①段内 id 未定义 → 归 `check_affix_pool_refs`；②权重 / 等级数值 → 归 `check_affix_weights` / `check_affix_levels`；③`slots` 与段内条数是否匹配（投放层上限，D16）；④词条自身 `kind` 非法（`AffixPools.java:65-66` 已 WARN + 跳过）。
+- 输出契约：每条问题行 `[问题] <rel> <文案>`；末行 `共 1 份词条段类型对账表 · %d 条问题`，EXIT 0/1；`-v` 首行 `已检查 %d 份词条池 · %d 条词条定义 · %d 条词条引用`（三项分别取 `len(pools)` / `len(def_kinds)` / 段内字符串键总数）；`affixes` 或 `affix_pools` 目录读不到 → **恰 1 条** `[问题] affixes/affix_pools 目录读取失败` + 末行 `共 1 份词条段类型对账表 · 1 条问题` + EXIT 1，**不抛栈**。
+- 验收（**三条，全部离线，不需要构建 / 起服**）：
+  1. 基线：`cd /e/RedtaleProject && python tools/check_affix_kind_sync.py` → 末行 `共 1 份词条段类型对账表 · 0 条问题`、EXIT 0；`python tools/check_affix_kind_sync.py -v` → 首行 `已检查 2 份词条池 · 12 条词条定义 · 12 条词条引用`。
+  2. 六夹具（**自建目录、不要复用 `build/affixkind_s7/`，用后删净**，每个夹具 = 整份 `defaults/` 副本 + 改一处）：
+     - A 干净副本 → `0 条问题` EXIT=0
+     - B `armor_common` 的 `prefix` 段只放 `vital` → **1 条** `[问题] affix_pools/armor_common.json5 词条池 armor_common 的 prefix 段放了 suffix 类词条 vital`，EXIT=1
+     - C `suffix` 段只放 `plated` → **1 条** `… 的 suffix 段放了 prefix 类词条 plated`，EXIT=1
+     - D `sword_common` 的 `core` 段加 `sturdy: 80` → **1 条** `… 词条池 sword_common 的 core 段放了 prefix 类词条 sturdy`，EXIT=1
+     - E B+C 同池同时发生 → **2 条**，且顺序为 `prefix…vital` 在前、`suffix…plated` 在后（`sorted` 生效），EXIT=1
+     - F `prefix` 段只放 `ghost: 10`（未定义词条）→ **0 条** EXIT=0（存在性归别的尺）
+  3. 形态：`wc -l tools/check_affix_kind_sync.py` ≤ **200**；`grep -c "from check_progress import clean_json5"` = **1**；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" tools/check_affix_kind_sync.py | wc -l` = **0**；`python -m py_compile tools/check_affix_kind_sync.py` 无输出；`python tools/check_affix_kind_sync.py --dir NO_SUCH` → 恰 **1 条** `[问题]` + 末行 `1 条问题` + EXIT 1 且 **无 traceback**；`git status --porcelain` → 恰 **1 条** `?? tools/check_affix_kind_sync.py`（无其它改动）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -5850,8 +5886,9 @@ fi
 
 | C80 | ~~套装 `pieces` 成员 ↔ 物品 `set_id` 归属一致性~~ → **T-0132（R137 派）** | R137 实证：`SetBonus.counts()`（`items/SetBonus.java:95-117`）按 `ContentData.setId()` 计件、**不读 pieces**，而 `check_items.py:69-70` 与 `:130-131` 只核两份名单的**存在性**——「pieces 里这件东西自己认不认这个套装」零覆盖；写错则穿满不给计数、`check_set_reach` 仍判可达（静默放行同族，对账网第五十七例）。基线 2 套 / 5 处引用 / 12 物品 / 0 问题；`demo_robe` 的单向差异为设计如此，只核 pieces→set_id 方向 |
 
-| C81 | ~~护甲零词条：`affix_pools/` 只有 `sword_common`（`applies_to` = sword/axe/dagger），四件防具基底摇不出词条~~ → **T-0134（R139 派）** | R139 验收 T-0133 时实测 `demo_chestplate` 的 tooltip 只有套装行、零词条行；D22 原文不限武器，`affix_pools` 本就是按基底分池的设计 → 属**内容缺口**不是范围决策。4 条词条只写原版属性（`armor` / `armor_toughness` / `max_health` / `knockback_resistance`，均在 `AttributeSpecs` 的 `v(...)` 段、走原版 `ATTRIBUTE_MODIFIERS` 结算），排除 `damage_reduction` / `dodge_rating` / `magic_resistance` 这类零消费者自定义属性（R138-b）。派前整份副本预验（`build/armoraffix_s7/`）：`check_affix_reach -v` 12 定义/2 池/**5 有效槽位段**、`check_affix_pool_refs -v` 2 池/12 定义/12 引用、weights/levels/`check_items`(28)/`check_numeric`/`check_name_coercions` 各 0 | 无 |
+| C81 | ~~护甲零词条：`affix_pools/` 只有 `sword_common`（`applies_to` = sword/axe/dagger），四件防具基底摇不出词条~~ → **T-0134（R139 派 / R140 验，四基底各 2 条词条真机首证）** | R139 验收 T-0133 时实测 `demo_chestplate` 的 tooltip 只有套装行、零词条行；D22 原文不限武器，`affix_pools` 本就是按基底分池的设计 → 属**内容缺口**不是范围决策。4 条词条只写原版属性（`armor` / `armor_toughness` / `max_health` / `knockback_resistance`，均在 `AttributeSpecs` 的 `v(...)` 段、走原版 `ATTRIBUTE_MODIFIERS` 结算），排除 `damage_reduction` / `dodge_rating` / `magic_resistance` 这类零消费者自定义属性（R138-b）。派前整份副本预验（`build/armoraffix_s7/`）：`check_affix_reach -v` 12 定义/2 池/**5 有效槽位段**、`check_affix_pool_refs -v` 2 池/12 定义/12 引用、weights/levels/`check_items`(28)/`check_numeric`/`check_name_coercions` 各 0 | 无 |
 | C82 | 「jar 默认 ↔ 已落地 live 配置」漂移零观测面（R139-a 新开，**未派**） | `ConfigStore.ensureDefaults():148` 是 `Files.exists → continue`（只补缺不覆盖）：改过的默认文件升级 jar 后**永远到不了**已有服；`/redtale reload` 只报份数（57 份），不报「哪几份和 jar 里不一样」。本轮为此白摇 12 次、差点误判内容没生效。**不派的原因**：判据要读 live 目录（`E:/server-test/config/...`，机器本地路径，`check_all` 不可移植）；做成 `/redtale config diff` 是运行期命令、但「本地改过」本身是合法状态，只能 INFO 不能红 → 先记口径（R139-a + `docs/HOT-UPDATE.md` §种子语义），等出现第二份证据（例如真发生过「以为发了其实没发」的线上事故）再考虑 | 无 |
+| C83 | ~~`affix_pools` 段名 ↔ 词条 `kind` 零对账~~ → **T-0135（R140 派）** | `AffixRoller.java:102-109,140`：按 `slots` 三段抽签时用 `def.kind().equals(kind)` 过滤，**不一致直接 `continue`**、零 WARN，整段候选空 → `break`、该段槽位默默留空；只有「未定义词条」才进 `deadEntries` 打日志（`:119-121`）。六把已有尺零覆盖（`check_affix_pool_refs` 只看 id 在不在定义集、`check_affix_reach` 只看段数与等级可达）。R140 反事实：`armor_common` 的 `prefix`/`suffix` 段名互换（`kind` 全错）→ 六把尺逐字全绿 EXIT=0；基线 2 池 / 12 定义 / 12 引用 / 0 问题（对账网第五十八例） | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 

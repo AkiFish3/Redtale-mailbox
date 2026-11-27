@@ -1808,3 +1808,11 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **T-0132 接口冻结（新）**：`check_set_pieces_sync.py`，三判据 ①套装目录/物品目录读取失败 ②`<set>: <piece> 没有 set_id` ③`<set>: <piece> 的 set_id 是 <other>（不是 <set>）`；`pieces` 引用不存在的物品**跳过只计数**（存在性归 `check_items`）；**反方向不报**（物品有 `set_id` 但 `pieces` 未收录是 `demo_robe` 的设计现状）。基线 `共 2 份套装定义 · 5 处 pieces 引用 · 0 条问题`。
 - **计件口径再确认（D 层不变）**：件数**只**由 `ContentData.setId()` 决定（`SetBonus.counts()` 不读 `pieces`）；`pieces` 只服务「槽位可达性」与「`set probe` 真穿真脱」。任何「pieces 是权威名单」的假设都是错的。
 - **观察项（未派卡，记此备查）**：护甲类物品 `redtale tooltip` 目前**不打印属性行**（`demo_chestplate` 与三件新护甲同形，只显示 `套装 X 0/N`），D20 只规定武器 tooltip 口径；是否需要给非武器补属性行属**显示面待定项**，等 Aki 或 M7 真机看到实际观感再定。
+
+### 4.117 护甲词条池收口（T-0134 VERIFIED，R140）+ 词条段名 ↔ `kind` 尺冻结（T-0135，R140 派）
+
+- **T-0134 → VERIFIED（已合流）**：`defaults/affixes/{plated,sturdy,vital,of_the_bulwark}.json5` + `defaults/affix_pools/armor_common.json5` 五份已入库，`ConfigStore.DEFAULT_FILES` 恰 +5 行。基线：`check_defaults` **58**、`check_affix_reach -v` `12 定义 / 2 池 / 5 段`、`check_affix_pool_refs -v` `2 池 / 12 定义 / 12 引用`、`check_all` 74/74。
+- **真机口径**：`armor_common.applies_to` 的四个 id（`helmet` / `chestplate` / `leggings` / `boots`）**逐个** `tooltip` 验过各出 2 条词条；`slots: {prefix 1, suffix 1, core 0}` —— 护甲不开 `core` 段（D16：`0` = 关）。**只验一件不算验完**（R140-b）。
+- **池语义（新登记，此前只有代码事实没有文档）**：池的三个段名是**过滤条件**，不是标签 —— `AffixRoller.java:102-109` 按 `slots` 三段循环抽签，`:140` 用 `def.kind().equals(kind)` 过滤，**不一致直接 `continue`**（不计数、不打日志），整段候选为空后 `:107-108` `break`，该段槽位**留空**。因此「段名 = 词条 `kind`」是内容硬约束，写错只表现为「少一条词条」。
+- **T-0135 接口冻结（新）**：`check_affix_kind_sync.py`，单条判据 `词条池 <pool_id> 的 <段名> 段放了 <kind> 类词条 <id>`；**不核**四类（未定义 id 归 `check_affix_pool_refs`、数值归 `check_affix_weights` / `check_affix_levels`、`slots` 与条数匹配、`kind` 自身非法归 `AffixPools` 的既有 WARN）。函数签名 `read_def_kinds` / `read_pools` / `mismatches` / `_files` / `_load` / `main` 由 S7 定死；基线 `共 1 份词条段类型对账表 · 0 条问题`、`-v` `2 池 · 12 定义 · 12 引用`。**卡禁接线**，`check_all` 74 → 75 由 S7 在 R141 验收后做。
+- **内容计数纪律（复述 R137-a / R140-b）**：`check_affix_reach` / `check_affix_pool_refs` 的份数是**时点快照**，随内容增长（8→12 定义、1→2 池）。文档里凡引用这两个数字必须带轮次，禁止当常量断言。

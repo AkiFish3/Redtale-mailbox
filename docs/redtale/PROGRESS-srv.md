@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-28 00:53 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-28 07:01 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0134 | OPEN | 护甲词条池 `armor_common` + 4 条护甲词条（`plated` / `sturdy` / `vital` / `of_the_bulwark`） |
+| T-0135 | OPEN | `tools/check_affix_kind_sync.py` —— 词条池段名 ↔ 词条 `kind` 一致性对账（M3 / D22，单文件零接线，对账网第五十八例） |
 
-已验完 **131** 张 / 共 **134** 张。
+已验完 **132** 张 / 共 **135** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
