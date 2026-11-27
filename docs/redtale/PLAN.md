@@ -3134,3 +3134,30 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0133**：静态三验收 + 构建 + 测试服真机摇一件武器看 **3 条词条**（prefix + suffix + **core 首证**），`tooltip` 行数应从 2 变 3；`reload` 份数 52 → **57**。
 2. **M7 真机进服**：`rt-test` 走「多人游戏 → 直接连接 → `127.0.0.1:25567`」，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
 3. **Q-025 等 Aki**（护甲 tooltip 属性行，默认 A）；Q-021 / Q-022 / Q-023 / Q-024 无答复继续按默认走。
+
+## R139 · 2026-11-28 00:4x~01:1x · 验 T-0133（词条 3→8 + `core` 段首开，**18 轮死分支首证**）+ 派 T-0134（护甲词条池 `armor_common`）
+
+- **卡板**：T-0133 `[DONE]` → **`[VERIFIED]`**（3/3，S8 零偏差不打回）。① 静态三条逐字：`check_affix_reach -v` `8 份 / 1 池 / 3 个有效槽位段 / 物品等级 1` + `0 条问题`、`check_affix_pool_refs -v` `1 池 / 8 定义 / 8 引用`、weights / levels 各 0；`check_defaults` 53·53·0、`check_numeric` 0、`check_items` 23·0、`check_all` 74/74/红 0；`wc` 13/11/11/11/11、`git status` 恰 5 `??` + 2 ` M`、numstat `5 0`、禁词 0。② 五份新定义 + 池 + `ConfigStore` 五行与卡面逐字一致（含注释与插入位置）。③ 构建 EXIT=0（jar 699235 B，五份 JSON5 在 jar 内）→ 测试服 `Done (2.972s)` → `reload` **52 → 57 份** → `validate` `8 条词条定义 · 问题 0`。
+- **`core` 死分支首证**：`/redtale tooltip demo_longsword` 连摇 15 次，**15/15 都是 3 条词条**、`core` 段 15/15 命中 `runed`，prefix 四选（`sharp`/`heavy`/`keen`/`executioner`）与 suffix 三选（`of_the_bear`/`of_the_hunt`/`of_ruin`）全部出现过。`AffixRoller.java:102` 的三元循环自 M2 落地以来第一次三段全通；R138-a「没内容的分支 = 没验证的分支」得到正证。
+- **验证程序坑（R139-a，本轮最重要的产出）**：第一轮连摇 12 次全是 2 条旧词条。根因不是代码也不是内容 —— `ConfigStore.ensureDefaults():148` 是 `Files.exists(target) → continue`（**只补缺、不覆盖**）：5 份新词条被自动种进 `config/`（所以 `reload` 报 57、`validate` 认 8 条），但**改过**的 `affix_pools/sword_common.json5` 仍是 11-16 的旧版（`slots.core: 0`）。同步 live 后立即 3 条。→ 口径：**`reload` 报的是「读了几份」，不是「内容等于 jar 默认」**；内容卡分「只新增文件」（自动补种、验一遍就过）与「改已有文件」（必须手工同步 live）两类。已写进 `docs/HOT-UPDATE.md` §5.1 + 池 C82（漂移观测面，未派）。
+- **派 T-0134**（护甲词条池 `armor_common` + `plated`/`sturdy`/`vital`/`of_the_bulwark` 四条 + `ConfigStore` 恰 +5 行），在制品 **1/3**。取证：验收时看 `demo_chestplate` tooltip 只有套装行、零词条行；`affix_pools/` 仅 `sword_common`（`applies_to` = sword/axe/dagger），四件防具基底摇不出词条 —— D22 原文不限武器，属**内容缺口**非范围决策。取值只写原版属性（`armor` / `armor_toughness` / `max_health` / `knockback_resistance`，全在 `AttributeSpecs` 的 `v(...)` 段），排除零消费者自定义属性（R138-b）。
+- **派前整份副本预验**（`build/armoraffix_s7/defaults`）：`check_affix_reach -v` `8/1/3` → **`12 定义 / 2 池 / 5 段`**；`check_affix_pool_refs -v` `1/8/8` → **`2/12/12`**；`check_items` 23 → **28** 文件 0 条；weights / levels / `check_numeric` / `check_name_coercions` 各 0。副本用后已删。
+- 七门禁全 0：`check_all` **74/74** 红 0、`check_tasks` **134 卡 · 在制品 1 · 问题 0**、`check_contracts` 116、`check_docs`、`check_rounds`、`check_ownership`、`check_checkall`。
+- 环境：构建 1 次（锁取删）、测试服 **1 启 1 停**（`Done (2.972s)`、`stop` 后 RCON 停、25567/25577 无 LISTEN）、**正式服未触碰**（25565 无监听）；残留 `java.exe` 经命令行确认是 Gradle daemon，未杀。
+- 收尾：`docs/ROUND-R139-AFFIXVERIFY.md`、PLAN §13 R139 + §13.142、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0133 VERIFIED + T-0134 OPEN + 池 C81/C82）、`docs/HOT-UPDATE.md` §5.1、协作板 §3。
+
+### §13.142 R139 的五条口径（只补缺不覆盖 / 内容卡两类 / 死分支判据 / tooltip 真机 / 裸名）+ 下一步（R140）
+
+| 编号 | 口径 |
+|---|---|
+| R139-a | **「只补缺不覆盖」是默认配置的硬语义，验收前必须同步 live**：`ConfigStore.ensureDefaults()` 存在即跳过 → 改过的默认文件升级 jar 后永远到不了已有服；`reload` 份数只证明「读了几份」。本轮为此白摇 12 次。 |
+| R139-b | **内容卡分两类**：只新增文件（自动补种，验一遍过）/ 改已有文件（必须手工同步 live，否则验的是旧内容）。派卡时写明属于哪类。 |
+| R139-c | **死分支点亮的判据是「每次都命中」**：`core` 段单一内容 → 理论 100%，15/15 才算证明 `slots.core=1` 真接线；若只有零星出现，说明读的是别的字段。 |
+| R139-d | **`/redtale tooltip <id>` 是内容卡的廉价真机判据**：真走 `ItemFactory.build` 摇一次，控制台可调、不要玩家在线、不要客户端。 |
+| R139-e | **裸名纪律第五十七次**：只写裸名，不写 `tools/` 全路径。 |
+
+下一步（R140）：
+
+1. **验 T-0134**（护甲词条池）：静态三条 + 构建 + 测试服 `reload` **57 → 62 份**、`tooltip demo_chestplate` 出现「词条 2：…」（护甲首个词条实证）；穿着时属性实挂留真机。
+2. **M7 真机进服**：`rt-test` → 多人游戏 → 直接连接 `127.0.0.1:25567`，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
+3. Q-021 ~ Q-025 等 Aki；Q-025（护甲 tooltip 自身属性行）是显示面，与 T-0134 的数值面不冲突。

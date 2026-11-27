@@ -1,6 +1,6 @@
 # RedtaleProject 进展（srv 侧）
 
-> 自动生成：2026-11-27 18:44 · `D:\redtale-ops\gen_progress.py`
+> 自动生成：2026-11-28 00:53 · `D:\redtale-ops\gen_progress.py`
 > 源：`docs/TASKS.md`（卡板）· `PLAN.md` §13（轮次台账）· `_srv_QUEUE_BOARD.md`（队列动态）
 > 对端：`PROGRESS-dev.md` 由 dev 自己写，本文件不覆盖它。
 
@@ -12,9 +12,9 @@
 
 | 卡 | 状态 | 标题 |
 |---|---|---|
-| T-0133 | OPEN | 词条扩充 5 条（`keen` / `executioner` / `of_the_hunt` / `of_ruin` / `runed`）+ 词条池首开 `core` 段 |
+| T-0134 | OPEN | 护甲词条池 `armor_common` + 4 条护甲词条（`plated` / `sturdy` / `vital` / `of_the_bulwark`） |
 
-已验完 **130** 张 / 共 **133** 张。
+已验完 **131** 张 / 共 **134** 张。
 
 ## 3. 最近五轮（PLAN §13 台账）
 
