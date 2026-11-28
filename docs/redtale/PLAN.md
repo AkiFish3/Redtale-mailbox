@@ -3211,3 +3211,32 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0136**：静态三条 → 构建 → 测试服 `reload` **62 → 65 份**、`redtale items` 12 → **15** 件、`tooltip demo_greataxe` / `demo_spear` / `demo_battlestaff` 各出一条 `tick · 次/秒` 攻速口径（D20）。
 2. **M7 真机进服**：`rt-test` → 直接连接 `127.0.0.1:25567`，需 Aki 在线或桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
 3. Q-021 ~ Q-025 等 Aki；池 C85（`bow` / `shield` / `ring`）需先定语义（远程伤害管线 / 盾牌格挡是否自研 / 装不装 Curios）才能派。
+
+## R142 · 2026-11-28 19:1x~19:2x · 验 T-0136（三把武器，基底 11/14）+ 派 T-0137（附魔 2→5，D32 组件面）
+
+- **卡板**：T-0136 `[DONE]` → **`[VERIFIED]`**（3/3 + 真机，S8 零偏差不打回）。① 静态：`check_items` `31 文件/0`、`check_numeric` 4/0、`check_affix_reach -v` `12 定义 · 2 池 · 5 段`/0、`check_name_coercions` 0、`check_weapon_attr_ref -v` `15 份 · 6 处（bettercombat 6）· 33 动作`/0、`check_defaults` 61·61·0、`check_all` **75/75 红 0**。② 形态：`git status` 5 条（3 `??` + `ConfigStore` + 卡板）、numstat `3 0`、三份 `rev: 1` 各 1、禁词 0。③ 逐字：三份与卡面代码块 `diff` 零差异（各 22 行）。
+- **真机（构建 + 测试服 1 启 1 停）**：构建 EXIT=0（jar **702963 B**，较 R140 的 701476 增 1487 B 全来自三份 JSON5）；测试服 `Done (2.377s)`；`reload` **65 份配置**（62 → 65）；`redtale items` = **`18 件装备内容 · 基底 14 个`**（15 → 18）；`validate` `18 件 / 2 池 / 12 定义 / 2 套装 · 问题 0`（外部 `weapon_attributes` 引用 **6** 条未校验，3 → 6）；redtale 相关 WARN/ERROR **0**；停服后 25567/25577 无 LISTEN。
+- **三把 tooltip（D15 动作差异 + D20 口径首证）**：`demo_greataxe` `≈ 10.62 /次（physical_damage +6.2%）` / `23.529 tick · 0.85 次/秒` / `动作 bettercombat:axe` / 词条 3（`executioner` · `of_the_bear` · `runed`）；`demo_spear` `≈ 9.35 /次（physical_damage +10%）` / `17.391 tick · 1.15 次/秒` / `:spear`；`demo_battlestaff` `≈ 7 /次` / `16.667 tick · 1.2 次/秒` / `:staff`。**攻速三档第一次同时出现在内容里**（0.85 / 1.15 / 1.2），D19 的 `min_attack_delay_ticks = 1.0` 物理地板仍远未触及。
+- **派 T-0137**（在制品 **1/3**）：`enchantments/titan_grip.json5` + `heavy_impact.json5` + `ember_bite.json5` + `ConfigStore` **恰 +3 行** + 跑一次 `gen_enchant_lang.py`。**动机**：D32 硬指标「加第 N 个附魔只写 JSON5、不编译」目前只有 **2 个数据点**、**1 种原版组件**（`minecraft:damage`）；三条新附魔各用一个原版已证组件（`minecraft:attributes` / `minecraft:knockback` / `minecraft:post_attack` + `minecraft:ignite`），组件面 1 → 4 种。
+- **派前取证（关键三条）**：① 原版 1.21.1 附魔 JSON 在 `server-1.21.1-20240808.144430-extra.jar` 的 `data/minecraft/enchantment/`（**42 份**），三形状分别抄 `efficiency.json` / `knockback.json` / `fire_aspect.json`；② 引用标签 `#minecraft:enchantable/armor` / `#minecraft:enchantable/sharp_weapon` / `#minecraft:exclusive_set/armor` **全在原版 jar** → 不需要新建标签（`EnchantableTags` 只兜自家命名空间的 `exclusive_set`）；③ `minecraft:generic.max_health` 与 `AttributeSpecs.java:69` 逐字一致（1.21.1 仍带 `generic.`）。**刻意不用 `attack_speed`**：附魔组件给的是 `add_value`，会绕开 D18 的 `ADD_MULTIPLIED_TOTAL` + 固定 modifier id 纪律。
+- **派前预验发现（本轮第二条真发现）**：`check_lang` 只认 `enchantment.redtale_project.<path>`，新附魔**必须**跑 `tools/gen_enchant_lang.py` 补键 —— 整份副本试跑确认「不加 lang 时恰 **6 条**缺键（zh_cn/en_us 各 3）」，而 `tools/gen_enchant_lang.py` 才是该前缀的唯一拥有者（`KEY_PREFIX`），手改 lang 会与生成器冲突。已写进卡面：lang 只许生成器改写。副本预验：5 份附魔下 `check_enchants` 5/0、`check_enchant_exclusive` 5 份/0、其余附魔系尺各 0、`check_numeric` 4/0、`check_name_coercions` 0。
+- **三条候选证伪（不派重复卡）**：`items.rarity` 非法值 → `ItemContent.java:108-110` 有 WARN + `check_items.py:61-62` 已在役尺；`SocketSpec.types` 元素形态 → `:110-124` 六处 WARN（T-0115 已收）；`enchantments` 的 `exclusive_set` 指向自家缺失 tag → `EnchantableTags.java:127-141` 会补空 tag，不是洞。
+- 七门禁全 0：`check_all` 75/75、`check_tasks` **137 卡 · 在制品 1 · 问题 0**、`check_ownership` 0、`check_docs` **157 份/640 引用/0 提示/0 问题**、`check_rounds`、`check_contracts`、`check_checkall`。
+- 环境：构建 1 次（锁取删、25s）、测试服 **1 启 1 停**（`Done (2.377s)`、`stop` 后 `RCON Listener stopped`、无 LISTEN）、**正式服未触碰**（全程无 `java.exe` 驻留、25565 无监听）、预验副本 `build/enchs7/` 已删。
+- 收尾：`docs/ROUND-R142-ENCHANT5.md`、PLAN §13 R142 + §13.145、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0136 VERIFIED + T-0137 OPEN + 池 C87）、`docs/CONTRACTS.md` §4.119、协作板 §3。
+
+### §13.145 R142 的五条口径（内容缺口靠数不靠尺 / 组件形状抄原版样张 / lang 只有生成器 / 真机计数是时点快照 / 裸名）+ 下一步（R143）
+
+| 编号 | 口径 |
+|---|---|
+| R142-a | **「该写的没写」任何尺都报不出**（R141-b 的推广）：`items` 8→11/14 基底的缺口、`enchantments` 只有 2 份，都是**数覆盖率**数出来的（`grep -H 'base:' items/*.json5`、`ls enchantments/`），不是尺报出来的。派内容卡前的第一步永远是数。 |
+| R142-b | **原版组件的形状只能抄原版样张**：`EnchantmentGenerator` 对 `effects` **原样透传不校验**，写错组件名/少一层包装只会在 datapack 加载期炸或静默失效。取证路径固定为 `server-1.21.1-<日期>-extra.jar` 的 `data/minecraft/enchantment/*.json`（42 份），**不凭记忆写组件**。 |
+| R142-c | **lang 前缀有唯一拥有者**：`enchantment.redtale_project.*` 归 `gen_enchant_lang.py`、`attribute.*` 归 `gen_attr_lang.py`。新增附魔的验收链是「写 JSON5 → 注册进 `ConfigStore` → 跑生成器」，**手改 lang 一律算越界**（会与生成器打架，`check_lang` 只报缺键、不报「谁写的」）。 |
+| R142-d | **真机计数是时点快照**（R137-a 第二次兑现）：`reload 65 份` / `18 件装备内容` / `6 处外部引用`都会随内容增长。卡面写期望值时带轮次，事后数字变了不算打回 —— 本轮的 `weapon_attr_ref` 引用 3→6 就是内容增长而非回归。 |
+| R142-e | **裸名纪律第六十次**：只写裸名（`EnchantmentGenerator.java` / `gen_enchant_lang.py` / `titan_grip.json5`）；原版 jar 用 `<版本>-extra.jar` 通配描述，不写绝对路径。 |
+
+下一步（R143）：
+
+1. **验 T-0137**（附魔 2 → 5）：静态三条 → 构建 → 测试服 `reload` **65 → 68 份**、`validate` 五份附魔；真机判据待定（`/redtale` 无附魔列表命令时，用 datapack 目录 `data/redtale_project/enchantment/` 五份 + 日志零解析错误替代，并记欠账「组件运行期效果未验」）。
+2. **M7 真机进服**：`rt-test` → 直接连接 `127.0.0.1:25567`，需 Aki 在线或桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
+3. Q-021 ~ Q-025 等 Aki；池 C85（`bow` / `shield` / `ring`）需先定语义；池 C86（`applies_to` 通配）默认维持现状。

@@ -5807,7 +5807,7 @@ fi
 - 2026-11-28 07:38 · 完成 · `tools/check_affix_kind_sync.py`（新建 123 行，零接线） · 构建 N/A（卡禁 gradle/禁锁） · 基线 `0 条问题` EXIT=0、`-v` `2 池·12 定义·12 引用`；六夹具 A~F 逐字 EXIT=0/1/1/1/1/1（B/C/D 各 1 条、E 2 条 sorted、F 0 条）；wc=123、import=1、禁词=0、py_compile 空、`--dir NO_SUCH` 恰 1 条 EXIT=1 无栈；`check_tasks` 135 卡/问题 0（收尾前在制品 1 = 本卡）、`check_ownership` 0；git 较验收 3 多 `M docs/TASKS.md`（S8 必须改卡状态/进度，非源码）
 - 2026-11-28 13:0x · S7 验收 → VERIFIED（3/3，S8 零偏差不打回） · ①基线 `共 1 份词条段类型对账表 · 0 条问题` EXIT=0 + `-v` `已检查 2 份词条池 · 12 条词条定义 · 12 条词条引用` ②六夹具（S7 自建 `build/affixkind_r141/`，A 干净 / B `prefix` 只放 `vital` / C `suffix` 只放 `plated` / D `sword_common.core` 加 `sturdy` / E B+C / F `prefix` 只放 `ghost`）逐字 EXIT=0/1/1/1/1/0，文案与卡面逐字一致、E 两行 `prefix…vital` 在 `suffix…plated` 前 ③`wc=123` ≤200、`from check_progress import clean_json5` 恰 1、禁词 0、`py_compile` 无输出、`--dir NO_SUCH` 恰 1 条 `[问题]` + 末行 `1 条问题` + EXIT=1 无栈；已由 S7 接线 `check_all` **74→75**（75/75 红 0）
 
-### T-0136 · [OPEN] 三把武器内容补档：`axe` / `spear` / `staff`（D1 武器线，14 基底里 3 个零内容）
+### T-0136 · [VERIFIED] 三把武器内容补档：`axe` / `spear` / `staff`（D1 武器线，14 基底里 3 个零内容）
 
 - 派单：S7 · 2026-11-28 13:0x（R141）、在制品 **1/3**（本卡）
 - 目标：D1 要求武器全做，但 `defaults/items/` 12 份内容只覆盖 `sword` / `dagger` / `hammer` / `helmet` / `chestplate` / `leggings` / `boots` / `amulet` 八个基底；**`axe` / `spear` / `staff` / `bow` / `shield` / `ring` 六个基底零内容**（`grep -H 'base:' items/*.json5` 现查）。本卡补前三个（纯 JSON5 + `ConfigStore` 恰 +3 行），让「14 基底」从 8 个通电走到 11 个。
@@ -5918,6 +5918,137 @@ fi
   2. 形态：`git status --porcelain` → 恰 **3 条** `?? src/main/resources/redtale/defaults/items/demo_*.json5` + 恰 **1 条** ` M src/main/java/com/redtale/project/core/config/ConfigStore.java` + **1 条** ` M docs/TASKS.md`（卡板，允许）；`git diff --numstat src/main/java/com/redtale/project/core/config/ConfigStore.java` → 恰 `3	0`；三个新文件 `grep -c "^  rev: 1,"` 各 **1**；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" src/main/resources/redtale/defaults/items/demo_greataxe.json5 src/main/resources/redtale/defaults/items/demo_spear.json5 src/main/resources/redtale/defaults/items/demo_battlestaff.json5 | wc -l` = **0**。
   3. 逐字：`diff` 三份新文件与卡面代码块 → **零差异**（`id` / `base` / `name` / `durability` / `rarity` / `rev` / `sockets` / `weapon_attributes` / `stats` 九段全对）。
 - 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
+- 2026-11-28 15:45 · 完成 · 新建 `defaults/items/demo_greataxe.json5` / `demo_spear.json5` / `demo_battlestaff.json5` + `ConfigStore.java` 恰 +3 行（插 demo_boots 后） · 构建 N/A（卡禁 gradle/锁，未取锁未构建、未启停任何服） · 自测 3/3 全过：`check_items` 31 文件/0、`check_numeric` 4/0、`check_affix_reach -v` 2 池/0、`check_name_coercions` 0、`check_weapon_attr_ref -v` 15 份/6 处/33 动作/0、`check_defaults` 61/61/0、`check_all` 75/75 红 0 EXIT=0；`git status` 3 `??` + 2 ` M`、numstat `3 0`、`rev: 1` 各 1、禁词 0、三份与卡面代码块逐字 22 行 MATCH。待 S7 构建 + 测试服 `reload` / `items` 15 件验收。
+- 2026-11-28 19:1x · S7 验收 → VERIFIED（验收 1~3 逐字过 + 真机 1 启 1 停，S8 零偏差不打回） · ① `check_items` 31/0、`check_numeric` 4/0、`check_affix_reach -v` `12 定义 · 2 池 · 5 段`/0、`check_name_coercions` 0、`check_weapon_attr_ref -v` `15 份 · 6 处（bettercombat 6）· 33 动作`/0、`check_defaults` 61/61/0、`check_all` 75/75 红 0 ② `git status` 5 条（3 `??` + `ConfigStore` + 卡板）、numstat `3 0`、`rev: 1` 各 1、禁词 0 ③ 三份与卡面代码块 `diff` 零差异各 22 行 · **真机**：构建 EXIT=0（jar 702963 B）、测试服 `Done (2.377s)`、`reload` **62→65 份**、`items` **15→18 件装备内容 · 基底 14 个**、三把 tooltip 各出 `tick · 次/秒`（战斧 23.529/0.85、长枪 17.391/1.15、长棍 16.667/1.2）与 `动作 bettercombat:axe|spear|staff`、`validate` 18 件/0 问题、redtale 相关 WARN/ERROR **0**；停服后 25567/25577 无 LISTEN
+
+### T-0137 · [OPEN] 附魔内容 2→5：三个新 effect 组件取样（`attributes` / `knockback` / `post_attack`+`ignite`，D32 第 3~5 个数据点）
+
+- 派单：S7 · 2026-11-28 19:1x（R142）、在制品 **1/3**（本卡）
+- 目标：D32 的硬指标是「加第 N 个附魔只写 JSON5、不编译」，目前只有 **2** 个数据点，且只覆盖两种形态（纯数值 `minecraft:damage` / 脚本化 `redtale_project:scripted`）。本卡补三条，每条用**一个原版已证**的 effect 组件、**都不碰脚本层**，把 D32 的数据点从 2 推到 5、组件面从 1 种推到 4 种。纯配置 + 生成器，引擎零改动。
+- 取证（R142 现查）：
+  - 原版 1.21.1 附魔 JSON 在 `server-1.21.1-20240808.144430-extra.jar` 的 `data/minecraft/enchantment/`（42 份）。`minecraft:attributes` 形状见 `efficiency.json`、`minecraft:knockback` 见 `knockback.json`、`minecraft:post_attack` + `minecraft:ignite` + `requirements.is_direct` 见 `fire_aspect.json` —— 本卡三份逐字照这三个形状，不自创字段、不用 `armor_effectiveness` / `damage_protection`（原版样张里带可选 `requirements`，形态不确定，不冒这个险）。
+  - 引用标签全在原版内（**不需要新建任何标签**）：`data/minecraft/tags/item/enchantable/` 有 `armor.json` / `sharp_weapon.json`；`data/minecraft/tags/enchantment/exclusive_set/armor.json` 存在（protection 家族 4 条）。
+  - 属性 id `minecraft:generic.max_health` 与 `AttributeSpecs.java:69` 逐字一致（1.21.1 仍带 `generic.` 前缀）。**不用 `attack_speed`**：D18 只允许 `ADD_MULTIPLIED_TOTAL` + 固定 modifier id，附魔组件给的 `add_value` 会绕开那条纪律。
+  - 生成器白名单 `EnchantmentGenerator.java:37-41` 十键；`effects` 原样透传**不校验**，所以组件形状对不对只能靠照抄原版样张。
+  - **lang 键必须补，且只能由生成器补**：`check_lang` 只认 `enchantment.redtale_project.<path>`；在整份副本上试跑，不加 lang 时 `check_lang` 报 **6 条缺键**（zh_cn/en_us 各 3）。`tools/gen_enchant_lang.py` 拥有该前缀（`KEY_PREFIX`），手改 lang 会与生成器打架。
+  - **派前整份副本预验**（`build/enchs7/`，已删）：5 份附魔下 `check_enchants` **5 文件/0**、`check_enchant_exclusive` **5 份/0**、`check_enchant_args_sync` / `cost_forms` / `slot_forms` / `definition_ints` 各 0、`check_numeric` 4/0、`check_name_coercions` 0。
+- 独占文件（**唯一可写**）：
+  - `src/main/resources/redtale/defaults/enchantments/titan_grip.json5`（新建）
+  - `src/main/resources/redtale/defaults/enchantments/heavy_impact.json5`（新建）
+  - `src/main/resources/redtale/defaults/enchantments/ember_bite.json5`（新建）
+  - `src/main/java/com/redtale/project/core/config/ConfigStore.java`（**恰 +3 行**）
+  - `src/main/resources/assets/redtale_project/lang/zh_cn.json`、`en_us.json`（**只许由 `gen_enchant_lang.py` 改写**，不许手改一个字符）
+  - （卡板文件只许追加本卡进度行与状态行，按 §2 通用授权，**不列入独占清单**）
+- 禁止：不改现有 2 份附魔（`super_sharpness` / `soul_reap`）；不改 `EnchantmentGenerator` / `EnchantableTags` / 任何 `src/main/java` 其它文件（**引擎零改动**）；不新建脚本（`scripts/`）、不新建标签 / 模型 / 贴图；不改 `tools/**`（`check_all.py` 不接线，本卡不新增尺）；不改其它 `docs/**`；不取构建锁、不执行 gradle、不启停任何服。
+- **接口（S7 定死，三份逐字照抄，不许改 id / 数值 / 组件 / 标签）**：
+
+  `enchantments/titan_grip.json5`
+  ```
+  {
+    // M4 示范附魔 ③：属性型（`minecraft:attributes` → 原版 max_health，验 L0 透传不加工）
+    id: "redtale_project:titan_grip",
+    description: "巨力握持",
+    description_en: "Titan Grip",
+    max_level: 2,
+    weight: 3,
+    anvil_cost: 3,
+    slots: ["armor"],
+    supported_items: "#minecraft:enchantable/armor",
+    min_cost: { base: 10, per_level_above_first: 12 },
+    max_cost: { base: 34, per_level_above_first: 12 },
+    exclusive_set: "#minecraft:exclusive_set/armor",
+    effects: {
+      "minecraft:attributes": [
+        {
+          amount: { type: "minecraft:linear", base: 2.0, per_level_above_first: 2.0 },
+          attribute: "minecraft:generic.max_health",
+          id: "redtale_project:enchantment.titan_grip",
+          operation: "add_value",
+        },
+      ],
+    },
+  }
+  ```
+
+  `enchantments/heavy_impact.json5`
+  ```
+  {
+    // M4 示范附魔 ④：击退型（`minecraft:knockback` → 原版击退加成，无脚本、无条件）
+    id: "redtale_project:heavy_impact",
+    description: "重击",
+    description_en: "Heavy Impact",
+    max_level: 2,
+    weight: 4,
+    anvil_cost: 2,
+    slots: ["mainhand"],
+    supported_items: "#minecraft:enchantable/sharp_weapon",
+    min_cost: { base: 6, per_level_above_first: 14 },
+    max_cost: { base: 28, per_level_above_first: 14 },
+    effects: {
+      "minecraft:knockback": [
+        {
+          effect: {
+            type: "minecraft:add",
+            value: { type: "minecraft:linear", base: 0.5, per_level_above_first: 0.5 },
+          },
+        },
+      ],
+    },
+  }
+  ```
+
+  `enchantments/ember_bite.json5`
+  ```
+  {
+    // M4 示范附魔 ⑤：命中后置型（`minecraft:post_attack` + `minecraft:ignite`，条件 `is_direct` 逐字抄原版 fire_aspect）
+    id: "redtale_project:ember_bite",
+    description: "余烬",
+    description_en: "Ember Bite",
+    max_level: 3,
+    weight: 2,
+    anvil_cost: 4,
+    slots: ["mainhand"],
+    supported_items: "#minecraft:enchantable/sharp_weapon",
+    min_cost: { base: 12, per_level_above_first: 16 },
+    max_cost: { base: 40, per_level_above_first: 16 },
+    effects: {
+      "minecraft:post_attack": [
+        {
+          enchanted: "attacker",
+          affected: "victim",
+          effect: {
+            type: "minecraft:ignite",
+            duration: { type: "minecraft:linear", base: 2.0, per_level_above_first: 2.0 },
+          },
+          requirements: {
+            condition: "minecraft:damage_source_properties",
+            predicate: { is_direct: true },
+          },
+        },
+      ],
+    },
+  }
+  ```
+
+  `ConfigStore.java` **恰 +3 行**（追加在 `"enchantments/soul_reap.json5",` 那行之后，缩进与相邻行一致）：
+  ```
+              "enchantments/titan_grip.json5",
+              "enchantments/heavy_impact.json5",
+              "enchantments/ember_bite.json5",
+  ```
+
+  最后跑一次生成器补 lang（**唯一允许的 lang 写入口**）：
+  ```
+  cd /e/RedtaleProject && python tools/gen_enchant_lang.py
+  ```
+  期望输出含 `解析到 5 份附魔定义：`（键按文件名升序：`ember_bite`, `heavy_impact`, `soul_reap`, `super_sharpness`, `titan_grip`）与两行 `写入 …（… 键，enchantment 键 2 → 5）`。
+- **判据（只核一件）**：五份附魔的 `description` / `description_en` 全部落进两份 lang，键形如 `enchantment.redtale_project.<文件名>`；`effects` 里不出现 `redtale_project:scripted`（本卡三条全走原版组件）。
+- **不核**（各有归属）：组件在运行期是否真生效（`minecraft:attributes` 的 max_health 差值、击退距离、点燃时长）→ S7 真机验；`weight` / `anvil_cost` / `max_level` 整数口径归 `check_enchant_definition_ints`；`slots` 形态归 `check_enchant_slot_forms`；`min_cost` / `max_cost` 形态归 `check_enchant_cost_forms`；`exclusive_set` 引用归 `check_enchant_exclusive`。
+- 验收（**三条，全部离线，不需要构建 / 起服**）：
+  1. 对账：`cd /e/RedtaleProject && python tools/check_enchants.py` → `共 5 个文件 · 没有发现问题 ✓` EXIT=0；`python tools/check_enchant_exclusive.py` → `共 5 份附魔互斥引用表 · 0 条问题`；`python tools/check_enchant_args_sync.py` / `check_enchant_cost_forms.py` / `check_enchant_slot_forms.py` / `check_enchant_definition_ints.py` → 各 `0 条问题`；`python tools/check_lang.py` → `共 2 个文件 · 0 条问题`；`python tools/check_lang_dupes.py` → `共 2 个语言文件 · 0 条问题`；`python tools/check_gen_prefix.py` → `共 1 份生成器清单 · 0 条问题`；`python tools/check_numeric.py` → `0 条问题`；`python tools/check_defaults.py` → `清单 64 条 · 磁盘 64 个 · 问题 0 条`；`python tools/check_all.py` → `共 75 个脚本 · 跑成 75 · 跳过 0 · 红 0` EXIT=0。
+  2. 形态：`git status --porcelain` → 恰 **3 条** `?? src/main/resources/redtale/defaults/enchantments/{titan_grip,heavy_impact,ember_bite}.json5` + **1 条** ` M src/main/java/com/redtale/project/core/config/ConfigStore.java` + **2 条** ` M src/main/resources/assets/redtale_project/lang/{zh_cn,en_us}.json` + **1 条** ` M docs/TASKS.md`（卡板，允许）；`git diff --numstat src/main/java/com/redtale/project/core/config/ConfigStore.java` → 恰 `3	0`；`git diff --stat` 里两份 lang 只增不删（`+` 行数 ≥ `-` 行数，键序漂移允许）；`grep -c "enchantment.redtale_project.\(titan_grip\|heavy_impact\|ember_bite\)" src/main/resources/assets/redtale_project/lang/zh_cn.json src/main/resources/assets/redtale_project/lang/en_us.json` → 两文件各 **3**；三份新文件 `grep -c "redtale_project:scripted"` 各 **0**；`grep -riE "mmoitems|mmocore|mmoinventory|mythiclib|mythicmobs|ecoenchants" src/main/resources/redtale/defaults/enchantments/{titan_grip,heavy_impact,ember_bite}.json5 | wc -l` = **0**。
+  3. 逐字：`diff` 三份新文件与卡面代码块 → **零差异**（每份 23 行；`effects` 组件键、`attribute` / `id` / `operation`、`requirements` 四段全对）；`git diff src/main/resources/assets/redtale_project/lang/` 里除 `enchantment.*` 前缀的键外**不出现键增删**（照 `gen_enchant_lang.py` 的合并语义）。
+- 进度：（S8 每轮在这里追加一行：日期 · 做到哪 · 卡在哪）
 
 ## 6. 派单池（S7 用，S8 不看）
 
@@ -6003,9 +6134,10 @@ fi
 | C81 | ~~护甲零词条：`affix_pools/` 只有 `sword_common`（`applies_to` = sword/axe/dagger），四件防具基底摇不出词条~~ → **T-0134（R139 派 / R140 验，四基底各 2 条词条真机首证）** | R139 验收 T-0133 时实测 `demo_chestplate` 的 tooltip 只有套装行、零词条行；D22 原文不限武器，`affix_pools` 本就是按基底分池的设计 → 属**内容缺口**不是范围决策。4 条词条只写原版属性（`armor` / `armor_toughness` / `max_health` / `knockback_resistance`，均在 `AttributeSpecs` 的 `v(...)` 段、走原版 `ATTRIBUTE_MODIFIERS` 结算），排除 `damage_reduction` / `dodge_rating` / `magic_resistance` 这类零消费者自定义属性（R138-b）。派前整份副本预验（`build/armoraffix_s7/`）：`check_affix_reach -v` 12 定义/2 池/**5 有效槽位段**、`check_affix_pool_refs -v` 2 池/12 定义/12 引用、weights/levels/`check_items`(28)/`check_numeric`/`check_name_coercions` 各 0 | 无 |
 | C82 | 「jar 默认 ↔ 已落地 live 配置」漂移零观测面（R139-a 新开，**未派**） | `ConfigStore.ensureDefaults():148` 是 `Files.exists → continue`（只补缺不覆盖）：改过的默认文件升级 jar 后**永远到不了**已有服；`/redtale reload` 只报份数（57 份），不报「哪几份和 jar 里不一样」。本轮为此白摇 12 次、差点误判内容没生效。**不派的原因**：判据要读 live 目录（`E:/server-test/config/...`，机器本地路径，`check_all` 不可移植）；做成 `/redtale config diff` 是运行期命令、但「本地改过」本身是合法状态，只能 INFO 不能红 → 先记口径（R139-a + `docs/HOT-UPDATE.md` §种子语义），等出现第二份证据（例如真发生过「以为发了其实没发」的线上事故）再考虑 | 无 |
 | C83 | ~~`affix_pools` 段名 ↔ 词条 `kind` 零对账~~ → **T-0135（R140 派 / R141 验）** | `AffixRoller.java:102-109,140`：按 `slots` 三段抽签时用 `def.kind().equals(kind)` 过滤，**不一致直接 `continue`**、零 WARN，整段候选空 → `break`、该段槽位默默留空；只有「未定义词条」才进 `deadEntries` 打日志（`:119-121`）。六把已有尺零覆盖（`check_affix_pool_refs` 只看 id 在不在定义集、`check_affix_reach` 只看段数与等级可达）。R140 反事实：`armor_common` 的 `prefix`/`suffix` 段名互换（`kind` 全错）→ 六把尺逐字全绿 EXIT=0；基线 2 池 / 12 定义 / 12 引用 / 0 问题（对账网第五十八例） | 无 |
-| C84 | ~~`items/` 只覆盖 8/14 基底，`axe` / `spear` / `staff` 零内容~~ → **T-0136（R141 派）** | `grep -H 'base:' items/*.json5` 现查 12 份内容只覆盖 sword/dagger/hammer/helmet/chestplate/leggings/boots/amulet；D1 要武器全做。三把动作已现查 2.4.0 jar（`axe.json`/`spear.json`/`staff.json`，33 内置里命中）；模型 14 基底已齐（T-0127）→ 纯内容 + `ConfigStore` 3 行。派前副本预验 `check_items` 15/0、`check_weapon_attr_ref -v` 15 份/6 处/33 动作/0 | 无 |
+| C84 | ~~`items/` 只覆盖 8/14 基底，`axe` / `spear` / `staff` 零内容~~ → **T-0136（R141 派 / R142 验）** | `grep -H 'base:' items/*.json5` 现查 12 份内容只覆盖 sword/dagger/hammer/helmet/chestplate/leggings/boots/amulet；D1 要武器全做。三把动作已现查 2.4.0 jar（`axe.json`/`spear.json`/`staff.json`，33 内置里命中）；模型 14 基底已齐（T-0127）→ 纯内容 + `ConfigStore` 3 行。派前副本预验 `check_items` 15/0、`check_weapon_attr_ref -v` 15 份/6 处/33 动作/0。**R142 验**：`items` 15→18 件、`基底 14 个`、三把 tooltip 各出 `tick · 次/秒` | 无 |
 | C85 | `bow` / `shield` / `ring` 三个基底仍零内容（R141 新开，**未派**） | 三条各有硬依赖：`bow` 需弹道/弹药（M2 未覆盖）；`shield` 在 BetterCombat 2.4.0 的 33 个内置动作里**没有**对应动作（现查）；`ring` 依赖 Curios（D11 可选前置，未装即无处装备）。**不派的原因**：都不是「写份 JSON5」能收口的，需要先定语义（远程伤害走哪条管线 / 盾牌格挡是否自研 / Curios 装不装），属 Aki 拍板面 | 待拍板 |
 | C86 | `applies_to` 的 `*` 通配与裸名：引擎接受面 ↔ 双校验器拒绝面不对称（R141 新开，**未派**） | `AffixRoller.java:53,68` 的 `poolFor` 明写接受 `"*"`、裸 `<基底>`、`full` 三种形态；但 `check_items.check_pool` 要求「含 `:` + ns 必须是 `redtale_project`」、`ValidateCommand:104` 对裸名直接报问题（R21-e 故意为之）→ **`*` 这条分支从校验面看不可达**（同 R138 `core` 死分支family）。**不派的理由**：放开 `*` 是语义决策（通配池会按文件序遮蔽所有别的池），且要同时动 `check_items.py` 与 `ValidateCommand.java` 两处；**默认 A = 维持现状（不开通配、裸名照报）**，等出现「运营真的需要一池通吃」的第二份证据再动 | 默认 A |
+| C87 | ~~`enchantments/` 只有 2 份内容，D32「加第 N 个附魔只写 JSON5」只有 2 个数据点 / 1 种原版组件~~ → **T-0137（R142 派）** | R142 现查：`enchantments/` 2 份（纯数值 `minecraft:damage` + 脚本化 `scripted`），`EnchantmentGenerator.PASS_THROUGH` 十键原样透传 `effects` **不校验**，组件形状只能照原版样张。原版 `data/minecraft/enchantment/`（extra jar，42 份）里 `minecraft:attributes`（`efficiency.json`）/ `minecraft:knockback`（`knockback.json`）/ `minecraft:post_attack`+`minecraft:ignite`（`fire_aspect.json`）三形状齐备，引用标签全在原版（`enchantable/armor`、`enchantable/sharp_weapon`、`exclusive_set/armor`）→ 纯配置可收。**另有一条生成器事实**：`check_lang` 只认 `enchantment.redtale_project.<path>`，新附魔必须跑 `gen_enchant_lang.py` 补键（手改会与生成器打架），副本试跑确认不加 lang 时恰 6 条缺键 | 无 |
 
 **不适合给 S8 的**（留 S7）：伤害乘区、注册表结构、mixin、任何跨三个以上文件的改动、需要判断「该不该这么做」的事。
 
