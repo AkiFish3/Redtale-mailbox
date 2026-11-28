@@ -3186,3 +3186,28 @@ S8 上线。机制 = **S7 派单 / S8 写码 / S7 验收**，卡板是唯一接�
 1. **验 T-0135**（词条段名 ↔ `kind` 尺）→ 通过后接 `check_all` **74 → 75**。
 2. **M7 真机进服**：`rt-test` → 多人游戏 → 直接连接 `127.0.0.1:25567`，需 Aki 在线或会话桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
 3. Q-021 ~ Q-025 等 Aki；Q-025（护甲 tooltip 自身属性行）是显示面，与词条数值面不冲突。
+
+## R141 · 2026-11-28 13:0x · 验 T-0135（词条池段名 ↔ `kind` 尺，接线 74→75）+ 派 T-0136（武器线三基底内容）
+
+- **卡板**：T-0135 `[DONE]` → **`[VERIFIED]`**（3/3，S8 零偏差不打回）。① 基线 `共 1 份词条段类型对账表 · 0 条问题` EXIT=0 + `-v` `已检查 2 份词条池 · 12 条词条定义 · 12 条词条引用`。② 六夹具（S7 自建 `build/affixkind_r141/`，整份 `defaults/` 副本改一处）逐字 EXIT **0/1/1/1/1/0**：B `prefix` 只放 `vital`、C `suffix` 只放 `plated`、D `sword_common.core` 加 `sturdy`、**E B+C 同池 2 条且 `prefix…vital` 在 `suffix…plated` 前**、F `prefix` 只放 `ghost` 判 0（存在性归别的尺，与卡面「不核」一致）。③ `wc=123` ≤200、`from check_progress import clean_json5` 恰 1、禁词 0、`py_compile` 无输出、`--dir NO_SUCH` 恰 1 条 `[问题]` + 末行 `1 条问题` + EXIT 1 无栈。**文案与卡面逐字一致**。
+- 接线 `check_all` **74 → 75**（75/75 红 0）；七门禁全 0（`check_tasks` 136 卡 · 在制品 1、`check_contracts` 117、`check_docs` 157 份/640 引用、`check_rounds`、`check_ownership`、`check_checkall`）。
+- **派 T-0136**（在制品 1/3）：`items/demo_greataxe.json5` + `demo_spear.json5` + `demo_battlestaff.json5`（`base` = `axe` / `spear` / `staff`，`weapon_attributes` = `bettercombat:axe` / `:spear` / `:staff`）+ `ConfigStore` **恰 +3 行**。**内容缺口实证**：`grep -H 'base:' items/*.json5` → 12 份内容只覆盖 **8/14** 基底，`axe` / `spear` / `staff` / `bow` / `shield` / `ring` **六个基底零内容**（D1 要求武器全做）。**动作名现查 2.4.0 jar**：`data/bettercombat/weapon_attributes/` **33** 个内置动作含 `axe` / `spear` / `staff`，**不含 `shield`**。14 基底模型已齐（T-0127）→ 本卡不需要新模型；`sword_common.applies_to` 已含 `axe` → 新战斧自动进池。派前整份副本预验（`build/weapons_s7_r141/`，已删）：`check_items` 15/0、`check_numeric` 4/0、`check_affix_reach` 2 池/12 定义/0、`check_name_coercions` 0、`check_weapon_attr_ref -v` 15 份/6 处/33 动作/0。
+- **不夹带的三条**（新开池 C85，待拍板）：`bow` 需弹道/弹药（M2 未覆盖）、`shield` 在 33 个动作里**没有**对应项、`ring` 依赖 Curios（D11 可选前置）—— 三条都不是「写份 JSON5」能收口的，先定语义再派。
+- 环境：`src/` 零 diff（只读取证）；改的只有 `tools/check_all.py` 一行 + 文档；未构建、未取锁、未启停任何服；正式服 `E:/server` 未触碰（25565 无监听）、测试服 25567/25577 未启；两个临时夹具目录已删净。
+- 收尾：`docs/ROUND-R141-KINDSYNC.md`、PLAN §13 R141 + §13.144、`docs/ROUNDS.md`、`docs/TASKS.md`（T-0135 VERIFIED + T-0136 OPEN + 池 C84/C85）、`docs/CONTRACTS.md` §4.118、`tools/check_all.py`、协作板 §3。
+
+### §13.144 R141 的五条口径（打印序≠计数源 / 先数覆盖率 / 动作名现查 jar / 一卡一族 / 裸名）+ 下一步（R142）
+
+| 编号 | 口径 |
+|---|---|
+| R141-a | **尺的打印顺序与计数来源不是同一件事**：`check_affix_kind_sync` 逐池打印（`read_pools` 文件序），末行计数取全量 `sorted` 长度。单池看不出差别，跨池「打印乱序但计数对」是合法状态——不要为「看起来整齐」去动 S8 的输出层。 |
+| R141-b | **派内容卡前先数基底覆盖率**：D1「武器全做」落地到哪，`grep -H 'base:' items/*.json5` 一条命令数出来（8/14）。这类缺口**任何尺都报不出**——尺核的是「写了的对不对」，不是「该写的写了没」。 |
+| R141-c | **动作引用一律现查 jar**：`axe` / `spear` / `staff` 不看文档不看记忆，直接 `unzip -l` 列 2.4.0 的 `weapon_attributes/`（33 个）。同一次列目录顺带证伪 `shield` —— **不查就不会知道盾牌根本没动作可挂**。 |
+| R141-d | **一个卡只收一个基底族的三单位**：`axe`/`spear`/`staff` 同族（近战、动作现成、无新依赖）成一张卡；`bow`/`shield`/`ring` 各有硬依赖，不夹带。夹带的代价是卡里出现一条永远验不过的验收。 |
+| R141-e | **裸名纪律第五十九次**：只写裸名（`check_affix_kind_sync.py` / `ConfigStore.java` / `demo_greataxe.json5`）；jar 文件用通配 `*bettercombat*.jar` 或 `--jar-dir`。 |
+
+下一步（R142）：
+
+1. **验 T-0136**：静态三条 → 构建 → 测试服 `reload` **62 → 65 份**、`redtale items` 12 → **15** 件、`tooltip demo_greataxe` / `demo_spear` / `demo_battlestaff` 各出一条 `tick · 次/秒` 攻速口径（D20）。
+2. **M7 真机进服**：`rt-test` → 直接连接 `127.0.0.1:25567`，需 Aki 在线或桌面可交互；`quickPlayMultiplayer` 不再尝试（R132 已证被忽略）。
+3. Q-021 ~ Q-025 等 Aki；池 C85（`bow` / `shield` / `ring`）需先定语义（远程伤害管线 / 盾牌格挡是否自研 / 装不装 Curios）才能派。

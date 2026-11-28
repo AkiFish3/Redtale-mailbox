@@ -1816,3 +1816,11 @@ public Map<String, Long> ConfigStore.mtimes();      // 相对路径 → mtime(ms
 - **池语义（新登记，此前只有代码事实没有文档）**：池的三个段名是**过滤条件**，不是标签 —— `AffixRoller.java:102-109` 按 `slots` 三段循环抽签，`:140` 用 `def.kind().equals(kind)` 过滤，**不一致直接 `continue`**（不计数、不打日志），整段候选为空后 `:107-108` `break`，该段槽位**留空**。因此「段名 = 词条 `kind`」是内容硬约束，写错只表现为「少一条词条」。
 - **T-0135 接口冻结（新）**：`check_affix_kind_sync.py`，单条判据 `词条池 <pool_id> 的 <段名> 段放了 <kind> 类词条 <id>`；**不核**四类（未定义 id 归 `check_affix_pool_refs`、数值归 `check_affix_weights` / `check_affix_levels`、`slots` 与条数匹配、`kind` 自身非法归 `AffixPools` 的既有 WARN）。函数签名 `read_def_kinds` / `read_pools` / `mismatches` / `_files` / `_load` / `main` 由 S7 定死；基线 `共 1 份词条段类型对账表 · 0 条问题`、`-v` `2 池 · 12 定义 · 12 引用`。**卡禁接线**，`check_all` 74 → 75 由 S7 在 R141 验收后做。
 - **内容计数纪律（复述 R137-a / R140-b）**：`check_affix_reach` / `check_affix_pool_refs` 的份数是**时点快照**，随内容增长（8→12 定义、1→2 池）。文档里凡引用这两个数字必须带轮次，禁止当常量断言。
+
+### 4.118 词条段类型尺收口（T-0135 VERIFIED，R141）+ 武器线三基底内容冻结（T-0136，R141 派）
+
+- **T-0135 → VERIFIED（已合流，已接线）**：`check_affix_kind_sync.py` 123 行，`check_all` 清单 **74 → 75**（75/75 红 0）。验收：六夹具逐字 EXIT 0/1/1/1/1/0（B/C/D 各 1 条、E 2 条有序、F 0 条），文案与卡面逐字一致。**接口按卡面落地，零偏差**：`_load` / `_files` / `read_def_kinds` / `read_pools` / `mismatches` / `main`。
+- **R141 反事实复核（新登记）**：`mismatches()` 的排序是**文案全序**而非 `(pool, kind)` 序 —— E 夹具证明「`prefix…vital` 在 `suffix…plated` 前」只对 `armor_common` 单池成立；跨池时按池 id 字典序也是同一结果（本卡输出层按 `read_pools` 保序逐池打印、计数取全量 `sorted` 长度），两者不矛盾但**不可互换**：打印顺序 = 文件序，末行计数 = 全量。
+- **14 基底的模型面已冻结**：`check_item_models` 基线 `14 基底 / 14 模型 / 14 处 layer0 / 605 张`（T-0127 / T-0129）。**新增内容物品不新建模型**，一律复用基底模型；只有「新增基底」才需要新模型，而 D17 冻结了 14 个基底，所以这条不会再变。
+- **T-0136 接口冻结（新）**：三份 `items/demo_greataxe.json5` / `demo_spear.json5` / `demo_battlestaff.json5` 全文见卡面，`ConfigStore.DEFAULT_FILES` 恰 +3 行（插在 `items/demo_boots.json5` 之后）。`stats` 只许写有消费者的五键（`attack_damage` / `attack_speed` / `critical_strike_chance` / `critical_strike_power` / `physical_damage`）；`rev: 1`（`rev: 0` 会被尺判红，R136-b）。
+- **武器动作白名单（现查，此后引用以此为准）**：BetterCombat 2.4.0 `data/bettercombat/weapon_attributes/` **33** 个内置动作，含 `axe` / `spear` / `staff` / `battlestaff` / `glaive` / `halberd` / `lance` / `katana` / `rapier` / `claw` / `scythe`；**不含 `shield`**（所以盾牌内容无动作可挂，见池 C85）。
